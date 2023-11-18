@@ -11,7 +11,7 @@ pub struct Padding<T: Sized> {
     internal: PhantomData<T>
 }
 
-impl<T> TagDataSimplePrimitive for Padding<T> {
+impl<T: Copy> TagDataSimplePrimitive for Padding<T> {
     fn size() -> usize {
         std::mem::size_of::<T>()
     }

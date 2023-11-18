@@ -7,8 +7,11 @@ use crate::error::RinghopperResult;
 /// Maximum length for an array.
 ///
 /// This is enforced by the [`TagDataSimplePrimitive`] (and, by extension, [`TagData`]) implementation of [`usize`].
-pub const MAX_ARRAY_LENGTH: usize = i32::MAX as usize;
+pub const MAX_ARRAY_LENGTH: usize = u32::MAX as usize;
 
+/// Tag data parsing/writing methods.
+///
+/// This is used for parsing data that can be processed later as well as serializing data into formats that can be read later.
 pub trait TagData: Sized {
     /// Get the size of the tag data.
     fn size() -> usize;
@@ -34,6 +37,21 @@ pub trait TagData: Sized {
 }
 
 /// Automatically implements types for [`TagData`] for simple types.
+///
+/// These types include:
+/// - All [`Color`](crate::primitive::Color) types
+/// - All [`Plane`](crate::primitive::Plane) types
+/// - All [`Vector`](crate::primitive::Vector) types
+/// - [`Address`](crate::primitive::Address)
+/// - [`String32`](crate::primitive::String32)
+/// - [`TagGroup`](crate::primitive::TagGroup)
+/// - [`u8`]
+/// - [`i8`]
+/// - [`u16`]
+/// - [`i16`]
+/// - [`u32`]
+/// - [`i32`]
+/// - [`f32`]
 pub trait TagDataSimplePrimitive: Sized {
     /// Get the raw size of the data in bytes.
     fn size() -> usize;
@@ -112,10 +130,10 @@ macro_rules! generate_tag_data_for_number {
     };
 }
 
-generate_tag_data_for_number!(u16, read_u16, write_u16);
-generate_tag_data_for_number!(u32, read_u32, write_u32);
 generate_tag_data_for_number!(i16, read_i16, write_i16);
+generate_tag_data_for_number!(u16, read_u16, write_u16);
 generate_tag_data_for_number!(i32, read_i32, write_i32);
+generate_tag_data_for_number!(u32, read_u32, write_u32);
 generate_tag_data_for_number!(f32, read_f32, write_f32);
 
 impl TagDataSimplePrimitive for u8 {
@@ -133,7 +151,25 @@ impl TagDataSimplePrimitive for u8 {
     }
 }
 
+impl TagDataSimplePrimitive for i8 {
+    fn size() -> usize {
+        std::mem::size_of::<i8>()
+    }
+    fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
+        tag_data_fits::<Self>(at, struct_end, data.len())?;
+        Ok(data[at] as i8)
+    }
+    fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
+        tag_data_fits::<Self>(at, struct_end, data.len()).expect("should fit");
+        data[at] = *self as u8;
+        Ok(())
+    }
+}
+
 /// Enforces sizes to be less than [`MAX_ARRAY_LENGTH`].
+///
+/// We have special handling for `usize` because Rust internally uses `usize` for vectors, but tags are defined using
+/// 32-bit sizes, instead.
 impl TagDataSimplePrimitive for usize {
     fn size() -> usize {
         std::mem::size_of::<u32>()
@@ -149,3 +185,6 @@ impl TagDataSimplePrimitive for usize {
         self_as_u32.write::<B>(data, at, struct_end)
     }
 }
+
+#[cfg(test)]
+mod test;

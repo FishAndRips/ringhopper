@@ -79,24 +79,5 @@ pub use self::color::*;
 mod data;
 pub use self::data::*;
 
-#[repr(transparent)]
-pub struct String32 {
-    pub string_data: [u8; 32]
-}
-
-impl TagDataSimplePrimitive for String32 {
-    fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
-        tag_data_fits::<Self>(at, struct_end, data.len())?;
-        Ok(Self {
-            string_data: data[at..at+32].try_into().unwrap()
-        })
-    }
-    fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
-        tag_data_fits::<Self>(at, struct_end, data.len()).expect("should fit");
-        data[at..at+32].clone_from_slice(&self.string_data[..]);
-        Ok(())
-    }
-    fn size() -> usize {
-        32
-    }
-}
+mod string;
+pub use self::string::*;
