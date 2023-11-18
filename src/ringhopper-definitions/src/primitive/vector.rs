@@ -1,6 +1,5 @@
 use std::fmt::Display;
 
-use crate::parse::TagDataSimplePrimitive;
 use byteorder::ByteOrder;
 use crate::error::*;
 

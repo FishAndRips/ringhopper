@@ -79,7 +79,7 @@ pub trait TagDataSimplePrimitive: Sized {
 
 impl<T: TagDataSimplePrimitive + Sized> TagData for T {
     fn size() -> usize {
-        <u32 as TagDataSimplePrimitive>::size()
+        <T as TagDataSimplePrimitive>::size()
     }
     fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, _: &mut usize) -> RinghopperResult<Self> {
         T::read::<BE>(data, at, struct_end)

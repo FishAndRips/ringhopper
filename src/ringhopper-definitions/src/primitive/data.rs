@@ -107,7 +107,7 @@ impl<T: TagData + Sized> TagData for Reflexive<T> {
         for _ in 0..count {
             let struct_end = item_offset + item_size;
             result.push(T::read_from_tag_file(data, item_offset, struct_end, extra_data_cursor)?);
-            item_offset += item_size;
+            item_offset = struct_end;
         }
 
         Ok(result)

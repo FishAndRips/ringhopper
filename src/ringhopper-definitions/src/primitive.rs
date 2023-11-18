@@ -44,7 +44,7 @@ pub(crate) mod macros {
                 fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
                     let mut current_offset = at;
                     generate_tag_data_simple_primitive_code_write!(self, B, $field_type, data, current_offset, struct_end, $($fields), +);
-                    todo!()
+                    Ok(())
                 }
                 fn size() -> usize {
                     count_sizes!(<$field_type as TagDataSimplePrimitive>::size(), $($fields), +)

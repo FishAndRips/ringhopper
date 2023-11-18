@@ -1,3 +1,5 @@
+use crate::primitive::Vector3D;
+
 use super::*;
 
 #[test]
@@ -60,4 +62,27 @@ fn test_byte_array_rw() {
     read_data.write_to_tag_file(&mut write_data, 0, 0x14).unwrap();
 
     assert_eq!(&write_data[..], tag_data_file);
+}
+
+#[test]
+fn reflexive_rw() {
+    let array_of_vectors_bytes: &[u8] = &[
+        0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+
+        0x3F, 0x80, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x40, 0x40, 0x00, 0x00,
+        0x40, 0x80, 0x00, 0x00, 0x40, 0xA0, 0x00, 0x00, 0x40, 0xC0, 0x00, 0x00,
+        0x40, 0xE0, 0x00, 0x00, 0x41, 0x00, 0x00, 0x00, 0x41, 0x10, 0x00, 0x00
+    ];
+
+    let vectors: Reflexive<Vector3D> = Reflexive::<Vector3D>::read_from_tag_file(array_of_vectors_bytes, 0, 0xC, &mut 0xC).unwrap();
+    assert_eq!(&vectors[..], &[
+        Vector3D { x: 1.0, y: 2.0, z: 3.0 },
+        Vector3D { x: 4.0, y: 5.0, z: 6.0 },
+        Vector3D { x: 7.0, y: 8.0, z: 9.0 }
+    ]);
+
+    let mut new_array_bytes = Vec::new();
+    new_array_bytes.resize(0xC, 0);
+    vectors.write_to_tag_file(&mut new_array_bytes, 0, 0xC).unwrap();
+    assert_eq!(array_of_vectors_bytes, &new_array_bytes[..]);
 }
