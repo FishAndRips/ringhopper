@@ -55,7 +55,7 @@ impl String32 {
         }
     }
 
-    /// Parse the string data.
+    /// Get the string from this.
     pub fn as_str(&self) -> &str {
         // NOTE: We uphold this invariant in `from_bytes_lossy` by replacing invalid characters. And `from_str` assumes a valid str.
         unsafe { std::str::from_utf8_unchecked(&self.string_data[0..self.strlen()]) }
@@ -92,6 +92,30 @@ impl Display for String32 {
 impl Debug for String32 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         Debug::fmt(self.as_str(), f)
+    }
+}
+
+impl PartialEq<str> for String32 {
+    fn eq(&self, other: &str) -> bool {
+        PartialEq::eq(self.as_str(), other)
+    }
+}
+
+impl PartialEq<String> for String32 {
+    fn eq(&self, other: &String) -> bool {
+        PartialEq::eq(self.as_str(), other)
+    }
+}
+
+impl PartialEq<String32> for &str {
+    fn eq(&self, other: &String32) -> bool {
+        PartialEq::eq(other.as_str(), *self)
+    }
+}
+
+impl PartialEq<String32> for String {
+    fn eq(&self, other: &String32) -> bool {
+        PartialEq::eq(other.as_str(), self)
     }
 }
 
