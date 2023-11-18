@@ -1,0 +1,5 @@
+[workspace]
+members = [
+    "src/ringhopper",
+    "src/ringhopper-definitions"
+]
