@@ -5,3 +5,5 @@ extern crate byteorder;
 pub mod primitive;
 pub mod error;
 pub mod parse;
+pub mod tag;
+pub mod accessor;

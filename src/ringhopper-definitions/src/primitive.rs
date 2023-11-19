@@ -81,3 +81,31 @@ pub use self::data::*;
 
 mod string;
 pub use self::string::*;
+
+macro_rules! define_primitive_ref {
+    ($name: tt, $($reference: tt), *) => {
+        /// Defines a primitive reference.
+        pub enum $name<'a> {
+            TagGroup($($reference)* TagGroup),
+            Plane2D($($reference)* Plane2D),
+            Plane3D($($reference)* Plane3D),
+            TagReference($($reference)* TagReference),
+            ColorRGBFloat($($reference)* ColorRGBFloat),
+            ColorARGBFloat($($reference)* ColorARGBFloat),
+            ColorARGBInt($($reference)* ColorARGBInt),
+            Data($($reference)* Data),
+            Euler2D($($reference)* Euler2D),
+            Euler3D($($reference)* Euler3D),
+            Matrix3x3($($reference)* Matrix3x3),
+            Address($($reference)* Address),
+            Angle($($reference)* Angle),
+            Vector2D($($reference)* Vector2D),
+            Vector3D($($reference)* Vector3D),
+            Quaternion($($reference)* Quaternion),
+            String32($($reference)* String32),
+        }
+    };
+}
+
+define_primitive_ref!(PrimitiveRef, &, 'a);
+define_primitive_ref!(PrimitiveRefMut, &, 'a, mut);
