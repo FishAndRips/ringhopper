@@ -1,5 +1,4 @@
 use super::*;
-use crate::parse::TagData;
 use crate::parse::*;
 use std::convert::From;
 use std::fmt::Display;
@@ -221,14 +220,17 @@ impl Display for TagReference {
     }
 }
 
+
 impl TagData for TagReference {
     fn size() -> usize {
-        4 * <u32 as TagDataSimplePrimitive>::size()
+        <TagReferenceC as TagDataSimplePrimitive>::size()
     }
 
     fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> {
-        let group = TagGroup::read_from_tag_file(data, at, struct_end, extra_data_cursor)?;
-        let len = usize::read_from_tag_file(data, at + 0xC, struct_end, extra_data_cursor)?;
+        let c_primitive = TagReferenceC::read_from_tag_file(data, at, struct_end, extra_data_cursor)?;
+
+        let group = TagGroup::from_fourcc(c_primitive.tag_group)?;
+        let len = c_primitive.path_length as usize;
 
         if len == 0 {
             return Ok(TagReference::Null(group))
@@ -253,19 +255,55 @@ impl TagData for TagReference {
     }
 
     fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {
-        match self {
+        let construct_to_write = match self {
             TagReference::Null(group) => {
-                group.write_to_tag_file(data, at, struct_end)?;
-                (0usize).write_to_tag_file(data, at + 0x8, struct_end)?;
+                TagReferenceC {
+                    tag_group: group.as_fourcc(),
+                    ..Default::default()
+                }
             },
             TagReference::Set(path) => {
-                path.group.write_to_tag_file(data, at, struct_end)?;
-                path.path.len().write_to_tag_file(data, at + 0x8, struct_end)?;
                 data.extend_from_slice(path.path.as_bytes());
                 data.push(0x00);
+                TagReferenceC {
+                    tag_group: path.group.as_fourcc(),
+                    path_length: path.path.len().add_overflow_checked(1)?.into_u32()?,
+                    ..Default::default()
+                }
             }
-        }
+        };
+        construct_to_write.write_to_tag_file(data, at, struct_end)
+    }
+}
 
+
+/// Lower level C implementation of a tag reference
+#[derive(Clone, Copy, Default, Debug, PartialEq)]
+#[repr(C)]
+pub struct TagReferenceC {
+    pub tag_group: FourCC,
+    pub path_address: Address,
+    pub path_length: u32,
+    pub tag_id: ID
+}
+impl TagDataSimplePrimitive for TagReferenceC {
+    fn size() -> usize {
+        std::mem::size_of::<Self>()
+    }
+
+    fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
+        let tag_group = FourCC::read::<B>(data, at, struct_end)?;
+        let path_address = Address::read::<B>(data, at + 0x4, struct_end)?;
+        let path_length = u32::read::<B>(data, at + 0x8, struct_end)?;
+        let tag_id = ID::read::<B>(data, at + 0xC, struct_end)?;
+        Ok(Self { tag_group, path_address, path_length, tag_id })
+    }
+
+    fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
+        self.tag_group.write::<B>(data, at, struct_end)?;
+        self.path_address.write::<B>(data, at + 0x4, struct_end)?;
+        self.path_length.write::<B>(data, at + 0x8, struct_end)?;
+        self.tag_id.write::<B>(data, at + 0xC, struct_end)?;
         Ok(())
     }
 }

@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::fmt::{Display, Debug};
 
 use byteorder::ByteOrder;
 use crate::error::*;
@@ -103,6 +103,7 @@ pub trait Vector: Sized {
 }
 
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
+#[repr(C)]
 pub struct Vector2D {
     pub x: f32,
     pub y: f32
@@ -173,6 +174,7 @@ impl Vector for Vector2D {
 generate_tag_data_simple_primitive_code!(Vector2D, f32, x, y);
 
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
+#[repr(C)]
 pub struct Vector3D {
     pub x: f32,
     pub y: f32,
@@ -251,6 +253,7 @@ impl Vector for Vector3D {
 generate_tag_data_simple_primitive_code!(Vector3D, f32, x, y, z);
 
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
+#[repr(C)]
 pub struct Quaternion {
     pub x: f32,
     pub y: f32,
@@ -261,6 +264,7 @@ pub struct Quaternion {
 generate_tag_data_simple_primitive_code!(Quaternion, f32, x, y, z, w);
 
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
+#[repr(C)]
 pub struct Euler2D {
     pub yaw: Angle,
     pub pitch: Angle
@@ -269,6 +273,7 @@ pub struct Euler2D {
 generate_tag_data_simple_primitive_code!(Euler2D, Angle, yaw, pitch);
 
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
+#[repr(C)]
 pub struct Euler3D {
     pub yaw: Angle,
     pub pitch: Angle,
@@ -278,6 +283,7 @@ pub struct Euler3D {
 generate_tag_data_simple_primitive_code!(Euler3D, Angle, yaw, pitch, roll);
 
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
+#[repr(C)]
 pub struct Matrix3x3 {
     pub vectors: [Vector3D; 3]
 }
@@ -315,7 +321,7 @@ impl TagDataSimplePrimitive for Matrix3x3 {
 /// Represents an angle.
 ///
 /// The value is internally represented as radians.
-#[derive(Clone, Copy, Default, Debug, PartialEq)]
+#[derive(Clone, Copy, Default, PartialEq)]
 #[repr(transparent)]
 pub struct Angle {
     /// Angle value, represented in radians.
@@ -347,6 +353,12 @@ impl Angle {
 impl Display for Angle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:.05}°", self.to_degrees())
+    }
+}
+
+impl Debug for Angle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(&self, f)
     }
 }
 

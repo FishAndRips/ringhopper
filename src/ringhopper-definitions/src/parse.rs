@@ -186,5 +186,20 @@ impl TagDataSimplePrimitive for usize {
     }
 }
 
+pub(crate) trait U32SizeConversion {
+    fn into_u32(self) -> RinghopperResult<u32>;
+}
+
+impl U32SizeConversion for usize {
+    fn into_u32(self) -> RinghopperResult<u32> {
+        if self > u32::MAX as usize {
+            Err(Error::ArrayLimitExceeded)
+        }
+        else {
+            Ok(self as u32)
+        }
+    }
+}
+
 #[cfg(test)]
 mod test;

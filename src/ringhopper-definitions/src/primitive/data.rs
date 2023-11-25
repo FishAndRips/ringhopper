@@ -1,28 +1,172 @@
+use std::fmt::Debug;
 use std::ops::*;
-use std::marker::PhantomData;
 use crate::accessor::*;
 use crate::parse::*;
 use crate::error::*;
 use byteorder::*;
 use std::fmt::Display;
 
+/// 16-bit index type
+pub type Index = u16;
+
 #[derive(Copy, Clone, Default, PartialEq)]
 #[repr(transparent)]
-pub struct Padding<T: Sized> {
-    internal: PhantomData<T>
+pub struct ID {
+    id: u32
 }
 
-impl<T: Copy> TagDataSimplePrimitive for Padding<T> {
+impl ID {
+    /// Construct an ID from a salt and index.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ringhopper_definitions::primitive::ID;
+    ///
+    /// let value = ID::from_index(0x1234, 0x5678);
+    /// assert_eq!(value.index().unwrap(), 0x1234);
+    /// assert_eq!(value.salt().unwrap(), 0x5678);
+    /// ```
+    pub const fn from_index(index: Index, salt: u16) -> Self {
+        let id = (((salt ^ index) as u32) << 16) | (index as u32);
+        let rv = Self { id };
+        debug_assert!(!rv.is_null());
+        rv
+    }
+
+    /// Create a null ID.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ringhopper_definitions::primitive::ID;
+    ///
+    /// let value = ID::from_null();
+    /// assert!(value.is_null());
+    /// ```
+    pub const fn from_null() -> Self {
+        ID { id: 0xFFFFFFFF }
+    }
+
+    /// Get the index value of the ID.
+    ///
+    /// Returns `None` if the ID is null.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ringhopper_definitions::primitive::ID;
+    ///
+    /// let value = ID::from_index(0x1234, 0x5678).index().expect("not null");
+    /// assert_eq!(value, 0x1234);
+    /// ```
+    pub const fn index(self) -> Option<Index> {
+        match self.is_null() {
+            false => Some((self.id & 0xFFFF) as u16),
+            true => None
+        }
+    }
+
+    /// Get the salt value of the ID.
+    ///
+    /// Returns `None` if the ID is null.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ringhopper_definitions::primitive::ID;
+    ///
+    /// let value = ID::from_index(0x1234, 0x5678).salt().expect("not null");
+    /// assert_eq!(value, 0x5678);
+    /// ```
+    pub const fn salt(self) -> Option<u16> {
+        match self.index() {
+            Some(index) => Some(((self.id ^ ((index as u32) << 16)) >> 16) as u16),
+            None => None
+        }
+    }
+
+    /// Convert into a [`u32`].
+    pub const fn as_u32(self) -> u32 {
+        self.id
+    }
+
+    /// Convert from a [`u32`].
+    pub const fn from_u32(id: u32) -> Self {
+        Self { id }
+    }
+
+    /// Return `true` if the ID is null.
+    pub const fn is_null(self) -> bool {
+        self.id == 0xFFFFFFFF
+    }
+}
+
+impl TagDataSimplePrimitive for ID {
+    fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
+        Ok(<u32 as TagDataSimplePrimitive>::read::<B>(data, at, struct_end)?.into())
+    }
+    fn size() -> usize {
+        <u32 as TagDataSimplePrimitive>::size()
+    }
+    fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
+        let id: u32 = (*self).into();
+        id.write::<B>(data, at, struct_end)
+    }
+}
+
+impl From<u32> for ID {
+    fn from(value: u32) -> Self {
+        ID::from_u32(value)
+    }
+}
+
+impl From<ID> for u32 {
+    fn from(value: ID) -> Self {
+        value.as_u32()
+    }
+}
+
+impl Display for ID {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self.is_null() {
+            true => f.write_str("(id=null, salt=null)"),
+            false => write!(f, "(id={}, salt={})", self.index().unwrap(), self.salt().unwrap())
+        }
+    }
+}
+
+impl Debug for ID {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        <ID as Display>::fmt(&self, f)
+    }
+}
+
+
+#[derive(Copy, Clone, Default, PartialEq)]
+#[repr(transparent)]
+pub struct Padding<T: Sized + Default> {
+    internal: T
+}
+
+impl<T: Copy + Default> TagDataSimplePrimitive for Padding<T> {
     fn size() -> usize {
         std::mem::size_of::<T>()
     }
     fn read<B: ByteOrder>(_: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
         fits(<Self as TagDataSimplePrimitive>::size(), at, struct_end)?;
-        Ok(Padding { internal: PhantomData::default() })
+        Ok(Padding { internal: T::default() })
     }
-    fn write<B: ByteOrder>(&self, _: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
+    fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
         fits(<Self as TagDataSimplePrimitive>::size(), at, struct_end).expect("should fit");
+        data[at..at+<Self as TagDataSimplePrimitive>::size()].fill(0u8);
         Ok(())
+    }
+}
+
+impl<T: Copy + Default> Debug for Padding<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({} bytes padding)", <Self as TagDataSimplePrimitive>::size())
     }
 }
 
@@ -47,11 +191,13 @@ impl DerefMut for Data {
 
 impl TagData for Data {
     fn size() -> usize {
-        5 * <u32 as TagDataSimplePrimitive>::size()
+        <DataC as TagData>::size()
     }
 
     fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> {
-        let size = usize::read_from_tag_file(data, at, struct_end, extra_data_cursor)?;
+        let c_primitive = DataC::read_from_tag_file(data, at, struct_end, extra_data_cursor)?;
+
+        let size = c_primitive.size as usize;
         let data_location = *extra_data_cursor;
         fits(size, data_location, data.len())?;
         *extra_data_cursor += size;
@@ -62,7 +208,10 @@ impl TagData for Data {
     }
 
     fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {
-        self.len().write_to_tag_file(data, at, struct_end)?;
+        (DataC {
+            size: self.len().into_u32()?,
+            ..Default::default()
+        }).write_to_tag_file(data, at, struct_end)?;
         data.extend_from_slice(self);
         Ok(())
     }
@@ -90,12 +239,13 @@ impl<T: TagData + Sized> DerefMut for Reflexive<T> {
 
 impl<T: TagData + Sized> TagData for Reflexive<T> {
     fn size() -> usize {
-        3 * <u32 as TagDataSimplePrimitive>::size()
+        <ReflexiveC as TagDataSimplePrimitive>::size()
     }
 
     fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> {
-        let count = usize::read_from_tag_file(data, at, struct_end, extra_data_cursor)?;
+        let c_primitive = ReflexiveC::read_from_tag_file(data, at, struct_end, extra_data_cursor)?;
 
+        let count = c_primitive.count as usize;
         let item_size = T::size();
         let total_length = count.mul_overflow_checked(item_size)?;
         let mut result = Reflexive {
@@ -115,7 +265,10 @@ impl<T: TagData + Sized> TagData for Reflexive<T> {
     }
 
     fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {
-        self.len().write_to_tag_file(data, at, struct_end)?;
+        (ReflexiveC {
+            count: self.len().into_u32()?,
+            ..Default::default()
+        }).write_to_tag_file(data, at, struct_end)?;
 
         let item_size = T::size();
         let total_bytes_to_write = self.len().mul_overflow_checked(item_size)?;
@@ -363,6 +516,66 @@ impl<T: TagData + TagDataAccessor> TagDataAccessor for Reflexive<T> {
     }
     fn get_type(&self) -> TagDataAccessorType {
         TagDataAccessorType::Reflexive
+    }
+}
+
+/// Lower level C implementation of a tag reference
+#[derive(Clone, Copy, Default, Debug, PartialEq)]
+#[repr(C)]
+pub struct ReflexiveC {
+    pub count: u32,
+    pub address: Address,
+    pub padding: Padding<[u8; 4]>
+}
+impl TagDataSimplePrimitive for ReflexiveC {
+    fn size() -> usize {
+        std::mem::size_of::<Self>()
+    }
+
+    fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
+        let count = u32::read::<B>(data, at, struct_end)?;
+        let address = Address::read::<B>(data, at + 0x4, struct_end)?;
+        Ok(Self { count, address, ..Default::default() })
+    }
+
+    fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
+        self.count.write::<B>(data, at, struct_end)?;
+        self.address.write::<B>(data, at + 0x4, struct_end)?;
+        self.padding.write::<B>(data, at + 0x8, struct_end)?;
+        Ok(())
+    }
+}
+
+/// Lower level C implementation of tag data
+#[derive(Clone, Copy, Default, Debug, PartialEq)]
+#[repr(C)]
+pub struct DataC {
+    pub size: u32,
+    pub external: u32,
+    pub file_offset: u32,
+    pub padding: Padding<[u8; 4]>,
+    pub address: Address
+}
+impl TagDataSimplePrimitive for DataC {
+    fn size() -> usize {
+        std::mem::size_of::<Self>()
+    }
+
+    fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
+        let size = u32::read::<B>(data, at, struct_end)?;
+        let external = u32::read::<B>(data, at + 0x4, struct_end)?;
+        let file_offset = u32::read::<B>(data, at + 0x8, struct_end)?;
+        let address = Address::read::<B>(data, at + 0xC, struct_end)?;
+        Ok(Self { size, external, file_offset, address, ..Default::default() })
+    }
+
+    fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
+        self.size.write::<B>(data, at, struct_end)?;
+        self.external.write::<B>(data, at + 0x4, struct_end)?;
+        self.file_offset.write::<B>(data, at + 0x8, struct_end)?;
+        self.padding.write::<B>(data, at + 0xC, struct_end)?;
+        self.address.write::<B>(data, at + 0x10, struct_end)?;
+        Ok(())
     }
 }
 
