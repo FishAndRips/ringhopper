@@ -39,7 +39,7 @@ fn primitive_sizes() {
     correct_size::<Plane2D>(F32_SIZE * 2 + F32_SIZE);
     correct_size::<Plane3D>(F32_SIZE * 3 + F32_SIZE);
     correct_size::<Quaternion>(F32_SIZE * 4);
-    correct_size::<ReflexiveC>(U32_SIZE * 3);
+    correct_size::<ReflexiveC::<Vector3D>>(U32_SIZE * 3);
     correct_size::<String32>(U8_SIZE * 32);
     correct_size::<TagReferenceC>(U32_SIZE * 4);
     correct_size::<Vector2D>(F32_SIZE * 2);

@@ -189,7 +189,25 @@ impl TagReference {
     pub const fn group(&self) -> TagGroup {
         match self {
             Self::Null(g) => *g,
-            Self::Set(g) => g.group
+            Self::Set(p) => p.group
+        }
+    }
+
+    /// Return the tag path of the reference.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ringhopper_definitions::primitive::{TagPath, TagReference, TagGroup};
+    ///
+    /// let path = TagPath::from_path("weapons/someweapon/someweapon.weapon").unwrap();
+    /// let reference = TagReference::from(path.clone());
+    /// assert_eq!(*reference.path().expect("should be a path here"), path);
+    /// ```
+    pub const fn path(&self) -> Option<&TagPath> {
+        match self {
+            Self::Null(_) => None,
+            Self::Set(p) => Some(&p)
         }
     }
 }
@@ -239,16 +257,18 @@ impl TagData for TagReference {
         let real_len = len.add_overflow_checked(1)?;
         let start = *extra_data_cursor;
         let end = start.add_overflow_checked(real_len)?;
+        let null_byte_index = end-1;
         fits(real_len, start, data.len())?;
 
-        let str_data = &data[start..end];
-        if *str_data.last().unwrap() != 0 {
+        if data[null_byte_index] != 0 {
             return Err(Error::InvalidTagPath)
         }
 
+        *extra_data_cursor = end;
+
         Ok(TagReference::Set(
             TagPath {
-                path: std::str::from_utf8(&data[start..end-1]).map_err(|_| Error::InvalidTagPath)?.to_owned(),
+                path: std::str::from_utf8(&data[start..null_byte_index]).map_err(|_| Error::InvalidTagPath)?.to_owned(),
                 group
             }
         ))
@@ -267,7 +287,7 @@ impl TagData for TagReference {
                 data.push(0x00);
                 TagReferenceC {
                     tag_group: path.group.as_fourcc(),
-                    path_length: path.path.len().add_overflow_checked(1)?.into_u32()?,
+                    path_length: path.path.len().into_u32()?,
                     ..Default::default()
                 }
             }
@@ -307,3 +327,6 @@ impl TagDataSimplePrimitive for TagReferenceC {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod test;

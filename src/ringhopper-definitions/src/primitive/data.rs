@@ -1,4 +1,5 @@
 use std::fmt::Debug;
+use std::marker::PhantomData;
 use std::ops::*;
 use crate::accessor::*;
 use crate::parse::*;
@@ -239,11 +240,11 @@ impl<T: TagData + Sized> DerefMut for Reflexive<T> {
 
 impl<T: TagData + Sized> TagData for Reflexive<T> {
     fn size() -> usize {
-        <ReflexiveC as TagDataSimplePrimitive>::size()
+        <ReflexiveC<T> as TagDataSimplePrimitive>::size()
     }
 
     fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> {
-        let c_primitive = ReflexiveC::read_from_tag_file(data, at, struct_end, extra_data_cursor)?;
+        let c_primitive = ReflexiveC::<T>::read_from_tag_file(data, at, struct_end, extra_data_cursor)?;
 
         let count = c_primitive.count as usize;
         let item_size = T::size();
@@ -265,10 +266,7 @@ impl<T: TagData + Sized> TagData for Reflexive<T> {
     }
 
     fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {
-        (ReflexiveC {
-            count: self.len().into_u32()?,
-            ..Default::default()
-        }).write_to_tag_file(data, at, struct_end)?;
+        ReflexiveC::<T>::with_params(self.len().into_u32()?, Address::default()).write_to_tag_file(data, at, struct_end)?;
 
         let item_size = T::size();
         let total_bytes_to_write = self.len().mul_overflow_checked(item_size)?;
@@ -519,15 +517,19 @@ impl<T: TagData + TagDataAccessor> TagDataAccessor for Reflexive<T> {
     }
 }
 
-/// Lower level C implementation of a tag reference
-#[derive(Clone, Copy, Default, Debug, PartialEq)]
+/// Lower level C implementation of a reflexive.
+///
+/// The <T> refers to what the reflexive is supposed to point to, which can be useful.
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(C)]
-pub struct ReflexiveC {
+pub struct ReflexiveC<T: TagData + Sized> {
     pub count: u32,
     pub address: Address,
-    pub padding: Padding<[u8; 4]>
+    pub padding: Padding<[u8; 4]>,
+
+    phantom: PhantomData<T>
 }
-impl TagDataSimplePrimitive for ReflexiveC {
+impl<T: TagData + Sized> TagDataSimplePrimitive for ReflexiveC<T> {
     fn size() -> usize {
         std::mem::size_of::<Self>()
     }
@@ -535,7 +537,7 @@ impl TagDataSimplePrimitive for ReflexiveC {
     fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
         let count = u32::read::<B>(data, at, struct_end)?;
         let address = Address::read::<B>(data, at + 0x4, struct_end)?;
-        Ok(Self { count, address, ..Default::default() })
+        Ok(Self::with_params(count, address))
     }
 
     fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
@@ -543,6 +545,23 @@ impl TagDataSimplePrimitive for ReflexiveC {
         self.address.write::<B>(data, at + 0x4, struct_end)?;
         self.padding.write::<B>(data, at + 0x8, struct_end)?;
         Ok(())
+    }
+}
+
+impl<T: TagData + Sized> ReflexiveC<T> {
+    pub fn with_params(count: u32, address: Address) -> Self {
+        Self {
+            count,
+            address,
+            padding: Padding::default(),
+            phantom: PhantomData::default()
+        }
+    }
+}
+
+impl<T: TagData + Sized> Default for ReflexiveC<T> {
+    fn default() -> Self {
+        Self::with_params(u32::default(), Address::default())
     }
 }
 
