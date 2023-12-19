@@ -1,2 +1,2 @@
-pub extern crate ringhopper_definitions as definitions;
-pub use definitions::error::*;
+pub extern crate ringhopper_primitives as primitives;
+pub use primitives::error::*;

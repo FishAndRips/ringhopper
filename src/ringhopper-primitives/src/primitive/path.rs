@@ -28,7 +28,7 @@ impl TagPath {
     /// # Examples
     ///
     /// ```
-    /// use ringhopper_definitions::primitive::{TagPath, TagGroup};
+    /// use ringhopper_primitives::primitive::{TagPath, TagGroup};
     ///
     /// let path = TagPath::from_path("weapons/myweapon/myweapon.weapon")
     ///                       .unwrap();
@@ -46,7 +46,7 @@ impl TagPath {
     /// # Examples
     ///
     /// ```
-    /// use ringhopper_definitions::primitive::{TagPath, TagGroup};
+    /// use ringhopper_primitives::primitive::{TagPath, TagGroup};
     ///
     /// let path = TagPath::from_path("weapons\\myweapon\\myweapon.weapon")
     ///                       .unwrap();
@@ -66,7 +66,7 @@ impl TagPath {
     /// # Examples
     ///
     /// ```
-    /// use ringhopper_definitions::primitive::{TagPath, TagGroup};
+    /// use ringhopper_primitives::primitive::{TagPath, TagGroup};
     ///
     /// // Works with Unix paths!
     /// let path = TagPath::from_path("weapons/myweapon/myweapon.isthebest.weapon")
@@ -151,7 +151,7 @@ impl TagReference {
     /// # Examples
     ///
     /// ```
-    /// use ringhopper_definitions::primitive::TagReference;
+    /// use ringhopper_primitives::primitive::TagReference;
     ///
     /// let path = TagReference::default();
     /// assert!(path.is_null());
@@ -165,7 +165,7 @@ impl TagReference {
     /// # Examples
     ///
     /// ```
-    /// use ringhopper_definitions::primitive::{TagPath, TagReference};
+    /// use ringhopper_primitives::primitive::{TagPath, TagReference};
     ///
     /// let path = TagPath::from_path("weapons/someweapon/someweapon.weapon").unwrap();
     /// let reference = TagReference::from(path);
@@ -180,7 +180,7 @@ impl TagReference {
     /// # Examples
     ///
     /// ```
-    /// use ringhopper_definitions::primitive::{TagPath, TagReference, TagGroup};
+    /// use ringhopper_primitives::primitive::{TagPath, TagReference, TagGroup};
     ///
     /// let path = TagPath::from_path("weapons/someweapon/someweapon.weapon").unwrap();
     /// let reference = TagReference::from(path);
@@ -198,7 +198,7 @@ impl TagReference {
     /// # Examples
     ///
     /// ```
-    /// use ringhopper_definitions::primitive::{TagPath, TagReference, TagGroup};
+    /// use ringhopper_primitives::primitive::{TagPath, TagReference, TagGroup};
     ///
     /// let path = TagPath::from_path("weapons/someweapon/someweapon.weapon").unwrap();
     /// let reference = TagReference::from(path.clone());

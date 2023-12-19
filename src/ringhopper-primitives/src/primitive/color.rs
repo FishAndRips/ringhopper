@@ -12,7 +12,7 @@ pub trait Color: Sized {
     /// # Examples (with [`ColorARGBFloat`])
     ///
     /// ```
-    /// use ringhopper_definitions::primitive::{Color, ColorARGBFloat};
+    /// use ringhopper_primitives::primitive::{Color, ColorARGBFloat};
     ///
     /// // luma = 0.25
     /// let color = ColorARGBFloat { alpha: 1.0, red: 0.25, green: 0.25, blue: 0.25 };
@@ -43,7 +43,7 @@ pub trait Color: Sized {
     /// # Examples (with [`ColorARGBFloat`])
     ///
     /// ```
-    /// use ringhopper_definitions::primitive::{Color, ColorARGBFloat, ColorRGBFloat};
+    /// use ringhopper_primitives::primitive::{Color, ColorARGBFloat, ColorRGBFloat};
     ///
     /// let color = ColorARGBFloat { alpha: 1.0, red: 0.125, green: 0.25, blue: 0.5 };
     /// assert_eq!(color.rgb_float(), ColorRGBFloat { red: 0.125, green: 0.25, blue: 0.5 });
@@ -55,7 +55,7 @@ pub trait Color: Sized {
     /// # Examples (with [`ColorARGBFloat`])
     ///
     /// ```
-    /// use ringhopper_definitions::primitive::{Color, ColorARGBFloat};
+    /// use ringhopper_primitives::primitive::{Color, ColorARGBFloat};
     ///
     /// let color = ColorARGBFloat { alpha: 1.0, red: 0.25, green: 0.5, blue: 0.75 };
     /// assert_eq!(color.alpha_float(), 1.0);
@@ -67,7 +67,7 @@ pub trait Color: Sized {
     /// # Examples (with [`ColorARGBFloat`])
     ///
     /// ```
-    /// use ringhopper_definitions::primitive::{Color, ColorARGBFloat, ColorARGBIntBytes};
+    /// use ringhopper_primitives::primitive::{Color, ColorARGBFloat, ColorARGBIntBytes};
     ///
     /// let color = ColorARGBFloat { alpha: 1.0, red: 0.5, green: 0.25, blue: 0.125 };
     /// let expected = ColorARGBIntBytes { alpha: 255, red: 127, green: 63, blue: 31 };
@@ -91,7 +91,7 @@ pub trait Color: Sized {
     /// # Examples (with [`ColorARGBFloat`])
     ///
     /// ```
-    /// use ringhopper_definitions::primitive::{Color, ColorARGBFloat};
+    /// use ringhopper_primitives::primitive::{Color, ColorARGBFloat};
     ///
     /// let color = ColorARGBFloat { alpha: 1.0, red: 0.25, green: 0.25, blue: 0.25 };
     /// let expected = ColorARGBFloat { alpha: 1.0, red: 0.5, green: 0.5, blue: 0.5 };
@@ -111,7 +111,7 @@ pub trait Color: Sized {
     /// # Examples (with [`ColorARGBFloat`])
     ///
     /// ```
-    /// use ringhopper_definitions::primitive::{Color, ColorARGBFloat};
+    /// use ringhopper_primitives::primitive::{Color, ColorARGBFloat};
     ///
     /// let color = ColorARGBFloat { alpha: 1.0, red: 0.5, green: 0.5, blue: 0.5 };
     /// let expected = ColorARGBFloat { alpha: 1.0, red: 0.25, green: 0.25, blue: 0.25 };
@@ -129,7 +129,7 @@ pub trait Color: Sized {
     /// # Examples (with [`ColorARGBFloat`])
     ///
     /// ```
-    /// use ringhopper_definitions::primitive::{Color, ColorARGBFloat};
+    /// use ringhopper_primitives::primitive::{Color, ColorARGBFloat};
     ///
     /// let color = ColorARGBFloat { alpha: 1.0, red: 1.0, green: 1.0, blue: 1.0 };
     /// let source = ColorARGBFloat { alpha: 0.25, red: 0.0, green: 0.0, blue: 1.0 };

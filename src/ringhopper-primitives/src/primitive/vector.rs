@@ -74,7 +74,7 @@ pub trait Vector: Sized {
     ///
     /// # Examples (with [`Vector2D`])
     /// ```rust
-    /// use ringhopper_definitions::primitive::{Vector, Vector2D, Plane2D};
+    /// use ringhopper_primitives::primitive::{Vector, Vector2D, Plane2D};
     ///
     /// let point = Vector2D::zero();
     /// let plane = Plane2D { vector: Vector2D { x: 1.0, y: 0.0 }, d: 2.0 };
@@ -91,7 +91,7 @@ pub trait Vector: Sized {
     ///
     /// # Examples (with [`Vector2D`])
     /// ```rust
-    /// use ringhopper_definitions::primitive::{Vector, Vector2D};
+    /// use ringhopper_primitives::primitive::{Vector, Vector2D};
     ///
     /// let a = Vector2D { x: 2.5, y: 0.0 };
     /// let b = Vector2D::zero();

@@ -6,4 +6,4 @@ description = "Library for modding Halo: Combat Evolved"
 license = "GPL-3.0-only"
 
 [dependencies]
-ringhopper-definitions = { path = "../ringhopper-definitions" }
+ringhopper-primitives = { path = "../ringhopper-primitives" }

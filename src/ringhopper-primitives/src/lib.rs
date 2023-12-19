@@ -7,3 +7,4 @@ pub mod error;
 pub mod parse;
 pub mod tag;
 pub mod accessor;
+pub mod crc32;

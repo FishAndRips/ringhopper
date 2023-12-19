@@ -3,5 +3,5 @@ resolver = "2"
 
 members = [
     "src/ringhopper",
-    "src/ringhopper-definitions"
+    "src/ringhopper-primitives"
 ]

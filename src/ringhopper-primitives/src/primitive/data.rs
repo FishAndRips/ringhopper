@@ -22,7 +22,7 @@ impl ID {
     /// # Examples
     ///
     /// ```rust
-    /// use ringhopper_definitions::primitive::ID;
+    /// use ringhopper_primitives::primitive::ID;
     ///
     /// let value = ID::from_index(0x1234, 0x5678);
     /// assert_eq!(value.index().unwrap(), 0x1234);
@@ -40,7 +40,7 @@ impl ID {
     /// # Examples
     ///
     /// ```rust
-    /// use ringhopper_definitions::primitive::ID;
+    /// use ringhopper_primitives::primitive::ID;
     ///
     /// let value = ID::from_null();
     /// assert!(value.is_null());
@@ -56,7 +56,7 @@ impl ID {
     /// # Examples
     ///
     /// ```rust
-    /// use ringhopper_definitions::primitive::ID;
+    /// use ringhopper_primitives::primitive::ID;
     ///
     /// let value = ID::from_index(0x1234, 0x5678).index().expect("not null");
     /// assert_eq!(value, 0x1234);
@@ -75,7 +75,7 @@ impl ID {
     /// # Examples
     ///
     /// ```rust
-    /// use ringhopper_definitions::primitive::ID;
+    /// use ringhopper_primitives::primitive::ID;
     ///
     /// let value = ID::from_index(0x1234, 0x5678).salt().expect("not null");
     /// assert_eq!(value, 0x5678);

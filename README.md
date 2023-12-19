@@ -11,12 +11,12 @@ the Invader toolset which directly interfaces with this library.
     - `ringhopper` - This is where the main, high level tag processing code is located. This contains the following:
         - Processing code for creating assets such as new tags from data
         - Calculation for physics, etc.
-    - `ringhopper-definitions` - This is where low-level structure processing code exists. This contains the following:
+    - `ringhopper-primitives` - This is where low-level structure processing code exists. This contains the following:
         - Tag groups
-        - Definitions for tag structures
         - Definitions for primitives such as vectors, colors, planes, etc. used to make up a tag
         - Processing code for manipulating primitives
         - Processing code for parsing structures
+        - Processing code for parsing tag files
 
 ## License
 

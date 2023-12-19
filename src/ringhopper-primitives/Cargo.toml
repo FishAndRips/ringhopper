@@ -1,5 +1,5 @@
 [package]
-name = "ringhopper-definitions"
+name = "ringhopper-primitives"
 authors = ["Snowy Mouse"]
 version = "0.2.0"
 description = "Library for modding Halo: Combat Evolved"
