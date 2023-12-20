@@ -519,7 +519,7 @@ impl<T: TagData + TagDataAccessor> TagDataAccessor for Reflexive<T> {
 
 /// Lower level C implementation of a reflexive.
 ///
-/// The <T> refers to what the reflexive is supposed to point to, which can be useful.
+/// `T` refers to the type of object that the reflexive is supposed to point to.
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(C)]
 pub struct ReflexiveC<T: TagData + Sized> {

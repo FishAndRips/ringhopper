@@ -94,21 +94,40 @@
     0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d
 ];
 
-/// Calculate the CRC32 for the given slice of bytes with an initial CRC32 value.
-pub fn crc32_with_init(init: u32, data: &[u8]) -> u32 {
-    // original implementation: initialized crc as !init and returned !crc
-    let mut crc = init;
-
+fn crc32(mut crc: u32, data: &[u8]) -> u32 {
     for byte in data {
         crc = CRC32_TABLE[((crc ^ (*byte as u32)) & 0xFF) as usize] ^ (crc >> 8);
     }
-
     crc
 }
 
-/// Calculate the CRC32 for the given slice of bytes using [u32::MAX] as an initial value.
-pub fn crc32(data: &[u8]) -> u32 {
-    crc32_with_init(u32::MAX, data)
+/// Halo-accurate CRC32 calculation.
+#[derive(Copy, Clone, PartialEq)]
+#[repr(transparent)]
+pub struct CRC32 {
+    crc: u32
+}
+
+impl CRC32 {
+    /// Init with the digest initialized to [u32::MAX]
+    pub fn new() -> Self {
+        Self { crc: u32::MAX }
+    }
+
+    /// Init with a preset digest.
+    pub fn init(crc: u32) -> Self {
+        Self { crc }
+    }
+
+    /// Get the calculated checksum.
+    pub fn crc(self) -> u32 {
+        self.crc
+    }
+
+    /// Calculate with more bytes.
+    pub fn update(&mut self, data: &[u8]) {
+        self.crc = crc32(self.crc, data);
+    }
 }
 
 #[cfg(test)]

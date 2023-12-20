@@ -12,9 +12,9 @@ pub const MAX_ARRAY_LENGTH: usize = u32::MAX as usize;
 /// Tag data parsing/writing methods.
 ///
 /// This is used for parsing data that can be processed later as well as serializing data into formats that can be read later.
-pub trait TagData: Sized {
+pub trait TagData {
     /// Get the size of the tag data.
-    fn size() -> usize;
+    fn size() -> usize where Self: Sized;
 
     /// Read data from the tag.
     ///
@@ -24,7 +24,7 @@ pub trait TagData: Sized {
     /// - `extra_data_cursor` is the cursor where extra data (e.g. strings) may be read
     ///
     /// Errors if the data is out of bounds.
-    fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self>;
+    fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> where Self: Sized;
 
     /// Write data to the tag.
     ///

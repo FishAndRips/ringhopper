@@ -13,14 +13,21 @@ struct String {
 
 // TODO: Replace this whole implementation with generated code when that's finished
 impl TagDataAccessor for UnicodeStringList {
-    fn access(&self, _matcher: &str) -> Vec<AccessorResult> {
-        todo!()
+    fn access(&self, matcher: &str) -> Vec<AccessorResult> {
+        if matcher == "" {
+            return vec![AccessorResult::Accessor(self)]
+        }
+        if matcher == ".strings" {
+            return vec![AccessorResult::Accessor(&self.strings)]
+        }
+        assert!(matcher.starts_with(".strings"));
+        self.strings.access(&matcher[".strings".len()..])
     }
     fn access_mut(&mut self, _matcher: &str) -> Vec<AccessorResultMut> {
-        todo!()
+        unimplemented!()
     }
     fn all_fields(&self) -> &'static [&'static str] {
-        todo!()
+        &["strings"]
     }
     fn get_type(&self) -> TagDataAccessorType {
         TagDataAccessorType::Block
@@ -28,14 +35,18 @@ impl TagDataAccessor for UnicodeStringList {
 }
 
 impl TagDataAccessor for String {
-    fn access(&self, _matcher: &str) -> Vec<AccessorResult> {
-        todo!()
+    fn access(&self, matcher: &str) -> Vec<AccessorResult> {
+        if matcher == "" {
+            return vec![AccessorResult::Accessor(self)]
+        }
+        assert!(matcher.starts_with(".string"));
+        return vec![AccessorResult::Primitive(PrimitiveRef::Data(&self.string))]
     }
     fn access_mut(&mut self, _matcher: &str) -> Vec<AccessorResultMut> {
-        todo!()
+        unimplemented!()
     }
     fn all_fields(&self) -> &'static [&'static str] {
-        todo!()
+        &["string"]
     }
     fn get_type(&self) -> TagDataAccessorType {
         TagDataAccessorType::Block
@@ -66,9 +77,7 @@ impl TagData for UnicodeStringList {
     }
 }
 
-impl PrimaryTagStruct for UnicodeStringList {}
-
-impl PrimaryTagStructGroup for UnicodeStringList {
+impl PrimaryTagStruct for UnicodeStringList {
     fn fourcc() -> FourCC {
         TagGroup::UnicodeStringList.as_fourcc()
     }
@@ -77,16 +86,32 @@ impl PrimaryTagStructGroup for UnicodeStringList {
     }
 }
 
+fn read_test_unicode_string_list() -> (&'static [u8], TagFile) {
+    let data = include_bytes!("test.unicode_string_list");
+    (data, TagFile::read_tag_file_buffer::<UnicodeStringList>(data, ParseStrictness::Strict).expect("should be valid"))
+}
+
 #[test]
 fn parse_unicode_string_list() {
-    let data = include_bytes!("test.unicode_string_list");
-    let string_list: UnicodeStringList = TagFile::read_tag_file::<UnicodeStringList>(data, ParseStrictness::Strict).expect("should be valid").take();
+    let (data, string_list_file) = read_test_unicode_string_list();
+    let string_list: &UnicodeStringList = string_list_file.data.get_ref().unwrap();
+    let string_list_accessor = string_list_file.data.as_accessor();
 
     let utf16_matches = |string_index: usize, expected: &str| {
-        let mut data: Vec<u8> = expected.encode_utf16().map(|f| [(f & 0xFF) as u8, ((f & 0xFF00) >> 8) as u8]).flatten().collect();
+        let mut data: Vec<u8> = expected.encode_utf16().map(|f| f.to_le_bytes()).flatten().collect();
         data.push(0);
         data.push(0);
+
         assert_eq!(string_list.strings[string_index].string.as_ref(), data);
+
+        // Also try with the accessor
+        let v = string_list_accessor.access(format!(".strings[{string_index}].string").as_str());
+        let result = match &v[0] {
+            AccessorResult::Primitive(PrimitiveRef::Data(data)) => *data,
+            AccessorResult::Error(e) => panic!("Error: {}", e.as_str()),
+            _ => panic!("could not access it!")
+        };
+        assert_eq!(result.as_slice(), data.as_slice());
     };
 
     utf16_matches(0, "This is a test string.");
@@ -96,6 +121,6 @@ fn parse_unicode_string_list() {
     utf16_matches(4, "Okay, this is the actual test string. I wanted to add an empty one, too.");
 
     // If we convert it back to a tag file, it should match.
-    let reparsed = TagFile::to_tag_file(&string_list).unwrap();
+    let reparsed = TagFile::to_tag_file(string_list).unwrap();
     assert_eq!(data, reparsed.as_slice());
 }
