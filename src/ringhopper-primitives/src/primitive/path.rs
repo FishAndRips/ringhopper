@@ -4,44 +4,23 @@ use std::convert::From;
 use std::fmt::Display;
 use std::fmt::Write;
 
-pub(crate) const WIN32_PATH_SEPARATOR: char = '\\';
-pub(crate) const UNIX_PATH_SEPARATOR: char = '/';
-
-pub(crate) const WIN32_PATH_SEPARATOR_STR: &'static str = "\\";
-pub(crate) const UNIX_PATH_SEPARATOR_STR: &'static str = "/";
+/// Halo path separator
+pub(crate) const HALO_PATH_SEPARATOR: char = '\\';
 
 /// Refers to a tag path and provides functions for handling these.
 #[derive(Clone, Debug, PartialEq)]
 pub struct TagPath {
     /// The path of the tag, not including the extension
-    pub path: String,
+    pub(crate) path: String,
 
     /// The group of the tag (also used for determining the file extension)
-    pub group: TagGroup
+    pub(crate) group: TagGroup
 }
 
 impl TagPath {
-    /// Return a Win32 path of the tag reference.
+    /// Get the path component of the tag path.
     ///
-    /// This is what is internally stored in tags.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ringhopper_primitives::primitive::{TagPath, TagGroup};
-    ///
-    /// let path = TagPath::from_path("weapons/myweapon/myweapon.weapon")
-    ///                       .unwrap();
-    ///
-    /// assert_eq!(path.to_win32_path(), "weapons\\myweapon\\myweapon.weapon");
-    /// ```
-    pub fn to_win32_path(&self) -> String {
-        format!("{}.{}", self.path, self.group)
-    }
-
-    /// Return a Unix path of the tag reference.
-    ///
-    /// This is useful for creating filesystem paths on Unix-like operating systems.
+    /// This will be the path as internally stored in tags.
     ///
     /// # Examples
     ///
@@ -51,15 +30,73 @@ impl TagPath {
     /// let path = TagPath::from_path("weapons\\myweapon\\myweapon.weapon")
     ///                       .unwrap();
     ///
-    /// assert_eq!(path.to_unix_path(), "weapons/myweapon/myweapon.weapon");
+    /// assert_eq!("weapons\\myweapon\\myweapon", path.path());
     /// ```
-    pub fn to_unix_path(&self) -> String {
-        self.to_win32_path().replace(WIN32_PATH_SEPARATOR, UNIX_PATH_SEPARATOR_STR)
+    pub fn path(&self) -> &str {
+        &self.path
+    }
+
+    /// Get the group component of the tag path.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ringhopper_primitives::primitive::{TagPath, TagGroup};
+    ///
+    /// let path = TagPath::from_path("weapons\\myweapon\\myweapon.weapon")
+    ///                       .unwrap();
+    ///
+    /// assert_eq!(TagGroup::Weapon, path.group());
+    /// ```
+    pub const fn group(&self) -> TagGroup {
+        self.group
+    }
+
+    /// Return an internal path of the tag reference.
+    ///
+    /// This is what is internally stored in tags.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ringhopper_primitives::primitive::TagPath;
+    ///
+    /// let path = TagPath::from_path("weapons\\myweapon\\myweapon.weapon")
+    ///                       .unwrap();
+    ///
+    /// assert_eq!(path.to_internal_path(), "weapons\\myweapon\\myweapon.weapon");
+    /// ```
+    pub fn to_internal_path(&self) -> String {
+        format!("{}.{}", self.path, self.group)
+    }
+
+    /// Return a native path of the tag reference.
+    ///
+    /// This is useful for creating filesystem paths on the native OS.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ringhopper_primitives::primitive::TagPath;
+    /// use std::path::Path;
+    /// use std::ffi::OsStr;
+    ///
+    /// let path = TagPath::from_path("weapons\\myweapon\\myweapon.weapon")
+    ///                       .unwrap();
+    /// let native_path = path.to_native_path();
+    ///
+    /// let std_path = Path::new(&native_path);
+    /// let components: Vec<&OsStr> = std_path.iter().collect();
+    ///
+    /// assert_eq!(vec!["weapons", "myweapon", "myweapon.weapon"], components);
+    /// ```
+    pub fn to_native_path(&self) -> String {
+        self.to_internal_path().replace(HALO_PATH_SEPARATOR, std::path::MAIN_SEPARATOR_STR)
     }
 
     /// Construct a tag reference from a path.
     ///
-    /// This will accept both Win32 and Unix paths as input.
+    /// This will accept both Halo (i.e. `\`) and native paths as input.
     ///
     /// Return `None` if the path is not valid.
     ///
@@ -68,24 +105,24 @@ impl TagPath {
     /// ```
     /// use ringhopper_primitives::primitive::{TagPath, TagGroup};
     ///
-    /// // Works with Unix paths!
-    /// let path = TagPath::from_path("weapons/myweapon/myweapon.isthebest.weapon")
-    ///                       .expect("tag path should be valid");
+    /// #[cfg(any(target_family = "unix", target_family = "windows"))]
+    /// {
+    ///     // Works with Unix paths if on a Unix-like OS or Windows!
+    ///     let path = TagPath::from_path("weapons/myweapon/myweapon.isthebest.weapon")
+    ///                           .expect("tag path should be valid");
     ///
-    /// assert_eq!(path.path, "weapons\\myweapon\\myweapon.isthebest");
-    /// assert_eq!(path.group, TagGroup::Weapon);
+    ///     assert_eq!(path.path(), "weapons\\myweapon\\myweapon.isthebest");
+    ///     assert_eq!(path.group(), TagGroup::Weapon);
+    /// }
     ///
-    /// // Also works the same with Win32 paths
-    /// let path2 = TagPath::from_path("weapons\\myweapon\\myweapon.isthebest.weapon")
+    /// // Works with Halo paths
+    /// let path = TagPath::from_path("weapons\\myweapon\\myweapon.isthebest.weapon")
     ///                        .expect("tag path should be valid");
     ///
-    /// assert_eq!(path2.path, "weapons\\myweapon\\myweapon.isthebest");
-    /// assert_eq!(path2.group, TagGroup::Weapon);
-    /// assert_eq!(path, path2);
+    /// assert_eq!(path.path(), "weapons\\myweapon\\myweapon.isthebest");
+    /// assert_eq!(path.group(), TagGroup::Weapon);
     /// ```
     pub fn from_path(path: &str) -> RinghopperResult<Self> {
-        let path = path.replace(UNIX_PATH_SEPARATOR, WIN32_PATH_SEPARATOR_STR);
-
         let mut offset = path.find('.').ok_or(Error::InvalidTagPath)? + 1;
         let mut extension_maybe = &path[offset..];
         while let Some(offset_delta) = extension_maybe.find('.') {
@@ -97,9 +134,52 @@ impl TagPath {
         path_without_extension = &path_without_extension[..path_without_extension.len() - 1];
         debug_assert_eq!(extension_maybe, group);
 
+        let group = TagGroup::from_str(group).map_err(|_| Error::InvalidTagPath)?;
+        Self::from_components(path_without_extension, group)
+    }
+
+    /// Construct a tag reference from a path with separate path and group components.
+    ///
+    /// This will accept both Halo (i.e. `\`) and native paths as input.
+    ///
+    /// Return `None` if the path is not valid.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ringhopper_primitives::primitive::{TagPath, TagGroup};
+    ///
+    /// #[cfg(any(target_family = "unix", target_family = "windows"))]
+    /// {
+    ///     // Works with Unix paths if on a Unix-like OS or Windows!
+    ///     let path = TagPath::from_components("weapons/myweapon/myweapon.isthebest", TagGroup::Weapon)
+    ///                                 .expect("tag path should be valid");
+    ///
+    ///     assert_eq!(path.path(), "weapons\\myweapon\\myweapon.isthebest");
+    ///     assert_eq!(path.group(), TagGroup::Weapon);
+    /// }
+    ///
+    /// // Works with Halo paths
+    /// let path = TagPath::from_components("weapons\\myweapon\\myweapon.isthebest", TagGroup::Weapon)
+    ///                             .expect("tag path should be valid");
+    ///
+    /// assert_eq!(path.path(), "weapons\\myweapon\\myweapon.isthebest");
+    /// assert_eq!(path.group(), TagGroup::Weapon);
+    /// ```
+    pub fn from_components(path: &str, group: TagGroup) -> RinghopperResult<Self> {
+        let mut path_fixed = String::with_capacity(path.len());
+
+        for c in path.chars() {
+            path_fixed.push(match c {
+                c if std::path::is_separator(c) => HALO_PATH_SEPARATOR,
+                '/' | ':' | '*' | '?' | '"' | '<' | '>' | '|' => return Err(Error::InvalidTagPath),
+                c if c.is_ascii_control() => return Err(Error::InvalidTagPath),
+                c => c
+            });
+        }
+
         Ok(Self {
-            path: path_without_extension.to_owned(),
-            group: TagGroup::from_str(group).map_err(|_| Error::InvalidTagPath)?
+            path: path_fixed.to_owned(), group
         })
     }
 }
@@ -118,8 +198,8 @@ impl Display for TagPath {
 impl Display for TagPath {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for c in self.path.chars() {
-            if c == WIN32_PATH_SEPARATOR {
-                f.write_char(UNIX_PATH_SEPARATOR)?;
+            if c == HALO_PATH_SEPARATOR {
+                f.write_char(std::path::MAIN_SEPARATOR)?;
             }
             else {
                 f.write_char(c)?;
@@ -296,7 +376,6 @@ impl TagData for TagReference {
     }
 }
 
-
 /// Lower level C implementation of a tag reference
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 #[repr(C)]
@@ -315,7 +394,15 @@ impl TagDataSimplePrimitive for TagReferenceC {
         let tag_group = FourCC::read::<B>(data, at, struct_end)?;
         let path_address = Address::read::<B>(data, at + 0x4, struct_end)?;
         let path_length = u32::read::<B>(data, at + 0x8, struct_end)?;
-        let tag_id = ID::read::<B>(data, at + 0xC, struct_end)?;
+
+        let tag_id_int = u32::read::<B>(data, at + 0xC, struct_end)?;
+        let tag_id = if tag_id_int == 0 {
+            ID::null()
+        }
+        else {
+            ID::from_u32(tag_id_int)?
+        };
+
         Ok(Self { tag_group, path_address, path_length, tag_id })
     }
 

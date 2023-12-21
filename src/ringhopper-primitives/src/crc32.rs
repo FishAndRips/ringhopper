@@ -102,7 +102,7 @@ fn crc32(mut crc: u32, data: &[u8]) -> u32 {
 }
 
 /// Halo-accurate CRC32 calculation.
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone)]
 #[repr(transparent)]
 pub struct CRC32 {
     crc: u32

@@ -57,8 +57,17 @@ impl String32 {
 
     /// Get the string from this.
     pub fn as_str(&self) -> &str {
-        // NOTE: We uphold this invariant in `from_bytes_lossy` by replacing invalid characters. And `from_str` assumes a valid str.
-        unsafe { std::str::from_utf8_unchecked(&self.string_data[0..self.strlen()]) }
+        // SAFETY: We uphold this invariant in `from_bytes_lossy` by replacing invalid characters. And `from_str` assumes a valid str.
+        //
+        // Also strlen() never goes outside the bounds here.
+        let string_length = self.strlen();
+        unsafe {
+            debug_assert!(self.string_data.get(0..string_length).is_some());
+            let bytes = self.string_data.get_unchecked(0..string_length);
+
+            debug_assert!(std::str::from_utf8(bytes).is_ok());
+            std::str::from_utf8_unchecked(bytes)
+        }
     }
 
     /// Get the length of the string.

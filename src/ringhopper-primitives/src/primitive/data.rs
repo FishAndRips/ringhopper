@@ -1,6 +1,5 @@
 use std::fmt::Debug;
 use std::marker::PhantomData;
-use std::ops::*;
 use crate::accessor::*;
 use crate::parse::*;
 use crate::error::*;
@@ -10,7 +9,13 @@ use std::fmt::Display;
 /// 16-bit index type
 pub type Index = u16;
 
-#[derive(Copy, Clone, Default, PartialEq)]
+/// Nullable index for referring to an element in an array.
+///
+/// IDs are stored with a 16-bit salt and a 16-bit index. If both are `0xFFFF`, then the ID is null. Otherwise, the
+/// salt is array-specific and used for uniquely identifying indices from different arrays (it is XOR'd with the index
+/// and 0x8000), thus identical indices from different array types (e.g. script nodes vs. tags) will not equal each
+/// other.
+#[derive(Copy, Clone, PartialEq)]
 #[repr(transparent)]
 pub struct ID {
     id: u32
@@ -24,12 +29,12 @@ impl ID {
     /// ```rust
     /// use ringhopper_primitives::primitive::ID;
     ///
-    /// let value = ID::from_index(0x1234, 0x5678);
+    /// let value = ID::new(0x1234, 0x5678);
     /// assert_eq!(value.index().unwrap(), 0x1234);
     /// assert_eq!(value.salt().unwrap(), 0x5678);
     /// ```
-    pub const fn from_index(index: Index, salt: u16) -> Self {
-        let id = (((salt ^ index) as u32) << 16) | (index as u32);
+    pub const fn new(index: Index, salt: u16) -> Self {
+        let id = (((salt ^ index) as u32 | 0x8000) << 16) | (index as u32);
         let rv = Self { id };
         debug_assert!(!rv.is_null());
         rv
@@ -42,10 +47,10 @@ impl ID {
     /// ```rust
     /// use ringhopper_primitives::primitive::ID;
     ///
-    /// let value = ID::from_null();
+    /// let value = ID::null();
     /// assert!(value.is_null());
     /// ```
-    pub const fn from_null() -> Self {
+    pub const fn null() -> Self {
         ID { id: 0xFFFFFFFF }
     }
 
@@ -58,7 +63,7 @@ impl ID {
     /// ```rust
     /// use ringhopper_primitives::primitive::ID;
     ///
-    /// let value = ID::from_index(0x1234, 0x5678).index().expect("not null");
+    /// let value = ID::new(0x1234, 0x5678).index().expect("not null");
     /// assert_eq!(value, 0x1234);
     /// ```
     pub const fn index(self) -> Option<Index> {
@@ -77,14 +82,15 @@ impl ID {
     /// ```rust
     /// use ringhopper_primitives::primitive::ID;
     ///
-    /// let value = ID::from_index(0x1234, 0x5678).salt().expect("not null");
+    /// let value = ID::new(0x1234, 0x5678).salt().expect("not null");
     /// assert_eq!(value, 0x5678);
     /// ```
     pub const fn salt(self) -> Option<u16> {
-        match self.index() {
-            Some(index) => Some(((self.id ^ ((index as u32) << 16)) >> 16) as u16),
-            None => None
-        }
+        let salt = match self.index() {
+            Some(index) => ((self.id ^ ((index as u32) << 16)) >> 16) as u16,
+            None => return None
+        };
+        Some(salt & !0x8000)
     }
 
     /// Convert into a [`u32`].
@@ -93,8 +99,13 @@ impl ID {
     }
 
     /// Convert from a [`u32`].
-    pub const fn from_u32(id: u32) -> Self {
-        Self { id }
+    pub const fn from_u32(id: u32) -> RinghopperResult<Self> {
+        if (id & 0x80000000) == 0 {
+            Err(Error::InvalidID)
+        }
+        else {
+            Ok(Self { id })
+        }
     }
 
     /// Return `true` if the ID is null.
@@ -103,9 +114,29 @@ impl ID {
     }
 }
 
+impl Default for ID {
+    fn default() -> Self {
+        Self::null()
+    }
+}
+
+/// ID types used for salt values in IDs.
+#[derive(Copy, Clone, PartialEq, Debug)]
+#[repr(u16)]
+pub enum IDType {
+    Tag = 0x6174,
+    ScriptNode = 0x6373
+}
+impl IDType {
+    /// Get the salt value for the ID type.
+    pub const fn salt(self) -> u16 {
+        self as u16
+    }
+}
+
 impl TagDataSimplePrimitive for ID {
     fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
-        Ok(<u32 as TagDataSimplePrimitive>::read::<B>(data, at, struct_end)?.into())
+        ID::from_u32(<u32 as TagDataSimplePrimitive>::read::<B>(data, at, struct_end)?)
     }
     fn size() -> usize {
         <u32 as TagDataSimplePrimitive>::size()
@@ -113,12 +144,6 @@ impl TagDataSimplePrimitive for ID {
     fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
         let id: u32 = (*self).into();
         id.write::<B>(data, at, struct_end)
-    }
-}
-
-impl From<u32> for ID {
-    fn from(value: u32) -> Self {
-        ID::from_u32(value)
     }
 }
 
@@ -143,7 +168,9 @@ impl Debug for ID {
     }
 }
 
-
+/// Used to denote unused memory.
+///
+/// When stored in memory, it is represented as an array of `00` bytes.
 #[derive(Copy, Clone, Default, PartialEq)]
 #[repr(transparent)]
 pub struct Padding<T: Sized + Default> {
@@ -171,23 +198,22 @@ impl<T: Copy + Default> Debug for Padding<T> {
     }
 }
 
+/// Container of bytes for data that isn't structured tag data.
+///
+/// A `Data` type is used to store data that isn't read as structured tag data, such as audio samples, and it may or
+/// may not be stored in big or little endian.
+///
+/// In Ringhopper, this type simply wraps a `Vec<u8>` object.
+///
+/// # Limitations
+///
+/// A limitation over [`Vec`] is that the number of elements cannot exceed [`u32::MAX`] (i.e. 2<sup>32</sup> − 1), as
+/// lengths are internally stored as 32-bit. As such, serialization in tag or cache format is not possible if this
+/// limit is exceeded.
 #[derive(Clone, Default, PartialEq)]
 #[repr(transparent)]
 pub struct Data {
     pub bytes: Vec<u8>
-}
-
-impl Deref for Data {
-    type Target = Vec<u8>;
-    fn deref(&self) -> &Self::Target {
-        &self.bytes
-    }
-}
-
-impl DerefMut for Data {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.bytes
-    }
 }
 
 impl TagData for Data {
@@ -210,32 +236,30 @@ impl TagData for Data {
 
     fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {
         (DataC {
-            size: self.len().into_u32()?,
+            size: self.bytes.len().into_u32()?,
             ..Default::default()
         }).write_to_tag_file(data, at, struct_end)?;
-        data.extend_from_slice(self);
+        data.extend_from_slice(&self.bytes);
         Ok(())
     }
 }
 
-
+/// Container for contiguously stored blocks.
+///
+/// A `Reflexive` is functionally an array, containing a size value and, when stored in cache files, a memory address.
+/// Elements are stored contiguously (i.e. back-to-back) in all formats.
+///
+/// In Ringhopper, this type simply wraps a `Vec<T>` object.
+///
+/// # Limitations
+///
+/// A limitation over [`Vec`] is that the number of elements cannot exceed [`u32::MAX`] (i.e. 2<sup>32</sup> − 1), as
+/// lengths are internally stored as 32-bit. As such, serialization in tag or cache format is not possible if this
+/// limit is exceeded.
 #[derive(Clone, Default, PartialEq)]
 #[repr(transparent)]
 pub struct Reflexive<T: TagData + Sized> {
     pub items: Vec<T>
-}
-
-impl<T: TagData + Sized> Deref for Reflexive<T> {
-    type Target = Vec<T>;
-    fn deref(&self) -> &Self::Target {
-        &self.items
-    }
-}
-
-impl<T: TagData + Sized> DerefMut for Reflexive<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.items
-    }
 }
 
 impl<T: TagData + Sized> TagData for Reflexive<T> {
@@ -258,7 +282,7 @@ impl<T: TagData + Sized> TagData for Reflexive<T> {
 
         for _ in 0..count {
             let struct_end = item_offset + item_size;
-            result.push(T::read_from_tag_file(data, item_offset, struct_end, extra_data_cursor)?);
+            result.items.push(T::read_from_tag_file(data, item_offset, struct_end, extra_data_cursor)?);
             item_offset = struct_end;
         }
 
@@ -266,10 +290,10 @@ impl<T: TagData + Sized> TagData for Reflexive<T> {
     }
 
     fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {
-        ReflexiveC::<T>::with_params(self.len().into_u32()?, Address::default()).write_to_tag_file(data, at, struct_end)?;
+        ReflexiveC::<T>::with_params(self.items.len().into_u32()?, Address::default()).write_to_tag_file(data, at, struct_end)?;
 
         let item_size = T::size();
-        let total_bytes_to_write = self.len().mul_overflow_checked(item_size)?;
+        let total_bytes_to_write = self.items.len().mul_overflow_checked(item_size)?;
 
         let mut write_offset = data.len();
         let new_len = write_offset.add_overflow_checked(total_bytes_to_write)?;
@@ -450,7 +474,7 @@ impl<T: TagData + TagDataAccessor> Reflexive<T> {
         let remaining = &matcher[closer + 1..];
         let matcher_to_parse = &matcher[1..closer];
 
-        let ranges = match parse_range(matcher_to_parse, self.len()) {
+        let ranges = match parse_range(matcher_to_parse, self.items.len()) {
             Ok(r) => r,
             Err(err) => return Err(format!("invalid matcher {matcher}: {err}"))
         };
@@ -465,7 +489,7 @@ impl<T: TagData + TagDataAccessor> TagDataAccessor for Reflexive<T> {
             return vec![AccessorResult::Accessor(self)]
         }
         if matcher == ".length" {
-            return vec![AccessorResult::Size(self.len())]
+            return vec![AccessorResult::Size(self.items.len())]
         }
         let (remaining, ranges) = match self.parse_matcher(matcher) {
             Ok(n) => n,
@@ -475,7 +499,7 @@ impl<T: TagData + TagDataAccessor> TagDataAccessor for Reflexive<T> {
         let mut matches = Vec::new();
         for (start, end) in ranges {
             for q in start..=end {
-                matches.append(&mut self.get(q)
+                matches.append(&mut self.items.get(q)
                                         .expect("we just verified this in parse_range!")
                                         .access(remaining))
             }
@@ -488,7 +512,7 @@ impl<T: TagData + TagDataAccessor> TagDataAccessor for Reflexive<T> {
             return vec![AccessorResultMut::Accessor(self)]
         }
         if matcher == ".length" {
-            return vec![AccessorResultMut::Size(self.len())]
+            return vec![AccessorResultMut::Size(self.items.len())]
         }
         let (remaining, ranges) = match self.parse_matcher(matcher) {
             Ok(n) => n,
@@ -497,7 +521,7 @@ impl<T: TagData + TagDataAccessor> TagDataAccessor for Reflexive<T> {
 
         let mut matches: Vec<AccessorResultMut> = Vec::new();
         let mut index: usize = 0;
-        for m in self.iter_mut() {
+        for m in self.items.iter_mut() {
             'search_loop: for &(start, end) in &ranges {
                 if start >= index && end <= index {
                     matches.append(&mut m.access_mut(remaining));
@@ -523,11 +547,17 @@ impl<T: TagData + TagDataAccessor> TagDataAccessor for Reflexive<T> {
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(C)]
 pub struct ReflexiveC<T: TagData + Sized> {
+    /// Number of elements in the reflexive.
     pub count: u32,
+
+    /// Address in tag data of the first element of the reflexive if count > 0.
     pub address: Address,
+
+    /// Unused.
     pub padding: Padding<[u8; 4]>,
 
-    phantom: PhantomData<T>
+    /// Used for identifying the type being referred to.
+    pub phantom: PhantomData<T>
 }
 impl<T: TagData + Sized> TagDataSimplePrimitive for ReflexiveC<T> {
     fn size() -> usize {
@@ -549,12 +579,27 @@ impl<T: TagData + Sized> TagDataSimplePrimitive for ReflexiveC<T> {
 }
 
 impl<T: TagData + Sized> ReflexiveC<T> {
-    pub fn with_params(count: u32, address: Address) -> Self {
+    /// Convenience function for initializing a `ReflexiveC` instance with `count` and `address`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ringhopper_primitives::primitive::{ReflexiveC, Address, Vector3D};
+    ///
+    /// let count: u32 = 1024;
+    /// let address: Address = 0x12345678.into();
+    ///
+    /// let convenience: ReflexiveC<Vector3D> = ReflexiveC::with_params(count, address);
+    /// let manual: ReflexiveC<Vector3D> = ReflexiveC { count, address, ..Default::default() };
+    ///
+    /// assert_eq!(manual, convenience);
+    /// ```
+    pub const fn with_params(count: u32, address: Address) -> Self {
         Self {
             count,
             address,
-            padding: Padding::default(),
-            phantom: PhantomData::default()
+            padding: Padding { internal: [0u8; 4] },
+            phantom: PhantomData { }
         }
     }
 }
@@ -569,10 +614,19 @@ impl<T: TagData + Sized> Default for ReflexiveC<T> {
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 #[repr(C)]
 pub struct DataC {
+    /// Length of the data in bytes.
     pub size: u32,
-    pub external: u32,
+
+    /// Flags which are context-dependent; for example, whether or not the data is stored in sounds.map for a sound.
+    pub flags: u32,
+
+    /// File offset in bytes if not stored in tag data.
     pub file_offset: u32,
+
+    /// Unused.
     pub padding: Padding<[u8; 4]>,
+
+    /// Memory address if stored in tag data.
     pub address: Address
 }
 impl TagDataSimplePrimitive for DataC {
@@ -582,15 +636,15 @@ impl TagDataSimplePrimitive for DataC {
 
     fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
         let size = u32::read::<B>(data, at, struct_end)?;
-        let external = u32::read::<B>(data, at + 0x4, struct_end)?;
+        let flags = u32::read::<B>(data, at + 0x4, struct_end)?;
         let file_offset = u32::read::<B>(data, at + 0x8, struct_end)?;
         let address = Address::read::<B>(data, at + 0xC, struct_end)?;
-        Ok(Self { size, external, file_offset, address, ..Default::default() })
+        Ok(Self { size, flags, file_offset, address, ..Default::default() })
     }
 
     fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
         self.size.write::<B>(data, at, struct_end)?;
-        self.external.write::<B>(data, at + 0x4, struct_end)?;
+        self.flags.write::<B>(data, at + 0x4, struct_end)?;
         self.file_offset.write::<B>(data, at + 0x8, struct_end)?;
         self.padding.write::<B>(data, at + 0xC, struct_end)?;
         self.address.write::<B>(data, at + 0x10, struct_end)?;

@@ -12,8 +12,8 @@ use std::any::Any;
 
 /// Used for defining information for saving structs into tag files.
 pub trait PrimaryTagStruct: TagDataAccessor + TagData {
-    /// Get the FourCC of the tag struct's tag group.
-    fn fourcc() -> FourCC where Self: Sized;
+    /// Get the tag group of the tag struct.
+    fn group() -> TagGroup where Self: Sized;
 
     /// Get the version of the tag struct's tag file.
     fn version() -> u16 where Self: Sized;
@@ -37,6 +37,9 @@ pub trait PrimaryTagStructDyn: PrimaryTagStruct + Any {
     ///
     /// See [`TagFile::to_tag_file`] for information.
     fn to_tag_file(&self) -> RinghopperResult<Vec<u8>>;
+
+    /// Get the tag group of this tag.
+    fn group(&self) -> TagGroup;
 }
 
 impl dyn PrimaryTagStructDyn {
@@ -75,6 +78,9 @@ impl<T: PrimaryTagStruct + Any> PrimaryTagStructDyn for T {
     fn to_tag_file(&self) -> RinghopperResult<Vec<u8>> {
         TagFile::to_tag_file(self)
     }
+    fn group(&self) -> TagGroup {
+        <T as PrimaryTagStruct>::group()
+    }
 }
 
 /// If CRC32 is set to this, then disable CRC32 checks.
@@ -93,8 +99,8 @@ pub struct TagFileHeader {
     /// Some string value; not set on most tags, and always unused.
     pub string: String32,
 
-    /// FourCC of the tag.
-    pub fourcc: FourCC,
+    /// Tag group of the tag.
+    pub group: TagGroup,
 
     /// CRC32 of all data following the header; set to [`IGNORED_CRC32`] to disable checks.
     pub crc32: u32,
@@ -121,9 +127,14 @@ impl TagDataSimplePrimitive for TagFileHeader {
         std::mem::size_of::<TagFileHeader>()
     }
     fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
-        self.id.write::<B>(data, at + 0x00, struct_end)?;
+        if self.id.is_null() {
+            0u32.write::<B>(data, at + 0x00, struct_end)?;
+        }
+        else {
+            self.id.write::<B>(data, at + 0x00, struct_end)?;
+        }
         self.string.write::<B>(data, at + 0x04, struct_end)?;
-        self.fourcc.write::<B>(data, at + 0x24, struct_end)?;
+        self.group.write::<B>(data, at + 0x24, struct_end)?;
         self.crc32.write::<B>(data, at + 0x28, struct_end)?;
         self.header_size.write::<B>(data, at + 0x2C, struct_end)?;
         self.padding.write::<B>(data, at + 0x30, struct_end)?;
@@ -134,9 +145,9 @@ impl TagDataSimplePrimitive for TagFileHeader {
     }
     fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
         Ok(Self {
-            id: ID::read::<B>(data, at + 0x00, struct_end)?,
+            id: ID::read::<B>(data, at + 0x00, struct_end).unwrap_or(ID::null()),
             string: String32::read::<B>(data, at + 0x04, struct_end)?,
-            fourcc: FourCC::read::<B>(data, at + 0x24, struct_end)?,
+            group: TagGroup::read::<B>(data, at + 0x24, struct_end)?,
             crc32: u32::read::<B>(data, at + 0x28, struct_end)?,
             header_size: u32::read::<B>(data, at + 0x2C, struct_end)?,
             padding: Padding::<[u8; 8]>::read::<B>(data, at + 0x30, struct_end)?,
@@ -150,7 +161,7 @@ impl TagDataSimplePrimitive for TagFileHeader {
 impl TagFileHeader {
     /// Return `true` if the header is valid.
     pub fn valid<T: PrimaryTagStruct>(&self) -> bool {
-        self.fourcc == T::fourcc()
+        self.group == T::group()
         && self.version == T::version()
         && self.blam_fourcc == BLAM_FOURCC
         && self.u16_255 == 0x00FF
@@ -215,7 +226,7 @@ impl TagFile {
         let new_header = TagFileHeader {
             blam_fourcc: BLAM_FOURCC,
             crc32: crc32.crc(),
-            fourcc: T::fourcc(),
+            group: T::group(),
             header_size: header_len as u32,
             version: T::version(),
             u16_255: 0x00FF,

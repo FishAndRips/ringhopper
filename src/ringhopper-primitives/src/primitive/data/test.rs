@@ -56,7 +56,7 @@ fn test_byte_array_rw() {
     ];
 
     let read_data = Data::read_from_tag_file(tag_data_file, 0, 0x14, &mut 0x14).unwrap();
-    assert_eq!(&expected_data[..], &read_data[..]);
+    assert_eq!(&expected_data[..], &read_data.bytes[..]);
 
     let mut write_data = [0u8; 0x14].to_vec();
     read_data.write_to_tag_file(&mut write_data, 0, 0x14).unwrap();
@@ -121,7 +121,7 @@ fn reflexive_rw() {
         Vector3DHolder { vector: Vector3D { x: 4.0, y: 5.0, z: 6.0 } },
         Vector3DHolder { vector: Vector3D { x: 7.0, y: 8.0, z: 9.0 } },
     ];
-    assert_eq!(&vectors[..], expected);
+    assert_eq!(&vectors.items[..], expected);
 
     let mut new_array_bytes = Vec::new();
     new_array_bytes.resize(0xC, 0);

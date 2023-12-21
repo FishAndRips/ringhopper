@@ -78,8 +78,8 @@ impl TagData for UnicodeStringList {
 }
 
 impl PrimaryTagStruct for UnicodeStringList {
-    fn fourcc() -> FourCC {
-        TagGroup::UnicodeStringList.as_fourcc()
+    fn group() -> TagGroup where Self: Sized {
+        TagGroup::UnicodeStringList
     }
     fn version() -> u16 {
         1
@@ -102,7 +102,7 @@ fn parse_unicode_string_list() {
         data.push(0);
         data.push(0);
 
-        assert_eq!(string_list.strings[string_index].string.as_ref(), data);
+        assert_eq!(string_list.strings.items[string_index].string.bytes.as_ref(), data);
 
         // Also try with the accessor
         let v = string_list_accessor.access(format!(".strings[{string_index}].string").as_str());
@@ -111,7 +111,7 @@ fn parse_unicode_string_list() {
             AccessorResult::Error(e) => panic!("Error: {}", e.as_str()),
             _ => panic!("could not access it!")
         };
-        assert_eq!(result.as_slice(), data.as_slice());
+        assert_eq!(result.bytes.as_slice(), data.as_slice());
     };
 
     utf16_matches(0, "This is a test string.");

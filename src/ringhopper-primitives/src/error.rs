@@ -8,6 +8,7 @@ pub type RinghopperResult<T> = Result<T, Error>;
 pub enum Error {
     NoSuchTagGroup,
     InvalidTagPath,
+    InvalidID,
     TagParseFailure,
     ChecksumMismatch,
     ArrayLimitExceeded,
@@ -21,6 +22,7 @@ impl Error {
     pub fn as_str(self) -> &'static str {
         match self {
             Error::InvalidTagPath => "invalid tag path",
+            Error::InvalidID => "invalid ID",
             Error::NoSuchTagGroup => "no such tag group",
             Error::TagParseFailure => "failed to parse the tag (likely corrupt)",
             Error::ChecksumMismatch => "refused to parse the data (CRC32 mismatch)",
