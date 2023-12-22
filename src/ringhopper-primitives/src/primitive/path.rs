@@ -135,7 +135,7 @@ impl TagPath {
         debug_assert_eq!(extension_maybe, group);
 
         let group = TagGroup::from_str(group).map_err(|_| Error::InvalidTagPath)?;
-        Self::from_components(path_without_extension, group)
+        Self::new(path_without_extension, group)
     }
 
     /// Construct a tag reference from a path with separate path and group components.
@@ -152,21 +152,21 @@ impl TagPath {
     /// #[cfg(any(target_family = "unix", target_family = "windows"))]
     /// {
     ///     // Works with Unix paths if on a Unix-like OS or Windows!
-    ///     let path = TagPath::from_components("weapons/myweapon/myweapon.isthebest", TagGroup::Weapon)
-    ///                                 .expect("tag path should be valid");
+    ///     let path = TagPath::new("weapons/myweapon/myweapon.isthebest", TagGroup::Weapon)
+    ///                     .expect("tag path should be valid");
     ///
     ///     assert_eq!(path.path(), "weapons\\myweapon\\myweapon.isthebest");
     ///     assert_eq!(path.group(), TagGroup::Weapon);
     /// }
     ///
     /// // Works with Halo paths
-    /// let path = TagPath::from_components("weapons\\myweapon\\myweapon.isthebest", TagGroup::Weapon)
-    ///                             .expect("tag path should be valid");
+    /// let path = TagPath::new("weapons\\myweapon\\myweapon.isthebest", TagGroup::Weapon)
+    ///                 .expect("tag path should be valid");
     ///
     /// assert_eq!(path.path(), "weapons\\myweapon\\myweapon.isthebest");
     /// assert_eq!(path.group(), TagGroup::Weapon);
     /// ```
-    pub fn from_components(path: &str, group: TagGroup) -> RinghopperResult<Self> {
+    pub fn new(path: &str, group: TagGroup) -> RinghopperResult<Self> {
         let mut path_fixed = String::with_capacity(path.len());
 
         for c in path.chars() {

@@ -82,6 +82,9 @@ pub use self::data::*;
 mod string;
 pub use self::string::*;
 
+mod array;
+pub use self::array::*;
+
 macro_rules! define_primitive_ref {
     ($name: tt, $($reference: tt), *) => {
         /// Defines a primitive reference.

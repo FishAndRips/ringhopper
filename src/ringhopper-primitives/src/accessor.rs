@@ -33,3 +33,5 @@ pub trait TagDataAccessor {
     /// Get all available fields
     fn all_fields(&self) -> &'static [&'static str];
 }
+
+// TODO: Maybe make accessing more generalized here rather than implementing the same code repeatedly (and remove starts_with - that's a hack -.-)?

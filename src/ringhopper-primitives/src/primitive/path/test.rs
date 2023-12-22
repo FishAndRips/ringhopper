@@ -28,5 +28,5 @@ fn parse_tag_reference() {
 
     let mut new_bytes = vec![0u8; 16];
     tag.write_to_tag_file(&mut new_bytes, 0, 16).unwrap();
-    assert_eq!(bytes_set_id, &new_bytes[..]);
+    assert_eq!(bytes_set_id, new_bytes.as_slice());
 }
