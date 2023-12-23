@@ -1,0 +1,22 @@
+[
+    {
+        "name": "Garbage",
+        "fields": [
+            {
+                "type": "pad",
+                "size": 168
+            }
+        ],
+        "type": "struct",
+        "inherits": "Item",
+        "size": 944,
+        "needs_preprocessed": true,
+        "needs_postprocessed": true
+    },
+    {
+        "name": "garbage",
+        "struct": "Garbage",
+        "supergroup": "item",
+        "type": "group"
+    }
+]

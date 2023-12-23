@@ -1,0 +1,34 @@
+[
+    {
+        "name": "StringListString",
+        "fields": [
+            {
+                "name": "string",
+                "type": "Data",
+                "limit": 4096
+            }
+        ],
+        "type": "struct",
+        "size": 20,
+        "needs_preprocessed": true
+    },
+    {
+        "name": "StringList",
+        "fields": [
+            {
+                "name": "strings",
+                "type": "Reflexive",
+                "struct": "StringListString",
+                "read_only": true,
+                "limit": 800
+            }
+        ],
+        "type": "struct",
+        "size": 12
+    },
+    {
+        "name": "string_list",
+        "struct": "StringList",
+        "type": "group"
+    }
+]

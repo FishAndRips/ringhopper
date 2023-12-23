@@ -1,0 +1,22 @@
+[
+    {
+        "name": "DeviceLightFixture",
+        "fields": [
+            {
+                "type": "pad",
+                "size": 64
+            }
+        ],
+        "type": "struct",
+        "inherits": "Device",
+        "size": 720,
+        "needs_preprocessed": true,
+        "needs_postprocessed": true
+    },
+    {
+        "name": "device_light_fixture",
+        "struct": "DeviceLightFixture",
+        "supergroup": "device",
+        "type": "group"
+    }
+]

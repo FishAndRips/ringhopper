@@ -1,0 +1,17 @@
+[
+    {
+        "name": "Placeholder",
+        "fields": [],
+        "type": "struct",
+        "inherits": "BasicObject",
+        "size": 508,
+        "needs_preprocessed": true,
+        "needs_postprocessed": true
+    },
+    {
+        "name": "placeholder",
+        "struct": "Placeholder",
+        "supergroup": "object",
+        "type": "group"
+    }
+]
