@@ -1,0 +1,11 @@
+[
+    {
+        "name": "pc-retail",
+        "type": "engine",
+        "display_name": "Halo: Combat Evolved (PC)",
+        "version": "halo pc 01.00.10.0621 Apr 16 2014 15:54:48",
+        "build_target": true,
+        "build": "01.00.10.0621",
+        "inherits": "pc"
+    }
+]

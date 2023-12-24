@@ -53,33 +53,186 @@ fn get_all_child_groups(parent: &String, groups: &HashMap<String, TagGroup>) -> 
     result
 }
 
-impl ParsedTagData {
-    fn load_from_json(&mut self, objects: &Vec<Map<String, Value>>) {
+impl ParsedDefinitions {
+    pub(crate) fn load_from_json(&mut self, objects: &Vec<Map<String, Value>>) {
+        let mut all_engines = HashMap::<String, Map<String, Value>>::new();
+
         for object in objects {
             let object_type = oget_str!(object, "type");
             let object_name = oget_str!(object, "name").to_owned();
 
-            if object_type == "group" {
-                let parent_maybe = object.get("supergroup").map(|g| g.as_str().unwrap().to_owned());
+            match object_type {
+                "group" => {
+                    assert!(!self.groups.contains_key(&object_name), "duplicate group {object_name} detected");
+                    let parent_maybe = object.get("supergroup").map(|g| g.as_str().unwrap().to_owned());
+                    self.groups.insert(object_name.clone(), TagGroup {
+                        name: object_name,
+                        struct_name: oget_str!(object, "struct").to_owned(),
+                        supergroup: parent_maybe,
+                        supported_engines: SupportedEngines::load_from_json(object)
+                    });
+                },
+                "engine" => {
+                    assert!(!all_engines.contains_key(&object_name), "duplicate engine {object_name} detected");
+                    all_engines.insert(object_name, object.clone());
+                },
+                _ => {
+                    assert!(!self.objects.contains_key(&object_name), "duplicate object {object_name} detected");
+                    self.objects.insert(object_name, NamedObject::load_from_json(object));
+                }
+            }
+        }
 
-                assert!(!self.groups.contains_key(&object_name), "duplicate group {object_name} detected");
-                self.groups.insert(object_name.clone(), TagGroup {
-                    name: object_name,
-                    struct_name: oget_str!(object, "struct").to_owned(),
-                    supergroup: parent_maybe
-                });
-
-                continue
+        for (engine_name, _) in &all_engines {
+            // Values are ("engine::value", value)
+            fn get_chain(what: &str, engine_name: &str, all_engines: &HashMap<String, Map<String, Value>>) -> Vec<(String, Value)> {
+                let mut v: Vec<(String, Value)> = Vec::new();
+                let engine = all_engines.get(engine_name).unwrap_or_else(|| panic!("can't find engine {engine_name}"));
+                if let Some(n) = engine.get(what) {
+                    v.push((format!("{engine_name}::{what}"), n.to_owned()))
+                }
+                if let Some(i) = engine.get("inherits") {
+                    v.append(
+                        &mut get_chain(what, i.as_str().unwrap_or_else(|| panic!("inherits of {engine_name} is non-string")), all_engines)
+                    );
+                }
+                v
             }
 
-            // Now add the object
-            assert!(!self.objects.contains_key(&object_name), "duplicate object {object_name} detected");
-            self.objects.insert(object_name, NamedObject::load_from_json(object));
+            let get_chain = |what: &str, required: bool| -> Vec<(String, Value)> {
+                let result = get_chain(what, engine_name, &all_engines);
+                if required && result.is_empty() {
+                    panic!("{what} is not present in {engine_name} or its ancestors")
+                }
+                result
+            };
+
+            let hex_to_u64 = |hex: &Value| -> Option<u64> {
+                let str = hex.as_str()?;
+                if !str.starts_with("0x") {
+                    return None
+                }
+                u64::from_str_radix(&str[2..], 16).ok()
+            };
+
+            let parse_hex_u64 = |what: Vec<(String, Value)>| -> Vec<(String, u64)> {
+                what.iter()
+                    .map(|(f, v)| {
+                        let val = hex_to_u64(v).unwrap_or_else(|| panic!("{f} could not be parsed as hex"));
+                        (f.to_owned(), val)
+                    })
+                    .collect()
+            };
+
+            let first_string = |what: &str, required: bool| get_chain(what, required).first().map(|(f, v)| v.as_str().unwrap_or_else(|| panic!("{f} is nonstring")).to_owned());
+            let first_u64 = |what: &str, required: bool| get_chain(what, required).first().map(|(f, v)| v.as_u64().unwrap_or_else(|| panic!("{f} is non-u64")).to_owned());
+            let first_bool = |what: &str, required: bool| get_chain(what, required).first().map(|(f, v)| v.as_bool().unwrap_or_else(|| panic!("{f} is non-bool")).to_owned());
+
+            let base_memory_address = {
+                let bma_search = get_chain("base_memory_address", true);
+                let (bma_path, bma_obj) = bma_search.first().unwrap();
+
+                let bma_address_obj: &Value;
+                let bma_inferred_obj: &Value;
+
+                match bma_obj {
+                    Value::Object(o) => {
+                        bma_address_obj = o.get("value").unwrap_or_else(|| panic!("{bma_path} has no address"));
+                        bma_inferred_obj = o.get("inferred").unwrap_or(&Value::Bool(false));
+                    },
+                    Value::String(_) => {
+                        bma_address_obj = bma_obj;
+                        bma_inferred_obj = &Value::Bool(false);
+                    },
+                    _ => panic!("{bma_path} is not object or string")
+                }
+
+                BaseMemoryAddress {
+                    address: hex_to_u64(bma_address_obj).unwrap_or_else(|| panic!("{bma_path}'s address is nonhex")),
+                    inferred: bma_inferred_obj.as_bool().unwrap_or_else(|| panic!("{bma_path} strict is non-bool"))
+                }
+            };
+
+            let max_cache_file_size = {
+                let cfz_search = get_chain("max_cache_file_size", true);
+                let (cfz_path, cfz_obj) = cfz_search.first().unwrap();
+
+                let multiplayer: &Value;
+                let singleplayer: &Value;
+                let user_interface: &Value;
+
+                match cfz_obj {
+                    Value::Object(o) => {
+                        multiplayer = o.get("multiplayer").unwrap_or_else(|| panic!("{cfz_path} has no multiplayer"));
+                        singleplayer = o.get("singleplayer").unwrap_or_else(|| panic!("{cfz_path} has no singleplayer"));
+                        user_interface = o.get("user_interface").unwrap_or_else(|| panic!("{cfz_path} has no user_interface"));
+                    },
+                    Value::String(_) => {
+                        multiplayer = cfz_obj;
+                        singleplayer = cfz_obj;
+                        user_interface = cfz_obj;
+                    },
+                    _ => panic!("{cfz_path} is not object or string")
+                }
+
+                EngineCacheFileSize {
+                    multiplayer: hex_to_u64(multiplayer).unwrap_or_else(|| panic!("{cfz_path} multiplayer is not hex")),
+                    singleplayer: hex_to_u64(singleplayer).unwrap_or_else(|| panic!("{cfz_path} singleplayer is not hex")),
+                    user_interface: hex_to_u64(user_interface).unwrap_or_else(|| panic!("{cfz_path} user_interface is not hex")),
+                }
+            };
+
+            let required_tags = {
+                let ert = get_chain("required_tags", true);
+                let ert = ert.iter().map(|(k, v)| (k.to_owned(), v.as_object().unwrap_or_else(|| panic!("{k} is non-object"))));
+
+                let mut required_tags = EngineRequiredTags::default();
+
+                for obj in ert {
+                    let handler = |tags: &mut Vec<String>, what: &str| {
+                        let list = match obj.1.get(what) { Some(n) => n, None => return };
+                        let list = list.as_array().unwrap_or_else(|| panic!("{engine_name}::{what} is not an array"));
+                        tags.reserve(list.len());
+                        for i in list {
+                            tags.push(i.as_str().unwrap_or_else(|| panic!("{engine_name}::{what} contains non-strings")).to_owned());
+                        }
+                    };
+
+                    handler(&mut required_tags.all, "all");
+                    handler(&mut required_tags.user_interface, "user_interface");
+                    handler(&mut required_tags.singleplayer, "singleplayer");
+                    handler(&mut required_tags.multiplayer, "multiplayer");
+                }
+
+                required_tags.all.dedup();
+                required_tags.multiplayer.dedup();
+                required_tags.singleplayer.dedup();
+                required_tags.user_interface.dedup();
+
+                required_tags
+            };
+
+            self.engines.insert(engine_name.to_owned(), Engine {
+                base_memory_address,
+                build: first_string("build", false),
+                build_target: first_bool("build_target", true).unwrap(),
+                cache_file_version: first_u64("cache_file_version", true).unwrap().try_into().unwrap_or_else(|_| panic!("where's the cache file version???")),
+                display_name: first_string("display_name", true).unwrap(),
+                inherits: get_chain("inherits", false).first().map(|v| v.1.as_str().unwrap().to_owned()),
+                max_cache_file_size,
+                max_script_nodes: first_u64("max_script_nodes", true).unwrap() as u64,
+                max_tag_space: parse_hex_u64(get_chain("max_tag_space", true)).first().unwrap().1,
+                name: engine_name.to_owned(),
+                required_tags,
+                version: first_string("version", false)
+            });
         }
+
+
     }
 
     // Fix all tag references to have child groups
-    fn resolve_parent_class_references(&mut self) {
+    pub(crate) fn resolve_parent_class_references(&mut self) {
         for (_, named_object) in &mut self.objects {
             if let NamedObject::Struct(s) = named_object {
                 for f in &mut s.fields {
@@ -109,7 +262,17 @@ impl ParsedTagData {
         }
     }
 
-    fn assert_valid(&self) {
+    pub(crate) fn assert_valid(&self) {
+        let validate_supported_engines = |supported_engines: &SupportedEngines, object_name: &str, field_name: &str| {
+            if let Some(v) = &supported_engines.supported_engines {
+                for engine in v {
+                    if !self.engines.contains_key(engine) {
+                        panic!("{object_name}::{field_name}'s limits references an engine {engine} which does not exist");
+                    }
+                }
+            }
+        };
+
         for (group_name, group) in &self.groups {
             let group_name_in_struct = &group.name;
             assert_eq!(group_name_in_struct, group_name, "group name `{group_name_in_struct}` not consistent with name `{group_name}` in map");
@@ -120,17 +283,40 @@ impl ParsedTagData {
             if let Some(s) = &group.supergroup {
                 self.groups.get(s).unwrap_or_else(|| panic!("group {group_name}'s supergroup refers to group {s} which does not exist"));
             }
+
+            validate_supported_engines(&group.supported_engines, &group_name, "(self)");
         }
 
         for (object_name, object) in &self.objects {
             let name_in_object = object.name();
             assert_eq!(name_in_object, object_name, "object name `{name_in_object}` not consistent with name `{object_name}` in map");
 
+            let validate_flags = |flags: &Flags, field_name: &str| validate_supported_engines(&flags.supported_engines, &object_name, field_name);
+
             match object {
-                NamedObject::Bitfield(b) => assert!(b.fields.len() <= b.width as usize, "bitfield {object_name} has too many fields; {} / {}", b.fields.len(), b.width),
-                NamedObject::Enum(e) => assert!(e.options.len() <= u16::MAX as usize, "enum {object_name} has too many options, {} / {}", e.options.len(), u16::MAX),
+                NamedObject::Bitfield(b) => {
+                    validate_flags(&b.flags, "(self)");
+
+                    for f in &b.fields {
+                        validate_flags(&f.flags, &f.name);
+                    }
+
+                    assert!(b.fields.len() <= b.width as usize, "bitfield {object_name} has too many fields; {} / {}", b.fields.len(), b.width);
+                },
+                NamedObject::Enum(e) => {
+                    validate_flags(&e.flags, "(self)");
+
+                    for f in &e.options {
+                        validate_flags(&f.flags, &f.name);
+                    }
+
+                    assert!(e.options.len() <= u16::MAX as usize, "enum {object_name} has too many options, {} / {}", e.options.len(), u16::MAX);
+                },
                 NamedObject::Struct(s) => {
+                    validate_flags(&s.flags, "(self)");
+
                     for f in &s.fields {
+                        // Consistency with named objects and groups
                         let field_name = &f.name;
                         match &f.field_type {
                             StructFieldType::Object(ObjectType::NamedObject(o)) => {
@@ -149,6 +335,19 @@ impl ParsedTagData {
                             },
                             _ => ()
                         }
+
+                        // Limits point to engines
+                        if let Some(n) = &f.limit {
+                            for (k, _) in n {
+                                if let LimitType::Engine(e) = k {
+                                    if !self.engines.contains_key(e) {
+                                        panic!("{object_name}::{field_name}'s limits contains an engine {e} which does not exist");
+                                    }
+                                }
+                            }
+                        }
+
+                        validate_flags(&f.flags, &field_name);
                     }
 
                     s.assert_size_is_correct(self);
@@ -158,94 +357,108 @@ impl ParsedTagData {
     }
 }
 
-fn get_all_definitions() -> Vec<Map<String, Value>> {
+pub(crate) fn get_all_definitions() -> Vec<Map<String, Value>> {
     let mut jsons: HashMap<&'static str, &'static [u8]> = HashMap::new();
 
-    jsons.insert("actor_variant", include_bytes!("../../json/actor_variant.json"));
-    jsons.insert("actor", include_bytes!("../../json/actor.json"));
-    jsons.insert("antenna", include_bytes!("../../json/antenna.json"));
-    jsons.insert("biped", include_bytes!("../../json/biped.json"));
-    jsons.insert("bitfield", include_bytes!("../../json/bitfield.json"));
-    jsons.insert("bitmap", include_bytes!("../../json/bitmap.json"));
-    jsons.insert("camera_track", include_bytes!("../../json/camera_track.json"));
-    jsons.insert("color_table", include_bytes!("../../json/color_table.json"));
-    jsons.insert("continuous_damage_effect", include_bytes!("../../json/continuous_damage_effect.json"));
-    jsons.insert("contrail", include_bytes!("../../json/contrail.json"));
-    jsons.insert("damage_effect", include_bytes!("../../json/damage_effect.json"));
-    jsons.insert("decal", include_bytes!("../../json/decal.json"));
-    jsons.insert("detail_object_collection", include_bytes!("../../json/detail_object_collection.json"));
-    jsons.insert("device_control", include_bytes!("../../json/device_control.json"));
-    jsons.insert("device_light_fixture", include_bytes!("../../json/device_light_fixture.json"));
-    jsons.insert("device_machine", include_bytes!("../../json/device_machine.json"));
-    jsons.insert("device", include_bytes!("../../json/device.json"));
-    jsons.insert("dialogue", include_bytes!("../../json/dialogue.json"));
-    jsons.insert("effect", include_bytes!("../../json/effect.json"));
-    jsons.insert("enum", include_bytes!("../../json/enum.json"));
-    jsons.insert("equipment", include_bytes!("../../json/equipment.json"));
-    jsons.insert("flag", include_bytes!("../../json/flag.json"));
-    jsons.insert("fog", include_bytes!("../../json/fog.json"));
-    jsons.insert("font", include_bytes!("../../json/font.json"));
-    jsons.insert("garbage", include_bytes!("../../json/garbage.json"));
-    jsons.insert("gbxmodel", include_bytes!("../../json/gbxmodel.json"));
-    jsons.insert("globals", include_bytes!("../../json/globals.json"));
-    jsons.insert("glow", include_bytes!("../../json/glow.json"));
-    jsons.insert("grenade_hud_interface", include_bytes!("../../json/grenade_hud_interface.json"));
-    jsons.insert("hud_globals", include_bytes!("../../json/hud_globals.json"));
-    jsons.insert("hud_interface_types", include_bytes!("../../json/hud_interface_types.json"));
-    jsons.insert("hud_message_text", include_bytes!("../../json/hud_message_text.json"));
-    jsons.insert("hud_number", include_bytes!("../../json/hud_number.json"));
-    jsons.insert("input_device_defaults", include_bytes!("../../json/input_device_defaults.json"));
-    jsons.insert("item_collection", include_bytes!("../../json/item_collection.json"));
-    jsons.insert("item", include_bytes!("../../json/item.json"));
-    jsons.insert("lens_flare", include_bytes!("../../json/lens_flare.json"));
-    jsons.insert("light_volume", include_bytes!("../../json/light_volume.json"));
-    jsons.insert("light", include_bytes!("../../json/light.json"));
-    jsons.insert("lightning", include_bytes!("../../json/lightning.json"));
-    jsons.insert("material_effects", include_bytes!("../../json/material_effects.json"));
-    jsons.insert("meter", include_bytes!("../../json/meter.json"));
-    jsons.insert("model_animations", include_bytes!("../../json/model_animations.json"));
-    jsons.insert("model_collision_geometry", include_bytes!("../../json/model_collision_geometry.json"));
-    jsons.insert("model", include_bytes!("../../json/model.json"));
-    jsons.insert("multiplayer_scenario_description", include_bytes!("../../json/multiplayer_scenario_description.json"));
-    jsons.insert("object", include_bytes!("../../json/object.json"));
-    jsons.insert("particle_system", include_bytes!("../../json/particle_system.json"));
-    jsons.insert("particle", include_bytes!("../../json/particle.json"));
-    jsons.insert("physics", include_bytes!("../../json/physics.json"));
-    jsons.insert("placeholder", include_bytes!("../../json/placeholder.json"));
-    jsons.insert("point_physics", include_bytes!("../../json/point_physics.json"));
-    jsons.insert("preferences_network_game", include_bytes!("../../json/preferences_network_game.json"));
-    jsons.insert("projectile", include_bytes!("../../json/projectile.json"));
-    jsons.insert("scenario_structure_bsp", include_bytes!("../../json/scenario_structure_bsp.json"));
-    jsons.insert("scenario", include_bytes!("../../json/scenario.json"));
-    jsons.insert("scenery", include_bytes!("../../json/scenery.json"));
-    jsons.insert("shader_environment", include_bytes!("../../json/shader_environment.json"));
-    jsons.insert("shader_model", include_bytes!("../../json/shader_model.json"));
-    jsons.insert("shader_transparent_chicago_extended", include_bytes!("../../json/shader_transparent_chicago_extended.json"));
-    jsons.insert("shader_transparent_chicago", include_bytes!("../../json/shader_transparent_chicago.json"));
-    jsons.insert("shader_transparent_generic", include_bytes!("../../json/shader_transparent_generic.json"));
-    jsons.insert("shader_transparent_glass", include_bytes!("../../json/shader_transparent_glass.json"));
-    jsons.insert("shader_transparent_meter", include_bytes!("../../json/shader_transparent_meter.json"));
-    jsons.insert("shader_transparent_plasma", include_bytes!("../../json/shader_transparent_plasma.json"));
-    jsons.insert("shader_transparent_water", include_bytes!("../../json/shader_transparent_water.json"));
-    jsons.insert("shader", include_bytes!("../../json/shader.json"));
-    jsons.insert("sky", include_bytes!("../../json/sky.json"));
-    jsons.insert("sound_environment", include_bytes!("../../json/sound_environment.json"));
-    jsons.insert("sound_looping", include_bytes!("../../json/sound_looping.json"));
-    jsons.insert("sound_scenery", include_bytes!("../../json/sound_scenery.json"));
-    jsons.insert("sound", include_bytes!("../../json/sound.json"));
-    jsons.insert("string_list", include_bytes!("../../json/string_list.json"));
-    jsons.insert("tag_collection", include_bytes!("../../json/tag_collection.json"));
-    jsons.insert("ui_widget_collection", include_bytes!("../../json/ui_widget_collection.json"));
-    jsons.insert("ui_widget_definition", include_bytes!("../../json/ui_widget_definition.json"));
-    jsons.insert("unicode_string_list", include_bytes!("../../json/unicode_string_list.json"));
-    jsons.insert("unit_hud_interface", include_bytes!("../../json/unit_hud_interface.json"));
-    jsons.insert("unit", include_bytes!("../../json/unit.json"));
-    jsons.insert("vehicle", include_bytes!("../../json/vehicle.json"));
-    jsons.insert("virtual_keyboard", include_bytes!("../../json/virtual_keyboard.json"));
-    jsons.insert("weapon_hud_interface", include_bytes!("../../json/weapon_hud_interface.json"));
-    jsons.insert("weapon", include_bytes!("../../json/weapon.json"));
-    jsons.insert("weather_particle_system", include_bytes!("../../json/weather_particle_system.json"));
-    jsons.insert("wind", include_bytes!("../../json/wind.json"));
+    jsons.insert("tag/actor_variant.json", include_bytes!("../../json/tag/actor_variant.json"));
+    jsons.insert("tag/actor.json", include_bytes!("../../json/tag/actor.json"));
+    jsons.insert("tag/antenna.json", include_bytes!("../../json/tag/antenna.json"));
+    jsons.insert("tag/biped.json", include_bytes!("../../json/tag/biped.json"));
+    jsons.insert("tag/bitfield.json", include_bytes!("../../json/tag/bitfield.json"));
+    jsons.insert("tag/bitmap.json", include_bytes!("../../json/tag/bitmap.json"));
+    jsons.insert("tag/camera_track.json", include_bytes!("../../json/tag/camera_track.json"));
+    jsons.insert("tag/color_table.json", include_bytes!("../../json/tag/color_table.json"));
+    jsons.insert("tag/continuous_damage_effect.json", include_bytes!("../../json/tag/continuous_damage_effect.json"));
+    jsons.insert("tag/contrail.json", include_bytes!("../../json/tag/contrail.json"));
+    jsons.insert("tag/damage_effect.json", include_bytes!("../../json/tag/damage_effect.json"));
+    jsons.insert("tag/decal.json", include_bytes!("../../json/tag/decal.json"));
+    jsons.insert("tag/detail_object_collection.json", include_bytes!("../../json/tag/detail_object_collection.json"));
+    jsons.insert("tag/device_control.json", include_bytes!("../../json/tag/device_control.json"));
+    jsons.insert("tag/device_light_fixture.json", include_bytes!("../../json/tag/device_light_fixture.json"));
+    jsons.insert("tag/device_machine.json", include_bytes!("../../json/tag/device_machine.json"));
+    jsons.insert("tag/device.json", include_bytes!("../../json/tag/device.json"));
+    jsons.insert("tag/dialogue.json", include_bytes!("../../json/tag/dialogue.json"));
+    jsons.insert("tag/effect.json", include_bytes!("../../json/tag/effect.json"));
+    jsons.insert("tag/enum.json", include_bytes!("../../json/tag/enum.json"));
+    jsons.insert("tag/equipment.json", include_bytes!("../../json/tag/equipment.json"));
+    jsons.insert("tag/flag.json", include_bytes!("../../json/tag/flag.json"));
+    jsons.insert("tag/fog.json", include_bytes!("../../json/tag/fog.json"));
+    jsons.insert("tag/font.json", include_bytes!("../../json/tag/font.json"));
+    jsons.insert("tag/garbage.json", include_bytes!("../../json/tag/garbage.json"));
+    jsons.insert("tag/gbxmodel.json", include_bytes!("../../json/tag/gbxmodel.json"));
+    jsons.insert("tag/globals.json", include_bytes!("../../json/tag/globals.json"));
+    jsons.insert("tag/glow.json", include_bytes!("../../json/tag/glow.json"));
+    jsons.insert("tag/grenade_hud_interface.json", include_bytes!("../../json/tag/grenade_hud_interface.json"));
+    jsons.insert("tag/hud_globals.json", include_bytes!("../../json/tag/hud_globals.json"));
+    jsons.insert("tag/hud_interface_types.json", include_bytes!("../../json/tag/hud_interface_types.json"));
+    jsons.insert("tag/hud_message_text.json", include_bytes!("../../json/tag/hud_message_text.json"));
+    jsons.insert("tag/hud_number.json", include_bytes!("../../json/tag/hud_number.json"));
+    jsons.insert("tag/input_device_defaults.json", include_bytes!("../../json/tag/input_device_defaults.json"));
+    jsons.insert("tag/item_collection.json", include_bytes!("../../json/tag/item_collection.json"));
+    jsons.insert("tag/item.json", include_bytes!("../../json/tag/item.json"));
+    jsons.insert("tag/lens_flare.json", include_bytes!("../../json/tag/lens_flare.json"));
+    jsons.insert("tag/light_volume.json", include_bytes!("../../json/tag/light_volume.json"));
+    jsons.insert("tag/light.json", include_bytes!("../../json/tag/light.json"));
+    jsons.insert("tag/lightning.json", include_bytes!("../../json/tag/lightning.json"));
+    jsons.insert("tag/material_effects.json", include_bytes!("../../json/tag/material_effects.json"));
+    jsons.insert("tag/meter.json", include_bytes!("../../json/tag/meter.json"));
+    jsons.insert("tag/model_animations.json", include_bytes!("../../json/tag/model_animations.json"));
+    jsons.insert("tag/model_collision_geometry.json", include_bytes!("../../json/tag/model_collision_geometry.json"));
+    jsons.insert("tag/model.json", include_bytes!("../../json/tag/model.json"));
+    jsons.insert("tag/multiplayer_scenario_description.json", include_bytes!("../../json/tag/multiplayer_scenario_description.json"));
+    jsons.insert("tag/object.json", include_bytes!("../../json/tag/object.json"));
+    jsons.insert("tag/particle_system.json", include_bytes!("../../json/tag/particle_system.json"));
+    jsons.insert("tag/particle.json", include_bytes!("../../json/tag/particle.json"));
+    jsons.insert("tag/physics.json", include_bytes!("../../json/tag/physics.json"));
+    jsons.insert("tag/placeholder.json", include_bytes!("../../json/tag/placeholder.json"));
+    jsons.insert("tag/point_physics.json", include_bytes!("../../json/tag/point_physics.json"));
+    jsons.insert("tag/preferences_network_game.json", include_bytes!("../../json/tag/preferences_network_game.json"));
+    jsons.insert("tag/projectile.json", include_bytes!("../../json/tag/projectile.json"));
+    jsons.insert("tag/scenario_structure_bsp.json", include_bytes!("../../json/tag/scenario_structure_bsp.json"));
+    jsons.insert("tag/scenario.json", include_bytes!("../../json/tag/scenario.json"));
+    jsons.insert("tag/scenery.json", include_bytes!("../../json/tag/scenery.json"));
+    jsons.insert("tag/shader_environment.json", include_bytes!("../../json/tag/shader_environment.json"));
+    jsons.insert("tag/shader_model.json", include_bytes!("../../json/tag/shader_model.json"));
+    jsons.insert("tag/shader_transparent_chicago_extended.json", include_bytes!("../../json/tag/shader_transparent_chicago_extended.json"));
+    jsons.insert("tag/shader_transparent_chicago.json", include_bytes!("../../json/tag/shader_transparent_chicago.json"));
+    jsons.insert("tag/shader_transparent_generic.json", include_bytes!("../../json/tag/shader_transparent_generic.json"));
+    jsons.insert("tag/shader_transparent_glass.json", include_bytes!("../../json/tag/shader_transparent_glass.json"));
+    jsons.insert("tag/shader_transparent_meter.json", include_bytes!("../../json/tag/shader_transparent_meter.json"));
+    jsons.insert("tag/shader_transparent_plasma.json", include_bytes!("../../json/tag/shader_transparent_plasma.json"));
+    jsons.insert("tag/shader_transparent_water.json", include_bytes!("../../json/tag/shader_transparent_water.json"));
+    jsons.insert("tag/shader.json", include_bytes!("../../json/tag/shader.json"));
+    jsons.insert("tag/sky.json", include_bytes!("../../json/tag/sky.json"));
+    jsons.insert("tag/sound_environment.json", include_bytes!("../../json/tag/sound_environment.json"));
+    jsons.insert("tag/sound_looping.json", include_bytes!("../../json/tag/sound_looping.json"));
+    jsons.insert("tag/sound_scenery.json", include_bytes!("../../json/tag/sound_scenery.json"));
+    jsons.insert("tag/sound.json", include_bytes!("../../json/tag/sound.json"));
+    jsons.insert("tag/string_list.json", include_bytes!("../../json/tag/string_list.json"));
+    jsons.insert("tag/tag_collection.json", include_bytes!("../../json/tag/tag_collection.json"));
+    jsons.insert("tag/ui_widget_collection.json", include_bytes!("../../json/tag/ui_widget_collection.json"));
+    jsons.insert("tag/ui_widget_definition.json", include_bytes!("../../json/tag/ui_widget_definition.json"));
+    jsons.insert("tag/unicode_string_list.json", include_bytes!("../../json/tag/unicode_string_list.json"));
+    jsons.insert("tag/unit_hud_interface.json", include_bytes!("../../json/tag/unit_hud_interface.json"));
+    jsons.insert("tag/unit.json", include_bytes!("../../json/tag/unit.json"));
+    jsons.insert("tag/vehicle.json", include_bytes!("../../json/tag/vehicle.json"));
+    jsons.insert("tag/virtual_keyboard.json", include_bytes!("../../json/tag/virtual_keyboard.json"));
+    jsons.insert("tag/weapon_hud_interface.json", include_bytes!("../../json/tag/weapon_hud_interface.json"));
+    jsons.insert("tag/weapon.json", include_bytes!("../../json/tag/weapon.json"));
+    jsons.insert("tag/weather_particle_system.json", include_bytes!("../../json/tag/weather_particle_system.json"));
+    jsons.insert("tag/wind.json", include_bytes!("../../json/tag/wind.json"));
+
+    jsons.insert("engine/halo macintosh demo.json", include_bytes!("../../json/engine/halo macintosh demo.json"));
+    jsons.insert("engine/halo macintosh retail.json", include_bytes!("../../json/engine/halo macintosh retail.json"));
+    jsons.insert("engine/halo mcc cea.json", include_bytes!("../../json/engine/halo mcc cea.json"));
+    jsons.insert("engine/halo pc custom edition.json", include_bytes!("../../json/engine/halo pc custom edition.json"));
+    jsons.insert("engine/halo pc demo.json", include_bytes!("../../json/engine/halo pc demo.json"));
+    jsons.insert("engine/halo pc retail.json", include_bytes!("../../json/engine/halo pc retail.json"));
+    jsons.insert("engine/halo pc.json", include_bytes!("../../json/engine/halo pc.json"));
+    jsons.insert("engine/halo xbox ntsc demo.json", include_bytes!("../../json/engine/halo xbox ntsc demo.json"));
+    jsons.insert("engine/halo xbox ntsc jp.json", include_bytes!("../../json/engine/halo xbox ntsc jp.json"));
+    jsons.insert("engine/halo xbox ntsc tw.json", include_bytes!("../../json/engine/halo xbox ntsc tw.json"));
+    jsons.insert("engine/halo xbox ntsc us.json", include_bytes!("../../json/engine/halo xbox ntsc us.json"));
+    jsons.insert("engine/halo xbox pal.json", include_bytes!("../../json/engine/halo xbox pal.json"));
+    jsons.insert("engine/halo xbox.json", include_bytes!("../../json/engine/halo xbox.json"));
 
     jsons.into_iter()
             .map(|(file,v)| (file, serde_json::from_slice::<Value>(v).unwrap_or_else(|e| panic!("failed to parse {file}: {e}"))))
@@ -260,12 +473,8 @@ fn get_all_definitions() -> Vec<Map<String, Value>> {
 }
 
 #[test]
-fn test_def() {
-    let values = get_all_definitions();
-    let mut parsed = ParsedTagData::default();
-    parsed.load_from_json(&values);
-    parsed.assert_valid();
-    parsed.resolve_parent_class_references();
+fn test_load_all_definitions() {
+    crate::load_all_definitions();
 }
 
 trait LoadFromSerdeJSON {
@@ -284,14 +493,20 @@ impl LoadFromSerdeJSON for NamedObject {
     }
 }
 
-impl LoadFromSerdeJSON for Version {
+impl LoadFromSerdeJSON for SupportedEngines {
     fn load_from_json(object: &Map<String, Value>) -> Self {
-        let version_introduced = object.get("version_introduced").map(|v| v.as_number().unwrap_or_else(|| panic!("expected version_introduced to be a number")).as_u64().unwrap() as usize).unwrap_or(1);
-        let version_supported = object.get("version_supported").map(|v| v.as_number().unwrap_or_else(|| panic!("expected version_supported to be a number")).as_u64().unwrap() as usize).unwrap_or(version_introduced);
-        Self {
-            version_introduced,
-            version_supported
-        }
+        let supported = match object.get("supported_engines") {
+            Some(n) => n,
+            None => return Self::default()
+        };
+
+        let supported_engines = supported.as_array()
+            .unwrap_or_else(|| panic!("{}::version is not an array", oget_name!(object)))
+            .iter()
+            .map(|f| f.as_str().unwrap_or_else(|| panic!("{}::version contains non-strings", oget_name!(object))).to_owned())
+            .collect::<Vec<String>>();
+
+        Self { supported_engines: Some(supported_engines) }
     }
 }
 
@@ -307,7 +522,7 @@ impl LoadFromSerdeJSON for Flags {
             uneditable_in_editor: get_flag("read_only"),
             hidden_in_editor: get_flag("hidden"),
             unusable: get_flag("disabled"),
-            version: Version::load_from_json(object)
+            supported_engines: SupportedEngines::load_from_json(object)
         }
     }
 }
@@ -366,10 +581,52 @@ impl LoadFromSerdeJSON for StructField {
             Some(result)
         };
 
+        let limit = object.get("limit").map(|l| {
+            match l {
+                Value::Number(n) => {
+                    let mut map = HashMap::new();
+                    let limit = n.as_u64().unwrap_or_else(|| panic!("{name}::limit is not u64")) as usize;
+                    map.insert(LimitType::Editor, limit);
+                    map.insert(LimitType::Default, limit);
+                    map
+                },
+
+                Value::Object(o) => {
+                    let mut map = HashMap::new();
+
+                    let mut editor_limit: Option<usize> = None;
+                    let mut default_limit: Option<usize> = None;
+
+                    for (k, v) in o {
+                        let v = v.as_number().unwrap_or_else(|| panic!("{name}::limit is are not all numbers"))
+                            .as_u64().unwrap_or_else(|| panic!("{name}::limit is not all u64's"))
+                            as usize;
+
+                        if k == "default" {
+                            default_limit = Some(v);
+                        }
+                        else {
+                            map.insert(LimitType::Engine(k.to_owned()), v);
+                        }
+
+                        editor_limit = Some(editor_limit.unwrap_or_default().max(v))
+                    }
+
+                    default_limit.unwrap_or_else(|| panic!("No default limit set for {name}"));
+
+                    let editor_limit = editor_limit.unwrap_or_else(|| panic!("Unable to establish an editor limit for {name} (no limits maybe?)"));
+                    map.insert(LimitType::Editor, editor_limit);
+                    map
+                }
+
+                _ => panic!("{name} is not a number or an object")
+            }
+        });
+
         StructField {
             minimum: get_static_value("minimum"),
             maximum: get_static_value("maximum"),
-            limit: None, // TODO
+            limit,
             flags: Flags::load_from_json(object),
             little_endian_in_tags: object.get("little_endian").map(|f| f.as_bool().unwrap()).unwrap_or(false),
             default_value: get_static_values("default"),

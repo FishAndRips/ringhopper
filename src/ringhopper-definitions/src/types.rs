@@ -2,14 +2,15 @@ use std::collections::HashMap;
 use serde_json::Value;
 
 #[derive(Default)]
-pub struct ParsedTagData {
+pub struct ParsedDefinitions {
     pub objects: HashMap<String, NamedObject>,
     pub groups: HashMap<String, TagGroup>,
+    pub engines: HashMap<String, Engine>
 }
 
 pub trait SizeableObject {
     /// Get the size of the object in bytes
-    fn size(&self, parsed_tag_data: &ParsedTagData) -> usize;
+    fn size(&self, parsed_tag_data: &ParsedDefinitions) -> usize;
 }
 
 pub enum NamedObject {
@@ -19,7 +20,7 @@ pub enum NamedObject {
 }
 
 impl SizeableObject for NamedObject {
-    fn size(&self, parsed_tag_data: &ParsedTagData) -> usize {
+    fn size(&self, parsed_tag_data: &ParsedDefinitions) -> usize {
         match self {
             NamedObject::Bitfield(b) => b.size(parsed_tag_data),
             NamedObject::Enum(e) => e.size(parsed_tag_data),
@@ -42,6 +43,7 @@ pub struct TagGroup {
     pub name: String,
     pub struct_name: String,
     pub supergroup: Option<String>,
+    pub supported_engines: SupportedEngines
 }
 
 pub struct Struct {
@@ -54,13 +56,13 @@ pub struct Struct {
 }
 
 impl SizeableObject for Struct {
-    fn size(&self, _: &ParsedTagData) -> usize {
+    fn size(&self, _: &ParsedDefinitions) -> usize {
         self.size
     }
 }
 
 impl Struct {
-    fn assert_size_is_correct(&self, parsed_tag_data: &ParsedTagData) {
+    fn assert_size_is_correct(&self, parsed_tag_data: &ParsedDefinitions) {
         let expected_size = self.size;
         let mut real_size = 0;
         for f in &self.fields {
@@ -71,9 +73,16 @@ impl Struct {
     }
 }
 
+#[derive(PartialEq, Eq, Hash)]
 pub enum LimitType {
-    Version(usize),
-    Extended
+    /// Maximum allowed by the engine
+    Engine(String),
+
+    /// Maximum allowed by default
+    Default,
+
+    /// Maximum allowed by the editor
+    Editor
 }
 
 pub struct StructField {
@@ -106,7 +115,7 @@ pub struct StructField {
 }
 
 impl SizeableObject for StructField {
-    fn size(&self, parsed_tag_data: &ParsedTagData) -> usize {
+    fn size(&self, parsed_tag_data: &ParsedDefinitions) -> usize {
         self.field_type.size(parsed_tag_data) * self.count.field_count()
     }
 }
@@ -117,7 +126,7 @@ pub enum StructFieldType {
 }
 
 impl SizeableObject for StructFieldType {
-    fn size(&self, parsed_tag_data: &ParsedTagData) -> usize {
+    fn size(&self, parsed_tag_data: &ParsedDefinitions) -> usize {
         match self {
             StructFieldType::Object(o) => o.size(parsed_tag_data),
             StructFieldType::Padding(u) => *u,
@@ -181,7 +190,7 @@ pub struct Bitfield {
 }
 
 impl SizeableObject for Bitfield {
-    fn size(&self, _: &ParsedTagData) -> usize {
+    fn size(&self, _: &ParsedDefinitions) -> usize {
         (self.width / 8) as usize
     }
 }
@@ -193,7 +202,7 @@ pub struct Enum {
 }
 
 impl SizeableObject for Enum {
-    fn size(&self, _: &ParsedTagData) -> usize {
+    fn size(&self, _: &ParsedDefinitions) -> usize {
         std::mem::size_of::<u16>()
     }
 }
@@ -203,19 +212,14 @@ pub struct Field {
     pub flags: Flags
 }
 
-pub struct Version {
-    /// Version of engine this field was introduced. This field is used for documentation purposes.
-    pub version_introduced: usize,
-
-    /// Minimum supported version engine this field can be used which can differ from `introduced_version` if the field has no effect on older versions and this is OK.
-    pub version_supported: usize,
+pub struct SupportedEngines {
+    pub supported_engines: Option<Vec<String>>
 }
 
-impl Default for Version {
+impl Default for SupportedEngines {
     fn default() -> Self {
         Self {
-            version_introduced: 1,
-            version_supported: 1
+            supported_engines: None
         }
     }
 }
@@ -238,8 +242,42 @@ pub struct Flags {
     /// The field cannot be used; if it is set, it is an error
     pub unusable: bool,
 
-    /// Version information for the field
-    pub version: Version
+    /// Supported engines for the field
+    pub supported_engines: SupportedEngines
+}
+
+pub struct Engine {
+    pub name: String,
+    pub display_name: String,
+    pub version: Option<String>,
+    pub build: Option<String>,
+    pub inherits: Option<String>,
+    pub build_target: bool,
+    pub cache_file_version: u32,
+    pub max_script_nodes: u64,
+    pub max_tag_space: u64,
+    pub max_cache_file_size: EngineCacheFileSize,
+    pub base_memory_address: BaseMemoryAddress,
+    pub required_tags: EngineRequiredTags
+}
+
+pub struct EngineCacheFileSize {
+    pub user_interface: u64,
+    pub singleplayer: u64,
+    pub multiplayer: u64
+}
+
+#[derive(Default)]
+pub struct EngineRequiredTags {
+    pub all: Vec<String>,
+    pub user_interface: Vec<String>,
+    pub singleplayer: Vec<String>,
+    pub multiplayer: Vec<String>
+}
+
+pub struct BaseMemoryAddress {
+    pub address: u64,
+    pub inferred: bool
 }
 
 pub struct TagReference {
@@ -364,7 +402,7 @@ impl ObjectType {
 }
 
 impl SizeableObject for ObjectType {
-    fn size(&self, parsed_tag_data: &ParsedTagData) -> usize {
+    fn size(&self, parsed_tag_data: &ParsedDefinitions) -> usize {
         match self {
             Self::NamedObject(p) => parsed_tag_data.objects.get(p).unwrap().size(parsed_tag_data),
             _ => self.primitive_size()
@@ -373,4 +411,4 @@ impl SizeableObject for ObjectType {
 }
 
 mod parse;
-pub use parse::*;
+pub(crate) use parse::*;

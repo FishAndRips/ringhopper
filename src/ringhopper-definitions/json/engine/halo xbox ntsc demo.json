@@ -1,0 +1,11 @@
+[
+    {
+        "name": "xbox-demo",
+        "type": "engine",
+        "display_name": "Halo Demo (Xbox NTSC-US)",
+        "version": "halo xbox untracked version Feb 25 2002 17:14:05",
+        "build_target": true,
+        "build": "",
+        "inherits": "xbox-pal"
+    }
+]

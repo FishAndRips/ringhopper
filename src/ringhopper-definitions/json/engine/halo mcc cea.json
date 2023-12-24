@@ -1,0 +1,20 @@
+[
+    {
+        "name": "mcc-cea",
+        "type": "engine",
+        "display_name": "Halo: Combat Evolved Anniversary (MCC)",
+        "version": "halo1 pc 01.03.43.0000 Sep  1 2023 10:51:22",
+        "build_target": true,
+        "build": "01.03.43.0000",
+        "cache_file_version": 13,
+        "max_tag_space": "0x4000000",
+        "max_cache_file_size": "0x7FFFFFFF",
+        "base_memory_address": {
+            "value": "0x50000000",
+            "inferred": true
+        },
+        "script_compile_target": "mcc-cea",
+        "max_script_nodes": 32767,
+        "inherits": "pc-retail"
+    }
+]

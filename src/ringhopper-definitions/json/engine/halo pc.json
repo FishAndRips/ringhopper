@@ -1,0 +1,36 @@
+[
+    {
+        "name": "pc",
+        "type": "engine",
+        "display_name": "Unknown (PC)",
+        "build_target": false,
+        "cache_file_version": 7,
+        "max_tag_space": "0x1800000",
+        "max_cache_file_size": "0x18000000",
+        "base_memory_address": "0x40440000",
+        "script_compile_target": "gbx-retail",
+        "max_script_nodes": 19001,
+        "required_tags": {
+            "all": [
+                "globals\\globals.globals",
+                "ui\\ui_tags_loaded_all_scenario_types.tag_collection",
+                "sound\\sfx\\ui\\cursor.sound",
+                "sound\\sfx\\ui\\back.sound",
+                "sound\\sfx\\ui\\flag_failure.sound",
+                "ui\\shell\\main_menu\\mp_map_list.unicode_string_list",
+                "ui\\shell\\strings\\loading.unicode_string_list",
+                "ui\\shell\\bitmaps\\trouble_brewing.bitmap",
+                "ui\\shell\\bitmaps\\background.bitmap"
+            ],
+            "user_interface": [
+                "ui\\ui_tags_loaded_mainmenu_scenario_type.tag_collection"
+            ],
+            "singleplayer": [
+                "ui\\ui_tags_loaded_multiplayer_scenario_type.tag_collection"
+            ],
+            "multiplayer": [
+                "ui\\ui_tags_loaded_solo_scenario_type.tag_collection"
+            ]
+        }
+    }
+]

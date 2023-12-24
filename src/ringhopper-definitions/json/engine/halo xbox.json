@@ -1,0 +1,52 @@
+[
+    {
+        "name": "xbox",
+        "type": "engine",
+        "display_name": "Unknown (Xbox)",
+        "build_target": false,
+        "cache_file_version": 5,
+        "max_tag_space": "0x1600000",
+        "max_cache_file_size": {
+            "user_interface": "0x2300000",
+            "singleplayer": "0x11600000",
+            "multiplayer": "0x2F00000"
+        },
+        "base_memory_address": "0x803A6000",
+        "script_compile_target": "xbox",
+        "max_script_nodes": 19001,
+        "required_tags": {
+            "all": [
+                "globals\\globals.globals",
+                "ui\\shell\\bitmaps\\white.bitmap",
+                "ui\\multiplayer_game_text.unicode_string_list"
+            ],
+            "user_interface": [
+                "ui\\default_multiplayer_game_setting_names.unicode_string_list",
+                "ui\\saved_game_file_strings.unicode_string_list",
+                "ui\\multiplayer_scenarios.multiplayer_scenario_description",
+                "ui\\random_player_names.unicode_string_list",
+                "ui\\english.virtual_keyboard",
+                "ui\\shell\\strings\\default_player_profile_names.unicode_string_list",
+                "ui\\shell\\strings\\game_variant_descriptions.unicode_string_list",
+                "ui\\shell\\main_menu\\player_profiles_select\\joystick_set_short_descriptions.unicode_string_list",
+                "ui\\shell\\main_menu\\player_profiles_select\\button_set_short_descriptions.unicode_string_list",
+                "ui\\shell\\main_menu\\player_profiles_select\\button_set_long_descriptions.unicode_string_list",
+                "sound\\music\\title1\\title1.sound_looping",
+                "sound\\sfx\\ui\\flag_failure.sound",
+                "sound\\sfx\\ui\\cursor.sound"
+            ],
+            "singleplayer": [
+                "ui\\shell\\solo.ui_widget_collection"
+            ],
+            "multiplayer": [
+                "ui\\shell\\multiplayer.ui_widget_collection"
+            ],
+            "singleplayer_demo": [
+                "ui\\shell\\solo_demo.ui_widget_collection"
+            ],
+            "multiplayer_demo": [
+                "ui\\shell\\multiplayer_demo.ui_widget_collection"
+            ]
+        }
+    }
+]

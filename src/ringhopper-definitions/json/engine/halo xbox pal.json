@@ -1,0 +1,16 @@
+[
+    {
+        "name": "xbox-pal",
+        "type": "engine",
+        "display_name": "Halo: Combat Evolved (Xbox PAL)",
+        "version": "halo xbox 01.01.14.2342 Jan 14 2002 13:03:45",
+        "build_target": true,
+        "build": "01.01.14.2342",
+        "required_tags": {
+            "all": [
+                "ui\\shell\\strings\\temp_strings.unicode_string_list"
+            ]
+        },
+        "inherits": "xbox"
+    }
+]

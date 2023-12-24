@@ -1,0 +1,20 @@
+[
+    {
+        "name": "UIWidgetCollection",
+        "fields": [
+            {
+                "name": "tags",
+                "type": "Reflexive",
+                "struct": "TagCollectionTag",
+                "limit": 200
+            }
+        ],
+        "type": "struct",
+        "size": 12
+    },
+    {
+        "name": "ui_widget_collection",
+        "struct": "UIWidgetCollection",
+        "type": "group"
+    }
+]
