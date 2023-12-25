@@ -158,7 +158,7 @@ impl FieldCount {
 pub struct DefaultBehavior {
     /// Default values for each field.
     ///
-    /// For bounds, this is the [from,to]. For arrays, this is for each array element.
+    /// For bounds, this is the \[from,to\]. For arrays, this is for each array element.
     pub default_value: Vec<StaticValue>,
 
     /// Default if the tag is being created

@@ -277,9 +277,7 @@
             }
         ],
         "type": "struct",
-        "size": 512,
-        "needs_preprocessed": true,
-        "needs_reprocessed_on_extraction": true
+        "size": 512
     },
     {
         "name": "continuous_damage_effect",

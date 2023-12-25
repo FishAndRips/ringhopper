@@ -521,7 +521,7 @@ impl LoadFromSerdeJSON for Flags {
             cache_only: get_flag("cache_only"),
             uneditable_in_editor: get_flag("read_only"),
             hidden_in_editor: get_flag("hidden"),
-            unusable: get_flag("disabled"),
+            unusable: get_flag("exclude"),
             supported_engines: SupportedEngines::load_from_json(object)
         }
     }

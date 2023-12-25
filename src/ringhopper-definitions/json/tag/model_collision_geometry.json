@@ -428,8 +428,7 @@
         ],
         "type": "struct",
         "read_only": true,
-        "size": 96,
-        "needs_preprocessed": true
+        "size": 96
     },
     {
         "name": "ModelCollisionGeometryNode",
@@ -729,9 +728,7 @@
             }
         ],
         "type": "struct",
-        "size": 664,
-        "needs_preprocessed": true,
-        "needs_postprocessed": true
+        "size": 664
     },
     {
         "name": "model_collision_geometry",

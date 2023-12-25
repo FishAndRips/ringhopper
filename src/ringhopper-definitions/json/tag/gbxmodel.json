@@ -1,5 +1,15 @@
 [
     {
+        "name": "GBXModelFlags",
+        "type": "bitfield",
+        "fields": [
+            "blend shared normals",
+            "parts have local nodes",
+            "ignore skinning"
+        ],
+        "width": 32
+    },
+    {
         "name": "GBXModelGeometryPart",
         "fields": [
             {
@@ -34,11 +44,8 @@
         ],
         "type": "struct",
         "inherits": "ModelGeometryPart",
-        "unsafe_to_dedupe": true,
         "read_only": true,
-        "size": 132,
-        "needs_preprocessed": true,
-        "needs_reprocessed_on_extraction": true
+        "size": 132
     },
     {
         "name": "GBXModelGeometry",
@@ -75,7 +82,7 @@
             {
                 "name": "flags",
                 "read_only": false,
-                "type": "ModelFlags"
+                "type": "GBXModelFlags"
             },
             {
                 "name": "node list checksum",
@@ -198,10 +205,7 @@
         ],
         "type": "struct",
         "read_only": true,
-        "size": 232,
-        "needs_preprocessed": true,
-        "needs_postprocessed": true,
-        "needs_reprocessed_on_extraction": true
+        "size": 232
     },
     {
         "name": "gbxmodel",

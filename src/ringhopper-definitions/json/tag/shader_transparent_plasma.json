@@ -161,9 +161,7 @@
         ],
         "type": "struct",
         "inherits": "Shader",
-        "size": 332,
-        "needs_preprocessed": true,
-        "needs_postprocessed": true
+        "size": 332
     },
     {
         "name": "shader_transparent_plasma",

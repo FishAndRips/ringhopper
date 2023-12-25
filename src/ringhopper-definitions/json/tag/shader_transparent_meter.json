@@ -111,9 +111,7 @@
         ],
         "type": "struct",
         "inherits": "Shader",
-        "size": 260,
-        "needs_preprocessed": true,
-        "needs_postprocessed": true
+        "size": 260
     },
     {
         "name": "shader_transparent_meter",

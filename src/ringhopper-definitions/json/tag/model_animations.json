@@ -387,13 +387,13 @@
                 "name": "ik points",
                 "type": "Reflexive",
                 "struct": "ModelAnimationsAnimationGraphUnitSeatikPoint",
-                "limit": 4
+                "limit": 8
             },
             {
                 "name": "weapons",
                 "type": "Reflexive",
                 "struct": "ModelAnimationsAnimationGraphWeapon",
-                "limit": 16
+                "limit": 64
             }
         ],
         "type": "struct",
@@ -520,7 +520,7 @@
                 "name": "suspension animations",
                 "type": "Reflexive",
                 "struct": "ModelAnimationSuspensionAnimation",
-                "limit": 8
+                "limit": 32
             }
         ],
         "type": "struct",
@@ -593,7 +593,7 @@
                 "name": "animations",
                 "type": "Reflexive",
                 "struct": "ModelAnimationsFirstPersonWeapon",
-                "limit": 28
+                "limit": 30
             }
         ],
         "type": "struct",
@@ -823,9 +823,7 @@
         ],
         "type": "struct",
         "title": "name",
-        "size": 180,
-        "needs_preprocessed": true,
-        "needs_reprocessed_on_extraction": true
+        "size": 180
     },
     {
         "name": "ModelAnimations",
@@ -840,7 +838,7 @@
                 "name": "units",
                 "type": "Reflexive",
                 "struct": "ModelAnimationsAnimationGraphUnitSeat",
-                "limit": 32
+                "limit": 2048
             },
             {
                 "name": "weapons",
@@ -876,10 +874,7 @@
                 "name": "sound references",
                 "type": "Reflexive",
                 "struct": "ModelAnimationsAnimationGraphSoundReference",
-                "limit": {
-                    "mcc-cea": 513,
-                    "default": 257
-                }
+                "limit": 2048
             },
             {
                 "name": "limp body node radius",
@@ -909,8 +904,7 @@
             }
         ],
         "type": "struct",
-        "size": 128,
-        "needs_preprocessed": true
+        "size": 128
     },
     {
         "name": "model_animations",

@@ -692,8 +692,7 @@
             }
         ],
         "type": "struct",
-        "size": 68,
-        "needs_preprocessed": true
+        "size": 68
     },
     {
         "name": "GlobalsRasterizerData",
@@ -785,7 +784,6 @@
             {
                 "name": "test 0",
                 "type": "TagReference",
-                "non_null": true,
                 "groups": [
                     "bitmap"
                 ]
@@ -793,7 +791,6 @@
             {
                 "name": "test 1",
                 "type": "TagReference",
-                "non_null": true,
                 "groups": [
                     "bitmap"
                 ]
@@ -1107,8 +1104,7 @@
             }
         ],
         "type": "struct",
-        "size": 160,
-        "needs_postprocessed": true
+        "size": 160
     },
     {
         "name": "GlobalsPlayerInformation",
@@ -1250,8 +1246,7 @@
             }
         ],
         "type": "struct",
-        "size": 244,
-        "needs_preprocessed": true
+        "size": 244
     },
     {
         "name": "GlobalsFirstPersonInterface",
@@ -1405,8 +1400,7 @@
             }
         ],
         "type": "struct",
-        "size": 152,
-        "needs_preprocessed": true
+        "size": 152
     },
     {
         "name": "GlobalsBreakableSurfaceParticleEffect",
@@ -1718,8 +1712,7 @@
             }
         ],
         "type": "struct",
-        "size": 428,
-        "needs_preprocessed": true
+        "size": 428
     },
     {
         "name": "globals",

@@ -132,8 +132,7 @@
             }
         ],
         "type": "struct",
-        "size": 128,
-        "needs_postprocessed": true
+        "size": 128
     },
     {
         "name": "detail_object_collection",

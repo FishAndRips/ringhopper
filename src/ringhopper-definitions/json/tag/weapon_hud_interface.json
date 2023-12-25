@@ -265,8 +265,7 @@
             }
         ],
         "type": "struct",
-        "size": 180,
-        "needs_postprocessed": true
+        "size": 180
     },
     {
         "name": "WeaponHUDInterfaceMeter",
@@ -395,8 +394,7 @@
             }
         ],
         "type": "struct",
-        "size": 180,
-        "needs_postprocessed": true
+        "size": 180
     },
     {
         "name": "WeaponHUDInterfaceNumber",
@@ -650,8 +648,7 @@
         ],
         "type": "struct",
         "title": "crosshair bitmap",
-        "size": 104,
-        "needs_postprocessed": true
+        "size": 104
     },
     {
         "name": "WeaponHUDInterfaceOverlay",
@@ -797,8 +794,7 @@
             }
         ],
         "type": "struct",
-        "size": 104,
-        "needs_postprocessed": true
+        "size": 104
     },
     {
         "name": "WeaponHUDInterfaceScreenEffect",
@@ -1037,8 +1033,7 @@
             }
         ],
         "type": "struct",
-        "size": 380,
-        "needs_preprocessed": true
+        "size": 380
     },
     {
         "name": "weapon_hud_interface",

@@ -16,7 +16,7 @@
         "type": "enum"
     },
     {
-        "name": "ParticleSystemComplexSpriteRenderModes",
+        "name": "ParticleSystemComplexSpriteRenderMode",
         "options": [
             "simple",
             "rotational"
@@ -358,9 +358,7 @@
         ],
         "type": "struct",
         "title": "name",
-        "size": 376,
-        "needs_preprocessed": true,
-        "needs_postprocessed": true
+        "size": 376
     },
     {
         "name": "ParticleSystemType",
@@ -383,7 +381,7 @@
             },
             {
                 "name": "complex sprite render modes",
-                "type": "ParticleSystemComplexSpriteRenderModes"
+                "type": "ParticleSystemComplexSpriteRenderMode"
             },
             {
                 "type": "pad",

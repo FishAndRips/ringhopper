@@ -79,8 +79,7 @@
             }
         ],
         "type": "struct",
-        "size": 176,
-        "needs_preprocessed": true
+        "size": 176
     },
     {
         "name": "LightVolume",

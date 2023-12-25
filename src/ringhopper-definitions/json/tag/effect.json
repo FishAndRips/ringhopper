@@ -347,8 +347,7 @@
         ],
         "type": "struct",
         "title": "particle type",
-        "size": 232,
-        "needs_postprocessed": true
+        "size": 232
     },
     {
         "name": "EffectEvent",
@@ -435,8 +434,7 @@
             }
         ],
         "type": "struct",
-        "size": 64,
-        "needs_postprocessed": true
+        "size": 64
     },
     {
         "name": "effect",

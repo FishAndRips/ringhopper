@@ -274,8 +274,7 @@
             }
         ],
         "type": "struct",
-        "size": 240,
-        "needs_preprocessed": true
+        "size": 240
     },
     {
         "name": "lens_flare",

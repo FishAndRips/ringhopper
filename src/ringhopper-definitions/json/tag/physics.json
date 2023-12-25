@@ -274,9 +274,7 @@
             }
         ],
         "type": "struct",
-        "size": 128,
-        "needs_preprocessed": true,
-        "needs_reprocessed_on_extraction": true
+        "size": 128
     },
     {
         "name": "physics",

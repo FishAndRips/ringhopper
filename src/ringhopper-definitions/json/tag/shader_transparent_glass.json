@@ -184,9 +184,7 @@
         ],
         "type": "struct",
         "inherits": "Shader",
-        "size": 480,
-        "needs_preprocessed": true,
-        "needs_postprocessed": true
+        "size": 480
     },
     {
         "name": "shader_transparent_glass",

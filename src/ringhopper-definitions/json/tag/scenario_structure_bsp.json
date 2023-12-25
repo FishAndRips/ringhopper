@@ -40,8 +40,7 @@
         "type": "struct",
         "title": "shader",
         "read_only": true,
-        "size": 20,
-        "needs_postprocessed": true
+        "size": 20
     },
     {
         "name": "ScenarioStructureBSPNode",
@@ -383,9 +382,7 @@
         "type": "struct",
         "normalize": true,
         "read_only": true,
-        "size": 256,
-        "needs_preprocessed": true,
-        "needs_reprocessed_on_extraction": true
+        "size": 256
     },
     {
         "name": "ScenarioStructureBSPLightmap",
@@ -1165,8 +1162,7 @@
         ],
         "type": "struct",
         "read_only": true,
-        "size": 64,
-        "needs_preprocessed": true
+        "size": 64
     },
     {
         "name": "ScenarioStructureBSPRuntimeDecal",
@@ -1591,9 +1587,7 @@
         ],
         "type": "struct",
         "read_only": true,
-        "size": 648,
-        "needs_preprocessed": true,
-        "needs_postprocessed": true
+        "size": 648
     },
     {
         "name": "ScenarioStructureBSPCompiledHeader",

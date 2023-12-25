@@ -172,9 +172,7 @@
             }
         ],
         "type": "struct",
-        "size": 160,
-        "needs_preprocessed": true,
-        "needs_reprocessed_on_extraction": true
+        "size": 160
     },
     {
         "name": "Projectile",
@@ -348,10 +346,7 @@
         ],
         "type": "struct",
         "inherits": "Object",
-        "size": 588,
-        "needs_preprocessed": true,
-        "needs_postprocessed": true,
-        "needs_reprocessed_on_extraction": true
+        "size": 588
     },
     {
         "name": "projectile",

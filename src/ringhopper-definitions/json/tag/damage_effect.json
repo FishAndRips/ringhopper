@@ -580,9 +580,7 @@
             }
         ],
         "type": "struct",
-        "size": 672,
-        "needs_preprocessed": true,
-        "needs_reprocessed_on_extraction": true
+        "size": 672
     },
     {
         "name": "damage_effect",

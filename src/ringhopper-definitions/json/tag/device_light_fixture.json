@@ -9,9 +9,7 @@
         ],
         "type": "struct",
         "inherits": "Device",
-        "size": 720,
-        "needs_preprocessed": true,
-        "needs_postprocessed": true
+        "size": 720
     },
     {
         "name": "device_light_fixture",

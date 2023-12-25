@@ -70,9 +70,7 @@
         ],
         "type": "struct",
         "inherits": "Device",
-        "size": 792,
-        "needs_preprocessed": true,
-        "needs_postprocessed": true
+        "size": 792
     },
     {
         "name": "device_control",

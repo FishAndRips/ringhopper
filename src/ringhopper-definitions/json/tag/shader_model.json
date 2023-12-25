@@ -315,9 +315,7 @@
         ],
         "type": "struct",
         "inherits": "Shader",
-        "size": 440,
-        "needs_preprocessed": true,
-        "needs_postprocessed": true
+        "size": 440
     },
     {
         "name": "shader_model",

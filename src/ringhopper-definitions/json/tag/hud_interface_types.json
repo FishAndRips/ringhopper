@@ -67,7 +67,31 @@
             "top right",
             "bottom left",
             "bottom right",
-            "center"
+            "center",
+            {
+                "name": "top center",
+                "engines": [
+                    "mcc-cea"
+                ]
+            },
+            {
+                "name": "bottom center",
+                "engines": [
+                    "mcc-cea"
+                ]
+            },
+            {
+                "name": "left center",
+                "engines": [
+                    "mcc-cea"
+                ]
+            },
+            {
+                "name": "right center",
+                "engines": [
+                    "mcc-cea"
+                ]
+            }
         ],
         "type": "enum"
     },
@@ -79,7 +103,31 @@
             "top right",
             "bottom left",
             "bottom right",
-            "center"
+            "center",
+            {
+                "name": "top center",
+                "engines": [
+                    "mcc-cea"
+                ]
+            },
+            {
+                "name": "bottom center",
+                "engines": [
+                    "mcc-cea"
+                ]
+            },
+            {
+                "name": "left center",
+                "engines": [
+                    "mcc-cea"
+                ]
+            },
+            {
+                "name": "right center",
+                "engines": [
+                    "mcc-cea"
+                ]
+            }
         ],
         "type": "enum"
     },

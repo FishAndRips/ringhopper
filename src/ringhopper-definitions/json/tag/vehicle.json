@@ -280,9 +280,7 @@
         ],
         "type": "struct",
         "inherits": "Unit",
-        "size": 1008,
-        "needs_preprocessed": true,
-        "needs_postprocessed": true
+        "size": 1008
     },
     {
         "name": "vehicle",

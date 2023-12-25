@@ -4,9 +4,7 @@
         "fields": [],
         "type": "struct",
         "inherits": "BasicObject",
-        "size": 508,
-        "needs_preprocessed": true,
-        "needs_postprocessed": true
+        "size": 508
     },
     {
         "name": "scenery",

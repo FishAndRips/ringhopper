@@ -120,8 +120,7 @@
             }
         ],
         "type": "struct",
-        "size": 180,
-        "needs_preprocessed": true
+        "size": 180
     },
     {
         "name": "Lightning",

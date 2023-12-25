@@ -289,8 +289,7 @@
         ],
         "type": "struct",
         "title": "name",
-        "size": 604,
-        "needs_postprocessed": true
+        "size": 604
     },
     {
         "name": "WeatherParticleSystem",

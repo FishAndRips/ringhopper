@@ -114,8 +114,7 @@
         ],
         "type": "struct",
         "comment": "This is probably a leftover from pre-CE development. I don't think this tag does anything in modern CE.",
-        "size": 172,
-        "needs_preprocessed": true
+        "size": 172
     },
     {
         "name": "meter",

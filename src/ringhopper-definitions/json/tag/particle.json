@@ -322,9 +322,7 @@
             }
         ],
         "type": "struct",
-        "size": 356,
-        "needs_preprocessed": true,
-        "needs_postprocessed": true
+        "size": 356
     },
     {
         "name": "particle",

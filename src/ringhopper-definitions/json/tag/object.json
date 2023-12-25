@@ -294,8 +294,7 @@
             }
         ],
         "type": "struct",
-        "size": 360,
-        "needs_preprocessed": true
+        "size": 360
     },
     {
         "name": "ObjectChangeColorsPermutation",
@@ -348,9 +347,7 @@
             }
         ],
         "type": "struct",
-        "size": 44,
-        "needs_preprocessed": true,
-        "needs_reprocessed_on_extraction": true
+        "size": 44
     },
     {
         "name": "Object",
@@ -531,8 +528,7 @@
             },
             {
                 "type": "BaseObjectFlags",
-                "name": "more flags",
-                "display_name": "flags"
+                "name": "more flags"
             },
             {
                 "type": "pad",

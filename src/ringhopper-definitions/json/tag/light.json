@@ -207,9 +207,7 @@
             }
         ],
         "type": "struct",
-        "size": 352,
-        "needs_preprocessed": true,
-        "needs_reprocessed_on_extraction": true
+        "size": 352
     },
     {
         "name": "light",

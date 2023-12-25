@@ -207,15 +207,17 @@
                 "size": 20
             },
             {
-                "name": "single player font",
+                "name": "fullscreen font",
                 "type": "TagReference",
+                "non_null": true,
                 "groups": [
                     "font"
                 ]
             },
             {
-                "name": "multi player font",
+                "name": "splitscreen font",
                 "type": "TagReference",
+                "non_null": true,
                 "groups": [
                     "font"
                 ]

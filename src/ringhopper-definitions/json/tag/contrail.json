@@ -320,8 +320,7 @@
             }
         ],
         "type": "struct",
-        "size": 324,
-        "needs_preprocessed": true
+        "size": 324
     },
     {
         "name": "contrail",

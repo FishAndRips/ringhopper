@@ -191,8 +191,7 @@
             }
         ],
         "type": "struct",
-        "size": 268,
-        "needs_preprocessed": true
+        "size": 268
     },
     {
         "name": "decal",

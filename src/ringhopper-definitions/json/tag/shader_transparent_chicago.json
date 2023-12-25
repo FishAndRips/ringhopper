@@ -237,9 +237,7 @@
         ],
         "type": "struct",
         "inherits": "Shader",
-        "size": 108,
-        "needs_preprocessed": true,
-        "needs_postprocessed": true
+        "size": 108
     },
     {
         "name": "shader_transparent_chicago",

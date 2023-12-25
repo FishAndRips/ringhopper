@@ -23,7 +23,13 @@
         "fields": [
             "alpha tested",
             "bump map is specular mask",
-            "true atmospheric fog"
+            "true atmospheric fog",
+            {
+                "name": "use alternate bump attenuation",
+                "engines": [
+                    "mcc-cea"
+                ]
+            }
         ],
         "width": 16
     },
@@ -450,9 +456,7 @@
         ],
         "type": "struct",
         "inherits": "Shader",
-        "size": 836,
-        "needs_preprocessed": true,
-        "needs_postprocessed": true
+        "size": 836
     },
     {
         "name": "shader_environment",

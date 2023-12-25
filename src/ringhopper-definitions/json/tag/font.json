@@ -13,6 +13,14 @@
         "size": 2
     },
     {
+        "name": "FontFlags",
+        "fields": [
+            "disable mcc font override"
+        ],
+        "type": "bitfield",
+        "width": 32
+    },
+    {
         "name": "FontCharacterTables",
         "fields": [
             {
@@ -67,15 +75,14 @@
         ],
         "type": "struct",
         "size": 20,
-        "read_only": true,
-        "needs_preprocessed": true
+        "read_only": true
     },
     {
         "name": "Font",
         "fields": [
             {
                 "name": "flags",
-                "type": "int32"
+                "type": "FontFlags"
             },
             {
                 "name": "ascending height",
@@ -148,8 +155,7 @@
             }
         ],
         "type": "struct",
-        "size": 156,
-        "needs_preprocessed": true
+        "size": 156
     },
     {
         "name": "font",

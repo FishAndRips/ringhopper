@@ -542,9 +542,7 @@
             }
         ],
         "type": "struct",
-        "size": 568,
-        "needs_postprocessed": true,
-        "needs_reprocessed_on_extraction": true
+        "size": 568
     },
     {
         "name": "actor_variant",

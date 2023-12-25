@@ -12,7 +12,12 @@
         "type": "bitfield",
         "fields": [
             "stripped internal",
-            "zoner"
+            {
+                "name": "zoner",
+                "engines": [
+                    "pc"
+                ]
+            }
         ],
         "width": 32
     },
@@ -20,11 +25,17 @@
         "name": "ModelFlags",
         "type": "bitfield",
         "fields": [
-            "blend shared normals",
-            "parts have local nodes",
-            "ignore skinning"
+            "blend shared normals"
         ],
         "width": 32
+    },
+    {
+        "name": "TriangleBufferType",
+        "options": [
+            "triangle list",
+            "triangle strip"
+        ],
+        "type": "enum"
     },
     {
         "name": "ModelMarkerInstance",
@@ -263,8 +274,7 @@
         "type": "struct",
         "read_only": true,
         "title": "name",
-        "size": 88,
-        "needs_preprocessed": true
+        "size": 88
     },
     {
         "name": "ModelRegion",
@@ -402,15 +412,7 @@
         "fields": [
             {
                 "name": "flags",
-                "type": "ModelGeometryPartFlags",
-                "exclude": [
-                    {
-                        "field": "zoner",
-                        "struct": [
-                            "ModelGeometryPart"
-                        ]
-                    }
-                ]
+                "type": "ModelGeometryPartFlags"
             },
             {
                 "name": "shader index",
@@ -478,9 +480,13 @@
                 "limit": 65535
             },
             {
-                "name": "do not crash the game",
-                "type": "uint32",
+                "name": "triangle buffer type",
+                "type": "TriangleBufferType",
                 "cache_only": true
+            },
+            {
+                "type": "pad",
+                "size": 2
             },
             {
                 "name": "triangle count",
@@ -534,11 +540,8 @@
             }
         ],
         "type": "struct",
-        "unsafe_to_dedupe": true,
         "read_only": true,
-        "size": 104,
-        "needs_preprocessed": true,
-        "needs_reprocessed_on_extraction": true
+        "size": 104
     },
     {
         "name": "ModelGeometry",
@@ -603,21 +606,7 @@
             {
                 "name": "flags",
                 "read_only": false,
-                "type": "ModelFlags",
-                "exclude": [
-                    {
-                        "field": "parts have local nodes",
-                        "struct": [
-                            "Model"
-                        ]
-                    },
-                    {
-                        "field": "ignore skinning",
-                        "struct": [
-                            "Model"
-                        ]
-                    }
-                ]
+                "type": "ModelFlags"
             },
             {
                 "name": "node list checksum",
@@ -741,9 +730,6 @@
         "type": "struct",
         "read_only": true,
         "size": 232,
-        "needs_preprocessed": true,
-        "needs_postprocessed": true,
-        "needs_reprocessed_on_extraction": true,
         "supported_engines": [
             "xbox"
         ]

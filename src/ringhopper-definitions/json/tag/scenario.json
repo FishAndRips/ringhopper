@@ -2017,8 +2017,7 @@
             }
         ],
         "title": "item collection",
-        "size": 144,
-        "needs_postprocessed": true
+        "size": 144
     },
     {
         "name": "ScenarioStartingEquipment",
@@ -2551,8 +2550,7 @@
                 "cache_only": true
             }
         ],
-        "size": 24,
-        "needs_preprocessed": true
+        "size": 24
     },
     {
         "name": "ScenarioEncounter",
@@ -3271,9 +3269,7 @@
                 "size": 16
             }
         ],
-        "size": 96,
-        "needs_preprocessed": true,
-        "needs_reprocessed_on_extraction": true
+        "size": 96
     },
     {
         "name": "ScenarioBSP",
@@ -3838,10 +3834,7 @@
                 "limit": 16
             }
         ],
-        "size": 1456,
-        "needs_preprocessed": true,
-        "needs_postprocessed": true,
-        "needs_reprocessed_on_extraction": true
+        "size": 1456
     },
     {
         "name": "scenario",

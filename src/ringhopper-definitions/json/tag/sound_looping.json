@@ -222,9 +222,7 @@
             }
         ],
         "type": "struct",
-        "size": 84,
-        "needs_preprocessed": true,
-        "needs_postprocessed": true
+        "size": 84
     },
     {
         "name": "sound_looping",

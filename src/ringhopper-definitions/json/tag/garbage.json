@@ -9,9 +9,7 @@
         ],
         "type": "struct",
         "inherits": "Item",
-        "size": 944,
-        "needs_preprocessed": true,
-        "needs_postprocessed": true
+        "size": 944
     },
     {
         "name": "garbage",

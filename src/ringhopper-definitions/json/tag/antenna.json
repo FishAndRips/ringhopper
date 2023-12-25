@@ -102,8 +102,7 @@
             }
         ],
         "type": "struct",
-        "size": 208,
-        "needs_preprocessed": true
+        "size": 208
     },
     {
         "name": "antenna",

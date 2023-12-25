@@ -261,9 +261,7 @@
             }
         ],
         "type": "struct",
-        "size": 340,
-        "needs_preprocessed": true,
-        "needs_reprocessed_on_extraction": true
+        "size": 340
     },
     {
         "name": "glow",

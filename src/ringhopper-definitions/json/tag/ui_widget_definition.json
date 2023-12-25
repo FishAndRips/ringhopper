@@ -486,8 +486,7 @@
             }
         ],
         "type": "struct",
-        "size": 72,
-        "needs_postprocessed": true
+        "size": 72
     },
     {
         "name": "SearchAndReplaceReference",

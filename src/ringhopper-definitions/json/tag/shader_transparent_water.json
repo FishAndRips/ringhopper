@@ -185,9 +185,7 @@
         ],
         "type": "struct",
         "inherits": "Shader",
-        "size": 320,
-        "needs_preprocessed": true,
-        "needs_postprocessed": true
+        "size": 320
     },
     {
         "name": "shader_transparent_water",

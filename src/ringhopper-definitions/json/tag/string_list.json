@@ -9,8 +9,7 @@
             }
         ],
         "type": "struct",
-        "size": 20,
-        "needs_preprocessed": true
+        "size": 20
     },
     {
         "name": "StringList",

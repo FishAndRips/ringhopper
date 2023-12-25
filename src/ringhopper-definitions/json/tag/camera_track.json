@@ -30,6 +30,7 @@
                 "name": "control points",
                 "type": "Reflexive",
                 "struct": "CameraTrackControlPoint",
+                "_minimum": 4,
                 "limit": 16
             },
             {

@@ -65,9 +65,7 @@
             }
         ],
         "type": "struct",
-        "size": 64,
-        "needs_preprocessed": true,
-        "needs_reprocessed_on_extraction": true
+        "size": 64
     },
     {
         "name": "point_physics",

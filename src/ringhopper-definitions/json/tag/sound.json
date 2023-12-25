@@ -239,11 +239,8 @@
             }
         ],
         "type": "struct",
-        "unsafe_to_dedupe": true,
         "title": "name",
-        "size": 124,
-        "needs_preprocessed": true,
-        "needs_reprocessed_on_extraction": true
+        "size": 124
     },
     {
         "name": "SoundPitchRange",
@@ -307,8 +304,7 @@
         ],
         "type": "struct",
         "title": "name",
-        "size": 72,
-        "needs_preprocessed": true
+        "size": 72
     },
     {
         "name": "Sound",
@@ -465,10 +461,7 @@
             }
         ],
         "type": "struct",
-        "unsafe_to_dedupe": true,
-        "size": 164,
-        "needs_preprocessed": true,
-        "needs_reprocessed_on_extraction": true
+        "size": 164
     },
     {
         "name": "sound",

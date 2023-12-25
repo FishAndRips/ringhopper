@@ -73,9 +73,7 @@
         ],
         "type": "struct",
         "inherits": "Device",
-        "size": 804,
-        "needs_preprocessed": true,
-        "needs_postprocessed": true
+        "size": 804
     },
     {
         "name": "device_machine",
