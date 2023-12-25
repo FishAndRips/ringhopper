@@ -73,7 +73,7 @@
             },
             {
                 "name": "color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "flags 1",

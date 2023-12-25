@@ -298,15 +298,15 @@
             },
             {
                 "name": "color0 animation lower bound",
-                "type": "ColorARGB"
+                "type": "ColorARGBFloat"
             },
             {
                 "name": "color0 animation upper bound",
-                "type": "ColorARGB"
+                "type": "ColorARGBFloat"
             },
             {
                 "name": "color1",
-                "type": "ColorARGB"
+                "type": "ColorARGBFloat"
             },
             {
                 "name": "input a",

@@ -78,11 +78,11 @@
             },
             {
                 "name": "color lower bound",
-                "type": "ColorARGB"
+                "type": "ColorARGBFloat"
             },
             {
                 "name": "color upper bound",
-                "type": "ColorARGB"
+                "type": "ColorARGBFloat"
             },
             {
                 "type": "pad",
@@ -178,7 +178,7 @@
             },
             {
                 "name": "color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "type": "pad",

@@ -60,7 +60,7 @@
             },
             {
                 "name": "perpendicular tint color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "parallel brightness",
@@ -70,7 +70,7 @@
             },
             {
                 "name": "parallel tint color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "tint color source",

@@ -65,11 +65,11 @@
         "fields": [
             {
                 "name": "color lower bound",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "color upper bound",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "type": "pad",

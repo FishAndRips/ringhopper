@@ -676,13 +676,13 @@ impl LoadFromSerdeJSON for ObjectType {
             "Plane3D" => Self::Plane3D,
             "Quaternion" => Self::Quaternion,
             "Matrix3x3" => Self::Matrix3x3,
-            "ColorRGB" => Self::ColorRGB,
-            "ColorARGB" => Self::ColorARGB,
+            "ColorRGBFloat" => Self::ColorRGBFloat,
+            "ColorARGBFloat" => Self::ColorARGBFloat,
             "ColorARGBInt" => Self::ColorARGBInt,
             "String32" => Self::String32,
-            "Pointer" => Self::Pointer,
+            "Address" => Self::Address,
             "Index" => Self::Index,
-            "Point2DInt" => Self::Point2DInt,
+            "Vector2DInt" => Self::Vector2DInt,
             "TagID" => Self::TagID,
             "ScenarioScriptNodeValue" => Self::ScenarioScriptNodeValue,
             n => Self::NamedObject(n.to_owned()),
@@ -762,20 +762,31 @@ impl LoadFromSerdeJSON for Field {
     fn load_from_json(object: &Map<String, Value>) -> Self {
         Self {
             name: oget_str!(object, "name").to_owned(),
-            flags: Flags::load_from_json(object)
+            flags: Flags::load_from_json(object),
+            value: 0
         }
     }
 }
 
 fn process_field_array(fields: &Vec<Value>) -> Vec<Field> {
+    let mut current_index = 0;
+
     fields.iter()
-        .map(|f| match f {
-            Value::String(name) => Field {
-                name: name.to_owned(),
-                flags: Flags::default()
-            },
-            Value::Object(o) => Field::load_from_json(o),
-            _ => panic!("bitfield/enum entries must be a string or object")
+        .map(|f| {
+            let mut field = match f {
+                Value::String(name) => Field {
+                    name: name.to_owned(),
+                    flags: Flags::default(),
+                    value: 0
+                },
+                Value::Object(o) => Field::load_from_json(o),
+                _ => panic!("bitfield/enum entries must be a string or object")
+            };
+
+            field.value = current_index;
+            current_index += 1;
+
+            field
         })
         .collect()
 }
@@ -784,10 +795,18 @@ impl LoadFromSerdeJSON for Bitfield {
     fn load_from_json(object: &Map<String, Value>) -> Self {
         let name = oget_str!(object, "name").to_owned();
 
+        let mut fields = process_field_array(oget!(object, "fields").as_array().unwrap_or_else(|| panic!("{name}::fields must be an array")));
+        for f in &mut fields {
+            if f.value >= 32 {
+                panic!("field {name}::{} is too high to be represented as a bitfield", f.name);
+            }
+            f.value = 1 << f.value;
+        }
+
         Self {
             width: oget_number!(object, "width", as_u64) as u8,
             flags: Flags::load_from_json(object),
-            fields: process_field_array(oget!(object, "fields").as_array().unwrap_or_else(|| panic!("{name}::fields must be an array"))),
+            fields,
             name
         }
     }

@@ -101,7 +101,7 @@
             },
             {
                 "name": "view perpendicular tint color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "view parallel brightness",
@@ -112,7 +112,7 @@
             },
             {
                 "name": "view parallel tint color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "type": "pad",

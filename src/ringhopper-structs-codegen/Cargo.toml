@@ -1,0 +1,13 @@
+[package]
+name = "ringhopper-structs-codegen"
+authors = ["Snowy Mouse"]
+version = "0.2.0"
+description = "Tag structures for modding Halo: Combat Evolved"
+license = "GPL-3.0-only"
+edition = "2021"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+ringhopper-definitions = { path = "../ringhopper-definitions" }

@@ -104,7 +104,7 @@
             },
             {
                 "name": "color multiplier",
-                "type": "ColorARGB"
+                "type": "ColorARGBFloat"
             },
             {
                 "name": "radius multiplier",
@@ -201,11 +201,11 @@
             },
             {
                 "name": "color 1",
-                "type": "ColorARGB"
+                "type": "ColorARGBFloat"
             },
             {
                 "name": "color 2",
-                "type": "ColorARGB"
+                "type": "ColorARGBFloat"
             },
             {
                 "name": "radius multiplier",

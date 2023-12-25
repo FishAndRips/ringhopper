@@ -527,7 +527,7 @@
             },
             {
                 "name": "vertex pointer",
-                "type": "Pointer",
+                "type": "Address",
                 "comment": "Appears to be a pointer to the uncompressed vertices",
                 "cache_only": true
             },

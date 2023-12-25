@@ -90,7 +90,7 @@
             },
             {
                 "name": "color lower bounds",
-                "type": "ColorRGB",
+                "type": "ColorRGBFloat",
                 "default": [
                     1.0,
                     1.0,
@@ -99,7 +99,7 @@
             },
             {
                 "name": "color upper bounds",
-                "type": "ColorRGB",
+                "type": "ColorRGBFloat",
                 "default": [
                     1.0,
                     1.0,

@@ -74,11 +74,11 @@
             },
             {
                 "name": "minimum color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "maximum color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "ambient color",

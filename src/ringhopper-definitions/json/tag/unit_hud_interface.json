@@ -43,7 +43,7 @@
         "fields": [
             {
                 "name": "anchor offset",
-                "type": "Point2DInt"
+                "type": "Vector2DInt"
             },
             {
                 "name": "width scale",
@@ -201,7 +201,7 @@
             },
             {
                 "name": "background anchor offset",
-                "type": "Point2DInt"
+                "type": "Vector2DInt"
             },
             {
                 "name": "background width scale",
@@ -288,7 +288,7 @@
             },
             {
                 "name": "meter anchor offset",
-                "type": "Point2DInt"
+                "type": "Vector2DInt"
             },
             {
                 "name": "meter width scale",
@@ -458,7 +458,7 @@
             },
             {
                 "name": "hud background anchor offset",
-                "type": "Point2DInt"
+                "type": "Vector2DInt"
             },
             {
                 "name": "hud background width scale",
@@ -545,7 +545,7 @@
             },
             {
                 "name": "shield panel background anchor offset",
-                "type": "Point2DInt"
+                "type": "Vector2DInt"
             },
             {
                 "name": "shield panel background width scale",
@@ -632,7 +632,7 @@
             },
             {
                 "name": "shield panel meter anchor offset",
-                "type": "Point2DInt"
+                "type": "Vector2DInt"
             },
             {
                 "name": "shield panel meter width scale",
@@ -745,7 +745,7 @@
             },
             {
                 "name": "health panel background anchor offset",
-                "type": "Point2DInt"
+                "type": "Vector2DInt"
             },
             {
                 "name": "health panel background width scale",
@@ -832,7 +832,7 @@
             },
             {
                 "name": "health panel meter anchor offset",
-                "type": "Point2DInt"
+                "type": "Vector2DInt"
             },
             {
                 "name": "health panel meter width scale",
@@ -941,7 +941,7 @@
             },
             {
                 "name": "motion sensor background anchor offset",
-                "type": "Point2DInt"
+                "type": "Vector2DInt"
             },
             {
                 "name": "motion sensor background width scale",
@@ -1028,7 +1028,7 @@
             },
             {
                 "name": "motion sensor foreground anchor offset",
-                "type": "Point2DInt"
+                "type": "Vector2DInt"
             },
             {
                 "name": "motion sensor foreground width scale",
@@ -1119,7 +1119,7 @@
             },
             {
                 "name": "motion sensor center anchor offset",
-                "type": "Point2DInt"
+                "type": "Vector2DInt"
             },
             {
                 "name": "motion sensor center width scale",

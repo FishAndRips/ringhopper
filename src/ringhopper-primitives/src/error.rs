@@ -9,6 +9,7 @@ pub enum Error {
     NoSuchTagGroup,
     InvalidTagPath,
     InvalidID,
+    InvalidEnum,
     TagParseFailure,
     ChecksumMismatch,
     ArrayLimitExceeded,
@@ -23,6 +24,7 @@ impl Error {
         match self {
             Error::InvalidTagPath => "invalid tag path",
             Error::InvalidID => "invalid ID",
+            Error::InvalidEnum => "invalid enum value",
             Error::NoSuchTagGroup => "no such tag group",
             Error::TagParseFailure => "failed to parse the tag (likely corrupt)",
             Error::ChecksumMismatch => "refused to parse the data (CRC32 mismatch)",

@@ -37,6 +37,7 @@ name = "ringhopper"
 version = "0.2.0"
 dependencies = [
  "ringhopper-primitives",
+ "ringhopper-structs",
 ]
 
 [[package]]
@@ -51,6 +52,21 @@ name = "ringhopper-primitives"
 version = "0.2.0"
 dependencies = [
  "byteorder",
+]
+
+[[package]]
+name = "ringhopper-structs"
+version = "0.2.0"
+dependencies = [
+ "ringhopper-primitives",
+ "ringhopper-structs-codegen",
+]
+
+[[package]]
+name = "ringhopper-structs-codegen"
+version = "0.2.0"
+dependencies = [
+ "ringhopper-definitions",
 ]
 
 [[package]]

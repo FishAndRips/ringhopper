@@ -400,7 +400,7 @@ impl TagDataSimplePrimitive for TagReferenceC {
             ID::null()
         }
         else {
-            ID::from_u32(tag_id_int)?
+            ID::from_u32(tag_id_int)
         };
 
         Ok(Self { tag_group, path_address, path_length, tag_id })

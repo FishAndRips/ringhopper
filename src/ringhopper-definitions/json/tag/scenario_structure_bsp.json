@@ -246,7 +246,7 @@
             },
             {
                 "name": "ambient color",
-                "type": "ColorRGB",
+                "type": "ColorRGBFloat",
                 "read_only": false
             },
             {
@@ -260,7 +260,7 @@
             {
                 "name": "distant light 0 color",
                 "read_only": false,
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "distant light 0 direction",
@@ -270,7 +270,7 @@
             {
                 "name": "distant light 1 color",
                 "read_only": false,
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "distant light 1 direction",
@@ -284,7 +284,7 @@
             {
                 "name": "reflection tint",
                 "read_only": false,
-                "type": "ColorARGB"
+                "type": "ColorARGBFloat"
             },
             {
                 "name": "shadow vector",
@@ -294,7 +294,7 @@
             {
                 "name": "shadow color",
                 "read_only": false,
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "plane",
@@ -334,7 +334,7 @@
             },
             {
                 "name": "rendered vertices index pointer",
-                "type": "Pointer",
+                "type": "Address",
                 "cache_only": true,
                 "comment": "(Xbox only) an indirect pointer to the rendered vertices"
             },
@@ -362,7 +362,7 @@
             },
             {
                 "name": "lightmap vertices index pointer",
-                "type": "Pointer",
+                "type": "Address",
                 "cache_only": true,
                 "comment": "(Xbox only) an indirect pointer to the lightmap vertices"
             },
@@ -1318,7 +1318,7 @@
             {
                 "name": "default ambient color",
                 "read_only": false,
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "type": "pad",
@@ -1327,7 +1327,7 @@
             {
                 "name": "default distant light 0 color",
                 "read_only": false,
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "default distant light 0 direction",
@@ -1337,7 +1337,7 @@
             {
                 "name": "default distant light 1 color",
                 "read_only": false,
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "default distant light 1 direction",
@@ -1351,7 +1351,7 @@
             {
                 "name": "default reflection tint",
                 "read_only": false,
-                "type": "ColorARGB"
+                "type": "ColorARGBFloat"
             },
             {
                 "name": "default shadow vector",
@@ -1361,7 +1361,7 @@
             {
                 "name": "default shadow color",
                 "read_only": false,
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "type": "pad",
@@ -1594,7 +1594,7 @@
         "fields": [
             {
                 "name": "pointer",
-                "type": "Pointer",
+                "type": "Address",
                 "comment": "points to the BSP tag struct",
                 "cache_only": true
             },
@@ -1606,7 +1606,7 @@
             },
             {
                 "name": "rendered vertices",
-                "type": "Pointer",
+                "type": "Address",
                 "comment": "(Xbox only): pointer to array of rendered vertices",
                 "cache_only": true
             },
@@ -1618,7 +1618,7 @@
             },
             {
                 "name": "lightmap vertices",
-                "type": "Pointer",
+                "type": "Address",
                 "comment": "(Xbox only): pointer to array of lightmap vertices",
                 "cache_only": true
             },
@@ -1636,7 +1636,7 @@
         "fields": [
             {
                 "name": "pointer",
-                "type": "Pointer",
+                "type": "Address",
                 "comment": "points to the BSP tag struct",
                 "cache_only": true
             },

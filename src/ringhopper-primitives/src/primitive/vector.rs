@@ -104,6 +104,26 @@ pub trait Vector: Sized {
 
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 #[repr(C)]
+pub struct Vector2DInt {
+    pub x: i16,
+    pub y: i16
+}
+
+generate_tag_data_simple_primitive_code!(Vector2DInt, i16, x, y);
+
+#[derive(Clone, Copy, Default, Debug, PartialEq)]
+#[repr(C)]
+pub struct Rectangle {
+    pub top: i16,
+    pub left: i16,
+    pub bottom: i16,
+    pub right: i16
+}
+
+generate_tag_data_simple_primitive_code!(Rectangle, i16, top, left, bottom, right);
+
+#[derive(Clone, Copy, Default, Debug, PartialEq)]
+#[repr(C)]
 pub struct Vector2D {
     pub x: f32,
     pub y: f32

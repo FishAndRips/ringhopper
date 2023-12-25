@@ -231,11 +231,11 @@
             },
             {
                 "name": "tint color lower bound",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "tint color upper bound",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "periodic function",

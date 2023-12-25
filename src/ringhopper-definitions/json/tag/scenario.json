@@ -1589,7 +1589,7 @@
             },
             {
                 "name": "color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "intensity",

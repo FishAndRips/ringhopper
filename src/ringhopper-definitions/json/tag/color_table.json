@@ -8,7 +8,7 @@
             },
             {
                 "name": "color",
-                "type": "ColorARGB"
+                "type": "ColorARGBFloat"
             }
         ],
         "type": "struct",

@@ -387,7 +387,7 @@
             },
             {
                 "name": "registration point",
-                "type": "Point2DInt"
+                "type": "Vector2DInt"
             },
             {
                 "name": "mipmap count",
@@ -413,7 +413,7 @@
             },
             {
                 "name": "pointer",
-                "type": "Pointer",
+                "type": "Address",
                 "cache_only": true
             },
             {

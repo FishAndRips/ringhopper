@@ -71,7 +71,7 @@
             },
             {
                 "name": "color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "power",
@@ -120,7 +120,7 @@
             },
             {
                 "name": "indoor ambient radiosity color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "indoor ambient radiosity power",
@@ -128,7 +128,7 @@
             },
             {
                 "name": "outdoor ambient radiosity color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "outdoor ambient radiosity power",
@@ -136,7 +136,7 @@
             },
             {
                 "name": "outdoor fog color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "type": "pad",
@@ -161,7 +161,7 @@
             },
             {
                 "name": "indoor fog color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "type": "pad",

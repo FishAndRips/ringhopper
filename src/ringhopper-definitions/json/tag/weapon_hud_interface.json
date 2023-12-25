@@ -172,7 +172,7 @@
             },
             {
                 "name": "anchor offset",
-                "type": "Point2DInt"
+                "type": "Vector2DInt"
             },
             {
                 "name": "width scale",
@@ -295,7 +295,7 @@
             },
             {
                 "name": "anchor offset",
-                "type": "Point2DInt"
+                "type": "Vector2DInt"
             },
             {
                 "name": "width scale",
@@ -424,7 +424,7 @@
             },
             {
                 "name": "anchor offset",
-                "type": "Point2DInt"
+                "type": "Vector2DInt"
             },
             {
                 "name": "width scale",
@@ -523,7 +523,7 @@
         "fields": [
             {
                 "name": "anchor offset",
-                "type": "Point2DInt"
+                "type": "Vector2DInt"
             },
             {
                 "name": "width scale",
@@ -655,7 +655,7 @@
         "fields": [
             {
                 "name": "anchor offset",
-                "type": "Point2DInt"
+                "type": "Vector2DInt"
             },
             {
                 "name": "width scale",
@@ -890,7 +890,7 @@
             },
             {
                 "name": "effect tint",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "type": "pad",
@@ -1009,7 +1009,7 @@
             },
             {
                 "name": "offset from reference corner",
-                "type": "Point2DInt"
+                "type": "Vector2DInt"
             },
             {
                 "name": "override icon color",

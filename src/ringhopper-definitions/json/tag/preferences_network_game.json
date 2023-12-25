@@ -7,11 +7,11 @@
                 "name": "name"
             },
             {
-                "type": "ColorRGB",
+                "type": "ColorRGBFloat",
                 "name": "primary color"
             },
             {
-                "type": "ColorRGB",
+                "type": "ColorRGBFloat",
                 "name": "secondary color"
             },
             {

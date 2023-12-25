@@ -326,11 +326,11 @@
             },
             {
                 "name": "tint lower bound",
-                "type": "ColorARGB"
+                "type": "ColorARGBFloat"
             },
             {
                 "name": "tint upper bound",
-                "type": "ColorARGB"
+                "type": "ColorARGBFloat"
             },
             {
                 "type": "pad",

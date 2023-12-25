@@ -98,19 +98,32 @@ impl ID {
         self.id
     }
 
-    /// Convert from a [`u32`].
-    pub const fn from_u32(id: u32) -> RinghopperResult<Self> {
-        if (id & 0x80000000) == 0 {
+    /// Convert from a [`u32`] with validity checks.
+    pub const fn from_u32_checked(id: u32) -> RinghopperResult<Self> {
+        let id = Self::from_u32(id);
+        if id.is_valid() {
             Err(Error::InvalidID)
         }
         else {
-            Ok(Self { id })
+            Ok(id)
+        }
+    }
+
+    /// Convert from a [`u32`].
+    pub const fn from_u32(id: u32) -> Self {
+        Self {
+            id
         }
     }
 
     /// Return `true` if the ID is null.
     pub const fn is_null(self) -> bool {
         self.id == 0xFFFFFFFF
+    }
+
+    /// Return `true` if the ID is a valid ID.
+    pub const fn is_valid(self) -> bool {
+        (self.id & 0x80000000) != 0
     }
 }
 
@@ -136,7 +149,7 @@ impl IDType {
 
 impl TagDataSimplePrimitive for ID {
     fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
-        ID::from_u32(<u32 as TagDataSimplePrimitive>::read::<B>(data, at, struct_end)?)
+        Ok(ID::from_u32(<u32 as TagDataSimplePrimitive>::read::<B>(data, at, struct_end)?))
     }
     fn size() -> usize {
         <u32 as TagDataSimplePrimitive>::size()
@@ -210,7 +223,7 @@ impl<T: Copy + Default> Debug for Padding<T> {
 /// A limitation over [`Vec`] is that the number of elements cannot exceed [`u32::MAX`] (i.e. 2<sup>32</sup> − 1), as
 /// lengths are internally stored as 32-bit. As such, serialization in tag or cache format is not possible if this
 /// limit is exceeded.
-#[derive(Clone, Default, PartialEq)]
+#[derive(Clone, Default, PartialEq, Debug)]
 #[repr(transparent)]
 pub struct Data {
     pub bytes: Vec<u8>
@@ -256,7 +269,7 @@ impl TagData for Data {
 /// A limitation over [`Vec`] is that the number of elements cannot exceed [`u32::MAX`] (i.e. 2<sup>32</sup> − 1), as
 /// lengths are internally stored as 32-bit. As such, serialization in tag or cache format is not possible if this
 /// limit is exceeded.
-#[derive(Clone, Default, PartialEq)]
+#[derive(Clone, Default, PartialEq, Debug)]
 #[repr(transparent)]
 pub struct Reflexive<T: TagData + Sized> {
     pub items: Vec<T>
@@ -649,6 +662,74 @@ impl TagDataSimplePrimitive for DataC {
         self.padding.write::<B>(data, at + 0xC, struct_end)?;
         self.address.write::<B>(data, at + 0x10, struct_end)?;
         Ok(())
+    }
+}
+
+#[derive(Copy, Clone, Default, Debug, PartialEq)]
+#[repr(transparent)]
+pub struct ScenarioScriptNodeValue {
+    pub data: u32
+}
+impl From<i8> for ScenarioScriptNodeValue {
+    fn from(value: i8) -> Self {
+        Self { data: value as u32 }
+    }
+}
+impl From<i16> for ScenarioScriptNodeValue {
+    fn from(value: i16) -> Self {
+        Self { data: value as u32 }
+    }
+}
+impl From<i32> for ScenarioScriptNodeValue {
+    fn from(value: i32) -> Self {
+        Self { data: value as u32 }
+    }
+}
+impl From<f32> for ScenarioScriptNodeValue {
+    fn from(value: f32) -> Self {
+        Self { data: unsafe { std::mem::transmute(value) } }
+    }
+}
+impl From<ID> for ScenarioScriptNodeValue {
+    fn from(value: ID) -> Self {
+        Self { data: value.as_u32() }
+    }
+}
+impl From<ScenarioScriptNodeValue> for i8 {
+    fn from(value: ScenarioScriptNodeValue) -> Self {
+        value.data as i8
+    }
+}
+impl From<ScenarioScriptNodeValue> for i16 {
+    fn from(value: ScenarioScriptNodeValue) -> Self {
+        value.data as i16
+    }
+}
+impl From<ScenarioScriptNodeValue> for i32 {
+    fn from(value: ScenarioScriptNodeValue) -> Self {
+        value.data as i32
+    }
+}
+impl From<ScenarioScriptNodeValue> for f32 {
+    fn from(value: ScenarioScriptNodeValue) -> Self {
+        unsafe { std::mem::transmute(value.data) }
+    }
+}
+impl From<ScenarioScriptNodeValue> for ID {
+    fn from(value: ScenarioScriptNodeValue) -> Self {
+        unsafe { std::mem::transmute(value.data) }
+    }
+}
+
+impl TagDataSimplePrimitive for ScenarioScriptNodeValue {
+    fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
+        Ok(Self { data: u32::read::<B>(data, at, struct_end)? })
+    }
+    fn size() -> usize {
+        <u32 as TagDataSimplePrimitive>::size()
+    }
+    fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
+        self.data.write::<B>(data, at, struct_end)
     }
 }
 

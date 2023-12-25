@@ -209,7 +209,8 @@ impl SizeableObject for Enum {
 
 pub struct Field {
     pub name: String,
-    pub flags: Flags
+    pub flags: Flags,
+    pub value: u32
 }
 
 pub struct SupportedEngines {
@@ -303,10 +304,10 @@ pub enum ObjectType {
     TagID,
     Index,
     Angle,
-    Pointer,
+    Address,
     Vector2D,
     Vector3D,
-    Point2DInt,
+    Vector2DInt,
     Plane2D,
     Plane3D,
     Euler2D,
@@ -314,8 +315,8 @@ pub enum ObjectType {
     Rectangle,
     Quaternion,
     Matrix3x3,
-    ColorRGB,
-    ColorARGB,
+    ColorRGBFloat,
+    ColorARGBFloat,
     ColorARGBInt,
     String32,
     ScenarioScriptNodeValue,
@@ -327,10 +328,10 @@ impl ObjectType {
             Self::Reflexive(_) => 0xC,
             Self::TagReference(_) => 0x10,
             Self::Data => 0x14,
-            Self::F32 | Self::Angle | Self::U32 | Self::Pointer | Self::I32 | Self::ColorARGBInt | Self::TagID => 0x4,
+            Self::F32 | Self::Angle | Self::U32 | Self::Address | Self::I32 | Self::ColorARGBInt | Self::TagID => 0x4,
             Self::U16 | Self::I16 | Self::Index => 0x2,
             Self::U8 | Self::I8 => 0x1,
-            Self::Rectangle | Self::Point2DInt => Self::I16.primitive_size() * self.composite_count(),
+            Self::Rectangle | Self::Vector2DInt => Self::I16.primitive_size() * self.composite_count(),
             Self::ScenarioScriptNodeValue => 0x4,
             Self::Vector2D
             | Self::Vector3D
@@ -338,10 +339,10 @@ impl ObjectType {
             | Self::Plane3D
             | Self::Quaternion
             | Self::Matrix3x3
-            | Self::ColorRGB
+            | Self::ColorRGBFloat
             | Self::Euler2D
             | Self::Euler3D
-            | Self::ColorARGB => ObjectType::F32.primitive_size() * self.composite_count(),
+            | Self::ColorARGBFloat => ObjectType::F32.primitive_size() * self.composite_count(),
             Self::String32 => 32,
 
             Self::NamedObject(_) => unreachable!()
@@ -355,7 +356,7 @@ impl ObjectType {
             Self::NamedObject(_) => 1,
             Self::Data => 1,
             Self::TagID => 1,
-            Self::F32 | Self::Angle | Self::U32 | Self::Pointer | Self::I32 | Self::ColorARGBInt => 1,
+            Self::F32 | Self::Angle | Self::U32 | Self::Address | Self::I32 | Self::ColorARGBInt => 1,
             Self::U16 | Self::I16 | Self::Index => 1,
             Self::U8 | Self::I8 => 1,
             Self::Rectangle => 4,
@@ -366,10 +367,10 @@ impl ObjectType {
             Self::Plane2D => 3,
             Self::Plane3D => 4,
             Self::Quaternion => 4,
-            Self::Point2DInt => 2,
+            Self::Vector2DInt => 2,
             Self::Matrix3x3 => 3 * 3,
-            Self::ColorRGB => 3,
-            Self::ColorARGB => 4,
+            Self::ColorRGBFloat => 3,
+            Self::ColorARGBFloat => 4,
             Self::String32 => 1,
             Self::ScenarioScriptNodeValue => 1,
         }
@@ -377,13 +378,13 @@ impl ObjectType {
 
     const fn primitive_value_type(&self) -> Option<StaticValue> {
         match self {
-            Self::NamedObject(_) | Self::Data | Self::TagID | Self::Pointer | Self::ScenarioScriptNodeValue => None,
+            Self::NamedObject(_) | Self::Data | Self::TagID | Self::Address | Self::ScenarioScriptNodeValue => None,
 
             Self::TagReference(_) | Self::String32 => Some(StaticValue::String(String::new())),
 
             Self::U8 | Self::U16 | Self::Index | Self::U32 | Self::ColorARGBInt | Self::Reflexive(_) => Some(StaticValue::Uint(0)),
 
-            Self::I8 | Self::I16 | Self::I32 | Self::Rectangle | Self::Point2DInt => Some(StaticValue::Int(0)),
+            Self::I8 | Self::I16 | Self::I32 | Self::Rectangle | Self::Vector2DInt => Some(StaticValue::Int(0)),
 
             Self::F32
             | Self::Angle
@@ -395,8 +396,8 @@ impl ObjectType {
             | Self::Euler3D
             | Self::Quaternion
             | Self::Matrix3x3
-            | Self::ColorRGB
-            | Self::ColorARGB => Some(StaticValue::F32(0.0)),
+            | Self::ColorRGBFloat
+            | Self::ColorARGBFloat => Some(StaticValue::F32(0.0)),
         }
     }
 }

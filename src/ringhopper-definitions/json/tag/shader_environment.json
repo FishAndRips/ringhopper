@@ -174,7 +174,7 @@
             },
             {
                 "name": "material color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "type": "pad",
@@ -259,11 +259,11 @@
             },
             {
                 "name": "primary on color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "primary off color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "primary animation function",
@@ -290,11 +290,11 @@
             },
             {
                 "name": "secondary on color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "secondary off color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "secondary animation function",
@@ -321,11 +321,11 @@
             },
             {
                 "name": "plasma on color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "plasma off color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "plasma animation function",
@@ -390,11 +390,11 @@
             },
             {
                 "name": "perpendicular color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "parallel color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "type": "pad",

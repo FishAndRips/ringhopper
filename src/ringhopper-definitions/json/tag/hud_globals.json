@@ -20,7 +20,7 @@
             },
             {
                 "name": "offset from reference corner",
-                "type": "Point2DInt"
+                "type": "Vector2DInt"
             },
             {
                 "name": "override icon color",
@@ -184,7 +184,7 @@
             },
             {
                 "name": "anchor offset",
-                "type": "Point2DInt"
+                "type": "Vector2DInt"
             },
             {
                 "name": "width scale",
@@ -232,11 +232,11 @@
             },
             {
                 "name": "icon color",
-                "type": "ColorARGB"
+                "type": "ColorARGBFloat"
             },
             {
                 "name": "text color",
-                "type": "ColorARGB"
+                "type": "ColorARGBFloat"
             },
             {
                 "name": "text spacing",

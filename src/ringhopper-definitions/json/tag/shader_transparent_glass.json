@@ -43,7 +43,7 @@
             },
             {
                 "name": "background tint color",
-                "type": "ColorRGB",
+                "type": "ColorRGBFloat",
                 "default": [
                     1.0,
                     1.0,
@@ -82,7 +82,7 @@
             },
             {
                 "name": "perpendicular tint color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "parallel brightness",
@@ -92,7 +92,7 @@
             },
             {
                 "name": "parallel tint color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "reflection map",

@@ -160,7 +160,7 @@
             },
             {
                 "name": "color",
-                "type": "ColorARGB"
+                "type": "ColorARGBFloat"
             },
             {
                 "name": "low frequency vibrate frequency",

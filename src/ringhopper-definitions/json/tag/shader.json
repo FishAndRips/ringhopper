@@ -121,11 +121,11 @@
             },
             {
                 "name": "color of emitted light",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "tint color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "physics flags",

@@ -847,7 +847,7 @@
             },
             {
                 "name": "tint color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "hyper stealth refraction",
@@ -859,7 +859,7 @@
             },
             {
                 "name": "hyper stealth tint color",
-                "type": "ColorRGB"
+                "type": "ColorRGBFloat"
             },
             {
                 "name": "distance attenuation 2d",
@@ -1282,7 +1282,7 @@
             },
             {
                 "name": "shield meter origin",
-                "type": "Point2DInt"
+                "type": "Vector2DInt"
             },
             {
                 "name": "body meter",
@@ -1293,7 +1293,7 @@
             },
             {
                 "name": "body meter origin",
-                "type": "Point2DInt"
+                "type": "Vector2DInt"
             },
             {
                 "name": "night vision on effect",
@@ -1452,11 +1452,11 @@
             },
             {
                 "name": "tint lower bound",
-                "type": "ColorARGB"
+                "type": "ColorARGBFloat"
             },
             {
                 "name": "tint upper bound",
-                "type": "ColorARGB"
+                "type": "ColorARGBFloat"
             },
             {
                 "type": "pad",
