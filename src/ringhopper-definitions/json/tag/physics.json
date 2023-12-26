@@ -279,6 +279,7 @@
     {
         "name": "physics",
         "struct": "Physics",
-        "type": "group"
+        "type": "group",
+        "version": 4
     }
 ]

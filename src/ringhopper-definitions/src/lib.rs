@@ -1,3 +1,7 @@
+//! General-use definitions parsing library.
+//!
+//! This can be used for writing parsers for tags.
+
 extern crate serde_json;
 
 mod types;

@@ -187,6 +187,9 @@ impl TagPath {
 #[cfg(target_family="windows")]
 impl Display for TagPath {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // We can print the path as-is on Windows
+        const _: () = assert!(std::path::MAIN_SEPARATOR == HALO_PATH_SEPARATOR);
+
         f.write_str(&self.path)?;
         f.write_char('.')?;
         f.write_str(self.group.as_str())?;
@@ -247,7 +250,7 @@ impl TagReference {
     /// ```
     /// use ringhopper_primitives::primitive::{TagPath, TagReference};
     ///
-    /// let path = TagPath::from_path("weapons/someweapon/someweapon.weapon").unwrap();
+    /// let path = TagPath::from_path("weapons\\someweapon\\someweapon.weapon").unwrap();
     /// let reference = TagReference::from(path);
     /// assert!(reference.is_set());
     /// ```
@@ -262,7 +265,7 @@ impl TagReference {
     /// ```
     /// use ringhopper_primitives::primitive::{TagPath, TagReference, TagGroup};
     ///
-    /// let path = TagPath::from_path("weapons/someweapon/someweapon.weapon").unwrap();
+    /// let path = TagPath::from_path("weapons\\someweapon\\someweapon.weapon").unwrap();
     /// let reference = TagReference::from(path);
     /// assert_eq!(reference.group(), TagGroup::Weapon);
     /// ```
@@ -280,7 +283,7 @@ impl TagReference {
     /// ```
     /// use ringhopper_primitives::primitive::{TagPath, TagReference, TagGroup};
     ///
-    /// let path = TagPath::from_path("weapons/someweapon/someweapon.weapon").unwrap();
+    /// let path = TagPath::from_path("weapons\\someweapon\\someweapon.weapon").unwrap();
     /// let reference = TagReference::from(path.clone());
     /// assert_eq!(*reference.path().expect("should be a path here"), path);
     /// ```

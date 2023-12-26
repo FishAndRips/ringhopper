@@ -199,6 +199,7 @@
         "name": "device",
         "struct": "Device",
         "supergroup": "object",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

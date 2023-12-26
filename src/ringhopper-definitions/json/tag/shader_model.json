@@ -321,6 +321,7 @@
         "name": "shader_model",
         "struct": "ShaderModel",
         "supergroup": "shader",
-        "type": "group"
+        "type": "group",
+        "version": 2
     }
 ]

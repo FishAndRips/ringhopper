@@ -167,6 +167,7 @@
         "name": "shader_transparent_plasma",
         "struct": "ShaderTransparentPlasma",
         "supergroup": "shader",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

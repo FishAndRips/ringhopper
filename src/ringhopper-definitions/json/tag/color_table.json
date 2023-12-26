@@ -30,6 +30,7 @@
     {
         "name": "color_table",
         "struct": "ColorTable",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

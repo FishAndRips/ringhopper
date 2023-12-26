@@ -66,10 +66,11 @@ impl ParsedDefinitions {
                     assert!(!self.groups.contains_key(&object_name), "duplicate group {object_name} detected");
                     let parent_maybe = object.get("supergroup").map(|g| g.as_str().unwrap().to_owned());
                     self.groups.insert(object_name.clone(), TagGroup {
-                        name: object_name,
                         struct_name: oget_str!(object, "struct").to_owned(),
                         supergroup: parent_maybe,
-                        supported_engines: SupportedEngines::load_from_json(object)
+                        supported_engines: SupportedEngines::load_from_json(object),
+                        version: oget_number!(object, "version", as_u64).try_into().unwrap_or_else(|e| panic!("{object_name}::version can't convert to u16: {e}")),
+                        name: object_name,
                     });
                 },
                 "engine" => {

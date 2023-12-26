@@ -57,6 +57,7 @@
     {
         "name": "item_collection",
         "struct": "ItemCollection",
-        "type": "group"
+        "type": "group",
+        "version": 0
     }
 ]

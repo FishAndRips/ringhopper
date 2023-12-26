@@ -35,6 +35,7 @@
     {
         "name": "wind",
         "struct": "Wind",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

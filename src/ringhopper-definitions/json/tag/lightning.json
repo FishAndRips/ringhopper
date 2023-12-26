@@ -202,6 +202,7 @@
     {
         "name": "lightning",
         "struct": "Lightning",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

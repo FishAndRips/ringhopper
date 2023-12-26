@@ -159,20 +159,37 @@ impl TagDataSimplePrimitive for TagFileHeader {
 }
 
 impl TagFileHeader {
-    /// Return `true` if the header is valid.
-    pub fn valid<T: PrimaryTagStruct>(&self) -> bool {
-        self.group == T::group()
-        && self.version == T::version()
-        && self.blam_fourcc == BLAM_FOURCC
-        && self.u16_255 == 0x00FF
-        && self.header_size as usize == <Self as TagDataSimplePrimitive>::size()
+    /// Return `Ok(())` if the header is valid.
+    ///
+    /// Return `Err(Error::TagParseFailure)` if the header is not valid.
+    pub fn validate(&self) -> RinghopperResult<()> {
+        if self.blam_fourcc == BLAM_FOURCC && self.u16_255 == 0x00FF && self.header_size as usize == <Self as TagDataSimplePrimitive>::size() {
+            Ok(())
+        }
+        else {
+            Err(Error::TagParseFailure)
+        }
+    }
+
+    /// Return `Ok(())` if the group is correct.
+    ///
+    /// Returns `Err(Error::TagHeaderGroupTypeMismatch)` if the type is wrong, and `Err(Error::TagHeaderGroupVersionMismatch)` if the
+    /// version is wrong but the type is correct.
+    pub fn verify_group_matches<T: PrimaryTagStruct>(&self) -> RinghopperResult<()> {
+        if self.group != T::group() {
+            return Err(Error::TagHeaderGroupTypeMismatch)
+        }
+        if self.version != T::version() {
+            return Err(Error::TagHeaderGroupVersionMismatch)
+        }
+        Ok(())
     }
 }
 
 /// Determine how strict parsing should be.
 ///
 /// In all cases, out-of-bounds data cannot be parsed. However, allowing data with bad checksums to be parsed can be enabled, if desired.
-#[derive(Default)]
+#[derive(Copy, Clone, Default)]
 pub enum ParseStrictness {
     /// Require the CRC32 to match; should be used by default.
     #[default]
@@ -182,34 +199,13 @@ pub enum ParseStrictness {
     Relaxed,
 }
 
-/// Container for parsed tag files.
-pub struct TagFile {
-    /// Header retrieved from a tag file, used for verifying integrity and correctness.
-    pub header: TagFileHeader,
-
-    /// Actual CRC32 calculated from the file.
-    ///
-    /// Equals `None` if it was not calculated because [`TagFileHeader::crc32`] was set to [`IGNORED_CRC32`].
-    pub actual_crc32: Option<u32>,
-
-    /// Container of the tag data.
-    pub data: Box<dyn PrimaryTagStructDyn>
-}
+/// Methods for handling tag files.
+pub struct TagFile {}
 
 impl TagFile {
-    /// Check if the CRC32 in the header matches the CRC32 in the struct.
-    ///
-    /// Returns one of three values:
-    /// - `Some(true)` if the CRC32 in the header matches the CRC32 in the struct
-    /// - `Some(false)` if the CRC32 in the header does not match the CRC32 in the struct
-    /// - `None` if the CRC32 was not calculated (i.e. the CRC32 in the header was [`IGNORED_CRC32`])
-    pub fn crc32_matches(&self) -> Option<bool> {
-        self.actual_crc32.map(|c| c == self.header.crc32)
-    }
-
     /// Encode the tag data into tag file format.
     ///
-    /// This returns a serialized byte array that can be loaded back with [`TagFile::read_tag_file_buffer`] or with other tools and libraries when stored as a file.
+    /// This returns a serialized byte array that can be loaded back with [`TagFile::read_tag_from_file_buffer`] or with other tools and libraries when stored as a file.
     ///
     /// Returns `Err` if the tag is unable to be represented in tag format, such as if 32-bit array limits are exceeded.
     pub fn to_tag_file<T: PrimaryTagStruct>(tag_data: &T) -> RinghopperResult<Vec<u8>> {
@@ -237,17 +233,7 @@ impl TagFile {
         Ok(data)
     }
 
-    /// Read the tag file buffer.
-    ///
-    /// Returns `Err` if the tag data is invalid, corrupt, or does not correspond to `T`.
-    pub fn read_tag_file_buffer<T: PrimaryTagStruct + Any>(file: &[u8], strictness: ParseStrictness) -> RinghopperResult<Self> {
-        let header = TagFileHeader::read_from_tag_file(file, 0, 0x40, &mut 0)?;
-        let data_after_header = &file[<TagFileHeader as TagData>::size()..];
-
-        if !header.valid::<T>() {
-            return Err(Error::TagParseFailure)
-        }
-
+    fn validate_crc32(header: &TagFileHeader, data_after_header: &[u8], strictness: ParseStrictness) -> RinghopperResult<()> {
         let actual_crc32 = if header.crc32 == IGNORED_CRC32 {
             None
         }
@@ -256,6 +242,7 @@ impl TagFile {
             crc32.update(data_after_header);
             Some(crc32.crc())
         };
+
         match strictness {
             ParseStrictness::Relaxed => (),
             ParseStrictness::Strict => {
@@ -267,14 +254,32 @@ impl TagFile {
             }
         }
 
-        let mut cursor = T::size();
-        let data = Box::new(T::read_from_tag_file(data_after_header, 0, T::size(), &mut cursor)?);
+        Ok(())
+    }
 
-        Ok(Self {
-            header,
-            actual_crc32,
-            data
-        })
+    /// Returns the header and everything after the header without parsing the actual tag  data.
+    ///
+    /// Return `Err` if parsing the header fails.
+    pub fn load_header_and_data(file: &[u8], strictness: ParseStrictness) -> RinghopperResult<(TagFileHeader, &[u8])> {
+        let header = TagFileHeader::read_from_tag_file(file, 0, 0x40, &mut 0)?;
+        header.validate()?;
+
+        let data_after_header = &file[<TagFileHeader as TagData>::size()..];
+        Self::validate_crc32(&header, data_after_header, strictness)?;
+
+        Ok((header, data_after_header))
+    }
+
+    /// Read the tag file buffer.
+    ///
+    /// Returns `Err` if the tag data is invalid, corrupt, or does not correspond to `T`.
+    pub fn read_tag_from_file_buffer<T: PrimaryTagStruct>(file: &[u8], strictness: ParseStrictness) -> RinghopperResult<T> {
+        let (header, data_after_header) = Self::load_header_and_data(file, strictness)?;
+        header.verify_group_matches::<T>()?;
+
+        let mut cursor = T::size();
+        let result = T::read_from_tag_file(data_after_header, 0, T::size(), &mut cursor)?;
+        Ok(result)
     }
 }
 

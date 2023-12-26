@@ -279,6 +279,7 @@
     {
         "name": "lens_flare",
         "struct": "LensFlare",
-        "type": "group"
+        "type": "group",
+        "version": 2
     }
 ]

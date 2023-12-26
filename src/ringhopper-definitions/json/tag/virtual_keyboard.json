@@ -153,6 +153,7 @@
     {
         "name": "virtual_keyboard",
         "struct": "VirtualKeyboard",
-        "type": "group"
+        "type": "group",
+        "version": 2
     }
 ]

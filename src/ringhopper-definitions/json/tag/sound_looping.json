@@ -227,6 +227,7 @@
     {
         "name": "sound_looping",
         "struct": "SoundLooping",
-        "type": "group"
+        "type": "group",
+        "version": 3
     }
 ]

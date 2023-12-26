@@ -33,6 +33,7 @@
         "type": "group",
         "supported_engines": [
             "pc"
-        ]
+        ],
+        "version": 1
     }
 ]

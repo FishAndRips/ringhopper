@@ -76,6 +76,7 @@
         "name": "device_control",
         "struct": "DeviceControl",
         "supergroup": "device",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

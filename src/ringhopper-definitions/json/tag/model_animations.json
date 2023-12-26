@@ -909,6 +909,7 @@
     {
         "name": "model_animations",
         "struct": "ModelAnimations",
-        "type": "group"
+        "type": "group",
+        "version": 4
     }
 ]

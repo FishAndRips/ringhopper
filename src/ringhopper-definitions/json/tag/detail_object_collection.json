@@ -137,6 +137,7 @@
     {
         "name": "detail_object_collection",
         "struct": "DetailObjectCollection",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

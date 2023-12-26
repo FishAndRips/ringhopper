@@ -190,6 +190,7 @@
         "name": "shader_transparent_glass",
         "struct": "ShaderTransparentGlass",
         "supergroup": "shader",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

@@ -3,7 +3,7 @@ extern crate ringhopper_definitions;
 use std::fmt::Write;
 use std::borrow::Cow;
 
-use ringhopper_definitions::{load_all_definitions, Struct, NamedObject, Enum, Bitfield, StructFieldType, ObjectType};
+use ringhopper_definitions::{load_all_definitions, SizeableObject, Struct, NamedObject, Enum, Bitfield, StructFieldType, ObjectType, ParsedDefinitions, FieldCount, TagGroup};
 
 use proc_macro::TokenStream;
 
@@ -12,34 +12,70 @@ pub fn generate_ringhopper_structs(_: TokenStream) -> TokenStream {
     let definitions = load_all_definitions();
     let mut stream = TokenStream::default();
 
-    for (_, obj) in definitions.objects {
-        stream.extend(obj.to_token_stream());
+    for (_, obj) in &definitions.objects {
+        stream.extend(obj.to_token_stream(&definitions));
     }
+
+    let mut read_any_tag_lines = String::new();
+    for (group_name, group) in &definitions.groups {
+        stream.extend(group.to_token_stream(&definitions));
+
+        let struct_name = &group.struct_name;
+        let group_name_fixed = camel_case(&group_name);
+        writeln!(read_any_tag_lines, "TagGroup::{group_name_fixed} => b(TagFile::read_tag_from_file_buffer::<{struct_name}>(file, ParseStrictness::Relaxed)),").unwrap();
+    }
+
+    stream.extend(format!("
+    /// Read the tag file buffer.
+    ///
+    /// Returns `Err` if the tag data is invalid, corrupt, or does not correspond to any known tag group.
+    pub fn read_any_tag_from_file_buffer(file: &[u8], strictness: ParseStrictness) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {{
+        let (header, _) = TagFile::load_header_and_data(file, strictness)?;
+
+        fn b<T: PrimaryTagStruct + 'static>(what: RinghopperResult<T>) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {{
+            what.map(|b| Box::<T>::new(b) as Box<dyn PrimaryTagStructDyn>)
+        }}
+
+        match header.group {{
+            {read_any_tag_lines}
+            _ => Err(Error::TagGroupUnimplemented)
+        }}
+    }}").parse::<TokenStream>());
 
     stream
 }
 
 trait ToTokenStream {
-    fn to_token_stream(&self) -> TokenStream;
+    fn to_token_stream(&self, definitions: &ParsedDefinitions) -> TokenStream;
 }
 
 impl ToTokenStream for NamedObject {
-    fn to_token_stream(&self) -> TokenStream {
+    fn to_token_stream(&self, definitions: &ParsedDefinitions) -> TokenStream {
         match self {
-            Self::Struct(s) => s.to_token_stream(),
-            Self::Bitfield(b) => b.to_token_stream(),
-            Self::Enum(e) => e.to_token_stream()
+            Self::Struct(s) => s.to_token_stream(definitions),
+            Self::Bitfield(b) => b.to_token_stream(definitions),
+            Self::Enum(e) => e.to_token_stream(definitions)
         }
     }
 }
 
 impl ToTokenStream for Struct {
-    fn to_token_stream(&self) -> TokenStream {
+    fn to_token_stream(&self, definitions: &ParsedDefinitions) -> TokenStream {
         let struct_name = &self.name;
         let mut fields = String::new();
-        for i in &self.fields {
-            let field_type = match &i.field_type {
-                StructFieldType::Padding(_) => continue,
+
+        let mut fields_with_types: Vec<String> = Vec::new();
+        let mut fields_with_names: Vec<Cow<str>> = Vec::new();
+        let mut fields_with_sizes: Vec<usize> = Vec::new();
+        let mut fields_read_from_tags: Vec<bool> = Vec::new();
+        let mut fields_read_from_caches: Vec<bool> = Vec::new();
+
+        let field_count = self.fields.len();
+
+        for i in 0..field_count {
+            let field = &self.fields[i];
+            let field_type = match &field.field_type {
+                StructFieldType::Padding(n) => format!("Padding<[u8; {n}]>"),
                 StructFieldType::Object(o) => match o {
                     ObjectType::Angle => "Angle".to_owned(),
                     ObjectType::ColorARGBFloat => "ColorARGBFloat".to_owned(),
@@ -74,9 +110,27 @@ impl ToTokenStream for Struct {
                 }
             };
 
-            let field_name = safe_str(&i.name);
+            let field_type = match field.count {
+                FieldCount::Array(n) => format!("[{field_type}; {n}]"),
+                FieldCount::Bounds => format!("Bounds<{field_type}>"),
+                FieldCount::One => field_type
+            };
 
-            writeln!(&mut fields, "pub {field_name}: {field_type},").unwrap();
+            if let StructFieldType::Padding(_) = &field.field_type {
+                fields_with_names.push(Default::default());
+                fields_read_from_tags.push(false);
+                fields_read_from_caches.push(false);
+            }
+            else {
+                let field_name = safe_str(&field.name);
+                writeln!(&mut fields, "pub {field_name}: {field_type},").unwrap();
+                fields_with_names.push(field_name);
+                fields_read_from_tags.push(!field.flags.cache_only);
+                fields_read_from_caches.push(!field.flags.non_cached);
+            }
+
+            fields_with_types.push(field_type);
+            fields_with_sizes.push(field.size(definitions));
         }
 
         let structure = format!("
@@ -87,16 +141,54 @@ impl ToTokenStream for Struct {
 
         let structure_size = self.size;
 
+        let mut write_out = String::new();
+        let mut read_in = String::new();
+
+        for i in 0..field_count {
+            let length = &fields_with_sizes[i];
+
+            if fields_read_from_tags[i] {
+                let field_name = &fields_with_names[i];
+                let field_type = &fields_with_types[i];
+
+                writeln!(&mut write_out, "self.{field_name}.write_to_tag_file(data, _pos, struct_end)?;").unwrap();
+                writeln!(&mut read_in, "output.{field_name} = <{field_type}>::read_from_tag_file(data, _pos, struct_end, extra_data_cursor)?;").unwrap();
+            }
+
+            writeln!(&mut write_out, "let _pos = _pos.add_overflow_checked({length})?;").unwrap();
+            writeln!(&mut read_in, "let _pos = _pos.add_overflow_checked({length})?;").unwrap();
+        }
+
         let functions = format!("impl TagData for {struct_name} {{
             fn size() -> usize {{
                 {structure_size}
             }}
 
             fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> {{
-                todo!()
+                let mut _pos = at;
+                let mut output = Self::default();
+                {read_in}
+                Ok(output)
             }}
 
             fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {{
+                let mut _pos = at;
+                {write_out}
+                Ok(())
+            }}
+        }}
+
+        impl TagDataAccessor for {struct_name} {{
+            fn access(&self, matcher: &str) -> Vec<AccessorResult> {{
+                todo!()
+            }}
+            fn access_mut(&mut self, matcher: &str) -> Vec<AccessorResultMut> {{
+                todo!()
+            }}
+            fn get_type(&self) -> TagDataAccessorType {{
+                todo!()
+            }}
+            fn all_fields(&self) -> &'static [&'static str] {{
                 todo!()
             }}
         }}").parse::<TokenStream>().unwrap();
@@ -111,7 +203,7 @@ impl ToTokenStream for Struct {
 }
 
 impl ToTokenStream for Enum {
-    fn to_token_stream(&self) -> TokenStream {
+    fn to_token_stream(&self, _definitions: &ParsedDefinitions) -> TokenStream {
         macro_rules! writeln_for_each_field {
             ($($fmt:expr)*) => {{
                 let mut out = String::new();
@@ -161,7 +253,7 @@ impl ToTokenStream for Enum {
 }
 
 impl ToTokenStream for Bitfield {
-    fn to_token_stream(&self) -> TokenStream {
+    fn to_token_stream(&self, _definitions: &ParsedDefinitions) -> TokenStream {
         macro_rules! writeln_for_each_field {
             ($($fmt:expr)*) => {{
                 let mut out = String::new();
@@ -181,25 +273,48 @@ impl ToTokenStream for Bitfield {
             {fields}
         }}").parse::<TokenStream>().unwrap();
 
+        // Generate readers/writers for converting between u<width> to the bitfield
         let width = self.width;
-        let write_out = writeln_for_each_field!("output |= self.{field} as u{width} * {value};");
-        let read_in = writeln_for_each_field!("{field}: (input & {value}) != 0,");
+        let write_out = writeln_for_each_field!("output |= value.{field} as u{width} * {value};");
+        let read_in = writeln_for_each_field!("{field}: (value & {value}) != 0,");
+
+        // Do not read/write cache_only stuff from tag files
+        let cache_only_mask = self.fields.iter()
+            .map(|f| match f.flags.cache_only { true => f.value, false => 0 } )
+            .reduce(|a, b| a | b)
+            .unwrap();
+        let not_cache_only = !cache_only_mask;
 
         let functions = format!("
-        impl TagDataSimplePrimitive for {struct_name} {{
-            fn size() -> usize {{
-                <u{width} as TagDataSimplePrimitive>::size()
-            }}
-            fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {{
-                let input = u{width}::read::<B>(data, at, struct_end)?;
-                Ok(Self {{
+        impl From<u{width}> for {struct_name} {{
+            fn from(value: u{width}) -> Self {{
+                Self {{
                     {read_in}
-                }})
+                }}
             }}
-            fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {{
-                let mut output = 0u{width};
+        }}
+
+        impl From<{struct_name}> for u{width} {{
+            fn from(value: {struct_name}) -> Self {{
+                let mut output: Self = 0;
                 {write_out}
-                output.write::<B>(data, at, struct_end)
+                output
+            }}
+        }}
+
+        impl TagData for {struct_name} {{
+            fn size() -> usize {{
+                <u{width} as TagData>::size()
+            }}
+
+            fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> {{
+                let read_in = u{width}::read_from_tag_file(data, at, struct_end, extra_data_cursor)? & {not_cache_only};
+                Ok(read_in.into())
+            }}
+
+            fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {{
+                let write_out: u{width} = (*self).into();
+                (write_out & {not_cache_only}).write_to_tag_file(data, at, struct_end)
             }}
         }}").parse::<TokenStream>().unwrap();
 
@@ -209,6 +324,23 @@ impl ToTokenStream for Bitfield {
         tokens.extend(functions);
 
         tokens
+    }
+}
+
+impl ToTokenStream for TagGroup {
+    fn to_token_stream(&self, _definitions: &ParsedDefinitions) -> TokenStream {
+        let struct_name = &self.struct_name;
+        let version = self.version;
+        let group = camel_case(&self.name);
+
+        format!("impl PrimaryTagStruct for {struct_name} {{
+            fn group() -> TagGroup {{
+                TagGroup::{group}
+            }}
+            fn version() -> u16 {{
+                {version}
+            }}
+        }}").parse().unwrap()
     }
 }
 
@@ -234,6 +366,14 @@ fn camel_case(string: &str) -> String {
         }
 
         result.push(c);
+    }
+
+    let prefixes = &["Gbxm", "Ui", "Bsp", "Hud"];
+
+    for p in prefixes {
+        if result.contains(p) {
+            result = result.replace(p, &p.to_ascii_uppercase());
+        }
     }
 
     result

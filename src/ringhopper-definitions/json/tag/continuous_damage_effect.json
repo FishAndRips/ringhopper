@@ -282,6 +282,7 @@
     {
         "name": "continuous_damage_effect",
         "struct": "ContinuousDamageEffect",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

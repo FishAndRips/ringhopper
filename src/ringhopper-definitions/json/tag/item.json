@@ -114,6 +114,7 @@
         "name": "item",
         "struct": "Item",
         "supergroup": "object",
-        "type": "group"
+        "type": "group",
+        "version": 2
     }
 ]

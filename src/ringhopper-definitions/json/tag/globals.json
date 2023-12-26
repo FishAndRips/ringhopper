@@ -1717,6 +1717,7 @@
     {
         "name": "globals",
         "struct": "Globals",
-        "type": "group"
+        "type": "group",
+        "version": 3
     }
 ]

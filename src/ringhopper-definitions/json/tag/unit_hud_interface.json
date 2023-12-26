@@ -1192,6 +1192,7 @@
     {
         "name": "unit_hud_interface",
         "struct": "UnitHUDInterface",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

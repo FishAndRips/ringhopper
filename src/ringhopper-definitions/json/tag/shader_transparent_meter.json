@@ -117,6 +117,7 @@
         "name": "shader_transparent_meter",
         "struct": "ShaderTransparentMeter",
         "supergroup": "shader",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

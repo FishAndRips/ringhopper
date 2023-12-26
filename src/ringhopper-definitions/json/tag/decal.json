@@ -196,6 +196,7 @@
     {
         "name": "decal",
         "struct": "Decal",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

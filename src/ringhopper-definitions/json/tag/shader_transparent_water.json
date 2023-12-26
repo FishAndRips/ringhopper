@@ -191,6 +191,7 @@
         "name": "shader_transparent_water",
         "struct": "ShaderTransparentWater",
         "supergroup": "shader",
-        "type": "group"
+        "type": "group",
+        "version": 2
     }
 ]

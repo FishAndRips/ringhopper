@@ -130,6 +130,7 @@
     {
         "name": "flag",
         "struct": "Flag",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

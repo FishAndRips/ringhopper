@@ -1359,6 +1359,7 @@
     {
         "name": "dialogue",
         "struct": "Dialogue",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

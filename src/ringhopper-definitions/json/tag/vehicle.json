@@ -286,6 +286,7 @@
         "name": "vehicle",
         "struct": "Vehicle",
         "supergroup": "unit",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

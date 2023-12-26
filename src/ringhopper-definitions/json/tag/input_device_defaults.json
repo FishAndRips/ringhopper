@@ -43,6 +43,7 @@
     {
         "name": "input_device_defaults",
         "struct": "InputDeviceDefaults",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

@@ -86,16 +86,15 @@ impl PrimaryTagStruct for UnicodeStringList {
     }
 }
 
-fn read_test_unicode_string_list() -> (&'static [u8], TagFile) {
+fn read_test_unicode_string_list() -> (&'static [u8], UnicodeStringList) {
     let data = include_bytes!("test.unicode_string_list");
-    (data, TagFile::read_tag_file_buffer::<UnicodeStringList>(data, ParseStrictness::Strict).expect("should be valid"))
+    (data, TagFile::read_tag_from_file_buffer::<UnicodeStringList>(data, ParseStrictness::Strict).expect("should be valid"))
 }
 
 #[test]
 fn parse_unicode_string_list() {
-    let (data, string_list_file) = read_test_unicode_string_list();
-    let string_list: &UnicodeStringList = string_list_file.data.get_ref().unwrap();
-    let string_list_accessor = string_list_file.data.as_accessor();
+    let (data, string_list) = read_test_unicode_string_list();
+    let string_list_accessor = string_list.as_accessor();
 
     let utf16_matches = |string_index: usize, expected: &str| {
         let mut data: Vec<u8> = expected.encode_utf16().map(|f| f.to_le_bytes()).flatten().collect();
@@ -121,6 +120,6 @@ fn parse_unicode_string_list() {
     utf16_matches(4, "Okay, this is the actual test string. I wanted to add an empty one, too.");
 
     // If we convert it back to a tag file, it should match.
-    let reparsed = TagFile::to_tag_file(string_list).unwrap();
+    let reparsed = TagFile::to_tag_file(&string_list).unwrap();
     assert_eq!(data, reparsed.as_slice());
 }

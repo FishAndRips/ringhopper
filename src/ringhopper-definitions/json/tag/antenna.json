@@ -107,6 +107,7 @@
     {
         "name": "antenna",
         "struct": "Antenna",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

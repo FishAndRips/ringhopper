@@ -190,6 +190,7 @@
     {
         "name": "light_volume",
         "struct": "LightVolume",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

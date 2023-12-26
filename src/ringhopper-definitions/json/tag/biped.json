@@ -345,6 +345,7 @@
         "name": "biped",
         "struct": "Biped",
         "supergroup": "unit",
-        "type": "group"
+        "type": "group",
+        "version": 3
     }
 ]

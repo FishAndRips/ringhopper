@@ -327,6 +327,7 @@
     {
         "name": "particle",
         "struct": "Particle",
-        "type": "group"
+        "type": "group",
+        "version": 2
     }
 ]

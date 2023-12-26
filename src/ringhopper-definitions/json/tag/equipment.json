@@ -55,6 +55,7 @@
         "name": "equipment",
         "struct": "Equipment",
         "supergroup": "item",
-        "type": "group"
+        "type": "group",
+        "version": 2
     }
 ]

@@ -266,6 +266,7 @@
     {
         "name": "glow",
         "struct": "Glow",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

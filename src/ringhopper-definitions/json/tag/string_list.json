@@ -28,6 +28,7 @@
     {
         "name": "string_list",
         "struct": "StringList",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

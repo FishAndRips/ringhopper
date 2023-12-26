@@ -78,6 +78,7 @@
     {
         "name": "sound_environment",
         "struct": "SoundEnvironment",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

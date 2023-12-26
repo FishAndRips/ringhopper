@@ -596,6 +596,7 @@
     {
         "name": "hud_globals",
         "struct": "HUDGlobals",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

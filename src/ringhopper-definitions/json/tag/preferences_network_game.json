@@ -55,6 +55,7 @@
     {
         "name": "preferences_network_game",
         "struct": "PreferencesNetworkGame",
-        "type": "group"
+        "type": "group",
+        "version": 2
     }
 ]

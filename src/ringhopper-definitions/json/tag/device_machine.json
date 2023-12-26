@@ -79,6 +79,7 @@
         "name": "device_machine",
         "struct": "DeviceMachine",
         "supergroup": "device",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

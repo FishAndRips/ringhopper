@@ -737,6 +737,7 @@
     {
         "name": "model",
         "struct": "Model",
-        "type": "group"
+        "type": "group",
+        "version": 4
     }
 ]

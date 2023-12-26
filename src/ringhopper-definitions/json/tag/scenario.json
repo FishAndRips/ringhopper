@@ -3839,6 +3839,7 @@
     {
         "name": "scenario",
         "struct": "Scenario",
-        "type": "group"
+        "type": "group",
+        "version": 2
     }
 ]

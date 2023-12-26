@@ -774,6 +774,7 @@
     {
         "name": "actor",
         "struct": "Actor",
-        "type": "group"
+        "type": "group",
+        "version": 2
     }
 ]

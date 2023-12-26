@@ -243,6 +243,7 @@
         "name": "shader_transparent_chicago",
         "struct": "ShaderTransparentChicago",
         "supergroup": "shader",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

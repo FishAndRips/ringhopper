@@ -152,6 +152,7 @@
     {
         "name": "shader",
         "struct": "Shader",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

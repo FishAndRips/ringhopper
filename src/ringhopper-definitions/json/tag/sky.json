@@ -220,6 +220,7 @@
     {
         "name": "sky",
         "struct": "Sky",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

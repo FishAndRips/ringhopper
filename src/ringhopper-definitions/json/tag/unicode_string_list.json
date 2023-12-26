@@ -28,6 +28,7 @@
     {
         "name": "unicode_string_list",
         "struct": "UnicodeStringList",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

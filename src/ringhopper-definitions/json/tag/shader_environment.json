@@ -462,6 +462,7 @@
         "name": "shader_environment",
         "struct": "ShaderEnvironment",
         "supergroup": "shader",
-        "type": "group"
+        "type": "group",
+        "version": 2
     }
 ]

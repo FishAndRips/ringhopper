@@ -733,6 +733,7 @@
     {
         "name": "model_collision_geometry",
         "struct": "ModelCollisionGeometry",
-        "type": "group"
+        "type": "group",
+        "version": 10
     }
 ]

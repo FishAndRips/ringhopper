@@ -542,6 +542,7 @@
     {
         "name": "object",
         "struct": "Object",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

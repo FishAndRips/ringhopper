@@ -44,6 +44,7 @@
     {
         "name": "multiplayer_scenario_description",
         "struct": "MultiplayerScenarioDescription",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

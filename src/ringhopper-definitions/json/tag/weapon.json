@@ -958,6 +958,7 @@
         "name": "weapon",
         "struct": "Weapon",
         "supergroup": "item",
-        "type": "group"
+        "type": "group",
+        "version": 2
     }
 ]

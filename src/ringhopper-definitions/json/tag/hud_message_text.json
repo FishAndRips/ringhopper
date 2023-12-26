@@ -82,6 +82,7 @@
     {
         "name": "hud_message_text",
         "struct": "HUDMessageText",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

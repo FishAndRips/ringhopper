@@ -10,6 +10,7 @@
         "name": "scenery",
         "struct": "Scenery",
         "supergroup": "object",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

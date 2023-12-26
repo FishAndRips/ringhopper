@@ -482,6 +482,7 @@
     {
         "name": "particle_system",
         "struct": "ParticleSystem",
-        "type": "group"
+        "type": "group",
+        "version": 4
     }
 ]

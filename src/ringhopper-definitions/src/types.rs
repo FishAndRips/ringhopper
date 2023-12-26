@@ -43,7 +43,8 @@ pub struct TagGroup {
     pub name: String,
     pub struct_name: String,
     pub supergroup: Option<String>,
-    pub supported_engines: SupportedEngines
+    pub supported_engines: SupportedEngines,
+    pub version: u16
 }
 
 pub struct Struct {

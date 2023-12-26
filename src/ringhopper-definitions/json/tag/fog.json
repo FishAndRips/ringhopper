@@ -208,6 +208,7 @@
     {
         "name": "fog",
         "struct": "Fog",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

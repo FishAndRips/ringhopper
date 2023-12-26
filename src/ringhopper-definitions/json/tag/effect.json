@@ -439,6 +439,7 @@
     {
         "name": "effect",
         "struct": "Effect",
-        "type": "group"
+        "type": "group",
+        "version": 4
     }
 ]

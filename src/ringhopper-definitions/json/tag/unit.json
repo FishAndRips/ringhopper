@@ -667,6 +667,7 @@
         "name": "unit",
         "struct": "Unit",
         "supergroup": "object",
-        "type": "group"
+        "type": "group",
+        "version": 2
     }
 ]

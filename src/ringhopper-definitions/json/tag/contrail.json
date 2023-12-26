@@ -325,6 +325,7 @@
     {
         "name": "contrail",
         "struct": "Contrail",
-        "type": "group"
+        "type": "group",
+        "version": 3
     }
 ]

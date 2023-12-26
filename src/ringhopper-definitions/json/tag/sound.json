@@ -466,6 +466,7 @@
     {
         "name": "sound",
         "struct": "Sound",
-        "type": "group"
+        "type": "group",
+        "version": 4
     }
 ]

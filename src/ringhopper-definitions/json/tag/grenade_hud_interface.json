@@ -482,6 +482,7 @@
     {
         "name": "grenade_hud_interface",
         "struct": "GrenadeHUDInterface",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

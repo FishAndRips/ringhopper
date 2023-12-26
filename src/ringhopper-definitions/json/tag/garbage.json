@@ -15,6 +15,7 @@
         "name": "garbage",
         "struct": "Garbage",
         "supergroup": "item",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

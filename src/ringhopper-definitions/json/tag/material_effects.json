@@ -61,6 +61,7 @@
     {
         "name": "material_effects",
         "struct": "MaterialEffects",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

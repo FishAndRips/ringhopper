@@ -547,6 +547,7 @@
     {
         "name": "actor_variant",
         "struct": "ActorVariant",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

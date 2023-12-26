@@ -316,6 +316,7 @@
     {
         "name": "weather_particle_system",
         "struct": "WeatherParticleSystem",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

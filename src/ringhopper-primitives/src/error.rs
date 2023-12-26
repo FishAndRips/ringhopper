@@ -1,3 +1,5 @@
+//! Error-handling for methods that can fail in Ringhopper.
+
 use std::fmt::Display;
 
 /// General Result type for Ringhopper that uses [`Error`].
@@ -11,6 +13,9 @@ pub enum Error {
     InvalidID,
     InvalidEnum,
     TagParseFailure,
+    TagHeaderGroupTypeMismatch,
+    TagHeaderGroupVersionMismatch,
+    TagGroupUnimplemented,
     ChecksumMismatch,
     ArrayLimitExceeded,
     IndexLimitExceeded,
@@ -27,6 +32,9 @@ impl Error {
             Error::InvalidEnum => "invalid enum value",
             Error::NoSuchTagGroup => "no such tag group",
             Error::TagParseFailure => "failed to parse the tag (likely corrupt)",
+            Error::TagHeaderGroupTypeMismatch => "failed to parse the tag due to it being the wrong group",
+            Error::TagHeaderGroupVersionMismatch => "failed to parse the tag due to it being the wrong group version",
+            Error::TagGroupUnimplemented => "tag group is unimplemented",
             Error::ChecksumMismatch => "refused to parse the data (CRC32 mismatch)",
             Error::SizeLimitExceeded => "usize limit exceeded",
             Error::ArrayLimitExceeded => "array limit of 0xFFFFFFFF (4294967295) exceeded",

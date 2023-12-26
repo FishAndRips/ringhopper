@@ -68,7 +68,7 @@ impl<T: TagData> TagData for Bounds<T> {
     }
 }
 
-impl<T: TagData + TagDataAccessor + Default> Default for Bounds<T> {
+impl<T: TagData + Default> Default for Bounds<T> {
     fn default() -> Self {
         Self {
             from: T::default(),

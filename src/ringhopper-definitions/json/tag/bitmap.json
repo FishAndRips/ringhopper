@@ -591,6 +591,7 @@
     {
         "name": "bitmap",
         "struct": "Bitmap",
-        "type": "group"
+        "type": "group",
+        "version": 7
     }
 ]

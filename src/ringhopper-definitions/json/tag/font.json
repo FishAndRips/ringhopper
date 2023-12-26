@@ -160,6 +160,7 @@
     {
         "name": "font",
         "struct": "Font",
-        "type": "group"
+        "type": "group",
+        "version": 1
     }
 ]

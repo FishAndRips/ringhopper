@@ -212,6 +212,7 @@
     {
         "name": "light",
         "struct": "Light",
-        "type": "group"
+        "type": "group",
+        "version": 3
     }
 ]
