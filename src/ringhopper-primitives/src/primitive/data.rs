@@ -1,10 +1,11 @@
+use std::any::Any;
 use std::fmt::Debug;
 use std::marker::PhantomData;
-use crate::accessor::*;
 use crate::parse::*;
 use crate::error::*;
 use byteorder::*;
 use std::fmt::Display;
+use crate::dynamic::{DynamicReflexive, DynamicTagData, DynamicTagDataArray, DynamicTagDataType};
 
 /// 16-bit index type
 pub type Index = u16;
@@ -257,6 +258,32 @@ impl TagData for Data {
     }
 }
 
+impl DynamicTagData for Data {
+    fn get_field(&self, _field: &str) -> Option<&dyn DynamicTagData> {
+        None
+    }
+
+    fn get_field_mut(&mut self, _field: &str) -> Option<&mut dyn DynamicTagData> {
+        None
+    }
+
+    fn fields(&self) -> &'static [&'static str] {
+        &[]
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+
+    fn data_type(&self) -> DynamicTagDataType {
+        DynamicTagDataType::Data
+    }
+}
+
 /// Container for contiguously stored blocks.
 ///
 /// A `Reflexive` is functionally an array, containing a size value and, when stored in cache files, a memory address.
@@ -350,8 +377,8 @@ impl From<Address> for u32 {
 
 generate_tag_data_simple_primitive_code!(Address, u32, address);
 
-type ReflexiveAccessRange = (usize, usize); // [start, end]
-fn parse_range(matcher: &str, len: usize) -> Result<Vec<ReflexiveAccessRange>, &'static str> {
+pub(crate) type ReflexiveAccessRange = (usize, usize); // [start, end]
+pub(crate) fn parse_range(matcher: &str, len: usize) -> Result<Vec<ReflexiveAccessRange>, &'static str> {
     const RANGE_SEPARATOR: u8 = ',' as u8;
     const START_END_SEPARATOR: u8 = '-' as u8;
     const EVERYTHING: u8 = '*' as u8;
@@ -458,99 +485,67 @@ fn parse_range(matcher: &str, len: usize) -> Result<Vec<ReflexiveAccessRange>, &
     Ok(returned_ranges)
 }
 
+impl<T: DynamicTagData + Sized + Default + Clone> DynamicTagData for Reflexive<T> {
+    fn get_field(&self, _field: &str) -> Option<&dyn DynamicTagData> {
+        None
+    }
 
-impl<T: TagData + TagDataAccessor> Reflexive<T> {
-    /// Separate the [] from the rest of the matcher, returning the matcher after the [] and range(s).
-    fn parse_matcher<'a>(&self, matcher: &'a str) -> Result<(&'a str, Vec<ReflexiveAccessRange>), String> {
-        if !matcher.is_ascii() {
-            return Err(format!("invalid matcher {matcher}: must be ASCII"))
-        }
+    fn get_field_mut(&mut self, _field: &str) -> Option<&mut dyn DynamicTagData> {
+        None
+    }
 
-        let mut chars = matcher.bytes();
-        if chars.next() != Some('[' as u8) {
-            return Err(format!("invalid matcher {matcher}: must be .length or []"))
-        }
-        let mut closer = None;
-        let mut index: usize = 1;
-        for c in chars {
-            if c == ']' as u8 {
-                closer = Some(index);
-                break;
-            }
-            index += 1;
-        }
-        let closer = match closer {
-            Some(n) => n,
-            None => return Err(format!("invalid matcher {matcher}: unclosed ["))
-        };
+    fn fields(&self) -> &'static [&'static str] {
+        &[]
+    }
 
-        let remaining = &matcher[closer + 1..];
-        let matcher_to_parse = &matcher[1..closer];
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 
-        let ranges = match parse_range(matcher_to_parse, self.items.len()) {
-            Ok(r) => r,
-            Err(err) => return Err(format!("invalid matcher {matcher}: {err}"))
-        };
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
 
-        Ok((remaining, ranges))
+    fn data_type(&self) -> DynamicTagDataType {
+        DynamicTagDataType::Reflexive
+    }
+
+    fn as_array(&self) -> Option<&dyn DynamicTagDataArray> {
+        Some(self as &dyn DynamicTagDataArray)
+    }
+
+    fn as_array_mut(&mut self) -> Option<&mut dyn DynamicTagDataArray> {
+        Some(self as &mut dyn DynamicTagDataArray)
     }
 }
 
-impl<T: TagData + TagDataAccessor> TagDataAccessor for Reflexive<T> {
-    fn access(&self, matcher: &str) -> Vec<AccessorResult> {
-        if matcher.is_empty() {
-            return vec![AccessorResult::Accessor(self)]
-        }
-        if matcher == ".length" {
-            return vec![AccessorResult::Size(self.items.len())]
-        }
-        let (remaining, ranges) = match self.parse_matcher(matcher) {
-            Ok(n) => n,
-            Err(e) => return vec![AccessorResult::Error(e)]
-        };
-
-        let mut matches = Vec::new();
-        for (start, end) in ranges {
-            for q in start..=end {
-                matches.append(&mut self.items.get(q)
-                                        .expect("we just verified this in parse_range!")
-                                        .access(remaining))
-            }
-        }
-
-        matches
+impl<T: DynamicTagData + Sized + Default + Clone> DynamicTagDataArray for Reflexive<T> {
+    fn get_at_index(&self, index: usize) -> Option<&dyn DynamicTagData> {
+        Some(&self.items[index])
     }
-    fn access_mut(&mut self, matcher: &str) -> Vec<AccessorResultMut> {
-        if matcher.is_empty() {
-            return vec![AccessorResultMut::Accessor(self)]
-        }
-        if matcher == ".length" {
-            return vec![AccessorResultMut::Size(self.items.len())]
-        }
-        let (remaining, ranges) = match self.parse_matcher(matcher) {
-            Ok(n) => n,
-            Err(e) => return vec![AccessorResultMut::Error(e)]
-        };
 
-        let mut matches: Vec<AccessorResultMut> = Vec::new();
-        let mut index: usize = 0;
-        for m in self.items.iter_mut() {
-            'search_loop: for &(start, end) in &ranges {
-                if start >= index && end <= index {
-                    matches.append(&mut m.access_mut(remaining));
-                    break 'search_loop;
-                }
-            }
-            index += 1;
-        }
+    fn get_at_index_mut(&mut self, index: usize) -> Option<&mut dyn DynamicTagData> {
+        Some(&mut self.items[index])
+    }
 
-        matches
+    fn len(&self) -> usize {
+        self.items.len()
     }
-    fn all_fields(&self) -> &'static [&'static str] {
-        &["length", "[]"]
+}
+
+impl<T: DynamicTagData + Sized + Default + Clone> DynamicReflexive for Reflexive<T> {
+    fn insert_default(&mut self, index: usize) {
+        self.items.insert(index, Default::default());
     }
-    fn get_type(&self) -> TagDataAccessorType {
-        TagDataAccessorType::Reflexive
+
+    fn insert_copy(&mut self, index: usize, item: &dyn DynamicTagData) {
+        let item: &T = item.as_any().downcast_ref::<T>().unwrap();
+        self.items.insert(index, item.clone());
+    }
+
+    fn insert_moved(&mut self, index: usize, item: &mut dyn DynamicTagData) {
+        let item = std::mem::take(item.as_any_mut().downcast_mut::<T>().unwrap());
+        self.items.insert(index, item);
     }
 }
 

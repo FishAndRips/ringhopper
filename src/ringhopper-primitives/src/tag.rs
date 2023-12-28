@@ -3,7 +3,7 @@
 use byteorder::ByteOrder;
 
 use crate::primitive::*;
-use crate::accessor::*;
+use crate::dynamic::*;
 use crate::parse::*;
 use crate::error::*;
 use crate::crc32::CRC32;
@@ -11,7 +11,7 @@ use crate::crc32::CRC32;
 use std::any::Any;
 
 /// Used for defining information for saving structs into tag files.
-pub trait PrimaryTagStruct: TagDataAccessor + TagData {
+pub trait PrimaryTagStruct: DynamicTagData + TagData {
     /// Get the tag group of the tag struct.
     fn group() -> TagGroup where Self: Sized;
 
@@ -21,11 +21,11 @@ pub trait PrimaryTagStruct: TagDataAccessor + TagData {
 
 /// Methods automatically implemented for all [`PrimaryTagStruct`] types that implement [`Any`].
 pub trait PrimaryTagStructDyn: PrimaryTagStruct + Any {
-    /// Get this as a [`TagDataAccessor`] to allow for accessing tag data without needing the underlying structure.
-    fn as_accessor(&self) -> &dyn TagDataAccessor;
+    /// Get this as a [`DynamicTagData`] to allow for accessing tag data without needing the underlying structure.
+    fn as_dynamic(&self) -> &dyn DynamicTagData;
 
-    /// Get this as a mutable [`TagDataAccessor`] to allow for accessing tag data without needing the underlying structure.
-    fn as_mut_accessor(&mut self) -> &mut dyn TagDataAccessor;
+    /// Get this as a mutable [`DynamicTagData`] to allow for accessing tag data without needing the underlying structure.
+    fn as_mut_dynamic(&mut self) -> &mut dyn DynamicTagData;
 
     /// Get this as an [`Any`] reference to downcast.
     fn as_any(&self) -> &dyn Any;
@@ -49,7 +49,7 @@ impl dyn PrimaryTagStructDyn {
     ///
     /// Convenience function for `.as_any().downcast_ref::<T>()` with some extra compile-time checks.
     pub fn get_ref<T: PrimaryTagStructDyn>(&self) -> Option<&T> {
-        self.as_any().downcast_ref::<T>()
+        PrimaryTagStructDyn::as_any(self).downcast_ref::<T>()
     }
 
     /// Get a mutable reference to the tag as a concrete type.
@@ -58,15 +58,15 @@ impl dyn PrimaryTagStructDyn {
     ///
     /// Convenience function for `.as_mut_any().downcast_mut::<T>()` with some extra compile-time checks.
     pub fn get_mut<T: PrimaryTagStructDyn>(&mut self) -> Option<&mut T> {
-        self.as_mut_any().downcast_mut::<T>()
+        PrimaryTagStructDyn::as_mut_any(self).downcast_mut::<T>()
     }
 }
 
 impl<T: PrimaryTagStruct + Any> PrimaryTagStructDyn for T {
-    fn as_accessor(&self) -> &dyn TagDataAccessor {
+    fn as_dynamic(&self) -> &dyn DynamicTagData {
         self
     }
-    fn as_mut_accessor(&mut self) -> &mut dyn TagDataAccessor {
+    fn as_mut_dynamic(&mut self) -> &mut dyn DynamicTagData {
         self
     }
     fn as_any(&self) -> &dyn Any {

@@ -1,4 +1,5 @@
-use crate::accessor::*;
+use std::any::Any;
+use crate::dynamic::*;
 use crate::parse::*;
 use crate::error::*;
 
@@ -12,42 +13,37 @@ pub struct Bounds<T: TagData> {
     pub to: T
 }
 
-// TODO: implement TagDataAccessor for all types?
+impl<T: DynamicTagData> DynamicTagData for Bounds<T> {
+    fn get_field(&self, item: &str) -> Option<&dyn DynamicTagData> {
+        match item {
+            "from" => Some(&self.from),
+            "to" => Some(&self.to),
+            _ => None
+        }
+    }
 
-impl<T: TagData + TagDataAccessor> TagDataAccessor for Bounds<T> {
-    fn access(&self, matcher: &str) -> Vec<AccessorResult> {
-        if matcher.is_empty() {
-            vec![AccessorResult::Accessor(self)]
-        }
-        else if matcher.starts_with(".from") {
-            self.from.access(&matcher[".from".len()..])
-        }
-        else if matcher.starts_with(".to") {
-            self.to.access(&matcher[".to".len()..])
-        }
-        else {
-            vec![AccessorResult::Error("only .from and .to can be used".to_owned())]
+    fn get_field_mut(&mut self, item: &str) -> Option<&mut dyn DynamicTagData> {
+        match item {
+            "from" => Some(&mut self.from),
+            "to" => Some(&mut self.to),
+            _ => None
         }
     }
-    fn access_mut(&mut self, matcher: &str) -> Vec<AccessorResultMut> {
-        if matcher.is_empty() {
-            vec![AccessorResultMut::Accessor(self)]
-        }
-        else if matcher.starts_with(".from") {
-            self.from.access_mut(&matcher[".from".len()..])
-        }
-        else if matcher.starts_with(".to") {
-            self.to.access_mut(&matcher[".to".len()..])
-        }
-        else {
-            vec![AccessorResultMut::Error("only .from and .to can be used".to_owned())]
-        }
-    }
-    fn all_fields(&self) -> &'static [&'static str] {
+
+    fn fields(&self) -> &'static [&'static str] {
         &["from", "to"]
     }
-    fn get_type(&self) -> TagDataAccessorType {
-        TagDataAccessorType::Block
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+
+    fn data_type(&self) -> DynamicTagDataType {
+        DynamicTagDataType::Block
     }
 }
 
@@ -117,6 +113,54 @@ impl<T: TagData + Sized + Default, const U: usize> TagData for [T; U] {
         }
 
         Ok(())
+    }
+}
+
+impl<T: DynamicTagData + Sized + Default, const U: usize> DynamicTagData for [T; U] {
+    fn get_field(&self, _field: &str) -> Option<&dyn DynamicTagData> {
+        None
+    }
+
+    fn get_field_mut(&mut self, _field: &str) -> Option<&mut dyn DynamicTagData> {
+        None
+    }
+
+    fn fields(&self) -> &'static [&'static str] {
+        &[]
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+
+    fn data_type(&self) -> DynamicTagDataType {
+        DynamicTagDataType::Array
+    }
+
+    fn as_array(&self) -> Option<&dyn DynamicTagDataArray> {
+        Some(self as &dyn DynamicTagDataArray)
+    }
+
+    fn as_array_mut(&mut self) -> Option<&mut dyn DynamicTagDataArray> {
+        Some(self as &mut dyn DynamicTagDataArray)
+    }
+}
+
+impl<T: DynamicTagData + Sized + Default, const U: usize> DynamicTagDataArray for [T; U] {
+    fn get_at_index(&self, index: usize) -> Option<&dyn DynamicTagData> {
+        Some(&self[index])
+    }
+
+    fn get_at_index_mut(&mut self, index: usize) -> Option<&mut dyn DynamicTagData> {
+        Some(&mut self[index])
+    }
+
+    fn len(&self) -> usize {
+        U
     }
 }
 

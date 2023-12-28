@@ -144,6 +144,10 @@ impl ToTokenStream for Struct {
         let mut write_out = String::new();
         let mut read_in = String::new();
 
+        let mut field_list = String::new();
+        let mut getter = String::new();
+        let mut getter_mut = String::new();
+
         for i in 0..field_count {
             let length = &fields_with_sizes[i];
 
@@ -153,6 +157,10 @@ impl ToTokenStream for Struct {
 
                 writeln!(&mut write_out, "self.{field_name}.write_to_tag_file(data, _pos, struct_end)?;").unwrap();
                 writeln!(&mut read_in, "output.{field_name} = <{field_type}>::read_from_tag_file(data, _pos, struct_end, extra_data_cursor)?;").unwrap();
+                write!(&mut field_list, "\"{field_name}\",").unwrap();
+
+                writeln!(&mut getter, "\"{field_name}\" => Some(&self.{field_name}),").unwrap();
+                writeln!(&mut getter_mut, "\"{field_name}\" => Some(&mut self.{field_name}),").unwrap();
             }
 
             writeln!(&mut write_out, "let _pos = _pos.add_overflow_checked({length})?;").unwrap();
@@ -178,18 +186,35 @@ impl ToTokenStream for Struct {
             }}
         }}
 
-        impl TagDataAccessor for {struct_name} {{
-            fn access(&self, matcher: &str) -> Vec<AccessorResult> {{
-                todo!()
+        impl DynamicTagData for {struct_name} {{
+            fn get_field(&self, field: &str) -> Option<&dyn DynamicTagData> {{
+                match field {{
+                    {getter}
+                    _ => None
+                }}
             }}
-            fn access_mut(&mut self, matcher: &str) -> Vec<AccessorResultMut> {{
-                todo!()
+
+            fn get_field_mut(&mut self, field: &str) -> Option<&mut dyn DynamicTagData> {{
+                match field {{
+                    {getter_mut}
+                    _ => None
+                }}
             }}
-            fn get_type(&self) -> TagDataAccessorType {{
-                todo!()
+
+            fn fields(&self) -> &'static [&'static str] {{
+                &[{field_list}]
             }}
-            fn all_fields(&self) -> &'static [&'static str] {{
-                todo!()
+
+            fn as_any(&self) -> &dyn Any {{
+                self
+            }}
+
+            fn as_any_mut(&mut self) -> &mut dyn Any {{
+                self
+            }}
+
+            fn data_type(&self) -> DynamicTagDataType {{
+                DynamicTagDataType::Block
             }}
         }}").parse::<TokenStream>().unwrap();
 
@@ -227,21 +252,51 @@ impl ToTokenStream for Enum {
         }}").parse::<TokenStream>().unwrap();
 
         let functions = format!("
-        impl TagDataSimplePrimitive for {struct_name} {{
+        impl TagData for {struct_name} {{
             fn size() -> usize {{
                 <u16 as TagDataSimplePrimitive>::size()
             }}
-            fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {{
-                let input = u16::read::<B>(data, at, struct_end)?;
+
+            fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> {{
+                let input = u16::read_from_tag_file(data, at, struct_end, extra_data_cursor)?;
                 match input {{
                     {read_in}
                     _ => Err(Error::InvalidEnum)
                 }}
             }}
-            fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {{
-                (*self as u16).write::<B>(data, at, struct_end)
+
+            fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {{
+                (*self as u16).write_to_tag_file(data, at, struct_end)
             }}
-        }}").parse::<TokenStream>().unwrap();
+        }}
+
+        impl DynamicTagData for {struct_name} {{
+            fn get_field(&self, field: &str) -> Option<&dyn DynamicTagData> {{
+                None
+            }}
+
+            fn get_field_mut(&mut self, field: &str) -> Option<&mut dyn DynamicTagData> {{
+                None
+            }}
+
+            fn fields(&self) -> &'static [&'static str] {{
+                &[]
+            }}
+
+            fn as_any(&self) -> &dyn Any {{
+                self
+            }}
+
+            fn as_any_mut(&mut self) -> &mut dyn Any {{
+                self
+            }}
+
+            fn data_type(&self) -> DynamicTagDataType {{
+                DynamicTagDataType::Enum
+            }}
+        }}
+
+        ").parse::<TokenStream>().unwrap();
 
         let mut tokens = TokenStream::default();
 
@@ -277,6 +332,9 @@ impl ToTokenStream for Bitfield {
         let width = self.width;
         let write_out = writeln_for_each_field!("output |= value.{field} as u{width} * {value};");
         let read_in = writeln_for_each_field!("{field}: (value & {value}) != 0,");
+        let getter = writeln_for_each_field!("\"{field}\" => Some(&self.{field}), // {value}");
+        let getter_mut = writeln_for_each_field!("\"{field}\" => Some(&mut self.{field}), // {value}");
+        let list = writeln_for_each_field!("\"{field}\", // {value}");
 
         // Do not read/write cache_only stuff from tag files
         let cache_only_mask = self.fields.iter()
@@ -299,6 +357,40 @@ impl ToTokenStream for Bitfield {
                 let mut output: Self = 0;
                 {write_out}
                 output
+            }}
+        }}
+
+        impl DynamicTagData for {struct_name} {{
+            fn get_field(&self, field: &str) -> Option<&dyn DynamicTagData> {{
+                match field {{
+                    {getter}
+                    _ => None
+                }}
+            }}
+
+            fn get_field_mut(&mut self, field: &str) -> Option<&mut dyn DynamicTagData> {{
+                match field {{
+                    {getter_mut}
+                    _ => None
+                }}
+            }}
+
+            fn fields(&self) -> &'static [&'static str] {{
+                &[
+                    {list}
+                ]
+            }}
+
+            fn as_any(&self) -> &dyn Any {{
+                self
+            }}
+
+            fn as_any_mut(&mut self) -> &mut dyn Any {{
+                self
+            }}
+
+            fn data_type(&self) -> DynamicTagDataType {{
+                DynamicTagDataType::Block
             }}
         }}
 

@@ -1,6 +1,8 @@
+use std::any::Any;
 use crate::error::{Error, OverflowCheck};
 
 use byteorder::*;
+use crate::dynamic::{DynamicTagData, DynamicTagDataType};
 
 use crate::error::RinghopperResult;
 
@@ -89,6 +91,32 @@ impl<T: TagDataSimplePrimitive + Sized> TagData for T {
     }
 }
 
+impl <T: TagDataSimplePrimitive + Sized + 'static> DynamicTagData for T {
+    fn get_field(&self, _field: &str) -> Option<&dyn DynamicTagData> {
+        None
+    }
+
+    fn get_field_mut(&mut self, _field: &str) -> Option<&mut dyn DynamicTagData> {
+        None
+    }
+
+    fn fields(&self) -> &'static [&'static str] {
+        &[]
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+
+    fn data_type(&self) -> DynamicTagDataType {
+        DynamicTagDataType::SimplePrimitive
+    }
+}
+
 pub(crate) fn fits(size: usize, at: usize, vec_size: usize) -> RinghopperResult<usize> {
     let end = at.add_overflow_checked(size)?;
 
@@ -135,6 +163,18 @@ generate_tag_data_for_number!(u16, read_u16, write_u16);
 generate_tag_data_for_number!(i32, read_i32, write_i32);
 generate_tag_data_for_number!(u32, read_u32, write_u32);
 generate_tag_data_for_number!(f32, read_f32, write_f32);
+
+impl TagDataSimplePrimitive for bool {
+    fn size() -> usize {
+        <u8 as TagDataSimplePrimitive>::size()
+    }
+    fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
+        Ok(u8::read::<B>(data, at, struct_end)? != 0)
+    }
+    fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
+        (*self as u8).write::<B>(data, at, struct_end)
+    }
+}
 
 impl TagDataSimplePrimitive for u8 {
     fn size() -> usize {

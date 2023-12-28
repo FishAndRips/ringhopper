@@ -83,27 +83,6 @@ impl TagData for Vector3DHolder {
     }
 }
 
-impl TagDataAccessor for Vector3DHolder {
-    fn access(&self, matcher: &str) -> Vec<AccessorResult> {
-        if matcher == ".vector" {
-            return vec![AccessorResult::Primitive(PrimitiveRef::Vector3D(&self.vector))];
-        }
-        panic!()
-    }
-    fn get_type(&self) -> TagDataAccessorType {
-        TagDataAccessorType::Block
-    }
-    fn access_mut(&mut self, matcher: &str) -> Vec<AccessorResultMut> {
-        if matcher == ".vector" {
-            return vec![AccessorResultMut::Primitive(PrimitiveRefMut::Vector3D(&mut self.vector))];
-        }
-        panic!()
-    }
-    fn all_fields(&self) -> &'static [&'static str] {
-        return &[".vector"]
-    }
-}
-
 #[test]
 fn reflexive_rw() {
     // Test reading a reflexive from tag data
@@ -127,33 +106,6 @@ fn reflexive_rw() {
     new_array_bytes.resize(0xC, 0);
     vectors.write_to_tag_file(&mut new_array_bytes, 0, 0xC).unwrap();
     assert_eq!(array_of_vectors_bytes, &new_array_bytes[..]);
-
-    fn cooerce_to_vector3d(what: &AccessorResult) -> Vector3D {
-        if let AccessorResult::Primitive(PrimitiveRef::Vector3D(&vec)) = what {
-            vec
-        }
-        else {
-            panic!("expected a vector3d to return from that")
-        }
-    }
-
-    assert_eq!(cooerce_to_vector3d(&vectors.access("[0].vector")[0]), Vector3D { x: 1.0, y: 2.0, z: 3.0 } );
-    assert_eq!(cooerce_to_vector3d(&vectors.access("[*].vector")[0]), Vector3D { x: 1.0, y: 2.0, z: 3.0 } );
-    assert_eq!(cooerce_to_vector3d(&vectors.access("[*].vector")[1]), Vector3D { x: 4.0, y: 5.0, z: 6.0 } );
-    assert_eq!(cooerce_to_vector3d(&vectors.access("[*].vector")[2]), Vector3D { x: 7.0, y: 8.0, z: 9.0 } );
-
-    fn cooerce_to_vector3d_mut<'a>(what: &'a mut AccessorResultMut<'a>) -> &'a mut Vector3D {
-        if let AccessorResultMut::Primitive(PrimitiveRefMut::Vector3D(vec)) = what {
-            vec
-        }
-        else {
-            panic!("expected a vector3d to return from that")
-        }
-    }
-
-    assert_eq!(*cooerce_to_vector3d_mut(&mut vectors.access_mut("[0].vector")[0]), Vector3D { x: 1.0, y: 2.0, z: 3.0 } );
-    *cooerce_to_vector3d_mut(&mut vectors.access_mut("[0].vector")[0]) = Vector3D { x: 30.0, y: 35.0, z: 40.0 };
-    assert_eq!(*cooerce_to_vector3d_mut(&mut vectors.access_mut("[0].vector")[0]), Vector3D { x: 30.0, y: 35.0, z: 40.0 } );
 }
 
 #[test]

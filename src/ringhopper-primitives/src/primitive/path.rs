@@ -1,8 +1,10 @@
+use std::any::Any;
 use super::*;
 use crate::parse::*;
 use std::convert::From;
 use std::fmt::Display;
 use std::fmt::Write;
+use crate::dynamic::{DynamicTagData, DynamicTagDataType};
 
 /// Halo path separator
 pub(crate) const HALO_PATH_SEPARATOR: char = '\\';
@@ -20,7 +22,7 @@ pub struct TagPath {
 impl TagPath {
     /// Get the path component of the tag path.
     ///
-    /// This will be the path as internally stored in tags.
+    /// This will be the path as internally stored in tags, using Halo path separators.
     ///
     /// # Examples
     ///
@@ -321,7 +323,6 @@ impl Display for TagReference {
     }
 }
 
-
 impl TagData for TagReference {
     fn size() -> usize {
         <TagReferenceC as TagDataSimplePrimitive>::size()
@@ -376,6 +377,32 @@ impl TagData for TagReference {
             }
         };
         construct_to_write.write_to_tag_file(data, at, struct_end)
+    }
+}
+
+impl DynamicTagData for TagReference {
+    fn get_field(&self, _field: &str) -> Option<&dyn DynamicTagData> {
+        None
+    }
+
+    fn get_field_mut(&mut self, _field: &str) -> Option<&mut dyn DynamicTagData> {
+        None
+    }
+
+    fn fields(&self) -> &'static [&'static str] {
+        &[]
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+
+    fn data_type(&self) -> DynamicTagDataType {
+        DynamicTagDataType::TagReference
     }
 }
 
