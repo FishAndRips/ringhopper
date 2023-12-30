@@ -5,7 +5,7 @@ use super::*;
 fn parse_bounds() {
     let array_of_bounds: &[u8] = &[0xBF, 0x80, 0x00, 0x00, 0x3F, 0x80, 0x00, 0x00];
     let b = Bounds::<f32>::read_from_tag_file(&array_of_bounds, 0, 8, &mut 8).expect("should work");
-    assert_eq!(Bounds { from: -1.0f32, to: 1.0f32 }, b);
+    assert_eq!(Bounds { lower: -1.0f32, upper: 1.0f32 }, b);
 }
 
 #[test]

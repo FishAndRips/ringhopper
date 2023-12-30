@@ -233,15 +233,18 @@ impl ToTokenStream for Enum {
             ($($fmt:expr)*) => {{
                 let mut out = String::new();
                 for i in &self.options {
-                    writeln!(&mut out, $($fmt)*, field=camel_case(&i.name), value=i.value).unwrap();
+                    writeln!(&mut out, $($fmt)*, field_camel_case=camel_case(&i.name), field_snake_case=safe_str(&i.name), value=i.value).unwrap();
                 }
                 out
             }};
         }
 
         let struct_name = &self.name;
-        let fields = writeln_for_each_field!("{field}, // {value}");
-        let read_in = writeln_for_each_field!("{value} => Ok(Self::{field}),");
+        let fields = writeln_for_each_field!("{field_camel_case}, // {value}, {field_snake_case}");
+        let read_in = writeln_for_each_field!("{value} => Ok(Self::{field_camel_case}), // {field_snake_case}");
+        let field_name_list = writeln_for_each_field!("\"{field_snake_case}\", // {value}, {field_camel_case}");
+        let str_to_enum = writeln_for_each_field!("\"{field_snake_case}\" => Some(Self::{field_camel_case}), // {value}");
+        let enum_to_str = writeln_for_each_field!("Self::{field_camel_case} => \"{field_snake_case}\", // {value}");
 
         let structure = format!("
         #[derive(Copy, Clone, PartialEq, Default, Debug)]
@@ -294,9 +297,34 @@ impl ToTokenStream for Enum {
             fn data_type(&self) -> DynamicTagDataType {{
                 DynamicTagDataType::Enum
             }}
+
+            fn as_enum(&self) -> Option<&dyn DynamicEnum> {{
+                Some(self)
+            }}
+
+            fn as_enum_mut(&mut self) -> Option<&mut dyn DynamicEnum> {{
+                Some(self)
+            }}
         }}
 
-        ").parse::<TokenStream>().unwrap();
+        impl DynamicEnumImpl for {struct_name} {{
+            fn from_str(value: &str) -> Option<Self> {{
+                match value {{
+                    {str_to_enum}
+                    _ => None
+                }}
+            }}
+            fn to_str(&self) -> &'static str {{
+                match *self {{
+                    {enum_to_str}
+                }}
+            }}
+            fn str_vals() -> &'static [&'static str] {{
+                &[
+                    {field_name_list}
+                ]
+            }}
+        }}").parse::<TokenStream>().unwrap();
 
         let mut tokens = TokenStream::default();
 

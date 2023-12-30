@@ -297,12 +297,9 @@
                 "default": 1.0
             },
             {
-                "name": "color0 animation lower bound",
-                "type": "ColorARGBFloat"
-            },
-            {
-                "name": "color0 animation upper bound",
-                "type": "ColorARGBFloat"
+                "name": "color0 animation",
+                "type": "ColorARGBFloat",
+                "bounds": true
             },
             {
                 "name": "color1",

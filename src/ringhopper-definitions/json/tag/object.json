@@ -305,12 +305,9 @@
                 "default": 1.0
             },
             {
-                "name": "color lower bound",
-                "type": "ColorRGBFloat"
-            },
-            {
-                "name": "color upper bound",
-                "type": "ColorRGBFloat"
+                "name": "color",
+                "type": "ColorRGBFloat",
+                "bounds": true
             }
         ],
         "type": "struct",
@@ -332,12 +329,9 @@
                 "type": "ColorInterpolationFlags"
             },
             {
-                "name": "color lower bound",
-                "type": "ColorRGBFloat"
-            },
-            {
-                "name": "color upper bound",
-                "type": "ColorRGBFloat"
+                "name": "color",
+                "type": "ColorRGBFloat",
+                "bounds": true
             },
             {
                 "name": "permutations",

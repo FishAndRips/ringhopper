@@ -8,7 +8,6 @@ use ringhopper_primitives::parse::*;
 use ringhopper_primitives::error::*;
 use ringhopper_primitives::tag::PrimaryTagStruct;
 use ringhopper_primitives::dynamic::*;
-use ringhopper_primitives::byteorder::ByteOrder;
 use ringhopper_primitives::tag::{TagFile, ParseStrictness, PrimaryTagStructDyn};
 
 ringhopper_structs_codegen::generate_ringhopper_structs!();

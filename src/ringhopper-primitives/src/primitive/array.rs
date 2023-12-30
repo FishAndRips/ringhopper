@@ -7,31 +7,31 @@ use crate::error::*;
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Bounds<T: TagData> {
     /// Minimum value
-    pub from: T,
+    pub lower: T,
 
     /// Maximum value
-    pub to: T
+    pub upper: T
 }
 
 impl<T: DynamicTagData> DynamicTagData for Bounds<T> {
     fn get_field(&self, item: &str) -> Option<&dyn DynamicTagData> {
         match item {
-            "from" => Some(&self.from),
-            "to" => Some(&self.to),
+            "lower" => Some(&self.lower),
+            "upper" => Some(&self.upper),
             _ => None
         }
     }
 
     fn get_field_mut(&mut self, item: &str) -> Option<&mut dyn DynamicTagData> {
         match item {
-            "from" => Some(&mut self.from),
-            "to" => Some(&mut self.to),
+            "lower" => Some(&mut self.lower),
+            "upper" => Some(&mut self.upper),
             _ => None
         }
     }
 
     fn fields(&self) -> &'static [&'static str] {
-        &["from", "to"]
+        &["lower", "upper"]
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -53,13 +53,13 @@ impl<T: TagData> TagData for Bounds<T> {
     }
     fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> {
         Ok(Self {
-            from: T::read_from_tag_file(data, at, struct_end, extra_data_cursor)?,
-            to: T::read_from_tag_file(data, at.add_overflow_checked(T::size())?, struct_end, extra_data_cursor)?
+            lower: T::read_from_tag_file(data, at, struct_end, extra_data_cursor)?,
+            upper: T::read_from_tag_file(data, at.add_overflow_checked(T::size())?, struct_end, extra_data_cursor)?
         })
     }
     fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {
-        self.from.write_to_tag_file(data, 0, struct_end)?;
-        self.to.write_to_tag_file(data, at.add_overflow_checked(T::size())?, struct_end)?;
+        self.lower.write_to_tag_file(data, 0, struct_end)?;
+        self.upper.write_to_tag_file(data, at.add_overflow_checked(T::size())?, struct_end)?;
         Ok(())
     }
 }
@@ -67,8 +67,8 @@ impl<T: TagData> TagData for Bounds<T> {
 impl<T: TagData + Default> Default for Bounds<T> {
     fn default() -> Self {
         Self {
-            from: T::default(),
-            to: T::default()
+            lower: T::default(),
+            upper: T::default()
         }
     }
 }

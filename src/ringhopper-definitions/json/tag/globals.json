@@ -1451,12 +1451,9 @@
                 "size": 8
             },
             {
-                "name": "tint lower bound",
-                "type": "ColorARGBFloat"
-            },
-            {
-                "name": "tint upper bound",
-                "type": "ColorARGBFloat"
+                "name": "tint",
+                "type": "ColorARGBFloat",
+                "bounds": true
             },
             {
                 "type": "pad",

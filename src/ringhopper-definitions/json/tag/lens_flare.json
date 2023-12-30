@@ -133,12 +133,9 @@
                 "type": "ColorARGBFloat"
             },
             {
-                "name": "color lower bound",
-                "type": "ColorARGBFloat"
-            },
-            {
-                "name": "color upper bound",
-                "type": "ColorARGBFloat"
+                "name": "color",
+                "type": "ColorARGBFloat",
+                "bounds": true
             },
             {
                 "name": "more flags",

@@ -230,12 +230,9 @@
                 "size": 64
             },
             {
-                "name": "tint color lower bound",
-                "type": "ColorRGBFloat"
-            },
-            {
-                "name": "tint color upper bound",
-                "type": "ColorRGBFloat"
+                "name": "tint",
+                "type": "ColorRGBFloat",
+                "bounds": true
             },
             {
                 "name": "periodic function",

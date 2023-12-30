@@ -64,12 +64,9 @@
         "name": "ActorVariantChangeColors",
         "fields": [
             {
-                "name": "color lower bound",
-                "type": "ColorRGBFloat"
-            },
-            {
-                "name": "color upper bound",
-                "type": "ColorRGBFloat"
+                "name": "color",
+                "type": "ColorRGBFloat",
+                "bounds": true
             },
             {
                 "type": "pad",

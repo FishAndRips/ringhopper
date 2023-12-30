@@ -275,12 +275,9 @@
         "name": "WeaponTriggerFiringEffect",
         "fields": [
             {
-                "name": "shot count lower bound",
-                "type": "int16"
-            },
-            {
-                "name": "shot count upper bound",
-                "type": "int16"
+                "name": "shot count",
+                "type": "int16",
+                "bounds": true
             },
             {
                 "type": "pad",

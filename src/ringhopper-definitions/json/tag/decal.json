@@ -89,21 +89,12 @@
                 ]
             },
             {
-                "name": "color lower bounds",
+                "name": "color",
                 "type": "ColorRGBFloat",
+                "bounds": true,
                 "default": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            },
-            {
-                "name": "color upper bounds",
-                "type": "ColorRGBFloat",
-                "default": [
-                    1.0,
-                    1.0,
-                    1.0
+                    [1.0, 1.0, 1.0],
+                    [1.0, 1.0, 1.0]
                 ]
             },
             {

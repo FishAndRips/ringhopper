@@ -1,7 +1,9 @@
 use std::any::Any;
+use crate::error::{Error, RinghopperResult};
 use crate::parse::TagData;
 use crate::primitive::parse_range;
 
+/// Trait for dynamically accessing tag data.
 pub trait DynamicTagData: TagData + 'static {
     /// Get the field `field`.
     ///
@@ -45,8 +47,23 @@ pub trait DynamicTagData: TagData + 'static {
     fn as_array_mut(&mut self) -> Option<&mut dyn DynamicTagDataArray> {
         None
     }
+
+    /// Get the `DynamicTagData` object as a `DynamicEnum` reference.
+    ///
+    /// Returns `None` if this object is not an enum.
+    fn as_enum(&self) -> Option<&dyn DynamicEnum> {
+        None
+    }
+
+    /// Get the `DynamicTagData` object as a mutable `DynamicEnum` reference.
+    ///
+    /// Returns `None` if this object is not an enum.
+    fn as_enum_mut(&mut self) -> Option<&mut dyn DynamicEnum> {
+        None
+    }
 }
 
+/// Trait for dynamically accessing an array of fields, including reflexives.
 pub trait DynamicTagDataArray: DynamicTagData {
     /// Get the item at index `index`.
     ///
@@ -62,6 +79,7 @@ pub trait DynamicTagDataArray: DynamicTagData {
     fn len(&self) -> usize;
 }
 
+/// Trait for dynamically accessing a reflexive of any type.
 pub trait DynamicReflexive: DynamicTagDataArray {
     /// Add an item at index `index` with default values.
     ///
@@ -202,7 +220,7 @@ impl dyn DynamicTagData {
     /// Verify the matcher will not have any errors upon being used.
     pub fn validate_matcher(&self, matcher: &str) -> Result<(), &'static str> {
         let mut first_error = Ok(());
-        self.access_all(matcher, |r| {
+        self.foreach(matcher, |r| {
             match r {
                 Ok(_) => true,
                 Err(e) => {
@@ -212,5 +230,57 @@ impl dyn DynamicTagData {
             }
         });
         first_error
+    }
+}
+
+/// Trait for enum objects.
+///
+/// Implementing this automatically implements [`DynamicEnum`] for the type.
+pub trait DynamicEnumImpl {
+    /// Get an enum value from a value.
+    ///
+    /// Returns `None` if the string does not correspond to a valid option.
+    fn from_str(value: &str) -> Option<Self> where Self: Sized;
+
+    /// Convert the value to a string.
+    fn to_str(&self) -> &'static str;
+
+    /// Retrieve all values for the enum.
+    fn str_vals() -> &'static [&'static str];
+}
+
+/// Dynamic trait for enum objects.
+///
+/// # Note
+///
+/// Implementing [`DynamicEnumImpl`] will automatically implement this.
+pub trait DynamicEnum: DynamicTagData {
+    /// Overwrite the enum object with the string value.
+    fn set_enum_string_value(&mut self, value: &str) -> RinghopperResult<()>;
+
+    /// Convert the enum into its equivalent string value.
+    fn get_enum_string_value(&self) -> &'static str;
+
+    /// Retrieve all values for the enum.
+    fn get_possible_enum_string_values(&self) -> &'static [&'static str];
+}
+
+impl<T: DynamicTagData + DynamicEnumImpl> DynamicEnum for T {
+    fn set_enum_string_value(&mut self, value: &str) -> RinghopperResult<()> {
+        if let Some(n) = Self::from_str(value) {
+            *self = n;
+            Ok(())
+        }
+        else {
+            Err(Error::InvalidEnum)
+        }
+    }
+
+    fn get_enum_string_value(&self) -> &'static str {
+        self.to_str()
+    }
+
+    fn get_possible_enum_string_values(&self) -> &'static [&'static str] {
+        Self::str_vals()
     }
 }

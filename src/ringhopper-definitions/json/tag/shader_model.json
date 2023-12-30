@@ -106,12 +106,9 @@
                 "default": 1.0
             },
             {
-                "name": "animation color lower bound",
-                "type": "ColorRGBFloat"
-            },
-            {
-                "name": "animation color upper bound",
-                "type": "ColorRGBFloat"
+                "name": "animation color",
+                "type": "ColorRGBFloat",
+                "bounds": true
             },
             {
                 "type": "pad",
