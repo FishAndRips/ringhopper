@@ -131,7 +131,7 @@
         "width": 16
     },
     {
-        "name": "ShaderTransparentGenericFlags",
+        "name": "ShaderTransparentFlags",
         "type": "bitfield",
         "fields": [
             "alpha tested",
@@ -146,16 +146,8 @@
         "width": 8
     },
     {
-        "name": "ShaderTransparentGenericMap",
+        "name": "ShaderTransparentMapParameters",
         "fields": [
-            {
-                "name": "flags",
-                "type": "ShaderTransparentGenericMapFlag"
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
             {
                 "name": "map u scale",
                 "type": "float"
@@ -174,11 +166,10 @@
             },
             {
                 "name": "map rotation",
-                "unit": "degrees",
                 "type": "float"
             },
             {
-                "name": "mapmap bias",
+                "name": "mipmap bias",
                 "minimum": 0.0,
                 "maximum": 1.0,
                 "type": "float"
@@ -189,7 +180,14 @@
                 "groups": [
                     "bitmap"
                 ]
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 40
+    },
+    {
+        "name": "ShaderTransparentMapAnimation",
+        "fields": [
             {
                 "name": "u animation source",
                 "type": "FunctionOut"
@@ -210,8 +208,8 @@
             },
             {
                 "name": "u animation scale",
+                "unit": "world units",
                 "type": "float",
-                "unit": "repeats",
                 "default": 1.0
             },
             {
@@ -234,8 +232,8 @@
             },
             {
                 "name": "v animation scale",
+                "unit": "world units",
                 "type": "float",
-                "unit": "repeats",
                 "default": 1.0
             },
             {
@@ -265,6 +263,31 @@
             {
                 "name": "rotation animation center",
                 "type": "Vector2D"
+            }
+        ],
+        "type": "struct",
+        "size": 56
+    },
+    {
+        "name": "ShaderTransparentGenericMap",
+        "fields": [
+            {
+                "name": "flags",
+                "type": "ShaderTransparentGenericMapFlag"
+            },
+            {
+                "type": "pad",
+                "size": 2
+            },
+            {
+                "name": "parameters",
+                "section": true,
+                "type": "ShaderTransparentMapParameters"
+            },
+            {
+                "name": "animation",
+                "section": true,
+                "type": "ShaderTransparentMapAnimation"
             }
         ],
         "type": "struct",
@@ -414,22 +437,15 @@
         "size": 112
     },
     {
-        "name": "ShaderTransparentGeneric",
-        "groups": [
-            {
-                "name": "transparent generic shader",
-                "description": "Shader Transparent Generic attributes",
-                "first": "numeric counter limit"
-            }
-        ],
+        "name": "ShaderTransparentProperties",
         "fields": [
             {
                 "name": "numeric counter limit",
                 "type": "uint8"
             },
             {
-                "name": "shader transparent generic flags",
-                "type": "ShaderTransparentGenericFlags"
+                "name": "flags",
+                "type": "ShaderTransparentFlags"
             },
             {
                 "name": "first map type",
@@ -452,22 +468,27 @@
                 "size": 2
             },
             {
-                "name": "lens flare spacing",
-                "unit": "world units",
-                "type": "float"
-            },
-            {
-                "name": "lens flare",
-                "type": "TagReference",
-                "groups": [
-                    "lens_flare"
-                ]
+                "name": "lens flares",
+                "section": true,
+                "type": "ShaderLensFlares"
             },
             {
                 "name": "extra layers",
                 "type": "Reflexive",
                 "struct": "ShaderTransparentExtraLayer",
                 "limit": 4
+            }
+        ],
+        "size": 44,
+        "type": "struct"
+    },
+    {
+        "name": "ShaderTransparentGeneric",
+        "fields": [
+            {
+                "name": "properties",
+                "section": true,
+                "type": "ShaderTransparentProperties"
             },
             {
                 "name": "maps",

@@ -68,7 +68,7 @@
         "size": 76
     },
     {
-        "name": "ShaderTransparentWater",
+        "name": "ShaderTransparentWaterProperties",
         "fields": [
             {
                 "name": "water flags",
@@ -128,29 +128,36 @@
             {
                 "type": "pad",
                 "size": 16
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 148
+    },
+    {
+        "name": "ShaderTransparentWaterRipples",
+        "fields": [
             {
-                "name": "ripple animation angle",
+                "name": "animation angle",
                 "type": "Angle"
             },
             {
-                "name": "ripple animation velocity",
+                "name": "animation velocity",
                 "type": "float"
             },
             {
-                "name": "ripple scale",
+                "name": "scale",
                 "type": "float",
                 "default": 1.0
             },
             {
-                "name": "ripple maps",
+                "name": "maps",
                 "type": "TagReference",
                 "groups": [
                     "bitmap"
                 ]
             },
             {
-                "name": "ripple mipmap levels",
+                "name": "mipmap levels",
                 "type": "uint16",
                 "default": 1
             },
@@ -159,13 +166,13 @@
                 "size": 2
             },
             {
-                "name": "ripple mipmap fade factor",
+                "name": "mipmap fade factor",
                 "minimum": 0.0,
                 "maximum": 1.0,
                 "type": "float"
             },
             {
-                "name": "ripple mipmap detail bias",
+                "name": "mipmap detail bias",
                 "type": "float"
             },
             {
@@ -181,6 +188,23 @@
             {
                 "type": "pad",
                 "size": 16
+            }
+        ],
+        "type": "struct",
+        "size": 132
+    },
+    {
+        "name": "ShaderTransparentWater",
+        "fields": [
+            {
+                "name": "properties",
+                "section": true,
+                "type": "ShaderTransparentWaterProperties"
+            },
+            {
+                "name": "ripples",
+                "section": true,
+                "type": "ShaderTransparentWaterRipples"
             }
         ],
         "type": "struct",

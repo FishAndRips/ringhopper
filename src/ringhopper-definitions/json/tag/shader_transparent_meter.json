@@ -12,17 +12,10 @@
         "width": 16
     },
     {
-        "name": "ShaderTransparentMeter",
-        "groups": [
-            {
-                "name": "transparent meter shader",
-                "description": "Shader Transparent Meter attributes",
-                "first": "meter flags"
-            }
-        ],
+        "name": "ShaderTransparentMeterProperties",
         "fields": [
             {
-                "name": "meter flags",
+                "name": "flags",
                 "type": "ShaderTransparentMeterFlags"
             },
             {
@@ -43,7 +36,14 @@
             {
                 "type": "pad",
                 "size": 32
-            },
+            }
+        ],
+        "size": 84,
+        "type": "struct"
+    },
+    {
+        "name": "ShaderTransparentMeterColors",
+        "fields": [
             {
                 "name": "gradient min color",
                 "type": "ColorRGBFloat"
@@ -79,7 +79,14 @@
             {
                 "type": "pad",
                 "size": 24
-            },
+            }
+        ],
+        "size": 92,
+        "type": "struct"
+    },
+    {
+        "name": "ShaderTransparentMeterExternalFunctionSources",
+        "fields": [
             {
                 "name": "meter brightness source",
                 "type": "FunctionOut"
@@ -107,6 +114,28 @@
             {
                 "type": "pad",
                 "size": 32
+            }
+        ],
+        "size": 44,
+        "type": "struct"
+    },
+    {
+        "name": "ShaderTransparentMeter",
+        "fields": [
+            {
+                "name": "properties",
+                "section": true,
+                "type": "ShaderTransparentMeterProperties"
+            },
+            {
+                "name": "colors",
+                "section": true,
+                "type": "ShaderTransparentMeterColors"
+            },
+            {
+                "name": "external function sources",
+                "section": true,
+                "type": "ShaderTransparentMeterExternalFunctionSources"
             }
         ],
         "type": "struct",

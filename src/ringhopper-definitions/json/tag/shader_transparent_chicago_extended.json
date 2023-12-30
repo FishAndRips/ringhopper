@@ -10,59 +10,18 @@
         ],
         "fields": [
             {
-                "name": "numeric counter limit",
-                "type": "uint8"
+                "name": "properties",
+                "section": true,
+                "type": "ShaderTransparentProperties"
             },
             {
-                "name": "shader transparent chicago extended flags",
-                "type": "ShaderTransparentGenericFlags"
-            },
-            {
-                "name": "first map type",
-                "type": "ShaderFirstMapType"
-            },
-            {
-                "name": "framebuffer blend function",
-                "type": "FramebufferBlendFunction"
-            },
-            {
-                "name": "framebuffer fade mode",
-                "type": "FramebufferFadeMode"
-            },
-            {
-                "name": "framebuffer fade source",
-                "type": "FunctionOut"
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "name": "lens flare spacing",
-                "unit": "world units",
-                "type": "float"
-            },
-            {
-                "name": "lens flare",
-                "type": "TagReference",
-                "groups": [
-                    "lens_flare"
-                ]
-            },
-            {
-                "name": "extra layers",
-                "type": "Reflexive",
-                "struct": "ShaderTransparentExtraLayer",
-                "limit": 4
-            },
-            {
-                "name": "maps 4 stage",
+                "name": "4 stage maps",
                 "type": "Reflexive",
                 "struct": "ShaderTransparentChicagoMap",
                 "limit": 4
             },
             {
-                "name": "maps 2 stage",
+                "name": "2 stage maps",
                 "type": "Reflexive",
                 "struct": "ShaderTransparentChicagoMap",
                 "comment": "The original definitions have these set to 4, but issues occur when you do this as these are 2-stage maps, not 4-stage maps!\nUse the 4 stage maps (or just shader_transparent_chicago) for 4-stage maps.",

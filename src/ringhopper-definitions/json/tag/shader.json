@@ -76,14 +76,6 @@
         "width": 16
     },
     {
-        "name": "ShaderPhysicsFlags",
-        "type": "bitfield",
-        "fields": [
-            "unused"
-        ],
-        "width": 16
-    },
-    {
         "name": "ShaderTransparentExtraLayer",
         "type": "struct",
         "fields": [
@@ -98,17 +90,10 @@
         "size": 16
     },
     {
-        "name": "Shader",
-        "groups": [
-            {
-                "name": "shader",
-                "description": "Base shader attributes",
-                "first": "shader flags"
-            }
-        ],
+        "name": "ShaderRadiosityProperties",
         "fields": [
             {
-                "name": "shader flags",
+                "name": "flags",
                 "type": "ShaderFlags"
             },
             {
@@ -126,11 +111,17 @@
             {
                 "name": "tint color",
                 "type": "ColorRGBFloat"
-            },
+            }
+        ],
+        "size": 32,
+        "type": "struct"
+    },
+    {
+        "name": "ShaderPhysicsProperties",
+        "fields": [
             {
-                "name": "physics flags",
-                "type": "ShaderPhysicsFlags",
-                "hidden": true
+                "type": "pad",
+                "size": 2
             },
             {
                 "name": "material type",
@@ -144,6 +135,42 @@
             {
                 "type": "pad",
                 "size": 2
+            }
+        ],
+        "type": "struct",
+        "size": 8
+    },
+    {
+        "name": "ShaderLensFlares",
+        "fields": [
+            {
+                "name": "lens flare spacing",
+                "unit": "world units",
+                "type": "float"
+            },
+            {
+                "name": "lens flare",
+                "type": "TagReference",
+                "groups": [
+                    "lens_flare"
+                ]
+            }
+        ],
+        "type": "struct",
+        "size": 20
+    },
+    {
+        "name": "Shader",
+        "fields": [
+            {
+                "name": "radiosity",
+                "section": true,
+                "type": "ShaderRadiosityProperties"
+            },
+            {
+                "name": "physics",
+                "section": true,
+                "type": "ShaderPhysicsProperties"
             }
         ],
         "type": "struct",

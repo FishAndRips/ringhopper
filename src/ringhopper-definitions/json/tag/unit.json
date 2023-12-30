@@ -215,6 +215,23 @@
         ]
     },
     {
+        "name": "MetagameProperties",
+        "fields": [
+            {
+                "name": "metagame type",
+                "type": "MetagameType",
+                "comment": "used for scoring in Halo: CE Anniversary (MCC only)"
+            },
+            {
+                "name": "metagame class",
+                "type": "MetagameClass",
+                "comment": "used for scoring in Halo: CE Anniversary (MCC only)"
+            }
+        ],
+        "type": "struct",
+        "size": 4
+    },
+    {
         "name": "UnitSeat",
         "fields": [
             {
@@ -592,14 +609,9 @@
                 "size": 2
             },
             {
-                "name": "metagame type",
-                "type": "MetagameType",
-                "comment": "used for scoring in Halo: CE Anniversary (MCC only)"
-            },
-            {
-                "name": "metagame class",
-                "type": "MetagameClass",
-                "comment": "used for scoring in Halo: CE Anniversary (MCC only)"
+                "name": "metagame properties",
+                "section": true,
+                "type": "MetagameProperties"
             },
             {
                 "type": "pad",

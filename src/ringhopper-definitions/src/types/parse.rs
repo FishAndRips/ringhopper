@@ -11,7 +11,7 @@ macro_rules! oget_name {
 
 macro_rules! oget {
     ($obj:expr, $field:expr) => {
-        $obj.get($field).unwrap_or_else(|| panic!("no such field {name}::{field}", field=$field, name=oget_name!($obj)))
+        $obj.get($field).unwrap_or_else(|| panic!("no such field `{name}::{field}`", field=$field, name=oget_name!($obj)))
     };
 }
 
@@ -60,6 +60,7 @@ impl ParsedDefinitions {
         for object in objects {
             let object_type = oget_str!(object, "type");
             let object_name = oget_str!(object, "name").to_owned();
+            assert!(!object_name.is_empty());
 
             match object_type {
                 "group" => {
@@ -302,6 +303,13 @@ impl ParsedDefinitions {
                         validate_flags(&f.flags, &f.name);
                     }
 
+                    for i in 0..b.fields.len() {
+                        for j in i+1..b.fields.len() {
+                            let field_name = &b.fields[i].name;
+                            assert_ne!(field_name, &b.fields[j].name, "bitfield {object_name} has duplicate fields {field_name}");
+                        }
+                    }
+
                     assert!(b.fields.len() <= b.width as usize, "bitfield {object_name} has too many fields; {} / {}", b.fields.len(), b.width);
                 },
                 NamedObject::Enum(e) => {
@@ -311,10 +319,30 @@ impl ParsedDefinitions {
                         validate_flags(&f.flags, &f.name);
                     }
 
+                    for i in 0..e.options.len() {
+                        for j in i+1..e.options.len() {
+                            let option_name = &e.options[i].name;
+                            assert_ne!(option_name, &e.options[j].name, "enum {object_name} has duplicate options {option_name}");
+                        }
+                    }
+
                     assert!(e.options.len() <= u16::MAX as usize, "enum {object_name} has too many options, {} / {}", e.options.len(), u16::MAX);
                 },
                 NamedObject::Struct(s) => {
                     validate_flags(&s.flags, "(self)");
+
+                    for i in 0..s.fields.len() {
+                        if matches!(s.fields[i].field_type, StructFieldType::Padding(_)) {
+                            continue
+                        }
+                        for j in i+1..s.fields.len() {
+                            if matches!(s.fields[j].field_type, StructFieldType::Padding(_)) {
+                                continue
+                            }
+                            let field_name = &s.fields[i].name;
+                            assert_ne!(field_name, &s.fields[j].name, "struct {object_name} has duplicate fields {field_name}");
+                        }
+                    }
 
                     for f in &s.fields {
                         // Consistency with named objects and groups
@@ -547,6 +575,7 @@ impl LoadFromSerdeJSON for StructField {
         };
 
         let name = oget_str!(object, "name").to_owned();
+        assert!(!name.is_empty());
         let count = FieldCount::load_from_json(object);
 
         let parse_static_value = |v: &Value| -> StaticValue {
@@ -726,6 +755,7 @@ impl LoadFromSerdeJSON for FieldCount {
 impl LoadFromSerdeJSON for Struct {
     fn load_from_json(object: &Map<String, Value>) -> Self {
         let name = oget_str!(object, "name").to_owned();
+        assert!(!name.is_empty());
 
         let mut fields = object.get("fields")
                                                     .unwrap_or_else(|| panic!("object {name} is missing fields"))
@@ -795,6 +825,7 @@ fn process_field_array(fields: &Vec<Value>) -> Vec<Field> {
 impl LoadFromSerdeJSON for Bitfield {
     fn load_from_json(object: &Map<String, Value>) -> Self {
         let name = oget_str!(object, "name").to_owned();
+        assert!(!name.is_empty());
 
         let mut fields = process_field_array(oget!(object, "fields").as_array().unwrap_or_else(|| panic!("{name}::fields must be an array")));
         for f in &mut fields {
@@ -816,6 +847,7 @@ impl LoadFromSerdeJSON for Bitfield {
 impl LoadFromSerdeJSON for Enum {
     fn load_from_json(object: &Map<String, Value>) -> Self {
         let name = oget_str!(object, "name").to_owned();
+        assert!(!name.is_empty());
 
         Self {
             flags: Flags::load_from_json(object),

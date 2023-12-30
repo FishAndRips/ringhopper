@@ -20,14 +20,7 @@
         "width": 16
     },
     {
-        "name": "ShaderTransparentGlass",
-        "groups": [
-            {
-                "name": "transparent glass shader",
-                "description": "Shader Transparent Glass attributes",
-                "first": "shader transparent glass flags"
-            }
-        ],
+        "name": "ShaderTransparentGlassBase",
         "fields": [
             {
                 "name": "shader transparent glass flags",
@@ -40,7 +33,14 @@
             {
                 "type": "pad",
                 "size": 40
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 44
+    },
+    {
+        "name": "ShaderTransparentGlassBackgroundTint",
+        "fields": [
             {
                 "name": "background tint color",
                 "type": "ColorRGBFloat",
@@ -69,7 +69,14 @@
             {
                 "type": "pad",
                 "size": 2
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 54
+    },
+    {
+        "name": "ShaderTransparentGlassReflection",
+        "fields": [
             {
                 "name": "reflection type",
                 "type": "ShaderTransparentGlassReflectionType"
@@ -120,7 +127,14 @@
             {
                 "type": "pad",
                 "size": 4
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 202
+    },
+    {
+        "name": "ShaderTransparentGlassDiffuse",
+        "fields": [
             {
                 "name": "diffuse map scale",
                 "type": "float",
@@ -152,7 +166,14 @@
             {
                 "type": "pad",
                 "size": 4
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 72
+    },
+    {
+        "name": "ShaderTransparentGlassSpecular",
+        "fields": [
             {
                 "name": "specular map scale",
                 "type": "float",
@@ -180,6 +201,38 @@
             {
                 "type": "pad",
                 "size": 28
+            }
+        ],
+        "type": "struct",
+        "size": 68
+    },
+    {
+        "name": "ShaderTransparentGlass",
+        "fields": [
+            {
+                "name": "properties",
+                "section": true,
+                "type": "ShaderTransparentGlassBase"
+            },
+            {
+                "name": "background tint",
+                "section": true,
+                "type": "ShaderTransparentGlassBackgroundTint"
+            },
+            {
+                "name": "reflection",
+                "section": true,
+                "type": "ShaderTransparentGlassReflection"
+            },
+            {
+                "name": "diffuse",
+                "section": true,
+                "type": "ShaderTransparentGlassDiffuse"
+            },
+            {
+                "name": "specular",
+                "section": true,
+                "type": "ShaderTransparentGlassSpecular"
             }
         ],
         "type": "struct",

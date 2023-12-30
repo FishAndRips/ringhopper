@@ -48,7 +48,7 @@
         "size": 36
     },
     {
-        "name": "SkyLight",
+        "name": "SkyLightLensFlare",
         "fields": [
             {
                 "name": "lens flare",
@@ -64,7 +64,14 @@
             {
                 "type": "pad",
                 "size": 28
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 76
+    },
+    {
+        "name": "SkyLightRadiosity",
+        "fields": [
             {
                 "name": "flags",
                 "type": "SkyLightFlags"
@@ -95,7 +102,71 @@
             }
         ],
         "type": "struct",
+        "size": 40
+    },
+    {
+        "name": "SkyLight",
+        "fields": [
+            {
+                "name": "lens flare",
+                "section": true,
+                "type": "SkyLightLensFlare"
+            },
+            {
+                "name": "radiosity",
+                "section": true,
+                "type": "SkyLightRadiosity"
+            }
+        ],
+        "type": "struct",
         "size": 116
+    },
+    {
+        "name": "SkyFog",
+        "fields": [
+            {
+                "name": "color",
+                "type": "ColorRGBFloat"
+            },
+            {
+                "type": "pad",
+                "size": 8
+            },
+            {
+                "name": "maximum density",
+                "minimum": 0.0,
+                "maximum": 1.0,
+                "type": "float",
+                "default": 1.0
+            },
+            {
+                "name": "start distance",
+                "unit": "world units",
+                "type": "float"
+            },
+            {
+                "name": "opaque distance",
+                "unit": "world units",
+                "type": "float"
+            }
+        ],
+        "size": 32,
+        "type": "struct"
+    },
+    {
+        "name": "SkyAmbientRadiosity",
+        "fields": [
+            {
+                "name": "color",
+                "type": "ColorRGBFloat"
+            },
+            {
+                "name": "power",
+                "type": "float"
+            }
+        ],
+        "type": "struct",
+        "size": 16
     },
     {
         "name": "Sky",
@@ -119,70 +190,24 @@
                 "size": 24
             },
             {
-                "name": "indoor ambient radiosity color",
-                "type": "ColorRGBFloat"
+                "name": "indoor ambient radiosity",
+                "section": true,
+                "type": "SkyAmbientRadiosity"
             },
             {
-                "name": "indoor ambient radiosity power",
-                "type": "float"
+                "name": "outdoor ambient radiosity",
+                "section": true,
+                "type": "SkyAmbientRadiosity"
             },
             {
-                "name": "outdoor ambient radiosity color",
-                "type": "ColorRGBFloat"
+                "name": "outdoor fog",
+                "section": true,
+                "type": "SkyFog"
             },
             {
-                "name": "outdoor ambient radiosity power",
-                "type": "float"
-            },
-            {
-                "name": "outdoor fog color",
-                "type": "ColorRGBFloat"
-            },
-            {
-                "type": "pad",
-                "size": 8
-            },
-            {
-                "name": "outdoor fog maximum density",
-                "minimum": 0.0,
-                "maximum": 1.0,
-                "type": "float",
-                "default": 1.0
-            },
-            {
-                "name": "outdoor fog start distance",
-                "unit": "world units",
-                "type": "float"
-            },
-            {
-                "name": "outdoor fog opaque distance",
-                "unit": "world units",
-                "type": "float"
-            },
-            {
-                "name": "indoor fog color",
-                "type": "ColorRGBFloat"
-            },
-            {
-                "type": "pad",
-                "size": 8
-            },
-            {
-                "name": "indoor fog maximum density",
-                "minimum": 0.0,
-                "maximum": 1.0,
-                "type": "float",
-                "default": 1.0
-            },
-            {
-                "name": "indoor fog start distance",
-                "unit": "world units",
-                "type": "float"
-            },
-            {
-                "name": "indoor fog opaque distance",
-                "unit": "world units",
-                "type": "float"
+                "name": "indoor fog",
+                "section": true,
+                "type": "SkyFog"
             },
             {
                 "name": "indoor fog screen",

@@ -118,28 +118,8 @@
         "width": 32
     },
     {
-        "name": "Actor",
+        "name": "ActorPerception",
         "fields": [
-            {
-                "name": "flags",
-                "type": "ActorFlags"
-            },
-            {
-                "name": "more flags",
-                "type": "ActorMoreFlags"
-            },
-            {
-                "type": "pad",
-                "size": 12
-            },
-            {
-                "name": "type",
-                "type": "ActorType"
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
             {
                 "name": "max vision distance",
                 "type": "float",
@@ -232,7 +212,14 @@
             {
                 "type": "pad",
                 "size": 8
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 104
+    },
+    {
+        "name": "ActorMovement",
+        "fields": [
             {
                 "name": "dive into cover chance",
                 "type": "float",
@@ -280,7 +267,14 @@
                 "name": "cosine begin moving angle",
                 "type": "float",
                 "cache_only": true
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 36
+    },
+    {
+        "name": "ActorLooking",
+        "fields": [
             {
                 "name": "maximum aiming deviation",
                 "type": "Euler2D"
@@ -405,7 +399,14 @@
                 "groups": [
                     "projectile"
                 ]
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 452
+    },
+    {
+        "name": "ActorUnopposable",
+        "fields": [
             {
                 "name": "unreachable danger trigger",
                 "type": "ActorUnreachableDangerTrigger"
@@ -449,7 +450,14 @@
             {
                 "type": "pad",
                 "size": 8
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 48
+    },
+    {
+        "name": "ActorPanic",
+        "fields": [
             {
                 "name": "cowering time",
                 "bounds": true,
@@ -490,7 +498,14 @@
             {
                 "type": "pad",
                 "size": 28
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 56
+    },
+    {
+        "name": "ActorDefensive",
+        "fields": [
             {
                 "name": "hide behind cover time",
                 "bounds": true,
@@ -606,7 +621,14 @@
             {
                 "type": "pad",
                 "size": 4
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 108
+    },
+    {
+        "name": "ActorPursuit",
+        "fields": [
             {
                 "name": "uncover delay time",
                 "bounds": true,
@@ -638,7 +660,14 @@
             {
                 "type": "pad",
                 "size": 32
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 60
+    },
+    {
+        "name": "ActorBerserk",
+        "fields": [
             {
                 "name": "melee attack delay",
                 "type": "float",
@@ -708,7 +737,14 @@
             {
                 "type": "pad",
                 "size": 12
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 64
+    },
+    {
+        "name": "ActorFiringPositions",
+        "fields": [
             {
                 "name": "guard position time",
                 "bounds": true,
@@ -734,7 +770,14 @@
             {
                 "type": "pad",
                 "size": 40
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 64
+    },
+    {
+        "name": "ActorCommunication",
+        "fields": [
             {
                 "name": "noncombat idle speech time",
                 "bounds": true,
@@ -756,7 +799,7 @@
                 "size": 128
             },
             {
-                "name": "do not use 2",
+                "name": "do not use",
                 "type": "TagReference",
                 "unused": true,
                 "groups": [
@@ -766,6 +809,83 @@
             {
                 "type": "pad",
                 "size": 48
+            }
+        ],
+        "type": "struct",
+        "size": 256
+    },
+    {
+        "name": "Actor",
+        "fields": [
+            {
+                "name": "flags",
+                "type": "ActorFlags"
+            },
+            {
+                "name": "more flags",
+                "type": "ActorMoreFlags"
+            },
+            {
+                "type": "pad",
+                "size": 12
+            },
+            {
+                "name": "type",
+                "type": "ActorType"
+            },
+            {
+                "type": "pad",
+                "size": 2
+            },
+            {
+                "name": "perception",
+                "section": true,
+                "type": "ActorPerception"
+            },
+            {
+                "name": "movement",
+                "section": true,
+                "type": "ActorMovement"
+            },
+            {
+                "name": "looking",
+                "section": true,
+                "type": "ActorLooking"
+            },
+            {
+                "name": "unopposable",
+                "section": true,
+                "type": "ActorUnopposable"
+            },
+            {
+                "name": "panic",
+                "section": true,
+                "type": "ActorPanic"
+            },
+            {
+                "name": "defensive",
+                "section": true,
+                "type": "ActorDefensive"
+            },
+            {
+                "name": "pursuit",
+                "section": true,
+                "type": "ActorPursuit"
+            },
+            {
+                "name": "berserk",
+                "section": true,
+                "type": "ActorBerserk"
+            },
+            {
+                "name": "firing positions",
+                "section": true,
+                "type": "ActorFiringPositions"
+            },
+            {
+                "name": "communication",
+                "section": true,
+                "type": "ActorCommunication"
             }
         ],
         "type": "struct",

@@ -1,22 +1,7 @@
 [
     {
-        "name": "ShaderTransparentPlasma",
-        "groups": [
-            {
-                "name": "transparent plasma shader",
-                "description": "Shader Transparent Plasma attributes",
-                "first": "intensity source"
-            }
-        ],
+        "name": "ShaderTransparentPlasmaIntensity",
         "fields": [
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
             {
                 "name": "intensity source",
                 "type": "FunctionOut"
@@ -29,7 +14,14 @@
                 "name": "intensity exponent",
                 "type": "float",
                 "default": 1.0
-            },
+            }
+        ],
+        "size": 8,
+        "type": "struct"
+    },
+    {
+        "name": "ShaderTransparentPlasmaOffset",
+        "fields": [
             {
                 "name": "offset source",
                 "type": "FunctionOut"
@@ -51,7 +43,14 @@
             {
                 "type": "pad",
                 "size": 32
-            },
+            }
+        ],
+        "size": 44,
+        "type": "struct"
+    },
+    {
+        "name": "ShaderTransparentPlasmaColor",
+        "fields": [
             {
                 "name": "perpendicular brightness",
                 "minimum": 0.0,
@@ -99,64 +98,78 @@
             {
                 "type": "pad",
                 "size": 4
-            },
+            }
+        ],
+        "size": 92,
+        "type": "struct"
+    },
+    {
+        "name": "ShaderTransparentPlasmaNoiseMap",
+        "fields": [
             {
                 "type": "pad",
                 "size": 4
             },
             {
-                "name": "primary animation period",
+                "name": "animation period",
                 "unit": "seconds",
                 "type": "float",
                 "default": 1.0
             },
             {
-                "name": "primary animation direction",
+                "name": "animation direction",
                 "type": "Vector3D"
             },
             {
-                "name": "primary noise map scale",
+                "name": "noise map scale",
                 "type": "float"
+            },
+            {
+                "name": "noise map",
+                "type": "TagReference",
+                "groups": [
+                    "bitmap"
+                ]
+            },
+            {
+                "type": "pad",
+                "size": 32
+            }
+        ],
+        "type": "struct",
+        "size": 72
+    },
+    {
+        "name": "ShaderTransparentPlasma",
+        "fields": [
+            {
+                "type": "pad",
+                "size": 4
+            },
+            {
+                "name": "intensity",
+                "section": true,
+                "type": "ShaderTransparentPlasmaIntensity"
+            },
+            {
+                "name": "offset",
+                "section": true,
+                "type": "ShaderTransparentPlasmaOffset"
+            },
+            {
+                "name": "color",
+                "section": true,
+                "type": "ShaderTransparentPlasmaColor"
             },
             {
                 "name": "primary noise map",
-                "type": "TagReference",
-                "groups": [
-                    "bitmap"
-                ]
-            },
-            {
-                "type": "pad",
-                "size": 32
-            },
-            {
-                "type": "pad",
-                "size": 4
-            },
-            {
-                "name": "secondary animation period",
-                "unit": "seconds",
-                "type": "float",
-                "default": 1.0
-            },
-            {
-                "name": "secondary animation direction",
-                "type": "Vector3D"
-            },
-            {
-                "name": "secondary noise map scale",
-                "type": "float"
+                "section": true,
+                "type": "ShaderTransparentPlasmaNoiseMap"
             },
             {
                 "name": "secondary noise map",
-                "type": "TagReference",
-                "groups": [
-                    "bitmap"
-                ]
-            },
-            {
-                "type": "pad",
-                "size": 32
+                "section": true,
+                "type": "ShaderTransparentPlasmaNoiseMap"
             }
         ],
         "type": "struct",

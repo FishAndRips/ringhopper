@@ -29,7 +29,7 @@
         "width": 16
     },
     {
-        "name": "ShaderModelMoreFlags",
+        "name": "ShaderModelSelfIlluminationFlags",
         "type": "bitfield",
         "fields": [
             "no random phase"
@@ -37,22 +37,10 @@
         "width": 16
     },
     {
-        "name": "ShaderModel",
-        "groups": [
-            {
-                "name": "model shader",
-                "first": "shader model flags",
-                "description": "The shader_model class is typically used as an non-transparent texture for models, and it features support for multipurpose maps."
-            },
-            {
-                "name": "multipurpose map",
-                "first": "multipurpose map",
-                "description": "A multipurpose map is not actually a visible texture but rather a composite four-channel monochrome map used for shading the texture mapped to the UVs of the model.\n\nThe classic channel order (used for the Xbox version of the game) is the following:\n- alpha is the auxiliary channel (optional detail mask)\n- red is specular and detail mapping\n- green is self illumination\n- blue is color change\n\nThe swapped channel order (used for the PC releases of the game) is the following:\n- alpha is color change\n- red is the auxiliary channel (optional detail mask)\n- green is self illumination\n- blue is specular and detail mapping"
-            }
-        ],
+        "name": "ShaderModelProperties",
         "fields": [
             {
-                "name": "shader model flags",
+                "name": "flags",
                 "type": "ShaderModelFlags"
             },
             {
@@ -70,7 +58,14 @@
             {
                 "type": "pad",
                 "size": 16
-            },
+            }
+        ],
+        "size": 36,
+        "type": "struct"
+    },
+    {
+        "name": "ShaderModelChangeColor",
+        "fields": [
             {
                 "name": "change color source",
                 "type": "FunctionNameNullable"
@@ -82,10 +77,17 @@
             {
                 "type": "pad",
                 "size": 28
-            },
+            }
+        ],
+        "size": 32,
+        "type": "struct"
+    },
+    {
+        "name": "ShaderModelSelfIllumination",
+        "fields": [
             {
-                "name": "shader model more flags",
-                "type": "ShaderModelMoreFlags"
+                "name": "flags",
+                "type": "ShaderModelSelfIlluminationFlags"
             },
             {
                 "type": "pad",
@@ -113,7 +115,14 @@
             {
                 "type": "pad",
                 "size": 12
-            },
+            }
+        ],
+        "size": 48,
+        "type": "struct"
+    },
+    {
+        "name": "ShaderModelMaps",
+        "fields": [
             {
                 "name": "map u scale",
                 "type": "float",
@@ -174,7 +183,14 @@
             {
                 "type": "pad",
                 "size": 12
-            },
+            }
+        ],
+        "size": 96,
+        "type": "struct"
+    },
+    {
+        "name": "ShaderModelTextureScrollingAnimation",
+        "fields": [
             {
                 "name": "u animation source",
                 "type": "FunctionOut"
@@ -308,6 +324,38 @@
             {
                 "type": "pad",
                 "size": 32
+            }
+        ],
+        "size": 188,
+        "type": "struct"
+    },
+    {
+        "name": "ShaderModel",
+        "fields": [
+            {
+                "name": "properties",
+                "section": true,
+                "type": "ShaderModelProperties"
+            },
+            {
+                "name": "change color",
+                "section": true,
+                "type": "ShaderModelChangeColor"
+            },
+            {
+                "name": "self-illumination",
+                "section": true,
+                "type": "ShaderModelSelfIllumination"
+            },
+            {
+                "name": "maps",
+                "section": true,
+                "type": "ShaderModelMaps"
+            },
+            {
+                "name": "texture scrolling animation",
+                "section": true,
+                "type": "ShaderModelTextureScrollingAnimation"
             }
         ],
         "type": "struct",

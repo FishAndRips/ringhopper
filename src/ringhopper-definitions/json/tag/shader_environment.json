@@ -61,40 +61,25 @@
         "width": 16
     },
     {
-        "name": "ShaderEnvironment",
-        "groups": [
-            {
-                "name": "environment shader",
-                "description": "Shader Environment attributes",
-                "first": "shader environment flags"
-            }
-        ],
+        "name": "ShaderEnvironmentProperties",
         "fields": [
             {
-                "name": "shader environment flags",
+                "name": "flags",
                 "type": "ShaderEnvironmentFlags"
             },
             {
                 "name": "shader environment type",
                 "type": "ShaderEnvironmentType"
-            },
+            }
+        ],
+        "size": 4,
+        "type": "struct"
+    },
+    {
+        "name": "ShaderEnvironmentDiffuse",
+        "fields": [
             {
-                "name": "lens flare spacing",
-                "type": "float"
-            },
-            {
-                "name": "lens flare",
-                "type": "TagReference",
-                "groups": [
-                    "lens_flare"
-                ]
-            },
-            {
-                "type": "pad",
-                "size": 44
-            },
-            {
-                "name": "diffuse flags",
+                "name": "flags",
                 "type": "ShaderEnvironmentDiffuseFlags"
             },
             {
@@ -179,7 +164,14 @@
             {
                 "type": "pad",
                 "size": 12
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 184
+    },
+    {
+        "name": "ShaderEnvironmentBump",
+        "fields": [
             {
                 "name": "bump map scale",
                 "type": "float",
@@ -200,7 +192,14 @@
             {
                 "type": "pad",
                 "size": 16
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 44
+    },
+    {
+        "name": "ShaderEnvironmentTextureScrollingAnimation",
+        "fields": [
             {
                 "name": "u animation function",
                 "type": "WaveFunction"
@@ -244,9 +243,16 @@
             {
                 "type": "pad",
                 "size": 24
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 48
+    },
+    {
+        "name": "ShaderEnvironmentSelfIllumination",
+        "fields": [
             {
-                "name": "self illumination flags",
+                "name": "flags",
                 "type": "IsUnfilteredFlag"
             },
             {
@@ -365,9 +371,16 @@
             {
                 "type": "pad",
                 "size": 24
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 252
+    },
+    {
+        "name": "ShaderEnvironmentSpecular",
+        "fields": [
             {
-                "name": "specular flags",
+                "name": "flags",
                 "type": "ShaderEnvironmentSpecularFlags"
             },
             {
@@ -452,6 +465,52 @@
             {
                 "type": "pad",
                 "size": 16
+            }
+        ],
+        "type": "struct",
+        "size": 200
+    },
+    {
+        "name": "ShaderEnvironment",
+        "fields": [
+            {
+                "name": "properties",
+                "section": true,
+                "type": "ShaderEnvironmentProperties"
+            },
+            {
+                "name": "lens flares",
+                "section": true,
+                "type": "ShaderLensFlares"
+            },
+            {
+                "type": "pad",
+                "size": 44
+            },
+            {
+                "name": "diffuse",
+                "section": true,
+                "type": "ShaderEnvironmentDiffuse"
+            },
+            {
+                "name": "bump",
+                "section": true,
+                "type": "ShaderEnvironmentBump"
+            },
+            {
+                "name": "texture scrolling animation",
+                "section": true,
+                "type": "ShaderEnvironmentTextureScrollingAnimation"
+            },
+            {
+                "name": "self-illumination",
+                "section": true,
+                "type": "ShaderEnvironmentSelfIllumination"
+            },
+            {
+                "name": "specular",
+                "section": true,
+                "type": "ShaderEnvironmentSpecular"
             }
         ],
         "type": "struct",

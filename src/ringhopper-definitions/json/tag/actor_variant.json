@@ -77,47 +77,8 @@
         "size": 32
     },
     {
-        "name": "ActorVariant",
+        "name": "ActorVariantMovementSwitching",
         "fields": [
-            {
-                "name": "flags",
-                "type": "ActorVariantFlags"
-            },
-            {
-                "name": "actor definition",
-                "type": "TagReference",
-                "groups": [
-                    "actor"
-                ]
-            },
-            {
-                "name": "unit",
-                "type": "TagReference",
-                "groups": [
-                    "unit"
-                ]
-            },
-            {
-                "name": "major variant",
-                "type": "TagReference",
-                "groups": [
-                    "actor_variant"
-                ]
-            },
-            {
-                "name": "metagame type",
-                "type": "MetagameType",
-                "comment": "used for scoring in Halo: CE Anniversary (MCC only)"
-            },
-            {
-                "name": "metagame class",
-                "type": "MetagameClass",
-                "comment": "used for scoring in Halo: CE Anniversary (MCC only)"
-            },
-            {
-                "type": "pad",
-                "size": 20
-            },
             {
                 "name": "movement type",
                 "type": "ActorVariantMovementType"
@@ -143,7 +104,14 @@
                 "bounds": true,
                 "type": "float",
                 "unit": "seconds"
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 24
+    },
+    {
+        "name": "ActorVariantRangedCombat",
+        "fields": [
             {
                 "name": "weapon",
                 "type": "TagReference",
@@ -229,7 +197,14 @@
             {
                 "name": "damage per second",
                 "type": "float"
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 104
+    },
+    {
+        "name": "ActorVariantBurstGeometry",
+        "fields": [
             {
                 "name": "burst origin radius",
                 "type": "float",
@@ -279,21 +254,28 @@
             {
                 "name": "special projectile error",
                 "type": "Angle"
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 52
+    },
+    {
+        "name": "ActorVariantFiringPatterns",
+        "fields": [
             {
-                "name": "new target burst duration",
+                "name": "new-target burst duration",
                 "type": "float"
             },
             {
-                "name": "new target burst separation",
+                "name": "new-target burst separation",
                 "type": "float"
             },
             {
-                "name": "new target rate of fire",
+                "name": "new-target rate of fire",
                 "type": "float"
             },
             {
-                "name": "new target projectile error",
+                "name": "new-target projectile error",
                 "type": "float"
             },
             {
@@ -339,9 +321,16 @@
             {
                 "type": "pad",
                 "size": 8
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 72
+    },
+    {
+        "name": "ActorVariantSpecialCaseFiringProperties",
+        "fields": [
             {
-                "name": "super ballistic range",
+                "name": "super-ballistic range",
                 "type": "float"
             },
             {
@@ -370,7 +359,14 @@
                 "name": "special fire delay",
                 "type": "float",
                 "unit": "seconds"
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 24
+    },
+    {
+        "name": "ActorVariantBerserkingAndMelee",
+        "fields": [
             {
                 "name": "melee range",
                 "type": "float",
@@ -400,7 +396,14 @@
             {
                 "type": "pad",
                 "size": 8
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 32
+    },
+    {
+        "name": "ActorVariantGrenades",
+        "fields": [
             {
                 "name": "grenade type",
                 "type": "GrenadeType"
@@ -461,7 +464,14 @@
             {
                 "type": "pad",
                 "size": 20
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 64
+    },
+    {
+        "name": "ActorVariantItems",
+        "fields": [
             {
                 "name": "equipment",
                 "type": "TagReference",
@@ -501,7 +511,14 @@
             {
                 "type": "pad",
                 "size": 16
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 64
+    },
+    {
+        "name": "ActorVariantUnitProperties",
+        "fields": [
             {
                 "name": "body vitality",
                 "type": "float"
@@ -536,6 +553,92 @@
                 "type": "Reflexive",
                 "struct": "ActorVariantChangeColors",
                 "limit": 4
+            }
+        ],
+        "type": "struct",
+        "size": 56
+    },
+    {
+        "name": "ActorVariant",
+        "fields": [
+            {
+                "name": "flags",
+                "type": "ActorVariantFlags"
+            },
+            {
+                "name": "actor definition",
+                "type": "TagReference",
+                "groups": [
+                    "actor"
+                ]
+            },
+            {
+                "name": "unit",
+                "type": "TagReference",
+                "groups": [
+                    "unit"
+                ]
+            },
+            {
+                "name": "major variant",
+                "type": "TagReference",
+                "groups": [
+                    "actor_variant"
+                ]
+            },
+            {
+                "name": "metagame properties",
+                "section": true,
+                "type": "MetagameProperties"
+            },
+            {
+                "type": "pad",
+                "size": 20
+            },
+            {
+                "name": "movement switching",
+                "section": true,
+                "type": "ActorVariantMovementSwitching"
+            },
+            {
+                "name": "ranged combat",
+                "section": true,
+                "type": "ActorVariantRangedCombat"
+            },
+            {
+                "name": "burst geometry",
+                "section": true,
+                "type": "ActorVariantBurstGeometry"
+            },
+            {
+                "name": "firing patterns",
+                "section": true,
+                "type": "ActorVariantFiringPatterns"
+            },
+            {
+                "name": "special-case firing properties",
+                "section": true,
+                "type": "ActorVariantSpecialCaseFiringProperties"
+            },
+            {
+                "name": "berserking and melee",
+                "section": true,
+                "type": "ActorVariantBerserkingAndMelee"
+            },
+            {
+                "name": "grenades",
+                "section": true,
+                "type": "ActorVariantGrenades"
+            },
+            {
+                "name": "items",
+                "section": true,
+                "type": "ActorVariantItems"
+            },
+            {
+                "name": "unit properties",
+                "section": true,
+                "type": "ActorVariantUnitProperties"
             }
         ],
         "type": "struct",
