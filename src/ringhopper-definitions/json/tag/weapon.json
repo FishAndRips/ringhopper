@@ -153,14 +153,14 @@
             "ais use weapon melee damage",
             {
                 "name": "prevents crouching",
-                "engines": [
-                    "mcc"
+                "supported_engines": [
+                    "mcc-cea"
                 ]
             },
             {
                 "name": "uses 3rd person camera",
-                "engines": [
-                    "mcc"
+                "supported_engines": [
+                    "mcc-cea"
                 ]
             }
         ],
@@ -396,8 +396,9 @@
                 "name": "prediction type",
                 "type": "WeaponPredictionType",
                 "comment": "behavior of the trigger in a network predicted game.",
-                "engines": [
-                    "mcc"
+                "unused": true,
+                "supported_engines": [
+                    "mcc-cea"
                 ]
             },
             {

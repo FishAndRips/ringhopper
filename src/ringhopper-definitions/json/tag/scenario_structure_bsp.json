@@ -12,7 +12,7 @@
         "name": "ScenarioStructureBSPClusterPortalFlags",
         "type": "bitfield",
         "fields": [
-            "ai can simply not hear through all this amazing stuff darn it"
+            "ai can't hear through this shit"
         ],
         "width": 32
     },

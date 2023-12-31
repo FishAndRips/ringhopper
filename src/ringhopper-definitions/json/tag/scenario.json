@@ -588,10 +588,28 @@
         "name": "ScenarioFlags",
         "type": "bitfield",
         "fields": [
-            "cortana hack",
-            "use demo ui",
-            "color correction ntsc to srgb",
-            "do not apply bungie campaign tag patches"
+            {
+                "name": "cortana hack",
+                "description": "use this to get 99 lives on super mario bros 2 the lost levels"
+            },
+            {
+                "name": "use demo ui",
+                "description": "changes what tags are used to build the cache file",
+                "supported_engines": [
+                    "xbox-demo"
+                ]
+            },
+            {
+                "name": "enable color correction",
+                "description": "makes the game look worse by running it through an ntsc->srgb filter",
+                "supported_engines": [
+                    "mcc-cea"
+                ]
+            },
+            {
+                "name": "do not apply bungie campaign tag patches",
+                "description": "disable patches made to various tags such as the pistol when building for singleplayer"
+            }
         ],
         "width": 16
     },
@@ -812,21 +830,8 @@
         "size": 36
     },
     {
-        "name": "ScenarioScenery",
-        "type": "struct",
+        "name": "ScenarioObjectPlacement",
         "fields": [
-            {
-                "name": "type",
-                "type": "Index",
-                "reflexive": "scenery palette",
-                "struct": "Scenario"
-            },
-            {
-                "name": "name",
-                "type": "Index",
-                "reflexive": "object names",
-                "struct": "Scenario"
-            },
             {
                 "name": "not placed",
                 "type": "ScenarioSpawnNotPlaced"
@@ -843,6 +848,30 @@
             {
                 "name": "rotation",
                 "type": "Euler3D"
+            }
+        ],
+        "type": "struct",
+        "size": 28
+    },
+    {
+        "name": "ScenarioScenery",
+        "type": "struct",
+        "fields": [
+            {
+                "name": "type",
+                "type": "Index",
+                "reflexive": "scenery palette",
+                "struct": "Scenario"
+            },
+            {
+                "name": "name",
+                "type": "Index",
+                "reflexive": "object names",
+                "struct": "Scenario"
+            },
+            {
+                "name": "placement",
+                "type": "ScenarioObjectPlacement"
             },
             {
                 "type": "uint16",
@@ -857,8 +886,8 @@
             {
                 "name": "appearance player index",
                 "type": "int8",
-                "engines": [
-                    "mcc"
+                "supported_engines": [
+                    "mcc-cea"
                 ]
             },
             {
@@ -901,37 +930,11 @@
         "size": 48
     },
     {
-        "name": "ScenarioBiped",
-        "type": "struct",
+        "name": "ScenarioUnitProperties",
         "fields": [
             {
-                "name": "type",
-                "type": "Index",
-                "reflexive": "biped palette",
-                "struct": "Scenario"
-            },
-            {
-                "name": "name",
-                "type": "Index",
-                "reflexive": "object names",
-                "struct": "Scenario"
-            },
-            {
-                "name": "not placed",
-                "type": "ScenarioSpawnNotPlaced"
-            },
-            {
-                "name": "desired permutation",
-                "type": "int16",
-                "comment": "when non-zero the game will try use model permutations with a matching number suffix"
-            },
-            {
-                "name": "position",
-                "type": "Vector3D"
-            },
-            {
-                "name": "rotation",
-                "type": "Euler3D"
+                "name": "placement",
+                "type": "ScenarioObjectPlacement"
             },
             {
                 "type": "pad",
@@ -940,8 +943,8 @@
             {
                 "name": "appearance player index",
                 "type": "int8",
-                "engines": [
-                    "mcc"
+                "supported_engines": [
+                    "mcc-cea"
                 ]
             },
             {
@@ -961,8 +964,9 @@
                 "size": 8
             },
             {
-                "name": "body vitality modifier",
+                "name": "body vitality",
                 "minimum": 0.0,
+                "maximum": 1.0,
                 "type": "float"
             },
             {
@@ -972,6 +976,30 @@
             {
                 "type": "pad",
                 "size": 8
+            }
+        ],
+        "type": "struct",
+        "size": 84
+    },
+    {
+        "name": "ScenarioBiped",
+        "type": "struct",
+        "fields": [
+            {
+                "name": "type",
+                "type": "Index",
+                "reflexive": "biped palette",
+                "struct": "Scenario"
+            },
+            {
+                "name": "name",
+                "type": "Index",
+                "reflexive": "object names",
+                "struct": "Scenario"
+            },
+            {
+                "name": "properties",
+                "type": "ScenarioUnitProperties"
             },
             {
                 "type": "pad",
@@ -1017,62 +1045,8 @@
                 "struct": "Scenario"
             },
             {
-                "name": "not placed",
-                "type": "ScenarioSpawnNotPlaced"
-            },
-            {
-                "name": "desired permutation",
-                "type": "int16",
-                "comment": "when non-zero the game will try use model permutations with a matching number suffix"
-            },
-            {
-                "name": "position",
-                "type": "Vector3D"
-            },
-            {
-                "name": "rotation",
-                "type": "Euler3D"
-            },
-            {
-                "type": "pad",
-                "size": 4
-            },
-            {
-                "name": "appearance player index",
-                "type": "int8",
-                "engines": [
-                    "mcc"
-                ]
-            },
-            {
-                "type": "pad",
-                "size": 3
-            },
-            {
-                "type": "pad",
-                "size": 16
-            },
-            {
-                "type": "pad",
-                "size": 8
-            },
-            {
-                "type": "pad",
-                "size": 8
-            },
-            {
-                "name": "body vitality",
-                "minimum": 0.0,
-                "maximum": 1.0,
-                "type": "float"
-            },
-            {
-                "name": "flags",
-                "type": "ScenarioUnitFlags"
-            },
-            {
-                "type": "pad",
-                "size": 8
+                "name": "properties",
+                "type": "ScenarioUnitProperties"
             },
             {
                 "name": "multiplayer team index",
@@ -1084,6 +1058,9 @@
             },
             {
                 "name": "multiplayer spawn flags",
+                "supported_engines": [
+                    "pc"
+                ],
                 "type": "ScenarioVehicleMultiplayerSpawnFlags"
             },
             {
@@ -1130,21 +1107,8 @@
                 "struct": "Scenario"
             },
             {
-                "name": "not placed",
-                "type": "ScenarioSpawnNotPlaced"
-            },
-            {
-                "name": "desired permutation",
-                "type": "int16",
-                "comment": "when non-zero the game will try use model permutations with a matching number suffix"
-            },
-            {
-                "name": "position",
-                "type": "Vector3D"
-            },
-            {
-                "name": "rotation",
-                "type": "Euler3D"
+                "name": "placement",
+                "type": "ScenarioObjectPlacement"
             },
             {
                 "type": "pad",
@@ -1157,8 +1121,8 @@
             {
                 "name": "appearance player index",
                 "type": "int8",
-                "engines": [
-                    "mcc"
+                "supported_engines": [
+                    "mcc-cea"
                 ]
             },
             {
@@ -1205,21 +1169,8 @@
                 "struct": "Scenario"
             },
             {
-                "name": "not placed",
-                "type": "ScenarioSpawnNotPlaced"
-            },
-            {
-                "name": "desired permutation",
-                "type": "int16",
-                "comment": "when non-zero the game will try use model permutations with a matching number suffix"
-            },
-            {
-                "name": "position",
-                "type": "Vector3D"
-            },
-            {
-                "name": "rotation",
-                "type": "Euler3D"
+                "name": "placement",
+                "type": "ScenarioObjectPlacement"
             },
             {
                 "type": "pad",
@@ -1228,8 +1179,8 @@
             {
                 "name": "appearance player index",
                 "type": "int8",
-                "engines": [
-                    "mcc"
+                "supported_engines": [
+                    "mcc-cea"
                 ]
             },
             {
@@ -1336,21 +1287,8 @@
                 "struct": "Scenario"
             },
             {
-                "name": "not placed",
-                "type": "ScenarioSpawnNotPlaced"
-            },
-            {
-                "name": "desired permutation",
-                "type": "int16",
-                "comment": "when non-zero the game will try use model permutations with a matching number suffix"
-            },
-            {
-                "name": "position",
-                "type": "Vector3D"
-            },
-            {
-                "name": "rotation",
-                "type": "Euler3D"
+                "name": "placement",
+                "type": "ScenarioObjectPlacement"
             },
             {
                 "type": "pad",
@@ -1359,8 +1297,8 @@
             {
                 "name": "appearance player index",
                 "type": "int8",
-                "engines": [
-                    "mcc"
+                "supported_engines": [
+                    "mcc-cea"
                 ]
             },
             {
@@ -1431,21 +1369,8 @@
                 "struct": "Scenario"
             },
             {
-                "name": "not placed",
-                "type": "ScenarioSpawnNotPlaced"
-            },
-            {
-                "name": "desired permutation",
-                "type": "int16",
-                "comment": "when non-zero the game will try use model permutations with a matching number suffix"
-            },
-            {
-                "name": "position",
-                "type": "Vector3D"
-            },
-            {
-                "name": "rotation",
-                "type": "Euler3D"
+                "name": "placement",
+                "type": "ScenarioObjectPlacement"
             },
             {
                 "type": "pad",
@@ -1454,8 +1379,8 @@
             {
                 "name": "appearance player index",
                 "type": "int8",
-                "engines": [
-                    "mcc"
+                "supported_engines": [
+                    "mcc-cea"
                 ]
             },
             {
@@ -1534,21 +1459,8 @@
                 "struct": "Scenario"
             },
             {
-                "name": "not placed",
-                "type": "ScenarioSpawnNotPlaced"
-            },
-            {
-                "name": "desired permutation",
-                "type": "int16",
-                "comment": "when non-zero the game will try use model permutations with a matching number suffix"
-            },
-            {
-                "name": "position",
-                "type": "Vector3D"
-            },
-            {
-                "name": "rotation",
-                "type": "Euler3D"
+                "name": "placement",
+                "type": "ScenarioObjectPlacement"
             },
             {
                 "type": "uint16",
@@ -1563,8 +1475,8 @@
             {
                 "name": "appearance player index",
                 "type": "int8",
-                "engines": [
-                    "mcc"
+                "supported_engines": [
+                    "mcc-cea"
                 ]
             },
             {
@@ -1647,21 +1559,8 @@
                 "struct": "Scenario"
             },
             {
-                "name": "not placed",
-                "type": "ScenarioSpawnNotPlaced"
-            },
-            {
-                "name": "desired permutation",
-                "type": "int16",
-                "comment": "when non-zero the game will try use model permutations with a matching number suffix"
-            },
-            {
-                "name": "position",
-                "type": "Vector3D"
-            },
-            {
-                "name": "rotation",
-                "type": "Euler3D"
+                "name": "placement",
+                "type": "ScenarioObjectPlacement"
             },
             {
                 "type": "pad",
@@ -1670,8 +1569,8 @@
             {
                 "name": "appearance player index",
                 "type": "int8",
-                "engines": [
-                    "mcc"
+                "supported_engines": [
+                    "mcc-cea"
                 ]
             },
             {
@@ -2002,7 +1901,10 @@
             },
             {
                 "name": "facing",
-                "type": "Angle"
+                "type": "Angle",
+                "supported_engines": [
+                    "pc"
+                ]
             },
             {
                 "name": "item collection",
@@ -3057,10 +2959,10 @@
                 "name": "parameters",
                 "type": "Reflexive",
                 "struct": "ScenarioScriptParameter",
-                "limit": {
-                    "mcc-cea": 16,
-                    "default": 0
-                }
+                "supported_engines": [
+                    "mcc-cea"
+                ],
+                "limit": 16
             }
         ],
         "title": "name",
@@ -3483,10 +3385,10 @@
                 "name": "scavenger hunt objects",
                 "type": "Reflexive",
                 "struct": "ScenarioScavengerHuntObjects",
-                "limit": {
-                    "mcc-cea": 16,
-                    "default": 0
-                }
+                "supported_engines": [
+                    "mcc-cea"
+                ],
+                "limit": 16
             },
             {
                 "type": "pad",

@@ -29,40 +29,23 @@
             "more colors",
             "no random rotation",
             "water effect",
-            "sapien snap to axis",
-            "sapien incremental counter",
+            "editor snap to axis",
+            "editor incremental counter",
             "animation loop",
             "preserve aspect",
-            "disabled in anniversary by blood setting"
+            {
+                "name": "disabled by blood setting",
+                "description": "In Anniversary mode on MCC, this decal is disabled if blood is disabled.",
+                "supported_engines": [
+                    "mcc-cea"
+                ]
+            }
         ],
         "width": 16
     },
     {
-        "name": "Decal",
+        "name": "DecalAppearance",
         "fields": [
-            {
-                "name": "flags",
-                "type": "DecalFlags"
-            },
-            {
-                "name": "type",
-                "type": "DecalType"
-            },
-            {
-                "name": "layer",
-                "type": "DecalLayer"
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "name": "next decal in chain",
-                "type": "TagReference",
-                "groups": [
-                    "decal"
-                ]
-            },
             {
                 "name": "radius",
                 "bounds": true,
@@ -104,7 +87,44 @@
             {
                 "type": "pad",
                 "size": 12
+            }
+        ],
+        "type": "struct",
+        "size": 64
+    },
+    {
+        "name": "DecalShader",
+        "fields": [
+            {
+                "name": "framebuffer blend function",
+                "type": "FramebufferBlendFunction"
             },
+            {
+                "type": "pad",
+                "size": 2
+            },
+            {
+                "type": "pad",
+                "size": 20
+            },
+            {
+                "name": "map",
+                "type": "TagReference",
+                "groups": [
+                    "bitmap"
+                ]
+            },
+            {
+                "type": "pad",
+                "size": 20
+            }
+        ],
+        "type": "struct",
+        "size": 60
+    },
+    {
+        "name": "DecalAnimation",
+        "fields": [
             {
                 "name": "animation loop frame",
                 "type": "int16"
@@ -146,29 +166,63 @@
             {
                 "type": "pad",
                 "size": 2
+            }
+        ],
+        "type": "struct",
+        "size": 104
+    },
+    {
+        "name": "DecalProperties",
+        "fields": [
+            {
+                "name": "flags",
+                "type": "DecalFlags"
             },
             {
-                "name": "framebuffer blend function",
-                "type": "FramebufferBlendFunction"
+                "name": "type",
+                "type": "DecalType"
+            },
+            {
+                "name": "layer",
+                "type": "DecalLayer"
             },
             {
                 "type": "pad",
                 "size": 2
             },
             {
-                "type": "pad",
-                "size": 20
-            },
-            {
-                "name": "map",
+                "name": "next decal in chain",
                 "type": "TagReference",
                 "groups": [
-                    "bitmap"
+                    "decal"
                 ]
+            }
+        ],
+        "type": "struct",
+        "size": 24
+    },
+    {
+        "name": "Decal",
+        "fields": [
+            {
+                "name": "properties",
+                "section": true,
+                "type": "DecalProperties"
             },
             {
-                "type": "pad",
-                "size": 20
+                "name": "appearance",
+                "section": true,
+                "type": "DecalAppearance"
+            },
+            {
+                "name": "animation",
+                "section": true,
+                "type": "DecalAnimation"
+            },
+            {
+                "name": "shader",
+                "section": true,
+                "type": "DecalShader"
             },
             {
                 "name": "maximum sprite extent",

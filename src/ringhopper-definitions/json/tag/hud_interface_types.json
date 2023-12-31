@@ -61,6 +61,282 @@
         "type": "enum"
     },
     {
+        "name": "HUDInterfaceMeterElement",
+        "fields": [
+            {
+                "name": "position",
+                "type": "HUDInterfaceElementPosition"
+            },
+            {
+                "name": "meter bitmap",
+                "type": "TagReference",
+                "groups": [
+                    "bitmap"
+                ]
+            },
+            {
+                "name": "color at meter minimum",
+                "type": "ColorARGBInt"
+            },
+            {
+                "name": "color at meter maximum",
+                "type": "ColorARGBInt"
+            },
+            {
+                "name": "flash color",
+                "type": "ColorARGBInt"
+            },
+            {
+                "name": "empty color",
+                "type": "ColorARGBInt"
+            },
+            {
+                "name": "flags",
+                "section": true,
+                "type": "HUDInterfaceMeterFlags"
+            },
+            {
+                "name": "minimum meter value",
+                "type": "int8"
+            },
+            {
+                "name": "sequence index",
+                "type": "Index"
+            },
+            {
+                "name": "alpha multiplier",
+                "type": "int8"
+            },
+            {
+                "name": "alpha bias",
+                "type": "int8"
+            },
+            {
+                "name": "value scale",
+                "type": "int16"
+            },
+            {
+                "name": "opacity",
+                "type": "float"
+            },
+            {
+                "name": "translucency",
+                "type": "float"
+            },
+            {
+                "name": "disabled color",
+                "type": "ColorARGBInt"
+            },
+            {
+                "name": "min alpha",
+                "supported_engines": [
+                    "mcc-cea"
+                ],
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 12
+            }
+        ],
+        "size": 104,
+        "type": "struct"
+    },
+    {
+        "name": "HUDInterfaceElementPosition",
+        "fields": [
+            {
+                "name": "anchor offset",
+                "type": "Vector2DInt"
+            },
+            {
+                "name": "width scale",
+                "type": "float",
+                "default": 1.0
+            },
+            {
+                "name": "height scale",
+                "type": "float",
+                "default": 1.0
+            },
+            {
+                "name": "scaling flags",
+                "type": "HUDInterfaceScalingFlags"
+            },
+            {
+                "type": "pad",
+                "size": 2
+            },
+            {
+                "type": "pad",
+                "size": 20
+            }
+        ],
+        "size": 36,
+        "type": "struct"
+    },
+    {
+        "name": "HUDInterfaceNumberElement",
+        "fields": [
+            {
+                "name": "position",
+                "type": "HUDInterfaceElementPosition"
+            },
+            {
+                "name": "color",
+                "type": "HUDInterfaceElementColor"
+            },
+            {
+                "type": "pad",
+                "size": 4
+            },
+            {
+                "name": "maximum number of digits",
+                "type": "int8"
+            },
+            {
+                "name": "flags",
+                "type": "HUDInterfaceNumberFlags"
+            },
+            {
+                "name": "number of fractional digits",
+                "type": "int8"
+            },
+            {
+                "type": "pad",
+                "size": 1
+            },
+            {
+                "type": "pad",
+                "size": 12
+            }
+        ],
+        "type": "struct",
+        "size": 84
+    },
+    {
+        "name": "HUDInterfaceMessagingInformation",
+        "fields": [
+            {
+                "name": "sequence index",
+                "type": "Index"
+            },
+            {
+                "name": "width offset",
+                "type": "int16"
+            },
+            {
+                "name": "offset from reference corner",
+                "type": "Vector2DInt"
+            },
+            {
+                "name": "override icon color",
+                "type": "ColorARGBInt"
+            },
+            {
+                "name": "frame rate",
+                "type": "int8"
+            },
+            {
+                "name": "more flags",
+                "type": "HUDInterfaceMessagingFlags"
+            },
+            {
+                "name": "text index",
+                "type": "Index"
+            },
+            {
+                "type": "pad",
+                "size": 48
+            }
+        ],
+        "size": 64,
+        "type": "struct"
+    },
+    {
+        "name": "HUDInterfaceElementColor",
+        "fields": [
+            {
+                "name": "default color",
+                "type": "ColorARGBInt"
+            },
+            {
+                "name": "flashing color",
+                "type": "ColorARGBInt"
+            },
+            {
+                "name": "flash period",
+                "type": "float"
+            },
+            {
+                "name": "flash delay",
+                "type": "float"
+            },
+            {
+                "name": "number of flashes",
+                "type": "int16"
+            },
+            {
+                "name": "flash flags",
+                "type": "HUDInterfaceFlashFlags"
+            },
+            {
+                "name": "flash length",
+                "type": "float"
+            },
+            {
+                "name": "disabled color",
+                "type": "ColorARGBInt"
+            }
+        ],
+        "size": 28,
+        "type": "struct"
+    },
+    {
+        "name": "HUDInterfaceStaticElement",
+        "fields": [
+            {
+                "name": "position",
+                "type": "HUDInterfaceElementPosition"
+            },
+            {
+                "name": "interface bitmap",
+                "type": "TagReference",
+                "groups": [
+                    "bitmap"
+                ]
+            },
+            {
+                "name": "color",
+                "type": "HUDInterfaceElementColor"
+            },
+            {
+                "type": "pad",
+                "size": 4
+            },
+            {
+                "name": "sequence index",
+                "type": "Index"
+            },
+            {
+                "type": "pad",
+                "size": 2
+            },
+            {
+                "name": "multitexture overlays",
+                "type": "Reflexive",
+                "struct": "HUDInterfaceMultitextureOverlay",
+                "limit": 30
+            },
+            {
+                "type": "pad",
+                "size": 4
+            }
+        ],
+        "size": 104,
+        "type": "struct"
+    },
+    {
         "name": "HUDInterfaceAnchor",
         "options": [
             "top left",
@@ -70,25 +346,25 @@
             "center",
             {
                 "name": "top center",
-                "engines": [
+                "supported_engines": [
                     "mcc-cea"
                 ]
             },
             {
                 "name": "bottom center",
-                "engines": [
+                "supported_engines": [
                     "mcc-cea"
                 ]
             },
             {
                 "name": "left center",
-                "engines": [
+                "supported_engines": [
                     "mcc-cea"
                 ]
             },
             {
                 "name": "right center",
-                "engines": [
+                "supported_engines": [
                     "mcc-cea"
                 ]
             }
@@ -106,25 +382,25 @@
             "center",
             {
                 "name": "top center",
-                "engines": [
+                "supported_engines": [
                     "mcc-cea"
                 ]
             },
             {
                 "name": "bottom center",
-                "engines": [
+                "supported_engines": [
                     "mcc-cea"
                 ]
             },
             {
                 "name": "left center",
-                "engines": [
+                "supported_engines": [
                     "mcc-cea"
                 ]
             },
             {
                 "name": "right center",
-                "engines": [
+                "supported_engines": [
                     "mcc-cea"
                 ]
             }

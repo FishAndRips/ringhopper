@@ -14,7 +14,7 @@
             "stripped internal",
             {
                 "name": "zoner",
-                "engines": [
+                "supported_engines": [
                     "pc"
                 ]
             }

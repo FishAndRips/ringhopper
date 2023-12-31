@@ -162,8 +162,8 @@
             {
                 "name": "anchor",
                 "type": "HUDInterfaceChildAnchor",
-                "engines": [
-                    "mcc"
+                "supported_engines": [
+                    "mcc-cea"
                 ]
             },
             {
@@ -171,93 +171,8 @@
                 "size": 28
             },
             {
-                "name": "anchor offset",
-                "type": "Vector2DInt"
-            },
-            {
-                "name": "width scale",
-                "type": "float",
-                "default": 1.0,
-                "default_sign": true
-            },
-            {
-                "name": "height scale",
-                "type": "float",
-                "default": 1.0,
-                "default_sign": true
-            },
-            {
-                "name": "scaling flags",
-                "type": "HUDInterfaceScalingFlags"
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "type": "pad",
-                "size": 20
-            },
-            {
-                "name": "interface bitmap",
-                "type": "TagReference",
-                "groups": [
-                    "bitmap"
-                ]
-            },
-            {
-                "name": "default color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "flashing color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "flash period",
-                "type": "float"
-            },
-            {
-                "name": "flash delay",
-                "type": "float"
-            },
-            {
-                "name": "number of flashes",
-                "type": "int16"
-            },
-            {
-                "name": "flash flags",
-                "type": "HUDInterfaceFlashFlags"
-            },
-            {
-                "name": "flash length",
-                "type": "float"
-            },
-            {
-                "name": "disabled color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "type": "pad",
-                "size": 4
-            },
-            {
-                "name": "sequence index",
-                "type": "Index"
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "name": "multitexture overlays",
-                "type": "Reflexive",
-                "struct": "HUDInterfaceMultitextureOverlay",
-                "limit": 30
-            },
-            {
-                "type": "pad",
-                "size": 4
+                "name": "properties",
+                "type": "HUDInterfaceStaticElement"
             },
             {
                 "type": "pad",
@@ -285,8 +200,8 @@
             {
                 "name": "anchor",
                 "type": "HUDInterfaceChildAnchor",
-                "engines": [
-                    "mcc"
+                "supported_engines": [
+                    "mcc-cea"
                 ]
             },
             {
@@ -294,99 +209,8 @@
                 "size": 28
             },
             {
-                "name": "anchor offset",
-                "type": "Vector2DInt"
-            },
-            {
-                "name": "width scale",
-                "type": "float",
-                "default": 1.0,
-                "default_sign": true
-            },
-            {
-                "name": "height scale",
-                "type": "float",
-                "default": 1.0,
-                "default_sign": true
-            },
-            {
-                "name": "scaling flags",
-                "type": "HUDInterfaceScalingFlags"
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "type": "pad",
-                "size": 20
-            },
-            {
-                "name": "meter bitmap",
-                "type": "TagReference",
-                "groups": [
-                    "bitmap"
-                ]
-            },
-            {
-                "name": "color at meter minimum",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "color at meter maximum",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "flash color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "empty color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "flags",
-                "type": "HUDInterfaceMeterFlags"
-            },
-            {
-                "name": "minimum meter value",
-                "type": "int8"
-            },
-            {
-                "name": "sequence index",
-                "type": "Index"
-            },
-            {
-                "name": "alpha multiplier",
-                "type": "int8"
-            },
-            {
-                "name": "alpha bias",
-                "type": "int8"
-            },
-            {
-                "name": "value scale",
-                "type": "int16"
-            },
-            {
-                "name": "opacity",
-                "type": "float"
-            },
-            {
-                "name": "translucency",
-                "type": "float"
-            },
-            {
-                "name": "disabled color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "min alpha",
-                "type": "float"
-            },
-            {
-                "type": "pad",
-                "size": 12
+                "name": "properties",
+                "type": "HUDInterfaceMeterElement"
             },
             {
                 "type": "pad",
@@ -414,8 +238,8 @@
             {
                 "name": "anchor",
                 "type": "HUDInterfaceChildAnchor",
-                "engines": [
-                    "mcc"
+                "supported_engines": [
+                    "mcc-cea"
                 ]
             },
             {
@@ -423,84 +247,8 @@
                 "size": 28
             },
             {
-                "name": "anchor offset",
-                "type": "Vector2DInt"
-            },
-            {
-                "name": "width scale",
-                "type": "float"
-            },
-            {
-                "name": "height scale",
-                "type": "float"
-            },
-            {
-                "name": "scaling flags",
-                "type": "HUDInterfaceScalingFlags"
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "type": "pad",
-                "size": 20
-            },
-            {
-                "name": "default color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "flashing color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "flash period",
-                "type": "float"
-            },
-            {
-                "name": "flash delay",
-                "type": "float"
-            },
-            {
-                "name": "number of flashes",
-                "type": "int16"
-            },
-            {
-                "name": "flash flags",
-                "type": "HUDInterfaceFlashFlags"
-            },
-            {
-                "name": "flash length",
-                "type": "float"
-            },
-            {
-                "name": "disabled color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "type": "pad",
-                "size": 4
-            },
-            {
-                "name": "maximum number of digits",
-                "type": "int8"
-            },
-            {
-                "name": "flags",
-                "type": "HUDInterfaceNumberFlags"
-            },
-            {
-                "name": "number of fractional digits",
-                "type": "int8"
-            },
-            {
-                "type": "pad",
-                "size": 1
-            },
-            {
-                "type": "pad",
-                "size": 12
+                "name": "properties",
+                "type": "HUDInterfaceNumberElement"
             },
             {
                 "name": "weapon specific flags",
@@ -522,64 +270,12 @@
         "name": "WeaponHUDInterfaceCrosshairOverlay",
         "fields": [
             {
-                "name": "anchor offset",
-                "type": "Vector2DInt"
+                "name": "position",
+                "type": "HUDInterfaceElementPosition"
             },
             {
-                "name": "width scale",
-                "type": "float",
-                "default": 1.0,
-                "default_sign": true
-            },
-            {
-                "name": "height scale",
-                "type": "float",
-                "default": 1.0,
-                "default_sign": true
-            },
-            {
-                "name": "scaling flags",
-                "type": "HUDInterfaceScalingFlags"
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "type": "pad",
-                "size": 20
-            },
-            {
-                "name": "default color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "flashing color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "flash period",
-                "type": "float"
-            },
-            {
-                "name": "flash delay",
-                "type": "float"
-            },
-            {
-                "name": "number of flashes",
-                "type": "int16"
-            },
-            {
-                "name": "flash flags",
-                "type": "HUDInterfaceFlashFlags"
-            },
-            {
-                "name": "flash length",
-                "type": "float"
-            },
-            {
-                "name": "disabled color",
-                "type": "ColorARGBInt"
+                "name": "color",
+                "type": "HUDInterfaceElementColor"
             },
             {
                 "type": "pad",
@@ -654,64 +350,12 @@
         "name": "WeaponHUDInterfaceOverlay",
         "fields": [
             {
-                "name": "anchor offset",
-                "type": "Vector2DInt"
+                "name": "position",
+                "type": "HUDInterfaceElementPosition"
             },
             {
-                "name": "width scale",
-                "type": "float",
-                "default": 1.0,
-                "default_sign": true
-            },
-            {
-                "name": "height scale",
-                "type": "float",
-                "default": 1.0,
-                "default_sign": true
-            },
-            {
-                "name": "scaling flags",
-                "type": "HUDInterfaceScalingFlags"
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "type": "pad",
-                "size": 20
-            },
-            {
-                "name": "default color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "flashing color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "flash period",
-                "type": "float"
-            },
-            {
-                "name": "flash delay",
-                "type": "float"
-            },
-            {
-                "name": "number of flashes",
-                "type": "int16"
-            },
-            {
-                "name": "flash flags",
-                "type": "HUDInterfaceFlashFlags"
-            },
-            {
-                "name": "flash length",
-                "type": "float"
-            },
-            {
-                "name": "disabled color",
-                "type": "ColorARGBInt"
+                "name": "color",
+                "type": "HUDInterfaceElementColor"
             },
             {
                 "type": "pad",
@@ -767,8 +411,8 @@
             {
                 "name": "anchor",
                 "type": "HUDInterfaceChildAnchor",
-                "engines": [
-                    "mcc"
+                "supported_engines": [
+                    "mcc-cea"
                 ]
             },
             {
@@ -1000,36 +644,9 @@
                 "size": 132
             },
             {
-                "name": "sequence index",
-                "type": "Index"
-            },
-            {
-                "name": "width offset",
-                "type": "int16"
-            },
-            {
-                "name": "offset from reference corner",
-                "type": "Vector2DInt"
-            },
-            {
-                "name": "override icon color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "frame rate",
-                "type": "int8"
-            },
-            {
-                "name": "more flags",
-                "type": "HUDInterfaceMessagingFlags"
-            },
-            {
-                "name": "text index",
-                "type": "Index"
-            },
-            {
-                "type": "pad",
-                "size": 48
+                "name": "messaging information",
+                "section": true,
+                "type": "HUDInterfaceMessagingInformation"
             }
         ],
         "type": "struct",

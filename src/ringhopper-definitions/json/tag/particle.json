@@ -69,8 +69,9 @@
                 ]
             },
             {
-                "name": "sir marty exchanged his children for thine",
+                "name": "collision material effects",
                 "type": "TagReference",
+                "description": "marty traded his kids for this",
                 "groups": [
                     "material_effects"
                 ]
@@ -141,9 +142,8 @@
             {
                 "name": "contact deterioration",
                 "type": "float",
-                "non_cached": true,
-                "comment": "this value is totally broken and locks the game up if it's non-zero; even tool.exe sets it to zero",
-                "hidden": true
+                "unused": true,
+                "comment": "this value is totally broken and locks the game up if it's non-zero; even tool.exe sets it to zero"
             },
             {
                 "name": "fade start size",

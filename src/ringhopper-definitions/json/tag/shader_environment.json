@@ -26,7 +26,7 @@
             "true atmospheric fog",
             {
                 "name": "use alternate bump attenuation",
-                "engines": [
+                "supported_engines": [
                     "mcc-cea"
                 ]
             }

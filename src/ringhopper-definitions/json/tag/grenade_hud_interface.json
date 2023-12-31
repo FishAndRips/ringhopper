@@ -24,62 +24,12 @@
         "name": "GrenadeHUDInterfaceOverlay",
         "fields": [
             {
-                "name": "anchor offset",
-                "type": "Vector2DInt"
+                "name": "position",
+                "type": "HUDInterfaceElementPosition"
             },
             {
-                "name": "width scale",
-                "type": "float",
-                "default": 1.0
-            },
-            {
-                "name": "height scale",
-                "type": "float",
-                "default": 1.0
-            },
-            {
-                "name": "scaling flags",
-                "type": "HUDInterfaceScalingFlags"
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "type": "pad",
-                "size": 20
-            },
-            {
-                "name": "default color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "flashing color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "flash period",
-                "type": "float"
-            },
-            {
-                "name": "flash delay",
-                "type": "float"
-            },
-            {
-                "name": "number of flashes",
-                "type": "int16"
-            },
-            {
-                "name": "flash flags",
-                "type": "HUDInterfaceFlashFlags"
-            },
-            {
-                "name": "flash length",
-                "type": "float"
-            },
-            {
-                "name": "disabled color",
-                "type": "ColorARGBInt"
+                "name": "color",
+                "type": "HUDInterfaceElementColor"
             },
             {
                 "type": "pad",
@@ -142,6 +92,51 @@
         "size": 56
     },
     {
+        "name": "GrenadeHUDInterfaceTotalGrenadesNumberElement",
+        "fields": [
+            {
+                "name": "properties",
+                "type": "HUDInterfaceNumberElement"
+            },
+            {
+                "name": "flash cutoff",
+                "type": "int16"
+            },
+            {
+                "type": "pad",
+                "size": 2
+            }
+        ],
+        "type": "struct",
+        "size": 88
+    },
+    {
+        "name": "GrenadeHUDInterfaceTotalGrenadesOverlays",
+        "fields": [
+            {
+                "name": "bitmap",
+                "type": "TagReference",
+                "groups": [
+                    "bitmap"
+                ]
+            },
+            {
+                "name": "overlays",
+                "type": "Reflexive",
+                "struct": "GrenadeHUDInterfaceOverlay",
+                "limit": 16
+            },
+            {
+                "name": "warning sounds",
+                "type": "Reflexive",
+                "struct": "GrenadeHUDInterfaceSound",
+                "limit": 12
+            }
+        ],
+        "type": "struct",
+        "size": 40
+    },
+    {
         "name": "GrenadeHUDInterface",
         "fields": [
             {
@@ -157,323 +152,33 @@
                 "size": 32
             },
             {
-                "name": "background anchor offset",
-                "type": "Vector2DInt"
+                "name": "background",
+                "section": true,
+                "type": "HUDInterfaceStaticElement"
             },
             {
-                "name": "background width scale",
-                "type": "float",
-                "default": 1.0
+                "name": "total grenades background",
+                "section": true,
+                "type": "HUDInterfaceStaticElement"
             },
             {
-                "name": "background height scale",
-                "type": "float",
-                "default": 1.0
-            },
-            {
-                "name": "background scaling flags",
-                "type": "HUDInterfaceScalingFlags"
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "type": "pad",
-                "size": 20
-            },
-            {
-                "name": "background interface bitmap",
-                "type": "TagReference",
-                "groups": [
-                    "bitmap"
-                ]
-            },
-            {
-                "name": "background default color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "background flashing color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "background flash period",
-                "type": "float"
-            },
-            {
-                "name": "background flash delay",
-                "type": "float"
-            },
-            {
-                "name": "background number of flashes",
-                "type": "int16"
-            },
-            {
-                "name": "background flash flags",
-                "type": "HUDInterfaceFlashFlags"
-            },
-            {
-                "name": "background flash length",
-                "type": "float"
-            },
-            {
-                "name": "background disabled color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "type": "pad",
-                "size": 4
-            },
-            {
-                "name": "background sequence index",
-                "type": "Index"
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "name": "background multitexture overlays",
-                "type": "Reflexive",
-                "struct": "HUDInterfaceMultitextureOverlay",
-                "limit": 30
-            },
-            {
-                "type": "pad",
-                "size": 4
-            },
-            {
-                "name": "total grenades background anchor offset",
-                "type": "Vector2DInt"
-            },
-            {
-                "name": "total grenades background width scale",
-                "type": "float",
-                "default": 1.0
-            },
-            {
-                "name": "total grenades background height scale",
-                "type": "float",
-                "default": 1.0
-            },
-            {
-                "name": "total grenades background scaling flags",
-                "type": "HUDInterfaceScalingFlags"
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "type": "pad",
-                "size": 20
-            },
-            {
-                "name": "total grenades background interface bitmap",
-                "type": "TagReference",
-                "groups": [
-                    "bitmap"
-                ]
-            },
-            {
-                "name": "total grenades background default color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "total grenades background flashing color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "total grenades background flash period",
-                "type": "float"
-            },
-            {
-                "name": "total grenades background flash delay",
-                "type": "float"
-            },
-            {
-                "name": "total grenades background number of flashes",
-                "type": "int16"
-            },
-            {
-                "name": "total grenades background flash flags",
-                "type": "HUDInterfaceFlashFlags"
-            },
-            {
-                "name": "total grenades background flash length",
-                "type": "float"
-            },
-            {
-                "name": "total grenades background disabled color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "type": "pad",
-                "size": 4
-            },
-            {
-                "name": "total grenades background sequence index",
-                "type": "Index"
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "name": "total grenades background multitexture overlays",
-                "type": "Reflexive",
-                "struct": "HUDInterfaceMultitextureOverlay",
-                "limit": 30
-            },
-            {
-                "type": "pad",
-                "size": 4
-            },
-            {
-                "name": "total grenades numbers anchor offset",
-                "type": "Vector2DInt"
-            },
-            {
-                "name": "total grenades numbers width scale",
-                "type": "float",
-                "default": 1.0
-            },
-            {
-                "name": "total grenades numbers height scale",
-                "type": "float",
-                "default": 1.0
-            },
-            {
-                "name": "total grenades numbers scaling flags",
-                "type": "HUDInterfaceScalingFlags"
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "type": "pad",
-                "size": 20
-            },
-            {
-                "name": "total grenades numbers default color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "total grenades numbers flashing color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "total grenades numbers flash period",
-                "type": "float"
-            },
-            {
-                "name": "total grenades numbers flash delay",
-                "type": "float"
-            },
-            {
-                "name": "total grenades numbers number of flashes",
-                "type": "int16"
-            },
-            {
-                "name": "total grenades numbers flash flags",
-                "type": "HUDInterfaceFlashFlags"
-            },
-            {
-                "name": "total grenades numbers flash length",
-                "type": "float"
-            },
-            {
-                "name": "total grenades numbers disabled color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "type": "pad",
-                "size": 4
-            },
-            {
-                "name": "total grenades numbers maximum number of digits",
-                "type": "int8"
-            },
-            {
-                "name": "total grenades numbers flags",
-                "type": "HUDInterfaceNumberFlags"
-            },
-            {
-                "name": "total grenades numbers number of fractional digits",
-                "type": "int8"
-            },
-            {
-                "type": "pad",
-                "size": 1
-            },
-            {
-                "type": "pad",
-                "size": 12
-            },
-            {
-                "name": "flash cutoff",
-                "type": "int16"
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "name": "total grenades overlay bitmap",
-                "type": "TagReference",
-                "groups": [
-                    "bitmap"
-                ]
+                "name": "total grenades numbers",
+                "section": true,
+                "type": "GrenadeHUDInterfaceTotalGrenadesNumberElement"
             },
             {
                 "name": "total grenades overlays",
-                "type": "Reflexive",
-                "struct": "GrenadeHUDInterfaceOverlay",
-                "limit": 16
-            },
-            {
-                "name": "total grenades warning sounds",
-                "type": "Reflexive",
-                "struct": "GrenadeHUDInterfaceSound",
-                "limit": 12
+                "section": true,
+                "type": "GrenadeHUDInterfaceTotalGrenadesOverlays"
             },
             {
                 "type": "pad",
                 "size": 68
             },
             {
-                "name": "messaging information sequence index",
-                "type": "Index"
-            },
-            {
-                "name": "messaging information width offset",
-                "type": "int16"
-            },
-            {
-                "name": "messaging information offset from reference corner",
-                "type": "Vector2DInt"
-            },
-            {
-                "name": "messaging information override icon color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "messaging information frame rate",
-                "type": "int8"
-            },
-            {
-                "name": "messaging information flags",
-                "type": "HUDInterfaceMessagingFlags"
-            },
-            {
-                "name": "messaging information text index",
-                "type": "Index"
-            },
-            {
-                "type": "pad",
-                "size": 48
+                "name": "messaging information",
+                "section": true,
+                "type": "HUDInterfaceMessagingInformation"
             }
         ],
         "type": "struct",

@@ -168,7 +168,7 @@
         "size": 104
     },
     {
-        "name": "HUDGlobals",
+        "name": "HUDGlobalsMessagingParameters",
         "fields": [
             {
                 "name": "anchor",
@@ -183,28 +183,8 @@
                 "size": 32
             },
             {
-                "name": "anchor offset",
-                "type": "Vector2DInt"
-            },
-            {
-                "name": "width scale",
-                "type": "float"
-            },
-            {
-                "name": "height scale",
-                "type": "float"
-            },
-            {
-                "name": "scaling flags",
-                "type": "HUDInterfaceScalingFlags"
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "type": "pad",
-                "size": 20
+                "name": "position",
+                "type": "HUDInterfaceElementPosition"
             },
             {
                 "name": "fullscreen font",
@@ -268,90 +248,135 @@
                 "type": "Reflexive",
                 "struct": "HUDGlobalsButtonIcon",
                 "limit": 18
+            }
+        ],
+        "type": "struct",
+        "size": 208
+    },
+    {
+        "name": "HUDGlobalsCrap",
+        "fields": [
+            {
+                "name": "default weapon HUD",
+                "type": "TagReference",
+                "groups": [
+                    "weapon_hud_interface"
+                ]
             },
             {
-                "name": "hud help default color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "hud help flashing color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "hud help flash period",
+                "name": "motion sensor range",
                 "type": "float"
             },
             {
-                "name": "hud help flash delay",
+                "name": "motion sensor velocity sensitivity",
                 "type": "float"
             },
             {
-                "name": "hud help number of flashes",
+                "name": "motion sensor scale",
+                "type": "float"
+            },
+            {
+                "name": "default chapter title bounds",
+                "type": "Rectangle"
+            },
+            {
+                "type": "pad",
+                "size": 44
+            }
+        ],
+        "type": "struct",
+        "size": 80
+    },
+    {
+        "name": "HUDGlobalsExtraCrap",
+        "fields": [
+            {
+                "name": "carnage report bitmap",
+                "type": "TagReference",
+                "groups": [
+                    "bitmap"
+                ]
+            },
+            {
+                "name": "loading begin text",
+                "type": "Index"
+            },
+            {
+                "name": "loading end text",
+                "type": "Index"
+            },
+            {
+                "name": "checkpoint begin text",
+                "type": "Index"
+            },
+            {
+                "name": "checkpoint end text",
+                "type": "Index"
+            },
+            {
+                "name": "checkpoint sound",
+                "type": "TagReference",
+                "groups": [
+                    "sound"
+                ]
+            }
+        ],
+        "type": "struct",
+        "size": 40
+    },
+    {
+        "name": "HUDGlobalsDamageIndicators",
+        "fields": [
+            {
+                "name": "top offset",
                 "type": "int16"
             },
             {
-                "name": "hud help flash flags",
-                "type": "HUDInterfaceFlashFlags"
+                "name": "bottom offset",
+                "type": "int16"
             },
             {
-                "name": "hud help flash length",
-                "type": "float"
+                "name": "left offset",
+                "type": "int16"
             },
             {
-                "name": "hud help disabled color",
+                "name": "right offset",
+                "type": "int16"
+            },
+            {
+                "type": "pad",
+                "size": 32
+            },
+            {
+                "name": "bitmap",
+                "type": "TagReference",
+                "groups": [
+                    "bitmap"
+                ]
+            },
+            {
+                "name": "sequence index",
+                "type": "Index"
+            },
+            {
+                "name": "multiplayer sequence index",
+                "type": "Index"
+            },
+            {
+                "name": "color",
                 "type": "ColorARGBInt"
             },
             {
                 "type": "pad",
-                "size": 4
-            },
-            {
-                "name": "hud messages",
-                "type": "TagReference",
-                "groups": [
-                    "hud_message_text"
-                ]
-            },
-            {
-                "name": "objective default color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "objective flashing color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "objective flash period",
-                "type": "float"
-            },
-            {
-                "name": "objective flash delay",
-                "type": "float"
-            },
-            {
-                "name": "objective number of flashes",
-                "type": "int16"
-            },
-            {
-                "name": "objective flash flags",
-                "type": "HUDInterfaceFlashFlags"
-            },
-            {
-                "name": "objective flash length",
-                "type": "float"
-            },
-            {
-                "name": "objective disabled color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "objective uptime ticks",
-                "type": "int16"
-            },
-            {
-                "name": "objective fade ticks",
-                "type": "int16"
-            },
+                "size": 16
+            }
+        ],
+        "type": "struct",
+        "size": 80
+    },
+    {
+        "name": "HUDGlobalsWaypointParameters",
+        "fields": [
             {
                 "name": "top offset",
                 "type": "float"
@@ -390,150 +415,92 @@
                 "size": 80
             },
             {
-                "name": "hud scale in multiplayer",
+                "name": "HUD scale in multiplayer",
                 "type": "float"
             },
             {
                 "type": "pad",
                 "size": 256
+            }
+        ],
+        "type": "struct",
+        "size": 416
+    },
+    {
+        "name": "HUDGlobalsObjectiveColors",
+        "fields": [
+            {
+                "name": "properties",
+                "type": "HUDInterfaceElementColor"
             },
             {
-                "name": "default weapon hud",
-                "type": "TagReference",
-                "groups": [
-                    "weapon_hud_interface"
-                ]
-            },
-            {
-                "name": "motion sensor range",
-                "type": "float"
-            },
-            {
-                "name": "motion sensor velocity sensitivity",
-                "type": "float"
-            },
-            {
-                "name": "motion sensor scale",
-                "type": "float"
-            },
-            {
-                "name": "default chapter title bounds",
-                "type": "Rectangle"
-            },
-            {
-                "type": "pad",
-                "size": 44
-            },
-            {
-                "name": "hud damage top offset",
+                "name": "uptime ticks",
                 "type": "int16"
             },
             {
-                "name": "hud damage bottom offset",
+                "name": "fade ticks",
                 "type": "int16"
+            }
+        ],
+        "type": "struct",
+        "size": 32
+    },
+    {
+        "name": "HUDGlobals",
+        "fields": [
+            {
+                "name": "messaging parameters",
+                "section": true,
+                "type": "HUDGlobalsMessagingParameters"
             },
             {
-                "name": "hud damage left offset",
-                "type": "int16"
-            },
-            {
-                "name": "hud damage right offset",
-                "type": "int16"
-            },
-            {
-                "type": "pad",
-                "size": 32
-            },
-            {
-                "name": "hud damage indicator bitmap",
-                "type": "TagReference",
-                "groups": [
-                    "bitmap"
-                ]
-            },
-            {
-                "name": "hud damage sequence index",
-                "type": "Index"
-            },
-            {
-                "name": "hud damage multiplayer sequence index",
-                "type": "Index"
-            },
-            {
-                "name": "hud damage color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "type": "pad",
-                "size": 16
-            },
-            {
-                "name": "not much time left default color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "not much time left flashing color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "not much time left flash period",
-                "type": "float"
-            },
-            {
-                "name": "not much time left flash delay",
-                "type": "float"
-            },
-            {
-                "name": "not much time left number of flashes",
-                "type": "int16"
-            },
-            {
-                "name": "not much time left flash flags",
-                "type": "HUDInterfaceFlashFlags"
-            },
-            {
-                "name": "not much time left flash length",
-                "type": "float"
-            },
-            {
-                "name": "not much time left disabled color",
-                "type": "ColorARGBInt"
+                "name": "help text color",
+                "type": "HUDInterfaceElementColor"
             },
             {
                 "type": "pad",
                 "size": 4
             },
             {
-                "name": "time out flash default color",
-                "type": "ColorARGBInt"
+                "name": "HUD messages",
+                "type": "TagReference",
+                "groups": [
+                    "hud_message_text"
+                ]
             },
             {
-                "name": "time out flash flashing color",
-                "type": "ColorARGBInt"
+                "name": "objective colors",
+                "section": true,
+                "type": "HUDGlobalsObjectiveColors"
             },
             {
-                "name": "time out flash flash period",
-                "type": "float"
+                "name": "waypoint parameters",
+                "section": true,
+                "type": "HUDGlobalsWaypointParameters"
             },
             {
-                "name": "time out flash flash delay",
-                "type": "float"
+                "name": "HUD crap",
+                "section": true,
+                "type": "HUDGlobalsCrap"
             },
             {
-                "name": "time out flash number of flashes",
-                "type": "int16"
+                "name": "indicators",
+                "section": true,
+                "type": "HUDGlobalsDamageIndicators"
             },
             {
-                "name": "time out flash flash flags",
-                "type": "HUDInterfaceFlashFlags"
+                "name": "not much time left color",
+                "section": true,
+                "type": "HUDInterfaceElementColor"
             },
             {
-                "name": "time out flash flash length",
-                "type": "float"
+                "type": "pad",
+                "size": 4
             },
             {
-                "name": "time out flash disabled color",
-                "type": "ColorARGBInt"
+                "name": "time out color",
+                "section": true,
+                "type": "HUDInterfaceElementColor"
             },
             {
                 "type": "pad",
@@ -544,46 +511,18 @@
                 "size": 40
             },
             {
-                "name": "carnage report bitmap",
-                "type": "TagReference",
-                "groups": [
-                    "bitmap"
-                ]
+                "name": "more HUD crap",
+                "section": true,
+                "type": "HUDGlobalsExtraCrap"
             },
             {
-                "name": "loading begin text",
-                "type": "Index"
-            },
-            {
-                "name": "loading end text",
-                "type": "Index"
-            },
-            {
-                "name": "checkpoint begin text",
-                "type": "Index"
-            },
-            {
-                "name": "checkpoint end text",
-                "type": "Index"
-            },
-            {
-                "name": "checkpoint sound",
-                "type": "TagReference",
-                "groups": [
-                    "sound"
-                ]
-            },
-            {
-                "name": "anniversary hud remaps",
+                "name": "anniversary HUD remaps",
                 "type": "Reflexive",
-                "engines": [
-                    "mcc"
+                "supported_engines": [
+                    "mcc-cea"
                 ],
                 "struct": "HUDGlobalsAnniversaryRemap",
-                "limit": {
-                    "mcc-cea": 32,
-                    "default": 0
-                }
+                "limit": 32
             },
             {
                 "type": "pad",

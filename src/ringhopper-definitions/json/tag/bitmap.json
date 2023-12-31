@@ -15,7 +15,7 @@
             {
                 "name": "A8",
                 "description": "8 bpp; 8-bit alpha on white",
-                "engines": [
+                "supported_engines": [
                     "xbox",
                     "mcc-cea"
                 ]
@@ -23,7 +23,7 @@
             {
                 "name": "Y8",
                 "description": "8 bpp; 8-bit luminosity",
-                "engines": [
+                "supported_engines": [
                     "xbox",
                     "mcc-cea"
                 ]
@@ -31,7 +31,7 @@
             {
                 "name": "AY8",
                 "description": "8 bpp; 8-bit luminosity-alpha (alpha = luminosity)",
-                "engines": [
+                "supported_engines": [
                     "xbox",
                     "mcc-cea"
                 ]
@@ -39,7 +39,7 @@
             {
                 "name": "A8Y8",
                 "description": "16 bpp; 8-bit luminosity with 8-bit alpha",
-                "engines": [
+                "supported_engines": [
                     "xbox",
                     "mcc-cea"
                 ]
@@ -99,7 +99,7 @@
             {
                 "name": "P8",
                 "description": "8 bpp; 8-bit palette optimized for height maps",
-                "engines": [
+                "supported_engines": [
                     "xbox",
                     "mcc-cea"
                 ]
@@ -107,7 +107,7 @@
             {
                 "name": "BC7",
                 "description": "8 bpp; BC7 compression",
-                "engines": [
+                "supported_engines": [
                     "mcc-cea"
                 ]
             }
@@ -151,7 +151,7 @@
             {
                 "name": "monochrome",
                 "description": "Use monochrome formats and convert non-monochrome bitmaps into monochrome.",
-                "engines": [
+                "supported_engines": [
                     "xbox",
                     "mcc-cea"
                 ]
@@ -159,7 +159,7 @@
             {
                 "name": "BC7",
                 "description": "Use BC7 compression.",
-                "engines": [
+                "supported_engines": [
                     "mcc-cea"
                 ]
             }
@@ -254,22 +254,17 @@
             {
                 "name": "half hud scale",
                 "description": "Draw the HUD at half the width and height.",
-                "engines": [
+                "supported_engines": [
                     "mcc-cea"
                 ]
             },
             {
                 "name": "invert detail fade",
-                "engines": [
-                    "mcc-cea"
-                ]
+                "description": "Inverts the fading direction for fading to gray/color; base map is fully faded where lowest bitmap is not faded."
             },
             {
                 "name": "use average color for detail fade",
-                "description": "Instead of fading to gray, use the average color of the bitmap.",
-                "engines": [
-                    "mcc-cea"
-                ]
+                "description": "Instead of fading to gray, use the average color of the bitmap."
             }
         ],
         "width": 16
