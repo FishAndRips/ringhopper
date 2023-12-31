@@ -191,8 +191,8 @@ impl dyn DynamicTagData {
     ///
     /// If `Err` is passed into the callback, such as due to an invalid matcher, and `true` is returned, this may still
     /// continue. Additionally, you may not immediately get errors until later (in the case the matcher would match more
-    /// than one). You can use [`DynamicTagData::validate_matcher`] ahead of time to ensure the matcher is correct and
-    /// will not have errors.
+    /// than one). You can use [`dyn DynamicTagData::validate_matcher`] ahead of time to ensure the matcher is correct
+    /// and will not have errors.
     pub fn foreach<F>(&self, matcher: &str, mut callback: F) where F: FnMut(Result<&dyn DynamicTagData, &'static str>) -> bool {
         fn inner<F>(dynamic: &dyn DynamicTagData, matcher: &str, callback: &mut F) -> bool where F: FnMut(Result<&dyn DynamicTagData, &'static str>) -> bool {
             generate_access_function!(dynamic, callback, matcher, inner, get_field, as_array, get_at_index)
@@ -208,8 +208,8 @@ impl dyn DynamicTagData {
     ///
     /// If `Err` is passed into the callback, such as due to an invalid matcher, and `true` is returned, this may still
     /// continue. Additionally, you may not immediately get errors until later (in the case the matcher would match more
-    /// than one). You can use [`DynamicTagData::validate_matcher`] ahead of time to ensure the matcher is correct and
-    /// will not have errors.
+    /// than one). You can use [`dyn DynamicTagData::validate_matcher`] ahead of time to ensure the matcher is correct
+    /// and will not have errors.
     pub fn foreach_mut<F>(&mut self, matcher: &str, mut callback: F) where F: FnMut(Result<&mut dyn DynamicTagData, &'static str>) -> bool {
         fn inner<F>(dynamic: &mut dyn DynamicTagData, matcher: &str, callback: &mut F) -> bool where F: FnMut(Result<&mut dyn DynamicTagData, &'static str>) -> bool {
             generate_access_function!(dynamic, callback, matcher, inner, get_field_mut, as_array_mut, get_at_index_mut)
