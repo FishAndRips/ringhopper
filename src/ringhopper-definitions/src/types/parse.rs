@@ -132,7 +132,7 @@ impl ParsedDefinitions {
 
             let base_memory_address = {
                 let bma_search = get_chain("base_memory_address", true);
-                let (bma_path, bma_obj) = bma_search.first().unwrap();
+                let (_bma_path, bma_obj) = bma_search.first().unwrap();
 
                 let bma_address_obj: &Value;
                 let bma_inferred_obj: &Value;
@@ -157,7 +157,7 @@ impl ParsedDefinitions {
 
             let max_cache_file_size = {
                 let cfz_search = get_chain("max_cache_file_size", true);
-                let (cfz_path, cfz_obj) = cfz_search.first().unwrap();
+                let (_cfz_path, cfz_obj) = cfz_search.first().unwrap();
 
                 let multiplayer: &Value;
                 let singleplayer: &Value;
@@ -544,13 +544,13 @@ impl LoadFromSerdeJSON for Flags {
         let get_flag = |flag: &str| {
             object.get(flag).map(|f| f.as_bool().unwrap_or_else(|| panic!("expected {flag} to be a boolean"))).unwrap_or_default()
         };
-
         Flags {
             non_cached: get_flag("non_cached"),
             cache_only: get_flag("cache_only"),
             uneditable_in_editor: get_flag("read_only"),
             hidden_in_editor: get_flag("hidden"),
             unusable: get_flag("exclude"),
+            little_endian_in_tags: get_flag("little_endian"),
             supported_engines: SupportedEngines::load_from_json(object)
         }
     }
@@ -567,7 +567,6 @@ impl LoadFromSerdeJSON for StructField {
                 default_value: None,
                 field_type,
                 flags: Flags::default(),
-                little_endian_in_tags: false,
                 maximum: None,
                 minimum: None,
                 limit: None
@@ -658,7 +657,6 @@ impl LoadFromSerdeJSON for StructField {
             maximum: get_static_value("maximum"),
             limit,
             flags: Flags::load_from_json(object),
-            little_endian_in_tags: object.get("little_endian").map(|f| f.as_bool().unwrap()).unwrap_or(false),
             default_value: get_static_values("default"),
             field_type,
             count,
@@ -775,8 +773,7 @@ impl LoadFromSerdeJSON for Struct {
                 minimum: None,
                 maximum: None,
                 limit: None,
-                flags: Flags::default(),
-                little_endian_in_tags: false
+                flags: Flags::default()
             })
         }
 

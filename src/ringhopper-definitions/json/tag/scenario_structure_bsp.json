@@ -147,6 +147,7 @@
             }
         ],
         "type": "struct",
+        "little_endian": true,
         "size": 56
     },
     {
@@ -174,6 +175,7 @@
             }
         ],
         "type": "struct",
+        "little_endian": true,
         "size": 32
     },
     {
@@ -189,6 +191,7 @@
             }
         ],
         "type": "struct",
+        "little_endian": true,
         "size": 20
     },
     {
@@ -199,15 +202,12 @@
                 "type": "uint32"
             },
             {
-                "name": "texture coordinate x",
-                "type": "int16"
-            },
-            {
-                "name": "texture coordinate y",
-                "type": "int16"
+                "name": "texture coords",
+                "type": "Vector2DInt"
             }
         ],
         "type": "struct",
+        "little_endian": true,
         "size": 8
     },
     {

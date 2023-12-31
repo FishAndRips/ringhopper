@@ -109,10 +109,7 @@ pub struct StructField {
     pub limit: Option<HashMap<LimitType, usize>>,
 
     /// Flags
-    pub flags: Flags,
-
-    /// Store in little endian in tag format
-    pub little_endian_in_tags: bool
+    pub flags: Flags
 }
 
 impl SizeableObject for StructField {
@@ -243,6 +240,9 @@ pub struct Flags {
 
     /// The field cannot be used; if it is set, it is an error
     pub unusable: bool,
+
+    /// Store in little endian in tag format
+    pub little_endian_in_tags: bool,
 
     /// Supported engines for the field
     pub supported_engines: SupportedEngines
