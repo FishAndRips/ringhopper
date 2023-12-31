@@ -84,349 +84,56 @@
         "width": 32
     },
     {
-        "name": "DamageEffect",
+        "name": "DamageEffectDamage",
         "fields": [
             {
-                "name": "radius",
-                "bounds": true,
-                "type": "float",
-                "unit": "world units"
-            },
-            {
-                "name": "cutoff scale",
-                "type": "float",
-                "minimum": 0.0,
-                "maximum": 1.0
-            },
-            {
-                "name": "flags",
-                "type": "DamageEffectFlags"
-            },
-            {
-                "type": "pad",
-                "size": 16
-            },
-            {
-                "type": "pad",
-                "size": 4
-            },
-            {
-                "name": "type",
-                "type": "DamageEffectScreenFlashType"
-            },
-            {
-                "name": "priority",
-                "type": "DamageEffectScreenFlashPriority"
-            },
-            {
-                "type": "pad",
-                "size": 8
-            },
-            {
-                "type": "pad",
-                "size": 4
-            },
-            {
-                "name": "duration",
-                "type": "float",
-                "unit": "seconds"
-            },
-            {
-                "name": "fade function",
-                "type": "FunctionType"
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "type": "pad",
-                "size": 4
-            },
-            {
-                "type": "pad",
-                "size": 4
-            },
-            {
-                "name": "maximum intensity",
-                "type": "float",
-                "minimum": 0.0,
-                "maximum": 1.0,
-                "default": 1.0
-            },
-            {
-                "type": "pad",
-                "size": 4
-            },
-            {
-                "name": "color",
-                "type": "ColorARGBFloat"
-            },
-            {
-                "name": "low frequency vibrate frequency",
-                "type": "float",
-                "minimum": 0.0,
-                "maximum": 1.0
-            },
-            {
-                "name": "low frequency vibrate duration",
-                "type": "float",
-                "unit": "seconds"
-            },
-            {
-                "name": "low frequency vibrate fade function",
-                "type": "FunctionType"
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "type": "pad",
-                "size": 8
-            },
-            {
-                "name": "high frequency vibrate frequency",
-                "type": "float",
-                "minimum": 0.0,
-                "maximum": 1.0
-            },
-            {
-                "name": "high frequency vibrate duration",
-                "type": "float",
-                "unit": "seconds"
-            },
-            {
-                "name": "high frequency vibrate fade function",
-                "type": "FunctionType"
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "type": "pad",
-                "size": 4
-            },
-            {
-                "type": "pad",
-                "size": 16
-            },
-            {
-                "type": "pad",
-                "size": 8
-            },
-            {
-                "name": "temporary camera impulse duration",
-                "type": "float",
-                "unit": "seconds"
-            },
-            {
-                "name": "temporary camera impulse fade function",
-                "type": "FunctionType"
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "name": "temporary camera impulse rotation",
-                "type": "Angle"
-            },
-            {
-                "name": "temporary camera impulse pushback",
-                "type": "float",
-                "unit": "world units"
-            },
-            {
-                "name": "jitter",
-                "bounds": true,
-                "type": "float",
-                "unit": "world units"
-            },
-            {
-                "type": "pad",
-                "size": 8
-            },
-            {
-                "name": "permanent camera impulse angle",
-                "type": "Angle"
-            },
-            {
-                "type": "pad",
-                "size": 4
-            },
-            {
-                "type": "pad",
-                "size": 12
-            },
-            {
-                "name": "camera shaking duration",
-                "type": "float",
-                "unit": "seconds"
-            },
-            {
-                "name": "camera shaking falloff function",
-                "type": "FunctionType"
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "name": "camera shaking random translation",
-                "type": "float",
-                "unit": "world units"
-            },
-            {
-                "name": "camera shaking random rotation",
-                "type": "Angle"
-            },
-            {
-                "type": "pad",
-                "size": 4
-            },
-            {
-                "type": "pad",
-                "size": 8
-            },
-            {
-                "name": "camera shaking wobble function",
-                "type": "WaveFunction"
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "name": "camera shaking wobble period",
-                "type": "float",
-                "unit": "seconds",
-                "default": 1.0
-            },
-            {
-                "name": "camera shaking wobble weight",
-                "type": "float"
-            },
-            {
-                "type": "pad",
-                "size": 12
-            },
-            {
-                "type": "pad",
-                "size": 16
-            },
-            {
-                "type": "pad",
-                "size": 4
-            },
-            {
-                "name": "sound",
-                "type": "TagReference",
-                "groups": [
-                    "sound"
-                ]
-            },
-            {
-                "type": "pad",
-                "size": 108
-            },
-            {
-                "type": "pad",
-                "size": 4
-            },
-            {
-                "name": "breaking effect forward velocity",
-                "type": "float",
-                "unit": "world units per second"
-            },
-            {
-                "name": "breaking effect forward radius",
-                "type": "float",
-                "unit": "world units"
-            },
-            {
-                "name": "breaking effect forward exponent",
-                "type": "float"
-            },
-            {
-                "type": "pad",
-                "size": 4
-            },
-            {
-                "type": "pad",
-                "size": 8
-            },
-            {
-                "name": "breaking effect outward velocity",
-                "type": "float",
-                "unit": "world units per second"
-            },
-            {
-                "name": "breaking effect outward radius",
-                "type": "float",
-                "unit": "world units"
-            },
-            {
-                "name": "breaking effect outward exponent",
-                "type": "float"
-            },
-            {
-                "type": "pad",
-                "size": 8
-            },
-            {
-                "type": "pad",
-                "size": 4
-            },
-            {
-                "name": "damage side effect",
+                "name": "side effect",
                 "type": "DamageEffectSideEffect"
             },
             {
-                "name": "damage category",
+                "name": "category",
                 "type": "DamageEffectCategory"
             },
             {
-                "name": "damage flags",
+                "name": "flags",
                 "type": "DamageEffectDamageFlags"
             },
             {
-                "name": "damage aoe core radius",
+                "name": "AOE core radius",
                 "type": "float",
                 "unit": "world units"
             },
             {
-                "name": "damage lower bound",
+                "name": "lower bound",
                 "type": "float"
             },
             {
-                "name": "damage upper bound",
+                "name": "upper bound",
                 "type": "float",
                 "bounds": true
             },
             {
-                "name": "damage vehicle passthrough penalty",
+                "name": "vehicle passthrough penalty",
                 "type": "float"
             },
             {
-                "name": "damage active camouflage damage",
+                "name": "active camouflage damage",
                 "type": "float"
             },
             {
-                "name": "damage stun",
+                "name": "stun",
                 "type": "float",
                 "minimum": 0.0,
                 "maximum": 1.0
             },
             {
-                "name": "damage maximum stun",
+                "name": "maximum stun",
                 "type": "float",
                 "minimum": 0.0,
                 "maximum": 1.0
             },
             {
-                "name": "damage stun time",
+                "name": "stun time",
                 "type": "float",
                 "unit": "seconds"
             },
@@ -435,9 +142,22 @@
                 "size": 4
             },
             {
-                "name": "damage instantaneous acceleration",
+                "name": "instantaneous acceleration",
                 "type": "Vector3D"
             },
+            {
+                "name": "modifiers",
+                "section": true,
+                "description": "Damage is multiplied by these modifiers based on the material the damage is applied to.",
+                "type": "DamageEffectMaterialModifier"
+            }
+        ],
+        "size": 220,
+        "type": "struct"
+    },
+    {
+        "name": "DamageEffectMaterialModifier",
+        "fields": [
             {
                 "name": "dirt",
                 "type": "float"
@@ -572,11 +292,370 @@
             },
             {
                 "type": "pad",
+                "size": 28
+            }
+        ],
+        "type": "struct",
+        "size": 160
+    },
+    {
+        "name": "DamageEffectBreakingEffect",
+        "fields": [
+            {
+                "name": "forward velocity",
+                "type": "float",
+                "unit": "world units per second"
+            },
+            {
+                "name": "forward radius",
+                "type": "float",
+                "unit": "world units"
+            },
+            {
+                "name": "forward exponent",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 4
+            },
+            {
+                "type": "pad",
+                "size": 8
+            },
+            {
+                "name": "outward velocity",
+                "type": "float",
+                "unit": "world units per second"
+            },
+            {
+                "name": "outward radius",
+                "type": "float",
+                "unit": "world units"
+            },
+            {
+                "name": "outward exponent",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 8
+            },
+            {
+                "type": "pad",
+                "size": 4
+            }
+        ],
+        "type": "struct",
+        "size": 48
+    },
+    {
+        "name": "DamageEffectCameraShaking",
+        "fields": [
+            {
+                "name": "duration",
+                "type": "float",
+                "unit": "seconds"
+            },
+            {
+                "name": "falloff function",
+                "type": "FunctionType"
+            },
+            {
+                "type": "pad",
+                "size": 2
+            },
+            {
+                "name": "random translation",
+                "type": "float",
+                "unit": "world units"
+            },
+            {
+                "name": "random rotation",
+                "type": "Angle"
+            },
+            {
+                "type": "pad",
+                "size": 4
+            },
+            {
+                "type": "pad",
+                "size": 8
+            },
+            {
+                "name": "wobble function",
+                "type": "WaveFunction"
+            },
+            {
+                "type": "pad",
+                "size": 2
+            },
+            {
+                "name": "wobble period",
+                "type": "float",
+                "unit": "seconds",
+                "default": 1.0
+            },
+            {
+                "name": "wobble weight",
+                "type": "float"
+            },
+            {
+                "type": "pad",
                 "size": 12
             },
             {
                 "type": "pad",
                 "size": 16
+            },
+            {
+                "type": "pad",
+                "size": 4
+            }
+        ],
+        "size": 72,
+        "type": "struct"
+    },
+    {
+        "name": "DamageEffectPermanentCameraImpulse",
+        "fields": [
+            {
+                "name": "angle",
+                "type": "Angle"
+            },
+            {
+                "type": "pad",
+                "size": 4
+            },
+            {
+                "type": "pad",
+                "size": 12
+            }
+        ],
+        "size": 20,
+        "type": "struct"
+    },
+    {
+        "name": "DamageEffectTemporaryCameraImpulse",
+        "fields": [
+            {
+                "name": "duration",
+                "type": "float",
+                "unit": "seconds"
+            },
+            {
+                "name": "fade function",
+                "type": "FunctionType"
+            },
+            {
+                "type": "pad",
+                "size": 2
+            },
+            {
+                "name": "rotation",
+                "type": "Angle"
+            },
+            {
+                "name": "pushback",
+                "type": "float",
+                "unit": "world units"
+            },
+            {
+                "name": "jitter",
+                "bounds": true,
+                "type": "float",
+                "unit": "world units"
+            },
+            {
+                "type": "pad",
+                "size": 8
+            }
+        ],
+        "size": 32,
+        "type": "struct"
+    },
+    {
+        "name": "DamageEffectVibrate",
+        "fields": [
+            {
+                "name": "frequency",
+                "type": "float",
+                "minimum": 0.0,
+                "maximum": 1.0
+            },
+            {
+                "name": "duration",
+                "type": "float",
+                "unit": "seconds"
+            },
+            {
+                "name": "fade function",
+                "type": "FunctionType"
+            },
+            {
+                "type": "pad",
+                "size": 2
+            }
+        ],
+        "type": "struct",
+        "size": 12
+    },
+    {
+        "name": "DamageEffectScreenFlash",
+        "fields": [
+            {
+                "name": "type",
+                "type": "DamageEffectScreenFlashType"
+            },
+            {
+                "name": "priority",
+                "type": "DamageEffectScreenFlashPriority"
+            },
+            {
+                "type": "pad",
+                "size": 8
+            },
+            {
+                "type": "pad",
+                "size": 4
+            },
+            {
+                "name": "duration",
+                "type": "float",
+                "unit": "seconds"
+            },
+            {
+                "name": "fade function",
+                "type": "FunctionType"
+            },
+            {
+                "type": "pad",
+                "size": 2
+            },
+            {
+                "type": "pad",
+                "size": 4
+            },
+            {
+                "type": "pad",
+                "size": 4
+            },
+            {
+                "name": "maximum intensity",
+                "type": "float",
+                "minimum": 0.0,
+                "maximum": 1.0,
+                "default": 1.0
+            },
+            {
+                "type": "pad",
+                "size": 4
+            },
+            {
+                "name": "color",
+                "type": "ColorARGBFloat"
+            }
+        ],
+        "size": 56,
+        "type": "struct"
+    },
+    {
+        "name": "DamageEffect",
+        "fields": [
+            {
+                "name": "radius",
+                "bounds": true,
+                "type": "float",
+                "unit": "world units"
+            },
+            {
+                "name": "cutoff scale",
+                "type": "float",
+                "minimum": 0.0,
+                "maximum": 1.0
+            },
+            {
+                "name": "flags",
+                "type": "DamageEffectFlags"
+            },
+            {
+                "type": "pad",
+                "size": 16
+            },
+            {
+                "type": "pad",
+                "size": 4
+            },
+            {
+                "name": "screen flash",
+                "section": true,
+                "type": "DamageEffectScreenFlash"
+            },
+            {
+                "name": "low frequency vibrate",
+                "section": true,
+                "type": "DamageEffectVibrate"
+            },
+            {
+                "type": "pad",
+                "size": 8
+            },
+            {
+                "name": "high frequency vibrate",
+                "section": true,
+                "type": "DamageEffectVibrate"
+            },
+            {
+                "type": "pad",
+                "size": 4
+            },
+            {
+                "type": "pad",
+                "size": 16
+            },
+            {
+                "type": "pad",
+                "size": 8
+            },
+            {
+                "name": "temporary camera impulse",
+                "section": true,
+                "type": "DamageEffectTemporaryCameraImpulse"
+            },
+            {
+                "name": "permanent camera impulse",
+                "section": true,
+                "type": "DamageEffectPermanentCameraImpulse"
+            },
+            {
+                "name": "camera shaking",
+                "section": true,
+                "type": "DamageEffectCameraShaking"
+            },
+            {
+                "name": "sound",
+                "type": "TagReference",
+                "groups": [
+                    "sound"
+                ]
+            },
+            {
+                "type": "pad",
+                "size": 108
+            },
+            {
+                "type": "pad",
+                "size": 4
+            },
+            {
+                "name": "breaking effect",
+                "section": true,
+                "type": "DamageEffectBreakingEffect"
+            },
+            {
+                "name": "damage",
+                "section": true,
+                "type": "DamageEffectDamage"
             }
         ],
         "type": "struct",
