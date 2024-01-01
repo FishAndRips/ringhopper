@@ -294,7 +294,7 @@
             {
                 "name": "flags",
                 "type": "IsUnusedFlag",
-                "unused": true
+                "exclude": true
             },
             {
                 "type": "pad",

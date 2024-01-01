@@ -74,13 +74,49 @@
             "ai driver flying",
             "ai driver can sidestep",
             "ai driver hovering",
-            "vehicle steers directly",
-            "unused",
-            "has ebrake",
-            "noncombat vehicle",
-            "no friction with driver",
-            "can trigger automatic opening doors",
-            "autoaim when teamless"
+            {
+                "name": "vehicle steers directly",
+                "supported_engines": [
+                    "mcc-cea"
+                ]
+            },
+            {
+                "name": "unused",
+                "exclude": true,
+                "supported_engines": [
+                    "mcc-cea"
+                ]
+            },
+            {
+                "name": "has ebrake",
+                "supported_engines": [
+                    "mcc-cea"
+                ]
+            },
+            {
+                "name": "noncombat vehicle",
+                "supported_engines": [
+                    "mcc-cea"
+                ]
+            },
+            {
+                "name": "no friction with driver",
+                "supported_engines": [
+                    "mcc-cea"
+                ]
+            },
+            {
+                "name": "can trigger automatic opening doors",
+                "supported_engines": [
+                    "mcc-cea"
+                ]
+            },
+            {
+                "name": "autoaim when teamless",
+                "supported_engines": [
+                    "mcc-cea"
+                ]
+            }
         ],
         "width": 32
     },
@@ -89,17 +125,17 @@
         "groups": [
             {
                 "name": "vehicle",
-                "description": "Vehicle attributes",
-                "first": "vehicle flags"
+                "description": "attributes",
+                "first": "flags"
             }
         ],
         "fields": [
             {
-                "name": "vehicle flags",
+                "name": "flags",
                 "type": "VehicleFlags"
             },
             {
-                "name": "vehicle type",
+                "name": "type",
                 "type": "VehicleType"
             },
             {
@@ -143,19 +179,19 @@
                 "type": "float"
             },
             {
-                "name": "vehicle a in",
+                "name": "a in",
                 "type": "VehicleFunctionIn"
             },
             {
-                "name": "vehicle b in",
+                "name": "b in",
                 "type": "VehicleFunctionIn"
             },
             {
-                "name": "vehicle c in",
+                "name": "c in",
                 "type": "VehicleFunctionIn"
             },
             {
-                "name": "vehicle d in",
+                "name": "d in",
                 "type": "VehicleFunctionIn"
             },
             {

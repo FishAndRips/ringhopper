@@ -396,7 +396,7 @@
                 "name": "prediction type",
                 "type": "WeaponPredictionType",
                 "comment": "behavior of the trigger in a network predicted game.",
-                "unused": true,
+                "exclude": true,
                 "supported_engines": [
                     "mcc-cea"
                 ]

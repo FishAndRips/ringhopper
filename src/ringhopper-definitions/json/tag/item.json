@@ -10,17 +10,24 @@
         "width": 32
     },
     {
+        "name": "ItemFunctionIn",
+        "type": "enum",
+        "options": [
+            "none"
+        ]
+    },
+    {
         "name": "Item",
         "groups": [
             {
                 "name": "item",
                 "description": "Base item attributes",
-                "first": "item flags"
+                "first": "flags"
             }
         ],
         "fields": [
             {
-                "name": "item flags",
+                "name": "flags",
                 "type": "ItemFlags"
             },
             {
@@ -48,20 +55,24 @@
                 "size": 16
             },
             {
-                "name": "item a in",
-                "type": "ObjectFunctionIn"
+                "name": "a in",
+                "exclude": true,
+                "type": "ItemFunctionIn"
             },
             {
-                "name": "item b in",
-                "type": "ObjectFunctionIn"
+                "name": "b in",
+                "exclude": true,
+                "type": "ItemFunctionIn"
             },
             {
-                "name": "item c in",
-                "type": "ObjectFunctionIn"
+                "name": "c in",
+                "exclude": true,
+                "type": "ItemFunctionIn"
             },
             {
-                "name": "item d in",
-                "type": "ObjectFunctionIn"
+                "name": "d in",
+                "exclude": true,
+                "type": "ItemFunctionIn"
             },
             {
                 "type": "pad",

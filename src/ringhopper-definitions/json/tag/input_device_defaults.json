@@ -26,7 +26,7 @@
             {
                 "name": "flags",
                 "type": "InputDeviceDefaultsFlags",
-                "unused": true
+                "exclude": true
             },
             {
                 "name": "device id",

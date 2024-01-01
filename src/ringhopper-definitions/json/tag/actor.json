@@ -381,9 +381,9 @@
                 "cache_only": true
             },
             {
-                "name": "do not use",
+                "name": "don't use",
                 "type": "TagReference",
-                "unused": true,
+                "exclude": true,
                 "groups": [
                     "weapon"
                 ]
@@ -393,9 +393,9 @@
                 "size": 268
             },
             {
-                "name": "do not use 1",
+                "name": "can't use",
                 "type": "TagReference",
-                "unused": true,
+                "exclude": true,
                 "groups": [
                     "projectile"
                 ]
@@ -799,9 +799,9 @@
                 "size": 128
             },
             {
-                "name": "do not use",
+                "name": "never use",
                 "type": "TagReference",
-                "unused": true,
+                "exclude": true,
                 "groups": [
                     "actor"
                 ]

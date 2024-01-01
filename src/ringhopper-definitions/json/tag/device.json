@@ -27,12 +27,12 @@
             {
                 "name": "device",
                 "description": "Base device attributes",
-                "first": "device flags"
+                "first": "flags"
             }
         ],
         "fields": [
             {
-                "name": "device flags",
+                "name": "flags",
                 "type": "DeviceFlags"
             },
             {
@@ -66,19 +66,19 @@
                 "type": "float"
             },
             {
-                "name": "device a in",
+                "name": "a in",
                 "type": "DeviceIn"
             },
             {
-                "name": "device b in",
+                "name": "b in",
                 "type": "DeviceIn"
             },
             {
-                "name": "device c in",
+                "name": "c in",
                 "type": "DeviceIn"
             },
             {
-                "name": "device d in",
+                "name": "d in",
                 "type": "DeviceIn"
             },
             {

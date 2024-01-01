@@ -354,7 +354,7 @@
         ],
         "fields": [
             {
-                "name": "object type",
+                "name": "type",
                 "type": "ObjectType",
                 "cache_only": true
             },

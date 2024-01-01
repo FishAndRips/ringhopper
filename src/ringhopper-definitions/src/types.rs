@@ -238,8 +238,8 @@ pub struct Flags {
     /// Hint to the editor it should not be displayed by default
     pub hidden_in_editor: bool,
 
-    /// The field cannot be used; if it is set, it is an error
-    pub unusable: bool,
+    /// The field cannot be used; if it is set, it will be lost
+    pub exclude: bool,
 
     /// Store in little endian in tag format
     pub little_endian_in_tags: bool,

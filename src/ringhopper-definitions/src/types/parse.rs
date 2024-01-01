@@ -132,7 +132,7 @@ impl ParsedDefinitions {
 
             let base_memory_address = {
                 let bma_search = get_chain("base_memory_address", true);
-                let (_bma_path, bma_obj) = bma_search.first().unwrap();
+                let (bma_path, bma_obj) = bma_search.first().unwrap();
 
                 let bma_address_obj: &Value;
                 let bma_inferred_obj: &Value;
@@ -157,7 +157,7 @@ impl ParsedDefinitions {
 
             let max_cache_file_size = {
                 let cfz_search = get_chain("max_cache_file_size", true);
-                let (_cfz_path, cfz_obj) = cfz_search.first().unwrap();
+                let (cfz_path, cfz_obj) = cfz_search.first().unwrap();
 
                 let multiplayer: &Value;
                 let singleplayer: &Value;
@@ -549,7 +549,7 @@ impl LoadFromSerdeJSON for Flags {
             cache_only: get_flag("cache_only"),
             uneditable_in_editor: get_flag("read_only"),
             hidden_in_editor: get_flag("hidden"),
-            unusable: get_flag("exclude"),
+            exclude: get_flag("exclude"),
             little_endian_in_tags: get_flag("little_endian"),
             supported_engines: SupportedEngines::load_from_json(object)
         }

@@ -407,7 +407,7 @@
             {
                 "name": "physics flags",
                 "type": "IsUnusedFlag",
-                "unused": true
+                "exclude": true
             },
             {
                 "name": "physics constants",
@@ -461,7 +461,7 @@
             {
                 "name": "physics flags",
                 "type": "IsUnusedFlag",
-                "unused": true
+                "exclude": true
             },
             {
                 "name": "physics constants",

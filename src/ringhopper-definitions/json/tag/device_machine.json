@@ -32,16 +32,16 @@
             {
                 "name": "device machine",
                 "description": "Device Machine attributes",
-                "first": "machine type"
+                "first": "type"
             }
         ],
         "fields": [
             {
-                "name": "machine type",
+                "name": "type",
                 "type": "MachineType"
             },
             {
-                "name": "machine flags",
+                "name": "flags",
                 "type": "MachineFlags"
             },
             {

@@ -47,7 +47,10 @@
             "half speed interpolation",
             "fires from camera",
             "entrance inside bounding sphere",
-            "unused",
+            {
+                "name": "unused",
+                "exclude": true
+            },
             "causes passenger dialogue",
             "resists pings",
             "melee attack is fatal",
@@ -65,7 +68,7 @@
             "special cinematic unit",
             "ignored by autoaiming",
             "shields fry infection forms",
-            "integrated light cntrls weapon",
+            "integrated light controls weapon",
             "integrated light lasts forever"
         ],
         "width": 32
@@ -292,7 +295,7 @@
                 "limit": 2
             },
             {
-                "name": "unit hud interface",
+                "name": "hud interface",
                 "type": "Reflexive",
                 "struct": "UnitUnitHudInterface",
                 "limit": 2
@@ -384,12 +387,12 @@
             {
                 "name": "unit",
                 "description": "Base unit attributes",
-                "first": "unit flags"
+                "first": "flags"
             }
         ],
         "fields": [
             {
-                "name": "unit flags",
+                "name": "flags",
                 "type": "UnitFlags"
             },
             {
@@ -413,19 +416,19 @@
                 ]
             },
             {
-                "name": "unit a in",
+                "name": "a in",
                 "type": "UnitFunctionIn"
             },
             {
-                "name": "unit b in",
+                "name": "b in",
                 "type": "UnitFunctionIn"
             },
             {
-                "name": "unit c in",
+                "name": "c in",
                 "type": "UnitFunctionIn"
             },
             {
-                "name": "unit d in",
+                "name": "d in",
                 "type": "UnitFunctionIn"
             },
             {

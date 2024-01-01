@@ -107,7 +107,7 @@
             {
                 "name": "damage",
                 "section": true,
-                "unused": true,
+                "exclude": true,
                 "type": "DamageEffectDamage"
             }
         ],

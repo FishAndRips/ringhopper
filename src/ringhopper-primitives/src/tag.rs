@@ -161,13 +161,13 @@ impl TagDataSimplePrimitive for TagFileHeader {
 impl TagFileHeader {
     /// Return `Ok(())` if the header is valid.
     ///
-    /// Return `Err(Error::TagParseFailure)` if the header is not valid.
+    /// Return `Err(Error::InvalidTagFile)` if the header is not valid.
     pub fn validate(&self) -> RinghopperResult<()> {
         if self.blam_fourcc == BLAM_FOURCC && self.u16_255 == 0x00FF && self.header_size as usize == <Self as TagDataSimplePrimitive>::size() {
             Ok(())
         }
         else {
-            Err(Error::TagParseFailure)
+            Err(Error::InvalidTagFile)
         }
     }
 
@@ -279,6 +279,19 @@ impl TagFile {
 
         let mut cursor = T::size();
         let result = T::read_from_tag_file(data_after_header, 0, T::size(), &mut cursor)?;
+
+        // If there is leftover data, that means some data was not accounted for. This means the tag is either corrupt
+        // or we are missing definitions.
+        //
+        // For example, if there is a tag reference unaccounted for, then data after the reference will be corrupted
+        // when read.
+        //
+        // As such, the data we just read CANNOT be trusted, as the data is potentially corrupt. Also, saving the tag in
+        // this state will always corrupt it even further. Therefore, we have to error here.
+        if cursor != data_after_header.len() {
+            return Err(Error::CorruptedTagFile);
+        }
+
         Ok(result)
     }
 }

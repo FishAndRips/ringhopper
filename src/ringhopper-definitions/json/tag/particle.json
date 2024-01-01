@@ -142,7 +142,7 @@
             {
                 "name": "contact deterioration",
                 "type": "float",
-                "unused": true,
+                "exclude": true,
                 "comment": "this value is totally broken and locks the game up if it's non-zero; even tool.exe sets it to zero"
             },
             {

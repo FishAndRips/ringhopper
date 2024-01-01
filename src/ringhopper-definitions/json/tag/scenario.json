@@ -1839,7 +1839,7 @@
             {
                 "name": "weapon group",
                 "type": "TagReference",
-                "unused": true,
+                "exclude": true,
                 "groups": [
                     "item_collection"
                 ]
@@ -3303,7 +3303,7 @@
             {
                 "name": "don't use",
                 "type": "TagReference",
-                "unused": true,
+                "exclude": true,
                 "groups": [
                     "scenario_structure_bsp"
                 ]
@@ -3311,7 +3311,7 @@
             {
                 "name": "won't use",
                 "type": "TagReference",
-                "unused": true,
+                "exclude": true,
                 "groups": [
                     "scenario_structure_bsp"
                 ]
@@ -3319,7 +3319,7 @@
             {
                 "name": "can't use",
                 "type": "TagReference",
-                "unused": true,
+                "exclude": true,
                 "groups": [
                     "sky"
                 ]

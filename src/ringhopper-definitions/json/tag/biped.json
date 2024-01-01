@@ -47,7 +47,7 @@
         "groups": [
             {
                 "name": "biped",
-                "description": "Biped attributes",
+                "description": "attributes",
                 "first": "moving turning speed"
             }
         ],
@@ -58,7 +58,7 @@
                 "unit": "degrees per second"
             },
             {
-                "name": "biped flags",
+                "name": "flags",
                 "type": "BipedFlags"
             },
             {
@@ -71,25 +71,25 @@
                 "size": 16
             },
             {
-                "name": "biped a in",
+                "name": "a in",
                 "type": "BipedFunctionIn"
             },
             {
-                "name": "biped b in",
+                "name": "b in",
                 "type": "BipedFunctionIn"
             },
             {
-                "name": "biped c in",
+                "name": "c in",
                 "type": "BipedFunctionIn"
             },
             {
-                "name": "biped d in",
+                "name": "d in",
                 "type": "BipedFunctionIn"
             },
             {
                 "name": "don't use",
                 "type": "TagReference",
-                "unused": true,
+                "exclude": true,
                 "groups": [
                     "damage_effect"
                 ]

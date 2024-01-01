@@ -39,11 +39,59 @@
         "type": "enum"
     },
     {
-        "name": "ShaderType",
+        "name": "ShaderDetailFunction",
         "options": [
-            "unused",
-            "unused1",
-            "unused2",
+            "double biased multiply",
+            "multiply",
+            "double biased add"
+        ],
+        "type": "enum"
+    },
+    {
+        "name": "ShaderTypeXbox",
+        "options": [
+            {
+                "name": "don't use",
+                "exclude": true
+            },
+            {
+                "name": "won't use",
+                "exclude": true
+            },
+            {
+                "name": "can't use",
+                "exclude": true
+            },
+            "shader environment",
+            "shader model",
+            "shader transparent generic",
+            "shader transparent chicago",
+            "shader transparent water",
+            "shader transparent glass",
+            "shader transparent meter",
+            "shader transparent plasma"
+        ],
+        "supported_engines": [
+            "xbox"
+        ],
+        "description": "used to resolve the shader type, pre-shader_transparent_chicago_extended",
+        "type": "enum"
+    },
+    {
+        "name": "ShaderTypePC",
+        "options": [
+            {
+                "name": "don't use",
+                "exclude": true
+            },
+            {
+                "name": "won't use",
+                "exclude": true
+            },
+            {
+                "name": "can't use",
+                "exclude": true
+            },
             "shader environment",
             "shader model",
             "shader transparent generic",
@@ -54,15 +102,10 @@
             "shader transparent meter",
             "shader transparent plasma"
         ],
-        "type": "enum"
-    },
-    {
-        "name": "ShaderDetailFunction",
-        "options": [
-            "double biased multiply",
-            "multiply",
-            "double biased add"
+        "supported_engines": [
+            "pc"
         ],
+        "description": "used to resolve the shader type, post-shader_transparent_chicago_extended",
         "type": "enum"
     },
     {
@@ -128,7 +171,7 @@
                 "type": "MaterialType"
             },
             {
-                "name": "shader type",
+                "name": "type",
                 "type": "uint16",
                 "cache_only": true
             },

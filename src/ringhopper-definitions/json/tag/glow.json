@@ -38,6 +38,142 @@
         "width": 32
     },
     {
+        "name": "GlowRotationalVelocity",
+        "fields": [
+            {
+                "name": "attachment",
+                "type": "FunctionOut",
+                "shifted_by_one": true
+            },
+            {
+                "type": "pad",
+                "size": 2
+            },
+            {
+                "name": "velocity",
+                "unit": "radians per second",
+                "type": "Angle"
+            },
+            {
+                "name": "multiplier",
+                "bounds": true,
+                "type": "float"
+            }
+        ],
+        "type": "struct",
+        "size": 16
+    },
+    {
+        "name": "GlowTranslationalVelocity",
+        "fields": [
+            {
+                "name": "attachment",
+                "type": "FunctionOut",
+                "shifted_by_one": true
+            },
+            {
+                "type": "pad",
+                "size": 2
+            },
+            {
+                "name": "velocity",
+                "unit": "world units per second",
+                "type": "float"
+            },
+            {
+                "name": "multiplier",
+                "bounds": true,
+                "type": "float"
+            }
+        ],
+        "type": "struct",
+        "size": 16
+    },
+    {
+        "name": "GlowDistanceToObject",
+        "fields": [
+            {
+                "name": "attachment",
+                "type": "FunctionOut",
+                "shifted_by_one": true
+            },
+            {
+                "type": "pad",
+                "size": 2
+            },
+            {
+                "name": "distance",
+                "bounds": true,
+                "unit": "world units",
+                "type": "float"
+            },
+            {
+                "name": "multiplier",
+                "bounds": true,
+                "type": "float"
+            }
+        ],
+        "type": "struct",
+        "size": 20
+    },
+    {
+        "name": "GlowParticleSize",
+        "fields": [
+            {
+                "name": "attachment",
+                "type": "FunctionOut",
+                "shifted_by_one": true
+            },
+            {
+                "type": "pad",
+                "size": 2
+            },
+            {
+                "name": "bounds",
+                "unit": "world units",
+                "bounds": true,
+                "type": "float"
+            },
+            {
+                "name": "multiplier",
+                "bounds": true,
+                "type": "float"
+            }
+        ],
+        "size": 20,
+        "type": "struct"
+    },
+    {
+        "name": "GlowColor",
+        "fields": [
+            {
+                "name": "attachment",
+                "type": "FunctionOut",
+                "shifted_by_one": true
+            },
+            {
+                "type": "pad",
+                "size": 2
+            },
+            {
+                "name": "color bound",
+                "bounds": true,
+                "type": "ColorARGBFloat"
+            },
+            {
+                "name": "scale color",
+                "bounds": true,
+                "type": "ColorARGBFloat"
+            },
+            {
+                "name": "color rate of change",
+                "type": "float"
+            }
+        ],
+        "size": 72,
+        "type": "struct"
+    },
+    {
         "name": "Glow",
         "fields": [
             {
@@ -81,153 +217,46 @@
                 "size": 4
             },
             {
-                "name": "attachment 0",
-                "type": "FunctionOut",
-                "shifted_by_one": true
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
                 "name": "particle rotational velocity",
-                "type": "float"
-            },
-            {
-                "name": "particle rot vel mul low",
-                "type": "float"
-            },
-            {
-                "name": "particle rot vel mul high",
-                "type": "float"
-            },
-            {
-                "name": "attachment 1",
-                "type": "FunctionOut",
-                "shifted_by_one": true
-            },
-            {
-                "type": "pad",
-                "size": 2
+                "section": true,
+                "type": "GlowRotationalVelocity"
             },
             {
                 "name": "effect rotational velocity",
-                "type": "float"
-            },
-            {
-                "name": "effect rot vel mul low",
-                "type": "float"
-            },
-            {
-                "name": "effect rot vel mul high",
-                "type": "float"
-            },
-            {
-                "name": "attachment 2",
-                "type": "FunctionOut",
-                "shifted_by_one": true
-            },
-            {
-                "type": "pad",
-                "size": 2
+                "section": true,
+                "type": "GlowRotationalVelocity"
             },
             {
                 "name": "effect translational velocity",
-                "type": "float"
+                "section": true,
+                "type": "GlowTranslationalVelocity"
             },
             {
-                "name": "effect trans vel mul low",
-                "type": "float"
-            },
-            {
-                "name": "effect trans vel mul high",
-                "type": "float"
-            },
-            {
-                "name": "attachment 3",
-                "type": "FunctionOut",
-                "shifted_by_one": true
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "name": "min distance particle to object",
-                "type": "float"
-            },
-            {
-                "name": "max distance particle to object",
-                "type": "float"
-            },
-            {
-                "name": "distance to object mul low",
-                "type": "float"
-            },
-            {
-                "name": "distance to object mul high",
-                "type": "float"
+                "name": "particle distance to object",
+                "section": true,
+                "type": "GlowDistanceToObject"
             },
             {
                 "type": "pad",
                 "size": 8
             },
             {
-                "name": "attachment 4",
-                "type": "FunctionOut",
-                "shifted_by_one": true
+                "name": "particle size",
+                "section": true,
+                "type": "GlowParticleSize"
             },
             {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "name": "particle size bounds",
-                "unit": "world units",
-                "bounds": true,
-                "type": "float"
-            },
-            {
-                "name": "size attachment multiplier",
-                "bounds": true,
-                "type": "float"
-            },
-            {
-                "name": "attachment 5",
-                "type": "FunctionOut",
-                "shifted_by_one": true
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "name": "color bound 0",
-                "type": "ColorARGBFloat"
-            },
-            {
-                "name": "color bound 1",
-                "type": "ColorARGBFloat"
-            },
-            {
-                "name": "scale color 0",
-                "type": "ColorARGBFloat"
-            },
-            {
-                "name": "scale color 1",
-                "type": "ColorARGBFloat"
-            },
-            {
-                "name": "color rate of change",
-                "type": "float"
+                "name": "color",
+                "section": true,
+                "type": "GlowColor"
             },
             {
                 "name": "fading percentage of glow",
                 "type": "float"
             },
             {
-                "name": "particle generation freq",
-                "unit": "Hz",
+                "name": "particle generation rate",
+                "unit": "particles per second",
                 "type": "float"
             },
             {
@@ -241,11 +270,8 @@
                 "type": "float"
             },
             {
-                "name": "trailing particle minimum t",
-                "type": "float"
-            },
-            {
-                "name": "trailing particle maximum t",
+                "name": "trailing particle t",
+                "bounds": true,
                 "type": "float"
             },
             {

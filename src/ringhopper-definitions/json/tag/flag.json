@@ -48,7 +48,7 @@
             {
                 "name": "flags",
                 "type": "IsUnusedFlag",
-                "unused": true
+                "exclude": true
             },
             {
                 "name": "trailing edge shape",

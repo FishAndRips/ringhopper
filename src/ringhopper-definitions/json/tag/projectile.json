@@ -179,13 +179,13 @@
         "groups": [
             {
                 "name": "projectile",
-                "description": "Projectile attributes",
-                "first": "projectile flags"
+                "description": "attributes",
+                "first": "flags"
             }
         ],
         "fields": [
             {
-                "name": "projectile flags",
+                "name": "flags",
                 "type": "ProjectileFlags"
             },
             {
@@ -197,19 +197,19 @@
                 "type": "ObjectNoise"
             },
             {
-                "name": "projectile a in",
+                "name": "a in",
                 "type": "ProjectileFunctionIn"
             },
             {
-                "name": "projectile b in",
+                "name": "b in",
                 "type": "ProjectileFunctionIn"
             },
             {
-                "name": "projectile c in",
+                "name": "c in",
                 "type": "ProjectileFunctionIn"
             },
             {
-                "name": "projectile d in",
+                "name": "d in",
                 "type": "ProjectileFunctionIn"
             },
             {
@@ -338,7 +338,7 @@
                 "size": 12
             },
             {
-                "name": "projectile material response",
+                "name": "material response",
                 "type": "Reflexive",
                 "struct": "ProjectileMaterialResponse",
                 "limit": 33

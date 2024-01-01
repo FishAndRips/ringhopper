@@ -125,7 +125,9 @@ impl ToTokenStream for Struct {
                 fields_read_from_caches.push(false);
             }
             else {
-                writeln!(&mut fields, "pub {field_name}: {field_type},").unwrap();
+                if !field.flags.exclude {
+                    writeln!(&mut fields, "pub {field_name}: {field_type},").unwrap();
+                }
                 fields_read_from_tags.push(!field.flags.cache_only);
                 fields_read_from_caches.push(!field.flags.non_cached);
             }
@@ -157,12 +159,19 @@ impl ToTokenStream for Struct {
                 let field_matcher = &fields_with_matchers[i];
                 let field_type = &fields_with_types[i];
 
-                writeln!(&mut write_out, "self.{field_name}.write_to_tag_file(data, _pos, struct_end)?;").unwrap();
-                writeln!(&mut read_in, "output.{field_name} = <{field_type}>::read_from_tag_file(data, _pos, struct_end, extra_data_cursor)?;").unwrap();
-                write!(&mut field_list, "\"{field_matcher}\",").unwrap();
+                let read_code = format!("<{field_type}>::read_from_tag_file(data, _pos, struct_end, extra_data_cursor)?");
 
-                writeln!(&mut getter, "\"{field_matcher}\" => Some(&self.{field_name}),").unwrap();
-                writeln!(&mut getter_mut, "\"{field_matcher}\" => Some(&mut self.{field_name}),").unwrap();
+                if !self.fields[i].flags.exclude {
+                    writeln!(&mut read_in, "output.{field_name} = {read_code};").unwrap();
+                    writeln!(&mut write_out, "self.{field_name}.write_to_tag_file(data, _pos, struct_end)?;").unwrap();
+                    write!(&mut field_list, "\"{field_matcher}\",").unwrap();
+                    writeln!(&mut getter, "\"{field_matcher}\" => Some(&self.{field_name}),").unwrap();
+                    writeln!(&mut getter_mut, "\"{field_matcher}\" => Some(&mut self.{field_name}),").unwrap();
+                }
+                else {
+                    writeln!(&mut read_in, "{read_code};").unwrap();
+                    writeln!(&mut write_out, "<{field_type}>::default().write_to_tag_file(data, _pos, struct_end)?;").unwrap();
+                }
             }
 
             writeln!(&mut write_out, "let _pos = _pos.add_overflow_checked({length})?;").unwrap();
@@ -238,14 +247,18 @@ impl ToTokenStream for Enum {
             ($($fmt:expr)*) => {{
                 let mut out = String::new();
                 for i in 0..self.options.len() {
-                    writeln!(&mut out, $($fmt)*, field_camel_case=field_names_rust[i], field_snake_case=field_names_matchers[i], value=self.options[i].value).unwrap();
+                    let option = &self.options[i];
+                    if option.flags.exclude {
+                        continue
+                    }
+                    writeln!(&mut out, $($fmt)*, field_camel_case=field_names_rust[i], field_snake_case=field_names_matchers[i], value=option.value).unwrap();
                 }
                 out
             }};
         }
 
         let struct_name = &self.name;
-        let fields = writeln_for_each_field!("{field_camel_case}, // {value}, {field_snake_case}");
+        let fields = writeln_for_each_field!("{field_camel_case} = {value}, // {field_snake_case}");
         let read_in = writeln_for_each_field!("{value} => Ok(Self::{field_camel_case}), // {field_snake_case}");
         let field_name_list = writeln_for_each_field!("\"{field_snake_case}\", // {value}, {field_camel_case}");
         let str_to_enum = writeln_for_each_field!("\"{field_snake_case}\" => Some(Self::{field_camel_case}), // {value}");
@@ -351,7 +364,11 @@ impl ToTokenStream for Bitfield {
             ($($fmt:expr)*) => {{
                 let mut out = String::new();
                 for i in 0..self.fields.len() {
-                    writeln!(&mut out, $($fmt)*, field_rust=field_names_rust[i], field_matcher=field_names_matchers[i], value=self.fields[i].value).unwrap();
+                    let field = &self.fields[i];
+                    if field.flags.exclude {
+                        continue
+                    }
+                    writeln!(&mut out, $($fmt)*, field_rust=field_names_rust[i], field_matcher=field_names_matchers[i], value=field.value).unwrap();
                 }
                 out
             }};
