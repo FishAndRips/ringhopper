@@ -230,6 +230,24 @@ pub struct Data {
     pub bytes: Vec<u8>
 }
 
+impl Data {
+    pub fn new(bytes: Vec<u8>) -> Data {
+        Self {
+            bytes
+        }
+    }
+}
+
+impl FromIterator<u8> for Data {
+    fn from_iter<I: IntoIterator<Item=u8>>(iter: I) -> Self {
+        let mut bytes = Vec::new();
+        for i in iter {
+            bytes.push(i);
+        }
+        Self { bytes }
+    }
+}
+
 impl TagData for Data {
     fn size() -> usize {
         <DataC as TagData>::size()
@@ -300,6 +318,22 @@ impl DynamicTagData for Data {
 #[repr(transparent)]
 pub struct Reflexive<T: TagData + Sized> {
     pub items: Vec<T>
+}
+
+impl<T: TagData + Sized> Reflexive<T> {
+    pub fn new(items: Vec<T>) -> Self {
+        Self { items }
+    }
+}
+
+impl<T: TagData + Sized> FromIterator<T> for Reflexive<T> {
+    fn from_iter<I: IntoIterator<Item=T>>(iter: I) -> Self {
+        let mut items = Vec::new();
+        for i in iter {
+            items.push(i);
+        }
+        Self { items }
+    }
 }
 
 impl<T: TagData + Sized> TagData for Reflexive<T> {

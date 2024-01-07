@@ -46,7 +46,7 @@ impl CommandLineParser {
         }
     }
 
-    fn add_help(self) -> Self {
+    pub fn add_help(self) -> Self {
         self.add_help_with_callback(|parser| {
             let mut arguments: Vec<&Parameter> = all_args!(parser).collect();
             arguments.sort_by(|a, b| {
@@ -67,6 +67,7 @@ impl CommandLineParser {
             for a in arguments {
                 println!("-{} --{} {}", a.short, a.name, a.usage);
             }
+            println!();
 
             std::process::exit(0);
         })
@@ -267,6 +268,16 @@ impl CommandLineParser {
             if i.required && i.values.is_none() {
                 return Err(format!("Argument parse error: Expected --{} to be set", i.name))
             }
+            if i.value_type == Some(CommandLineValueType::Path) {
+                if let Some(n) = i.values.as_ref() {
+                    for i in n {
+                        let path = i.path();
+                        if !path.exists() {
+                            return Err(format!("Cannot find `{}`", path.display()))
+                        }
+                    }
+                }
+            }
         }
 
         Ok(CommandLineArgs {
@@ -297,6 +308,16 @@ impl CommandLineArgs {
             .values
             .as_ref()
             .expect("data should be present even if it's a default")[0]
+            .path()
+    }
+
+    pub fn get_maps(&self) -> &Path {
+        self.standard_parameters
+            .get(&StandardParameterType::Maps)
+            .expect("maps not added as standard parameter")
+            .values
+            .as_ref()
+            .expect("maps should be present even if it's a default")[0]
             .path()
     }
 
@@ -441,7 +462,7 @@ impl CommandLineValue {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(PartialEq, Copy, Clone)]
 pub enum CommandLineValueType {
     Path,
     String,

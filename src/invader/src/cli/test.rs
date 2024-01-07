@@ -36,17 +36,17 @@ fn test_argument_parser_maps() {
     let parser_maps_set = CommandLineParser::new("Test", "Test")
         .add_maps()
         .parse_strs(&["-m", "my_maps"]).unwrap();
-    assert_eq!(parser_maps_set.get_data(), Path::new("my_maps"));
+    assert_eq!(parser_maps_set.get_maps(), Path::new("my_maps"));
 
     let parser_maps_set_long = CommandLineParser::new("Test", "Test")
         .add_maps()
         .parse_strs(&["--maps", "my_maps2"]).unwrap();
-    assert_eq!(parser_maps_set_long.get_data(), Path::new("my_maps2"));
+    assert_eq!(parser_maps_set_long.get_maps(), Path::new("my_maps2"));
 
     let parser_default = CommandLineParser::new("Test", "Test")
         .add_maps()
         .parse_strs(&[]).unwrap();
-    assert_eq!(parser_default.get_data(), Path::new("maps"));
+    assert_eq!(parser_default.get_maps(), Path::new("maps"));
 }
 
 #[test]
@@ -80,7 +80,7 @@ fn test_argument_custom() {
     assert!(parser_data_set.get_custom("test").is_some());
     assert!(parser_data_set.get_custom("test-unset").is_none());
     assert!(parser_data_set.get_custom("test-take").is_some_and(|t| t[0].float() == 0.0));
-    assert!(parser_data_set.get_extra() == &["extra".to_owned()]);
+    assert_eq!(parser_data_set.get_extra(), &["extra".to_owned()]);
 
     let parser_data_set2 = CommandLineParser::new("Test", "Test")
         .add_custom_parameter(Parameter::single("test", 'T', "test", "", None))

@@ -4,3 +4,6 @@ authors = ["Snowy Mouse"]
 version = "0.2.0"
 description = "Tool for modding Halo: Combat Evolved"
 license = "GPL-3.0-only"
+
+[dependencies]
+ringhopper = { path = "../ringhopper" }

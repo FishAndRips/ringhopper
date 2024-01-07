@@ -15,10 +15,10 @@ impl TagData for String {
     fn size() -> usize {
         Data::size()
     }
-    fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> crate::error::RinghopperResult<Self> {
+    fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> {
         Ok(Self { string: Data::read_from_tag_file(data, at, struct_end, extra_data_cursor)? })
     }
-    fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> crate::error::RinghopperResult<()> {
+    fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {
         self.string.write_to_tag_file(data, at, struct_end)
     }
 }
@@ -27,20 +27,20 @@ impl TagData for UnicodeStringList {
     fn size() -> usize {
         Reflexive::<String>::size()
     }
-    fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> crate::error::RinghopperResult<Self> {
+    fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> {
         Ok(Self { strings: Reflexive::<String>::read_from_tag_file(data, at, struct_end, extra_data_cursor)? })
     }
-    fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> crate::error::RinghopperResult<()> {
+    fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {
         self.strings.write_to_tag_file(data, at, struct_end)
     }
 }
 
 impl DynamicTagData for UnicodeStringList {
-    fn get_field(&self, field: &str) -> Option<&dyn DynamicTagData> {
+    fn get_field(&self, _field: &str) -> Option<&dyn DynamicTagData> {
         todo!()
     }
 
-    fn get_field_mut(&mut self, field: &str) -> Option<&mut dyn DynamicTagData> {
+    fn get_field_mut(&mut self, _field: &str) -> Option<&mut dyn DynamicTagData> {
         todo!()
     }
 
@@ -79,7 +79,6 @@ fn read_test_unicode_string_list() -> (&'static [u8], UnicodeStringList) {
 #[test]
 fn parse_unicode_string_list() {
     let (data, string_list) = read_test_unicode_string_list();
-    let string_list_accessor = string_list.as_dynamic();
 
     let utf16_matches = |string_index: usize, expected: &str| {
         let mut data: Vec<u8> = expected.encode_utf16().map(|f| f.to_le_bytes()).flatten().collect();
