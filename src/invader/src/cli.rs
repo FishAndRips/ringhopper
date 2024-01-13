@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use ringhopper::tag::tree::VirtualTagDirectory;
 
 pub struct CommandLineParser {
     description: &'static str,
@@ -268,16 +269,6 @@ impl CommandLineParser {
             if i.required && i.values.is_none() {
                 return Err(format!("Argument parse error: Expected --{} to be set", i.name))
             }
-            if i.value_type == Some(CommandLineValueType::Path) {
-                if let Some(n) = i.values.as_ref() {
-                    for i in n {
-                        let path = i.path();
-                        if !path.exists() {
-                            return Err(format!("Cannot find `{}`", path.display()))
-                        }
-                    }
-                }
-            }
         }
 
         Ok(CommandLineArgs {
@@ -299,6 +290,10 @@ impl CommandLineArgs {
             .iter()
             .map(CommandLineValue::path)
             .collect()
+    }
+
+    pub fn get_virtual_tags_directory(&self) -> VirtualTagDirectory {
+        VirtualTagDirectory::new(self.get_tags().as_slice()).unwrap()
     }
 
     pub fn get_data(&self) -> &Path {

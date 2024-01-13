@@ -21,7 +21,11 @@ pub enum Error {
     ArrayLimitExceeded,
     IndexLimitExceeded,
     SizeLimitExceeded,
-    String32SizeLimitExceeded
+    String32SizeLimitExceeded,
+    FileNotFound,
+    FailedToReadFile,
+    FailedToWriteFile,
+    InvalidTagsDirectory
 }
 
 impl Error {
@@ -41,7 +45,11 @@ impl Error {
             Error::SizeLimitExceeded => "usize limit exceeded",
             Error::ArrayLimitExceeded => "array limit of 0xFFFFFFFF (4294967295) exceeded",
             Error::IndexLimitExceeded => "index limit of 0xFFFF (65535) exceeded",
-            Error::String32SizeLimitExceeded => "string data is longer than 31 characters"
+            Error::String32SizeLimitExceeded => "string data is longer than 31 characters",
+            Error::FileNotFound => "file not found",
+            Error::FailedToReadFile => "failed to read file",
+            Error::FailedToWriteFile => "failed to write file",
+            Error::InvalidTagsDirectory => "invalid tags directory"
         }
     }
 }

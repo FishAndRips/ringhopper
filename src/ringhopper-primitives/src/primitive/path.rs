@@ -1,4 +1,5 @@
 use std::any::Any;
+use std::cmp::Ordering;
 use super::*;
 use crate::parse::*;
 use std::convert::From;
@@ -10,13 +11,28 @@ use crate::dynamic::{DynamicTagData, DynamicTagDataType};
 pub(crate) const HALO_PATH_SEPARATOR: char = '\\';
 
 /// Refers to a tag path and provides functions for handling these.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct TagPath {
     /// The path of the tag, not including the extension
     pub(crate) path: String,
 
     /// The group of the tag (also used for determining the file extension)
     pub(crate) group: TagGroup
+}
+
+impl Ord for TagPath {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match self.path.cmp(&other.path) {
+            Ordering::Equal => self.group.cmp(&other.group),
+            n => n
+        }
+    }
+}
+
+impl PartialOrd for TagPath {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 impl TagPath {

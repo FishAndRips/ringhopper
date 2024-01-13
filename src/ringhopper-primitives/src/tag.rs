@@ -40,6 +40,9 @@ pub trait PrimaryTagStructDyn: PrimaryTagStruct + Any {
 
     /// Get the tag group of this tag.
     fn group(&self) -> TagGroup;
+
+    /// Clone this object.
+    fn clone_inner(&self) -> Box<dyn PrimaryTagStructDyn>;
 }
 
 impl dyn PrimaryTagStructDyn {
@@ -62,7 +65,7 @@ impl dyn PrimaryTagStructDyn {
     }
 }
 
-impl<T: PrimaryTagStruct + Any> PrimaryTagStructDyn for T {
+impl<T: PrimaryTagStruct + Sized + Clone + Any> PrimaryTagStructDyn for T {
     fn as_dynamic(&self) -> &dyn DynamicTagData {
         self
     }
@@ -80,6 +83,9 @@ impl<T: PrimaryTagStruct + Any> PrimaryTagStructDyn for T {
     }
     fn group(&self) -> TagGroup {
         <T as PrimaryTagStruct>::group()
+    }
+    fn clone_inner(&self) -> Box<dyn PrimaryTagStructDyn> {
+        Box::new(self.clone()) as Box<dyn PrimaryTagStructDyn>
     }
 }
 

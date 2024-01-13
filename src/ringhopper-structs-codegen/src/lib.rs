@@ -32,7 +32,7 @@ pub fn generate_ringhopper_structs(_: TokenStream) -> TokenStream {
     pub fn read_any_tag_from_file_buffer(file: &[u8], strictness: ParseStrictness) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {{
         let (header, _) = TagFile::load_header_and_data(file, strictness)?;
 
-        fn b<T: PrimaryTagStruct + 'static>(what: RinghopperResult<T>) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {{
+        fn b<T: PrimaryTagStruct + Clone + 'static>(what: RinghopperResult<T>) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {{
             what.map(|b| Box::<T>::new(b) as Box<dyn PrimaryTagStructDyn>)
         }}
 

@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use crate::error::*;
 use std::fmt::Display;
 use std::convert::{TryFrom, TryInto};
@@ -8,7 +9,7 @@ use byteorder::ByteOrder;
 pub type FourCC = u32;
 
 /// Refers to a tag group, or a type of tag.
-#[derive(Copy, Clone, PartialEq, Debug, PartialOrd, Ord, Eq, Default)]
+#[derive(Copy, Clone, PartialEq, Debug, Eq, Hash, Default)]
 pub enum TagGroup {
     Actor,
     ActorVariant,
@@ -96,6 +97,18 @@ pub enum TagGroup {
 
     #[default]
     _None,
+}
+
+impl Ord for TagGroup {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.as_str().cmp(other.as_str())
+    }
+}
+
+impl PartialOrd for TagGroup {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 /// All tag groups for CE sorted alphabetically to allow for efficient binary searching.
