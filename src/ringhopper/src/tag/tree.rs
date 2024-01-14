@@ -1,7 +1,8 @@
-use std::collections::{HashMap, HashSet};
+use std::borrow::Cow;
+use std::collections::HashMap;
 use std::fs::{read, write};
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 use primitives::error::{Error, RinghopperResult};
 use primitives::primitive::{TagGroup, TagPath};
 use primitives::tag::{ParseStrictness, PrimaryTagStructDyn};
@@ -19,34 +20,49 @@ pub trait TagTree {
     fn files_in_path(&self, path: &str) -> Option<Vec<TagTreeItem>>;
 
     /// Write the tag into the tag tree.
-    fn write_tag(&self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<()>;
+    fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<()>;
 
     /// Get the root tag tree item.
     fn root(&self) -> TagTreeItem where Self: Sized {
-        TagTreeItem {
-            tag_tree: self,
-            path: String::new(),
-            item_type: TagTreeItemType::Directory,
-            tag_group: None
-        }
+        TagTreeItem::new(TagTreeItemType::Directory, Cow::default(), None, self)
     }
 }
 
+/// Denotes an item type for identifying a [`TagTreeItem`].
 #[derive(Copy, Clone, PartialEq)]
 pub enum TagTreeItemType {
+    /// The item represents a tag or tag file.
+    ///
+    /// Note that, in some cases, the validity of this being an actual tag and not just a file that happens to have a
+    /// tag extension is not guaranteed.
     Tag,
+
+    /// The item represents a directory that can be further traversed.
     Directory
 }
 
+/// Denotes a tag tree item for traversing a [`TagTree`].
 #[derive(Clone)]
 pub struct TagTreeItem<'a> {
     item_type: TagTreeItemType,
-    tag_tree: &'a dyn TagTree,
+    path: Cow<'a, str>,
     tag_group: Option<TagGroup>,
-    path: String
+    tag_tree: &'a dyn TagTree
 }
 
 impl<'a> TagTreeItem<'a> {
+    /// Instantiates a new item for the target tag tree.
+    ///
+    /// # Panics
+    ///
+    /// Panics if tag_group is set for a directory or not set for a tag.
+    pub fn new(item_type: TagTreeItemType, path: Cow<'a, str>, tag_group: Option<TagGroup>, tag_tree: &'a dyn TagTree) -> Self {
+        assert!((item_type == TagTreeItemType::Tag) ^ tag_group.is_none());
+        Self {
+            item_type, path, tag_group, tag_tree
+        }
+    }
+
     /// Get the type of item this is.
     pub fn item_type(&self) -> TagTreeItemType {
         self.item_type
@@ -81,7 +97,7 @@ impl<'a> TagTreeItem<'a> {
         self.tag_group
     }
 
-    /// Get the path as a string, including any extensions.
+    /// Get the path as a string, excluding extensions if it is a tag path.
     pub fn path_str(&self) -> &str {
         &self.path
     }
@@ -93,7 +109,7 @@ impl<'a> TagTreeItem<'a> {
         if self.is_directory() {
             return None
         }
-        Some(TagPath::from_path(self.path_str()).unwrap())
+        Some(TagPath::new(&self.path, self.tag_group.unwrap()).unwrap())
     }
 }
 
@@ -107,48 +123,67 @@ pub enum CachingTagTreeWriteStrategy {
 }
 
 pub struct CachingTagTree<T> where T: TagTree {
-    delegate: T,
-    tag_cache: Arc<Mutex<HashMap<TagPath, Box<dyn PrimaryTagStructDyn>>>>,
+    inner: T,
+
+    // wrapped in Mutex to allow writing to state even in immutable references
+    tag_cache: Mutex<HashMap<TagPath, Box<dyn PrimaryTagStructDyn>>>,
     strategy: CachingTagTreeWriteStrategy
 }
 
-impl<T: TagTree + Sized> CachingTagTree<T> {
+impl<T: TagTree> CachingTagTree<T> {
     /// Wrap a tag tree with a cache.
-    pub fn new(delegate: T, strategy: CachingTagTreeWriteStrategy) -> Self {
+    pub fn new(inner: T, strategy: CachingTagTreeWriteStrategy) -> Self {
         Self {
-            delegate,
-            tag_cache: Arc::new(Mutex::new(HashMap::new())),
+            inner,
+            tag_cache: Mutex::new(HashMap::new()),
             strategy
         }
     }
 
-    /// Evict a tag from the tag cache.
-    pub fn remove_tag(&mut self, path: TagPath) -> Option<Box<dyn PrimaryTagStructDyn>> {
+    /// Get the inner instance as a reference.
+    pub fn inner(&self) -> &T {
+        &self.inner
+    }
+
+    /// Get the inner instance as a mutable reference.
+    pub fn inner_mut(&mut self) -> &mut T {
+        &mut self.inner
+    }
+
+    /// Consume the cache and return the inner value.
+    pub fn into_inner(self) -> T {
+        self.inner
+    }
+
+    /// Evict a tag from the tag cache and return it if it existed.
+    pub fn take_tag(&mut self, path: TagPath) -> Option<Box<dyn PrimaryTagStructDyn>> {
         self.tag_cache.lock().unwrap().remove(&path)
     }
 
     /// Write the tag to the delegate.
     ///
     /// Returns `Err(Error::FileNotFound)` if the tag is not open, or some other [`Error`] if an error occurs on the delegate.
-    pub fn commit(&self, path: &TagPath) -> RinghopperResult<()> {
+    pub fn commit(&mut self, path: &TagPath) -> RinghopperResult<()> {
         let cache = self.tag_cache.lock().unwrap();
         let tag = cache.get(path).ok_or(Error::FileNotFound)?;
-        self.delegate.write_tag(path, tag.as_ref())
+        self.inner.write_tag(path, tag.as_ref())
     }
 
     /// Write all tags to the delegate.
-    pub fn commit_all(&self) -> Vec<(TagPath, Error)> {
-        self.tag_cache
-            .lock()
-            .unwrap()
-            .iter()
-            .filter_map(|f| {
-                let error = self.delegate
-                    .write_tag(f.0, f.1.as_ref())
-                    .err()?;
-                Some((f.0.to_owned(), error))
-            })
-            .collect()
+    ///
+    /// Returns a vector of all tags that couldn't be written, with a corresponding [`Error`].
+    pub fn commit_all(&mut self) -> Vec<(TagPath, Error)> {
+        let cache = self.tag_cache.lock().unwrap();
+        let mut errors = Vec::new();
+
+        for (k, v) in cache.iter() {
+            match self.inner.write_tag(k, v.clone_inner().as_ref()) {
+                Ok(_) => (),
+                Err(e) => errors.push((k.to_owned(), e))
+            }
+        }
+
+        errors
     }
 }
 
@@ -158,16 +193,16 @@ impl<T: TagTree> TagTree for CachingTagTree<T> {
         if let Some(n) = cache.get(path) {
             return Ok(n.clone_inner())
         }
-        let result = self.delegate.get_tag(path)?;
+        let result = self.inner.get_tag(path)?;
         cache.insert(path.clone(), result.clone_inner());
         Ok(result)
     }
     fn files_in_path(&self, path: &str) -> Option<Vec<TagTreeItem>> {
-        self.delegate.files_in_path(path)
+        self.inner.files_in_path(path)
     }
-    fn write_tag(&self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<()> {
+    fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<()> {
         if self.strategy == CachingTagTreeWriteStrategy::Instant {
-            self.delegate.write_tag(path, tag)?;
+            self.inner.write_tag(path, tag)?;
         }
         self.tag_cache.lock().unwrap().insert(path.to_owned(), tag.clone_inner());
         Ok(())
@@ -219,7 +254,6 @@ impl TagTree for VirtualTagDirectory {
     }
     fn files_in_path(&self, path: &str) -> Option<Vec<TagTreeItem>> {
         let mut result = Vec::new();
-        let mut items_found = HashSet::new();
         let mut success = false;
 
         for dir_path in &self.directories {
@@ -238,38 +272,37 @@ impl TagTree for VirtualTagDirectory {
                         return None
                     }
 
-                    let path = path.strip_prefix(dir_path).unwrap().to_owned();
+                    let mut path = path.strip_prefix(dir_path).unwrap().to_owned().into_os_string().into_string().ok()?;
                     if !is_dir {
-                        let tag_group = TagGroup::from_str(path.extension()?.to_str()?).ok()?;
-
-                        Some(TagTreeItem {
-                            item_type: TagTreeItemType::Tag,
-                            tag_tree: self,
-                            path: path.into_os_string().into_string().ok()?,
-                            tag_group: Some(tag_group)
-                        })
+                        let extension = path.rfind('.')?;
+                        let tag_group = TagGroup::from_str(&path[extension + 1..]).ok()?;
+                        path.truncate(extension);
+                        Some(TagTreeItem::new(
+                            TagTreeItemType::Tag,
+                            Cow::Owned(path),
+                            Some(tag_group),
+                            self
+                        ))
                     }
 
                     else {
-                        Some(TagTreeItem {
-                            item_type: TagTreeItemType::Directory,
-                            tag_tree: self,
-                            path: path.into_os_string().into_string().ok()?,
-                            tag_group: None
-                        })
+                        Some(TagTreeItem::new(
+                            TagTreeItemType::Directory,
+                            Cow::Owned(path),
+                            None,
+                            self
+                        ))
                     }
                 });
 
             for f in entries {
-                let path_base = Path::new(&f.path);
-                let file_name = path_base.file_name().unwrap();
-                if items_found.contains(file_name) {
-                    continue
-                }
-                items_found.insert(file_name.to_owned());
                 result.push(f);
             }
         }
+
+        result.dedup_by(|a, b| {
+            a.item_type == b.item_type && a.tag_group == b.tag_group && a.path == b.path
+        });
 
         if !success {
             return None
@@ -277,7 +310,7 @@ impl TagTree for VirtualTagDirectory {
 
         Some(result)
     }
-    fn write_tag(&self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<()> {
+    fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<()> {
         let file_to_write_to = self.path_for_tag(path).unwrap_or_else(|| self.directories[0].join(path.to_native_path()));
         std::fs::create_dir_all(file_to_write_to.parent().unwrap()).map_err(|_| Error::FailedToWriteFile)?;
         write(file_to_write_to, tag.to_tag_file()?).map_err(|_| Error::FailedToReadFile)

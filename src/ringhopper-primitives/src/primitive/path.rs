@@ -36,6 +36,25 @@ impl PartialOrd for TagPath {
 }
 
 impl TagPath {
+    /// Split a string path by its tag group, if one is valid.
+    ///
+    /// Returns `None` if `string_path` has no extension that corresponds to a valid tag group.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ringhopper_primitives::primitive::{TagPath, TagGroup};
+    ///
+    /// let (path, group) = TagPath::split_str_path("weapons\\myweapon\\myweapon.weapon").unwrap();
+    /// assert_eq!("weapons\\myweapon\\myweapon", path);
+    /// assert_eq!(TagGroup::Weapon, group);
+    pub fn split_str_path(string_path: &str) -> Option<(&str, TagGroup)> {
+        let path_extension_index = string_path.rfind('.')?;
+        let (path, extension) = string_path.split_at(path_extension_index);
+        let tag_group = TagGroup::from_str(&extension[1..]).ok()?;
+        Some((path, tag_group))
+    }
+
     /// Get the path component of the tag path.
     ///
     /// This will be the path as internally stored in tags, using Halo path separators.
@@ -45,8 +64,7 @@ impl TagPath {
     /// ```
     /// use ringhopper_primitives::primitive::{TagPath, TagGroup};
     ///
-    /// let path = TagPath::from_path("weapons\\myweapon\\myweapon.weapon")
-    ///                       .unwrap();
+    /// let path = TagPath::from_path("weapons\\myweapon\\myweapon.weapon").unwrap();
     ///
     /// assert_eq!("weapons\\myweapon\\myweapon", path.path());
     /// ```
@@ -141,18 +159,7 @@ impl TagPath {
     /// assert_eq!(path.group(), TagGroup::Weapon);
     /// ```
     pub fn from_path(path: &str) -> RinghopperResult<Self> {
-        let mut offset = path.find('.').ok_or(Error::InvalidTagPath)? + 1;
-        let mut extension_maybe = &path[offset..];
-        while let Some(offset_delta) = extension_maybe.find('.') {
-            offset += offset_delta + 1;
-            extension_maybe = &path[offset..];
-        }
-
-        let (mut path_without_extension, group) = path.split_at(offset);
-        path_without_extension = &path_without_extension[..path_without_extension.len() - 1];
-        debug_assert_eq!(extension_maybe, group);
-
-        let group = TagGroup::from_str(group).map_err(|_| Error::InvalidTagPath)?;
+        let (path_without_extension, group) = Self::split_str_path(path).ok_or(Error::InvalidTagFile)?;
         Self::new(path_without_extension, group)
     }
 
