@@ -224,11 +224,14 @@ impl TagGroup {
     /// Convert the `FourCC` value to a tag group if it exists.
     ///
     /// Returns an error if it doesn't correspond to a group.
-    pub fn from_fourcc(fourcc: FourCC) -> RinghopperResult<TagGroup> {
-        for i in ALL_GROUPS {
-            if i.2 == fourcc {
-                return Ok(i.1)
+    pub const fn from_fourcc(fourcc: FourCC) -> RinghopperResult<TagGroup> {
+        let mut i = 0;
+        while i < ALL_GROUPS.len() {
+            let group = &ALL_GROUPS[i];
+            if group.2 == fourcc {
+                return Ok(group.1)
             }
+            i += 1;
         }
         Err(Error::NoSuchTagGroup)
     }
