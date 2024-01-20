@@ -1,4 +1,5 @@
 use std::fmt::{Display, Debug};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 use byteorder::ByteOrder;
 use crate::error::*;
@@ -50,20 +51,20 @@ pub trait Vector: Sized {
     /// Return a unit vector.
     fn one() -> Self;
 
-    /// Scale the vector by `scaler`.
-    fn scale(&self, scaler: f32) -> Self;
+    /// Scale the vector by `by`.
+    fn scale(&self, by: f32) -> Self;
 
     /// Compute the sum of this vector and another vector.
     fn add(&self, of: &Self) -> Self;
 
     /// Subtract the components of this vector with the components of another.
-    fn subtract(&self, with: &Self) -> Self;
+    fn sub(&self, with: &Self) -> Self;
 
     /// Multiply the components of this vector and another vector.
-    fn multiply(&self, by: &Self) -> Self;
+    fn mul(&self, by: &Self) -> Self;
 
     /// Divide the components this vector by the components of the other vector.
-    fn divide(&self, by: &Self) -> Self;
+    fn div(&self, by: &Self) -> Self;
 
     /// Compute the distance the point lies from a plane.
     ///
@@ -79,7 +80,7 @@ pub trait Vector: Sized {
     /// let point = Vector2D::zero();
     /// let plane = Plane2D { vector: Vector2D { x: 1.0, y: 0.0 }, d: 2.0 };
     /// let distance = point.distance_from_plane(&plane);
-    /// assert!(distance == -2.0);
+    /// assert_eq!(-2.0, distance);
     /// ```
     fn distance_from_plane<P: Plane<VectorType = Self>>(&self, plane: &P) -> f32 {
         self.dot(&plane.vector()) - plane.d()
@@ -130,45 +131,8 @@ pub struct Vector2D {
 }
 
 impl Vector for Vector2D {
-    fn scale(&self, scaler: f32) -> Self {
-        Self {
-            x: self.x * scaler,
-            y: self.y * scaler
-        }
-    }
-
-    fn add(&self, of: &Self) -> Self {
-        Self {
-            x: self.x + of.x,
-            y: self.y + of.y,
-        }
-    }
-
-    fn subtract(&self, with: &Self) -> Self {
-        Self {
-            x: self.x - with.x,
-            y: self.y - with.y,
-        }
-    }
-
-    fn multiply(&self, of: &Self) -> Self {
-        Self {
-            x: self.x * of.x,
-            y: self.y * of.y,
-        }
-    }
-
-    fn divide(&self, of: &Self) -> Self {
-        Self {
-            x: self.x / of.x,
-            y: self.y / of.y,
-        }
-    }
-
-    fn distance_squared(&self, of: &Self) -> f32 {
-        let x = self.x - of.x;
-        let y = self.y - of.y;
-        x*x + y*y
+    fn dot(&self, with: &Self) -> f32 {
+        self.x * with.x + self.y * with.y
     }
 
     fn zero() -> Self {
@@ -186,8 +150,45 @@ impl Vector for Vector2D {
         o
     }
 
-    fn dot(&self, with: &Self) -> f32 {
-        self.x * with.x + self.y * with.y
+    fn scale(&self, by: f32) -> Self {
+        Self {
+            x: self.x * by,
+            y: self.y * by
+        }
+    }
+
+    fn add(&self, of: &Self) -> Self {
+        Self {
+            x: self.x + of.x,
+            y: self.y + of.y,
+        }
+    }
+
+    fn sub(&self, with: &Self) -> Self {
+        Self {
+            x: self.x - with.x,
+            y: self.y - with.y,
+        }
+    }
+
+    fn mul(&self, of: &Self) -> Self {
+        Self {
+            x: self.x * of.x,
+            y: self.y * of.y,
+        }
+    }
+
+    fn div(&self, of: &Self) -> Self {
+        Self {
+            x: self.x / of.x,
+            y: self.y / of.y,
+        }
+    }
+
+    fn distance_squared(&self, of: &Self) -> f32 {
+        let x = self.x - of.x;
+        let y = self.y - of.y;
+        x*x + y*y
     }
 }
 
@@ -202,51 +203,8 @@ pub struct Vector3D {
 }
 
 impl Vector for Vector3D {
-    fn scale(&self, scaler: f32) -> Self {
-        Self {
-            x: self.x * scaler,
-            y: self.y * scaler,
-            z: self.z * scaler,
-        }
-    }
-
-    fn add(&self, of: &Self) -> Self {
-        Self {
-            x: self.x + of.x,
-            y: self.y + of.y,
-            z: self.z + of.z,
-        }
-    }
-
-    fn subtract(&self, with: &Self) -> Self {
-        Self {
-            x: self.x - with.x,
-            y: self.y - with.y,
-            z: self.z - with.z,
-        }
-    }
-
-    fn multiply(&self, of: &Self) -> Self {
-        Self {
-            x: self.x * of.x,
-            y: self.y * of.y,
-            z: self.z * of.z,
-        }
-    }
-
-    fn divide(&self, of: &Self) -> Self {
-        Self {
-            x: self.x / of.x,
-            y: self.y / of.y,
-            z: self.z / of.z,
-        }
-    }
-
-    fn distance_squared(&self, of: &Self) -> f32 {
-        let x = self.x - of.x;
-        let y = self.y - of.y;
-        let z = self.z - of.z;
-        x*x + y*y + z*z
+    fn dot(&self, with: &Self) -> f32 {
+        self.x * with.x + self.y * with.y + self.z * with.z
     }
 
     fn zero() -> Self {
@@ -265,8 +223,51 @@ impl Vector for Vector3D {
         o
     }
 
-    fn dot(&self, with: &Self) -> f32 {
-        self.x * with.x + self.y * with.y + self.z * with.z
+    fn scale(&self, by: f32) -> Self {
+        Self {
+            x: self.x * by,
+            y: self.y * by,
+            z: self.z * by,
+        }
+    }
+
+    fn add(&self, of: &Self) -> Self {
+        Self {
+            x: self.x + of.x,
+            y: self.y + of.y,
+            z: self.z + of.z,
+        }
+    }
+
+    fn sub(&self, with: &Self) -> Self {
+        Self {
+            x: self.x - with.x,
+            y: self.y - with.y,
+            z: self.z - with.z,
+        }
+    }
+
+    fn mul(&self, of: &Self) -> Self {
+        Self {
+            x: self.x * of.x,
+            y: self.y * of.y,
+            z: self.z * of.z,
+        }
+    }
+
+    fn div(&self, of: &Self) -> Self {
+        Self {
+            x: self.x / of.x,
+            y: self.y / of.y,
+            z: self.z / of.z,
+        }
+    }
+
+    fn distance_squared(&self, of: &Self) -> f32 {
+        let x = self.x - of.x;
+        let y = self.y - of.y;
+        let z = self.z - of.z;
+        x*x + y*y + z*z
     }
 }
 
@@ -394,4 +395,135 @@ impl From<Angle> for f32 {
     }
 }
 
+impl Add for Angle {
+    type Output = Self;
+    fn add(self, rhs: Self) -> Self::Output {
+        Angle::from_radians(self.angle + rhs.angle)
+    }
+}
+impl AddAssign for Angle {
+    fn add_assign(&mut self, rhs: Self) {
+        *self = Angle::from_radians(self.angle + rhs.angle)
+    }
+}
+impl Sub for Angle {
+    type Output = Self;
+    fn sub(self, rhs: Self) -> Self {
+        Angle::from_radians(self.angle - rhs.angle)
+    }
+}
+impl SubAssign for Angle {
+    fn sub_assign(&mut self, rhs: Self) {
+        *self = Angle::from_radians(self.angle - rhs.angle)
+    }
+}
+impl Mul for Angle {
+    type Output = Self;
+    fn mul(self, rhs: Self) -> Self {
+        Angle::from_radians(self.angle * rhs.angle)
+    }
+}
+impl MulAssign for Angle {
+    fn mul_assign(&mut self, rhs: Self) {
+        *self = Angle::from_radians(self.angle * rhs.angle)
+    }
+}
+impl Div for Angle {
+    type Output = Self;
+    fn div(self, rhs: Self) -> Self {
+        Angle::from_radians(self.angle / rhs.angle)
+    }
+}
+impl DivAssign for Angle {
+    fn div_assign(&mut self, rhs: Self) {
+        *self = Angle::from_radians(self.angle / rhs.angle)
+    }
+}
+impl Mul<f32> for Angle {
+    type Output = Self;
+    fn mul(self, rhs: f32) -> Self::Output {
+        Angle::from_radians(self.angle * rhs)
+    }
+}
+impl MulAssign<f32> for Angle {
+    fn mul_assign(&mut self, rhs: f32) {
+        *self = Angle::from_radians(self.angle * rhs)
+    }
+}
+impl Neg for Angle {
+    type Output = Self;
+    fn neg(self) -> Self::Output {
+        Angle::from_radians(-self.angle)
+    }
+}
+
 generate_tag_data_simple_primitive_code!(Angle, f32, angle);
+
+macro_rules! define_ops_for_vector {
+    ($vector:ty) => {
+        impl Add for $vector {
+            type Output = Self;
+            fn add(self, rhs: Self) -> Self::Output {
+                Vector::add(&self, &rhs)
+            }
+        }
+        impl AddAssign for $vector {
+            fn add_assign(&mut self, rhs: Self) {
+                *self = Vector::add(&self, &rhs)
+            }
+        }
+        impl Sub for $vector {
+            type Output = Self;
+            fn sub(self, rhs: Self) -> Self {
+                Vector::sub(&self, &rhs)
+            }
+        }
+        impl SubAssign for $vector {
+            fn sub_assign(&mut self, rhs: Self) {
+                *self = Vector::sub(&self, &rhs)
+            }
+        }
+        impl Mul for $vector {
+            type Output = Self;
+            fn mul(self, rhs: Self) -> Self {
+                Vector::mul(&self, &rhs)
+            }
+        }
+        impl MulAssign for $vector {
+            fn mul_assign(&mut self, rhs: Self) {
+                *self = Vector::mul(&self, &rhs)
+            }
+        }
+        impl Div for $vector {
+            type Output = Self;
+            fn div(self, rhs: Self) -> Self {
+                Vector::div(&self, &rhs)
+            }
+        }
+        impl DivAssign for $vector {
+            fn div_assign(&mut self, rhs: Self) {
+                *self = Vector::div(&self, &rhs)
+            }
+        }
+        impl Mul<f32> for $vector {
+            type Output = Self;
+            fn mul(self, rhs: f32) -> Self::Output {
+                Vector::scale(&self, rhs)
+            }
+        }
+        impl MulAssign<f32> for $vector {
+            fn mul_assign(&mut self, rhs: f32) {
+                *self = Vector::scale(&self, rhs)
+            }
+        }
+        impl Neg for $vector {
+            type Output = Self;
+            fn neg(self) -> Self::Output {
+                Vector::scale(&self, -1.0)
+            }
+        }
+    };
+}
+
+define_ops_for_vector!(Vector2D);
+define_ops_for_vector!(Vector3D);
