@@ -70,13 +70,13 @@ struct Vector3DHolder {
 }
 
 impl TagData for Vector3DHolder {
+    fn size() -> usize {
+        <Vector3D as TagData>::size()
+    }
     fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> {
         Ok(Self {
             vector: Vector3D::read_from_tag_file(data, at, struct_end, extra_data_cursor)?
         })
-    }
-    fn size() -> usize {
-        <Vector3D as TagData>::size()
     }
     fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {
         self.vector.write_to_tag_file(data, at, struct_end)
@@ -94,7 +94,7 @@ fn reflexive_rw() {
         0x40, 0xE0, 0x00, 0x00, 0x41, 0x00, 0x00, 0x00, 0x41, 0x10, 0x00, 0x00
     ];
 
-    let mut vectors: Reflexive<Vector3DHolder> = Reflexive::<Vector3DHolder>::read_from_tag_file(array_of_vectors_bytes, 0, 0xC, &mut 0xC).unwrap();
+    let vectors: Reflexive<Vector3DHolder> = Reflexive::<Vector3DHolder>::read_from_tag_file(array_of_vectors_bytes, 0, 0xC, &mut 0xC).unwrap();
     let expected = &[
         Vector3DHolder { vector: Vector3D { x: 1.0, y: 2.0, z: 3.0 } },
         Vector3DHolder { vector: Vector3D { x: 4.0, y: 5.0, z: 6.0 } },

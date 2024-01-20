@@ -1,4 +1,5 @@
 use crate::{parse::TagData, primitive::TagGroup};
+use crate::primitive::TagPath;
 
 use super::TagReference;
 
@@ -29,4 +30,20 @@ fn parse_tag_reference() {
     let mut new_bytes = vec![0u8; 16];
     tag.write_to_tag_file(&mut new_bytes, 0, 16).unwrap();
     assert_eq!(bytes_set_id, new_bytes.as_slice());
+}
+
+#[test]
+fn banned_tag_paths() {
+    assert!(TagPath::from_path("weapons\\pistol\\pistol.weapon").is_ok());
+    assert!(TagPath::from_path("weapons\\PISTOL\\pistol.weapon").is_ok());
+    assert!(TagPath::from_path("weapons\\<pistol>\\pistol.weapon").is_err());
+    assert!(TagPath::from_path("weapons\\pistol\x00\\pistol.weapon").is_err());
+    assert!(TagPath::from_path("weapons\\pistol\n\\pistol.weapon").is_err());
+    assert!(TagPath::from_path("weapons\\pistol\t\\pistol.weapon").is_err());
+    assert!(TagPath::from_path("weapons\\con\\pistol.weapon").is_err());
+    assert!(TagPath::from_path("weapons\\pistol.\\pistol.weapon").is_err());
+    assert!(TagPath::from_path("\\weapons\\pistol\\pistol.weapon").is_err());
+
+    assert_eq!(TagPath::from_path("weapons\\PISTOL\\pistol.weapon"), TagPath::from_path("weapons\\pistol\\pistol.weapon"));
+    assert_eq!(TagPath::from_path("weapons\\pistol\\\\pistol.weapon"), TagPath::from_path("weapons\\pistol\\pistol.weapon"));
 }

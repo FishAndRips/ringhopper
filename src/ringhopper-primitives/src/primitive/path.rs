@@ -193,14 +193,60 @@ impl TagPath {
     /// ```
     pub fn new(path: &str, group: TagGroup) -> RinghopperResult<Self> {
         let mut path_fixed = String::with_capacity(path.len());
+        let mut last_char = '\x00';
 
         for c in path.chars() {
-            path_fixed.push(match c {
+            let character = match c {
                 c if std::path::is_separator(c) => HALO_PATH_SEPARATOR,
                 '/' | ':' | '*' | '?' | '"' | '<' | '>' | '|' => return Err(Error::InvalidTagPath),
                 c if c.is_ascii_control() => return Err(Error::InvalidTagPath),
-                c => c
-            });
+                c => c.to_ascii_lowercase()
+            };
+
+            // Ignore double path separators
+            if last_char == HALO_PATH_SEPARATOR && character == HALO_PATH_SEPARATOR {
+                continue
+            }
+
+            last_char = character;
+            path_fixed.push(last_char);
+        }
+
+        // Cannot start at the root
+        if path_fixed.starts_with(HALO_PATH_SEPARATOR) {
+            return Err(Error::InvalidTagPath)
+        }
+
+        // Check for problematic directory names for Windows
+        const BANNED_DIRECTORY_NAMES: &'static [&'static str] = &[
+            "aux",
+            "com0",
+            "com1",
+            "com2",
+            "com3",
+            "com4",
+            "com5",
+            "com6",
+            "com7",
+            "com8",
+            "com9",
+            "con",
+            "lpt0",
+            "lpt1",
+            "lpt2",
+            "lpt3",
+            "lpt4",
+            "lpt5",
+            "lpt6",
+            "lpt7",
+            "lpt8",
+            "lpt9",
+            "nul",
+            "prn",
+        ];
+
+        if path_fixed.split(HALO_PATH_SEPARATOR).any(|dir| dir.ends_with('.') || BANNED_DIRECTORY_NAMES.binary_search(&dir).is_ok()) {
+            return Err(Error::InvalidTagPath)
         }
 
         Ok(Self {
