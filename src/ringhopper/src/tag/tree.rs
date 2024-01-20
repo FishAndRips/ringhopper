@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fs::{read, write};
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use primitives::error::{Error, RinghopperResult};
 use primitives::primitive::{TagGroup, TagPath};
 use primitives::tag::{ParseStrictness, PrimaryTagStructDyn};
@@ -12,7 +12,7 @@ pub trait TagTree {
     /// Get the tag in the tag tree if it exists.
     ///
     /// Returns `Err` if it does not exist.
-    fn get_tag(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>>;
+    fn open_tag(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>>;
 
     /// Get all files in the path.
     ///
@@ -126,7 +126,7 @@ pub struct CachingTagTree<T> where T: TagTree {
     inner: T,
 
     // wrapped in Mutex to allow writing to state even in immutable references
-    tag_cache: Mutex<HashMap<TagPath, Box<dyn PrimaryTagStructDyn>>>,
+    tag_cache: Mutex<HashMap<TagPath, Arc<Mutex<Box<dyn PrimaryTagStructDyn>>>>>,
     strategy: CachingTagTreeWriteStrategy
 }
 
@@ -155,9 +155,33 @@ impl<T: TagTree> CachingTagTree<T> {
         self.inner
     }
 
+    /// Get a direct reference to the tag in the cache.
+    ///
+    /// Returns `None` if no such tag is cached.
+    pub fn get(&mut self, path: &TagPath) -> Option<Arc<Mutex<Box<dyn PrimaryTagStructDyn>>>> {
+        self.tag_cache
+            .lock()
+            .unwrap()
+            .get(path)
+            .map(Clone::clone)
+    }
+
+    /// Load the tag if the tag is not already loaded, and then get a direct reference to it in the cache.
+    ///
+    /// Returns [`Error`] if the tag failed to load for some reason.
+    pub fn load_and_get(&mut self, path: &TagPath) -> RinghopperResult<Arc<Mutex<Box<dyn PrimaryTagStructDyn>>>> {
+        self.open_and_cache_tag(path)
+    }
+
     /// Evict a tag from the tag cache and return it if it existed.
-    pub fn take_tag(&mut self, path: TagPath) -> Option<Box<dyn PrimaryTagStructDyn>> {
-        self.tag_cache.lock().unwrap().remove(&path)
+    ///
+    /// Returns `None` if no such tag was found in the cache.
+    pub fn evict(&mut self, path: &TagPath) -> Option<Box<dyn PrimaryTagStructDyn>> {
+        self.tag_cache
+            .lock()
+            .unwrap()
+            .remove(path)
+            .map(|tag| Arc::into_inner(tag).unwrap().into_inner().unwrap())
     }
 
     /// Write the tag to the delegate.
@@ -166,7 +190,8 @@ impl<T: TagTree> CachingTagTree<T> {
     pub fn commit(&mut self, path: &TagPath) -> RinghopperResult<()> {
         let cache = self.tag_cache.lock().unwrap();
         let tag = cache.get(path).ok_or(Error::FileNotFound)?;
-        self.inner.write_tag(path, tag.as_ref())
+        self.inner.write_tag(path, tag.as_ref().lock().unwrap().as_ref())?;
+        Ok(())
     }
 
     /// Write all tags to the delegate.
@@ -177,7 +202,7 @@ impl<T: TagTree> CachingTagTree<T> {
         let mut errors = Vec::new();
 
         for (k, v) in cache.iter() {
-            match self.inner.write_tag(k, v.clone_inner().as_ref()) {
+            match self.inner.write_tag(k, v.lock().unwrap().clone_inner().as_ref()) {
                 Ok(_) => (),
                 Err(e) => errors.push((k.to_owned(), e))
             }
@@ -185,17 +210,23 @@ impl<T: TagTree> CachingTagTree<T> {
 
         errors
     }
+
+    fn open_and_cache_tag(&self, path: &TagPath) -> RinghopperResult<Arc<Mutex<Box<dyn PrimaryTagStructDyn>>>> {
+        let mut cache = self.tag_cache.lock().unwrap();
+        if let Some(n) = cache.get(path) {
+            return Ok(n.clone())
+        }
+        let result = self.inner.open_tag(path)?;
+        let cached = Arc::new(Mutex::new(result));
+        cache.insert(path.clone(), cached.clone());
+        Ok(cached)
+    }
 }
 
 impl<T: TagTree> TagTree for CachingTagTree<T> {
-    fn get_tag(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
-        let mut cache = self.tag_cache.lock().unwrap();
-        if let Some(n) = cache.get(path) {
-            return Ok(n.clone_inner())
-        }
-        let result = self.inner.get_tag(path)?;
-        cache.insert(path.clone(), result.clone_inner());
-        Ok(result)
+    fn open_tag(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
+        self.open_and_cache_tag(path)
+            .map(|tag| tag.lock().unwrap().clone_inner())
     }
     fn files_in_path(&self, path: &str) -> Option<Vec<TagTreeItem>> {
         self.inner.files_in_path(path)
@@ -204,7 +235,7 @@ impl<T: TagTree> TagTree for CachingTagTree<T> {
         if self.strategy == CachingTagTreeWriteStrategy::Instant {
             self.inner.write_tag(path, tag)?;
         }
-        self.tag_cache.lock().unwrap().insert(path.to_owned(), tag.clone_inner());
+        self.tag_cache.lock().unwrap().insert(path.to_owned(), Arc::new(Mutex::new(tag.clone_inner())));
         Ok(())
     }
 }
@@ -247,7 +278,7 @@ impl VirtualTagDirectory {
 }
 
 impl TagTree for VirtualTagDirectory {
-    fn get_tag(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
+    fn open_tag(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
         let path = self.path_for_tag(path).ok_or(Error::FileNotFound)?;
         let file = read(path).map_err(|_| Error::FailedToReadFile)?;
         return ringhopper_structs::read_any_tag_from_file_buffer(&file, ParseStrictness::Strict)
