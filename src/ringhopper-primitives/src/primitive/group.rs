@@ -95,6 +95,9 @@ pub enum TagGroup {
     WeatherParticleSystem,
     Wind,
 
+    /// Denotes the state of the tag group not being set.
+    ///
+    /// This is considered invalid at runtime, but some fields that use tag groups may not always have a tag group set.
     #[default]
     _Unset
 }
