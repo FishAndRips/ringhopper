@@ -294,6 +294,7 @@ pub enum ObjectType {
     NamedObject(String),
     Reflexive(String),
     TagReference(TagReference),
+    TagGroup,
     Data,
     F32,
     U8,
@@ -334,6 +335,7 @@ impl ObjectType {
             Self::U8 | Self::I8 => 0x1,
             Self::Rectangle | Self::Vector2DInt => Self::I16.primitive_size() * self.composite_count(),
             Self::ScenarioScriptNodeValue => 0x4,
+            Self::TagGroup => 0x4,
             Self::Vector2D
             | Self::Vector3D
             | Self::Plane2D
@@ -357,6 +359,7 @@ impl ObjectType {
             Self::NamedObject(_) => 1,
             Self::Data => 1,
             Self::TagID => 1,
+            Self::TagGroup => 1,
             Self::F32 | Self::Angle | Self::U32 | Self::Address | Self::I32 | Self::ColorARGBInt => 1,
             Self::U16 | Self::I16 | Self::Index => 1,
             Self::U8 | Self::I8 => 1,
@@ -379,13 +382,28 @@ impl ObjectType {
 
     const fn primitive_value_type(&self) -> Option<StaticValue> {
         match self {
-            Self::NamedObject(_) | Self::Data | Self::TagID | Self::Address | Self::ScenarioScriptNodeValue => None,
+            Self::NamedObject(_)
+            | Self::Data
+            | Self::TagID
+            | Self::Address
+            | Self::ScenarioScriptNodeValue
+            | Self::TagGroup => None,
 
-            Self::TagReference(_) | Self::String32 => Some(StaticValue::String(String::new())),
+            Self::TagReference(_)
+            | Self::String32 => Some(StaticValue::String(String::new())),
 
-            Self::U8 | Self::U16 | Self::Index | Self::U32 | Self::ColorARGBInt | Self::Reflexive(_) => Some(StaticValue::Uint(0)),
+            Self::U8
+            | Self::U16
+            | Self::Index
+            | Self::U32
+            | Self::ColorARGBInt
+            | Self::Reflexive(_) => Some(StaticValue::Uint(0)),
 
-            Self::I8 | Self::I16 | Self::I32 | Self::Rectangle | Self::Vector2DInt => Some(StaticValue::Int(0)),
+            Self::I8
+            | Self::I16
+            | Self::I32
+            | Self::Rectangle
+            | Self::Vector2DInt => Some(StaticValue::Int(0)),
 
             Self::F32
             | Self::Angle

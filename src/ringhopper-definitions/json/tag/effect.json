@@ -156,8 +156,9 @@
                 "size": 12
             },
             {
-                "name": "type class",
-                "type": "uint32",
+                "name": "type identifier",
+                "type": "TagGroup",
+                "description": "Must be the same or a supergroup of type. Can be damage_effect, decal, light, object, particle_system, or sound",
                 "cache_only": true
             },
             {
@@ -165,11 +166,11 @@
                 "type": "TagReference",
                 "groups": [
                     "damage_effect",
+                    "decal",
+                    "light",
                     "object",
                     "particle_system",
-                    "sound",
-                    "decal",
-                    "light"
+                    "sound"
                 ]
             },
             {

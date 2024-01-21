@@ -350,7 +350,7 @@
         "fields": [
             {
                 "name": "signature",
-                "type": "uint32",
+                "type": "TagGroup",
                 "hidden": true
             },
             {

@@ -1624,7 +1624,7 @@
             },
             {
                 "name": "signature",
-                "type": "uint32",
+                "type": "TagGroup",
                 "cache_only": true
             }
         ],
@@ -1658,7 +1658,7 @@
             },
             {
                 "name": "signature",
-                "type": "uint32",
+                "type": "TagGroup",
                 "cache_only": true
             }
         ],

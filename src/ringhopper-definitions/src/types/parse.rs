@@ -686,6 +686,7 @@ impl LoadFromSerdeJSON for ObjectType {
         match field_type {
             "Reflexive" => Self::Reflexive(oget_str!(object, "struct").to_owned()),
             "TagReference" => Self::TagReference(TagReference::load_from_json(object)),
+            "TagGroup" => Self::TagGroup,
             "Data" => Self::Data,
             "float" => Self::F32,
             "uint8" => Self::U8,

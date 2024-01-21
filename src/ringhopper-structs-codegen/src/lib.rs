@@ -102,6 +102,7 @@ impl ToTokenStream for Struct {
                     ObjectType::String32 => "String32".to_owned(),
                     ObjectType::TagID => "ID".to_owned(),
                     ObjectType::TagReference(_) => "TagReference".to_owned(),
+                    ObjectType::TagGroup => "TagGroup".to_owned(),
                     ObjectType::U16 => "u16".to_owned(),
                     ObjectType::U32 => "u32".to_owned(),
                     ObjectType::U8 => "u8".to_owned(),
