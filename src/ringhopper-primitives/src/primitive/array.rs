@@ -1,4 +1,5 @@
 use std::any::Any;
+use std::mem::MaybeUninit;
 use crate::dynamic::*;
 use crate::parse::*;
 use crate::error::*;
@@ -73,35 +74,47 @@ impl<T: TagData + Default> Default for Bounds<T> {
     }
 }
 
-impl<T: TagData + Sized + Default, const U: usize> TagData for [T; U] {
+impl<T: TagData + Sized, const U: usize> TagData for [T; U] {
     fn size() -> usize {
         T::size() * U
     }
-    fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> {
+    fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> where T: Sized {
         let element_length = T::size();
         let mut at_offset = at;
-        let mut error: RinghopperResult<()> = Ok(());
+        let mut error: Option<Error> = None;
 
-        // TODO: replace with std::array::try_from_fn when it is stabilized
-        let s: Self = std::array::from_fn(|_| {
-            let mut read_it = || -> RinghopperResult<T> {
-                error?;
+        let mut uninited: [MaybeUninit<T>; U] = unsafe { MaybeUninit::uninit().assume_init() };
+        let mut actual_count = 0;
 
-                let result = T::read_from_tag_file(data, at_offset, struct_end, extra_data_cursor)?;
-                at_offset = at_offset.add_overflow_checked(element_length)?;
-                Ok(result)
-            };
+        let mut next = || -> RinghopperResult<T> {
+            let result = T::read_from_tag_file(data, at_offset, struct_end, extra_data_cursor)?;
+            at_offset = at_offset.add_overflow_checked(element_length)?;
+            Ok(result)
+        };
 
-            match read_it() {
+        for elem in &mut uninited {
+            let value = match next() {
                 Ok(n) => n,
                 Err(e) => {
-                    error = Err(e);
-                    Default::default()
+                    error = Some(e);
+                    break;
                 }
-            }
-        });
+            };
+            elem.write(value);
+            actual_count += 1;
+        }
 
-        error.map(|_| s)
+        if let Some(e) = error {
+            for i in &mut uninited[0..actual_count] {
+                unsafe { i.assume_init_drop() }
+            }
+            return Err(e);
+        }
+
+        // workaround: std::mem::transmute complains that it is not a fixed size even though it is
+        unsafe {
+            Ok(std::ptr::read(&uninited as *const _ as *const Self))
+        }
     }
     fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {
         let element_length = T::size();
@@ -116,7 +129,7 @@ impl<T: TagData + Sized + Default, const U: usize> TagData for [T; U] {
     }
 }
 
-impl<T: DynamicTagData + Sized + Default, const U: usize> DynamicTagData for [T; U] {
+impl<T: DynamicTagData + Sized, const U: usize> DynamicTagData for [T; U] {
     fn get_field(&self, _field: &str) -> Option<&dyn DynamicTagData> {
         None
     }
@@ -150,7 +163,7 @@ impl<T: DynamicTagData + Sized + Default, const U: usize> DynamicTagData for [T;
     }
 }
 
-impl<T: DynamicTagData + Sized + Default, const U: usize> DynamicTagDataArray for [T; U] {
+impl<T: DynamicTagData + Sized, const U: usize> DynamicTagDataArray for [T; U] {
     fn get_at_index(&self, index: usize) -> Option<&dyn DynamicTagData> {
         Some(&self[index])
     }

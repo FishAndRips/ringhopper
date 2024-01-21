@@ -8,7 +8,7 @@ pub type RinghopperResult<T> = Result<T, Error>;
 /// General error type for Ringhopper.
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Error {
-    NoSuchTagGroup,
+    InvalidFourCC,
     InvalidTagPath,
     InvalidID,
     InvalidEnum,
@@ -35,7 +35,7 @@ impl Error {
             Error::InvalidTagPath => "invalid tag path",
             Error::InvalidID => "invalid ID",
             Error::InvalidEnum => "invalid enum value",
-            Error::NoSuchTagGroup => "no such tag group",
+            Error::InvalidFourCC => "invalid tag group FourCC",
             Error::InvalidTagFile => "tag file is invalid (bad header)",
             Error::CorruptedTagFile => "failed to parse the tag (tag is likely corrupt)",
             Error::TagHeaderGroupTypeMismatch => "failed to parse the tag due to it being the wrong group",

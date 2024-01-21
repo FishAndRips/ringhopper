@@ -305,9 +305,9 @@ impl TagReference {
     /// # Examples
     ///
     /// ```
-    /// use ringhopper_primitives::primitive::TagReference;
+    /// use ringhopper_primitives::primitive::{TagGroup, TagReference};
     ///
-    /// let path = TagReference::default();
+    /// let path = TagReference::Null(TagGroup::Model);
     /// assert!(path.is_null());
     /// ```
     pub const fn is_null(&self) -> bool {
@@ -366,12 +366,6 @@ impl TagReference {
     }
 }
 
-impl Default for TagReference {
-    fn default() -> Self {
-        TagReference::Null(TagGroup::none())
-    }
-}
-
 impl From<TagPath> for TagReference {
     fn from(item: TagPath) -> TagReference {
         Self::Set(item)
@@ -400,7 +394,7 @@ impl TagData for TagReference {
     fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> {
         let c_primitive = TagReferenceC::read_from_tag_file(data, at, struct_end, extra_data_cursor)?;
 
-        let group = TagGroup::from_fourcc(c_primitive.tag_group)?;
+        let group = c_primitive.tag_group.try_into()?;
         let len = c_primitive.path_length as usize;
 
         if len == 0 {

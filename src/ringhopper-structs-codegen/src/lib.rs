@@ -73,6 +73,7 @@ impl ToTokenStream for Struct {
         let fields_with_matchers = self.fields.iter().map(|s| safe_str(&s.name, SafetyLevel::Matcher)).collect::<Vec<Cow<str>>>();
 
         let field_count = self.fields.len();
+        let mut default_code = String::new();
 
         for i in 0..field_count {
             let field_name = &fields_with_names[i];
@@ -127,6 +128,12 @@ impl ToTokenStream for Struct {
             else {
                 if !field.flags.exclude {
                     writeln!(&mut fields, "pub {field_name}: {field_type},").unwrap();
+                    if let StructFieldType::Object(ObjectType::TagReference(reference)) = &field.field_type {
+                        writeln!(&mut default_code, "{field_name}: TagReference::Null(TagGroup::{}),", camel_case(&reference.allowed_groups[0])).unwrap();
+                    }
+                    else {
+                        writeln!(&mut default_code, "{field_name}: Default::default(),").unwrap();
+                    }
                 }
                 fields_read_from_tags.push(!field.flags.cache_only);
                 fields_read_from_caches.push(!field.flags.non_cached);
@@ -137,7 +144,7 @@ impl ToTokenStream for Struct {
         }
 
         let structure = format!("
-        #[derive(Clone, PartialEq, Default, Debug)]
+        #[derive(Clone, PartialEq, Debug)]
         pub struct {struct_name} {{
             {fields}
         }}").parse::<TokenStream>().unwrap();
@@ -170,7 +177,9 @@ impl ToTokenStream for Struct {
                 }
                 else {
                     writeln!(&mut read_in, "{read_code};").unwrap();
-                    writeln!(&mut write_out, "<{field_type}>::default().write_to_tag_file(data, _pos, struct_end)?;").unwrap();
+                    if !matches!(self.fields[i].field_type, StructFieldType::Object(ObjectType::TagReference(_))) {
+                        writeln!(&mut write_out, "<{field_type}>::default().write_to_tag_file(data, _pos, struct_end)?;").unwrap();
+                    }
                 }
             }
 
@@ -194,6 +203,14 @@ impl ToTokenStream for Struct {
                 let mut _pos = at;
                 {write_out}
                 Ok(())
+            }}
+        }}
+
+        impl Default for {struct_name} {{
+            fn default() -> Self {{
+                Self {{
+                    {default_code}
+                }}
             }}
         }}
 

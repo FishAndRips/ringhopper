@@ -8,6 +8,26 @@ fn parse_bounds() {
     assert_eq!(Bounds { lower: -1.0f32, upper: 1.0f32 }, b);
 }
 
+
+struct TagReferenceHolder {
+    pub reference: [TagReference; 4]
+}
+
+impl TagData for TagReferenceHolder {
+    fn size() -> usize where Self: Sized {
+        <[TagReference; 4] as TagData>::size()
+    }
+
+    fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> where Self: Sized {
+        let reference = <[TagReference; 4]>::read_from_tag_file(data, at, struct_end, extra_data_cursor)?;
+        Ok(Self { reference })
+    }
+
+    fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {
+        self.reference.write_to_tag_file(data, at, struct_end)
+    }
+}
+
 #[test]
 fn parse_array() {
     let array_of_references: &[u8] = &[
@@ -29,9 +49,9 @@ fn parse_array() {
         0x77, 0x65, 0x61, 0x70, 0x6F, 0x6E, 0x73, 0x5C, 0x74, 0x68, 0x65, 0x66, 0x69, 0x6E, 0x61, 0x6C, 0x77, 0x65, 0x61, 0x70, 0x6F, 0x6E, 0x5C, 0x74, 0x68, 0x65, 0x66, 0x69, 0x6E, 0x61, 0x6C, 0x77, 0x65, 0x61, 0x70, 0x6F, 0x6E, 0x00
     ];
 
-    let references = <[TagReference; 4]>::read_from_tag_file(&array_of_references, 0, 0x40, &mut 0x40).expect("should work");
-    assert_eq!(TagReference::Set(TagPath::new("weapons\\someweapon\\someweapon", TagGroup::Weapon).unwrap()), references[0]);
-    assert_eq!(TagReference::Null(TagGroup::Weapon), references[1]);
-    assert_eq!(TagReference::Set(TagPath::new("weapons\\anotherweapon\\anotherweapon", TagGroup::Model).unwrap()), references[2]);
-    assert_eq!(TagReference::Set(TagPath::new("weapons\\thefinalweapon\\thefinalweapon", TagGroup::Projectile).unwrap()), references[3]);
+    let references = TagReferenceHolder::read_from_tag_file(&array_of_references, 0, 0x40, &mut 0x40).expect("should work");
+    assert_eq!(TagReference::Set(TagPath::new("weapons\\someweapon\\someweapon", TagGroup::Weapon).unwrap()), references.reference[0]);
+    assert_eq!(TagReference::Null(TagGroup::Weapon), references.reference[1]);
+    assert_eq!(TagReference::Set(TagPath::new("weapons\\anotherweapon\\anotherweapon", TagGroup::Model).unwrap()), references.reference[2]);
+    assert_eq!(TagReference::Set(TagPath::new("weapons\\thefinalweapon\\thefinalweapon", TagGroup::Projectile).unwrap()), references.reference[3]);
 }

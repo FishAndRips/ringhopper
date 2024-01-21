@@ -96,7 +96,7 @@ pub enum TagGroup {
     Wind,
 
     #[default]
-    _None,
+    _Unset
 }
 
 impl Ord for TagGroup {
@@ -196,7 +196,7 @@ const ALL_GROUPS: &'static [(&'static str, TagGroup, FourCC)] = &[
     ("weapon_hud_interface", TagGroup::WeaponHUDInterface, 0x77706869),
     ("weather_particle_system", TagGroup::WeatherParticleSystem, 0x7261696E),
     ("wind", TagGroup::Wind, 0x77696E64),
-    ("zz_<none>", TagGroup::_None, 0x00000000),
+    ("<unset>", TagGroup::_Unset, 0x00000000),
 ];
 
 impl TagGroup {
@@ -209,11 +209,11 @@ impl TagGroup {
 
     /// Convert the string value to a tag group if it exists.
     ///
-    /// Returns an error if it isn't valid.
+    /// Returns an error `Error::NoSuchTagGroup` if `str` doesn't correspond to a group.
     pub fn from_str(str: &str) -> RinghopperResult<TagGroup> {
         ALL_GROUPS.binary_search_by(|probe| probe.0.cmp(str))
             .map(|n| ALL_GROUPS[n].1)
-            .map_err(|_| Error::NoSuchTagGroup)
+            .map_err(|_| Error::InvalidFourCC)
     }
 
     /// Get the FourCC value of the tag group.
@@ -223,22 +223,17 @@ impl TagGroup {
 
     /// Convert the `FourCC` value to a tag group if it exists.
     ///
-    /// Returns an error if it doesn't correspond to a group.
-    pub const fn from_fourcc(fourcc: FourCC) -> RinghopperResult<TagGroup> {
+    /// Returns `None` if no such tag group exists.
+    pub const fn from_fourcc(fourcc: FourCC) -> Option<TagGroup> {
         let mut i = 0;
         while i < ALL_GROUPS.len() {
             let group = &ALL_GROUPS[i];
             if group.2 == fourcc {
-                return Ok(group.1)
+                return Some(group.1)
             }
             i += 1;
         }
-        Err(Error::NoSuchTagGroup)
-    }
-
-    /// Corresponds to no tag group.
-    pub const fn none() -> TagGroup {
-        TagGroup::_None
+        None
     }
 }
 
@@ -251,7 +246,7 @@ impl Display for TagGroup {
 impl TryFrom<FourCC> for TagGroup {
     type Error = Error;
     fn try_from(value: FourCC) -> RinghopperResult<Self> {
-        TagGroup::from_fourcc(value)
+        TagGroup::from_fourcc(value).ok_or(Error::InvalidFourCC)
     }
 }
 

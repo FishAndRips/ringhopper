@@ -96,7 +96,7 @@ pub const IGNORED_CRC32: u32 = 0xFFFFFFFF;
 pub const BLAM_FOURCC: u32 = 0x626C616D;
 
 /// Structure for identifying and validating a tag file, stored at the beginning of all tag files.
-#[derive(Copy, Clone, PartialEq, Default)]
+#[derive(Copy, Clone, PartialEq)]
 #[repr(C)]
 pub struct TagFileHeader {
     /// Some ID value; not set on most tags, and always unused.
@@ -132,6 +132,19 @@ impl TagDataSimplePrimitive for TagFileHeader {
         const _: () = assert!(std::mem::size_of::<TagFileHeader>() == 0x40);
         std::mem::size_of::<TagFileHeader>()
     }
+    fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
+        Ok(Self {
+            id: ID::read::<B>(data, at + 0x00, struct_end).unwrap_or(ID::null()),
+            string: String32::read::<B>(data, at + 0x04, struct_end)?,
+            group: TagGroup::read::<B>(data, at + 0x24, struct_end)?,
+            crc32: u32::read::<B>(data, at + 0x28, struct_end)?,
+            header_size: u32::read::<B>(data, at + 0x2C, struct_end)?,
+            padding: Padding::<[u8; 8]>::read::<B>(data, at + 0x30, struct_end)?,
+            version: u16::read::<B>(data, at + 0x38, struct_end)?,
+            u16_255: u16::read::<B>(data, at + 0x3A, struct_end)?,
+            blam_fourcc: u32::read::<B>(data, at + 0x3C, struct_end)?,
+        })
+    }
     fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
         if self.id.is_null() {
             0u32.write::<B>(data, at + 0x00, struct_end)?;
@@ -148,19 +161,6 @@ impl TagDataSimplePrimitive for TagFileHeader {
         self.u16_255.write::<B>(data, at + 0x3A, struct_end)?;
         self.blam_fourcc.write::<B>(data, at + 0x3C, struct_end)?;
         Ok(())
-    }
-    fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
-        Ok(Self {
-            id: ID::read::<B>(data, at + 0x00, struct_end).unwrap_or(ID::null()),
-            string: String32::read::<B>(data, at + 0x04, struct_end)?,
-            group: TagGroup::read::<B>(data, at + 0x24, struct_end)?,
-            crc32: u32::read::<B>(data, at + 0x28, struct_end)?,
-            header_size: u32::read::<B>(data, at + 0x2C, struct_end)?,
-            padding: Padding::<[u8; 8]>::read::<B>(data, at + 0x30, struct_end)?,
-            version: u16::read::<B>(data, at + 0x38, struct_end)?,
-            u16_255: u16::read::<B>(data, at + 0x3A, struct_end)?,
-            blam_fourcc: u32::read::<B>(data, at + 0x3C, struct_end)?,
-        })
     }
 }
 
@@ -232,7 +232,9 @@ impl TagFile {
             header_size: header_len as u32,
             version: T::version(),
             u16_255: 0x00FF,
-            ..Default::default()
+            string: Default::default(),
+            id: Default::default(),
+            padding: Default::default()
         };
         new_header.write_to_tag_file(&mut data, 0, header_len).expect("writing the tag file header should always work");
 
