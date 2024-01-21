@@ -9,10 +9,20 @@ use primitives::tag::{ParseStrictness, PrimaryTagStructDyn};
 
 /// Tag tree implementation for traversing and loading/saving tags.
 pub trait TagTree {
-    /// Get the tag in the tag tree if it exists.
+    /// Get a copy of the tag in the tag tree if it exists.
     ///
     /// Returns `Err` if it does not exist.
-    fn open_tag(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>>;
+    fn open_tag_copy(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>>;
+
+    /// Open the tag, getting a thread-safe, potentially shared version of the tag.
+    ///
+    /// For tag trees that implement caching, this can return a direct reference to the in-cache version of the tag,
+    /// preventing an extra copy.
+    ///
+    /// If this is not overridden, a copy will be returned, instead.
+    fn open_tag_shared(&self, path: &TagPath) -> RinghopperResult<Arc<Mutex<Box<dyn PrimaryTagStructDyn>>>> {
+        self.open_tag_copy(path).map(|b| Arc::new(Mutex::new(b)))
+    }
 
     /// Get all files in the path.
     ///
@@ -166,13 +176,6 @@ impl<T: TagTree> CachingTagTree<T> {
             .map(Clone::clone)
     }
 
-    /// Load the tag if the tag is not already loaded, and then get a direct reference to it in the cache.
-    ///
-    /// Returns [`Error`] if the tag failed to load for some reason.
-    pub fn load_and_get(&mut self, path: &TagPath) -> RinghopperResult<Arc<Mutex<Box<dyn PrimaryTagStructDyn>>>> {
-        self.open_and_cache_tag(path)
-    }
-
     /// Evict a tag from the tag cache and return it if it existed.
     ///
     /// Returns `None` if no such tag was found in the cache.
@@ -210,23 +213,22 @@ impl<T: TagTree> CachingTagTree<T> {
 
         errors
     }
+}
 
-    fn open_and_cache_tag(&self, path: &TagPath) -> RinghopperResult<Arc<Mutex<Box<dyn PrimaryTagStructDyn>>>> {
+impl<T: TagTree> TagTree for CachingTagTree<T> {
+    fn open_tag_copy(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
+        self.open_tag_shared(path)
+            .map(|tag| tag.lock().unwrap().clone_inner())
+    }
+    fn open_tag_shared(&self, path: &TagPath) -> RinghopperResult<Arc<Mutex<Box<dyn PrimaryTagStructDyn>>>> {
         let mut cache = self.tag_cache.lock().unwrap();
         if let Some(n) = cache.get(path) {
             return Ok(n.clone())
         }
-        let result = self.inner.open_tag(path)?;
+        let result = self.inner.open_tag_copy(path)?;
         let cached = Arc::new(Mutex::new(result));
         cache.insert(path.clone(), cached.clone());
         Ok(cached)
-    }
-}
-
-impl<T: TagTree> TagTree for CachingTagTree<T> {
-    fn open_tag(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
-        self.open_and_cache_tag(path)
-            .map(|tag| tag.lock().unwrap().clone_inner())
     }
     fn files_in_path(&self, path: &str) -> Option<Vec<TagTreeItem>> {
         self.inner.files_in_path(path)
@@ -278,7 +280,7 @@ impl VirtualTagDirectory {
 }
 
 impl TagTree for VirtualTagDirectory {
-    fn open_tag(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
+    fn open_tag_copy(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
         let path = self.path_for_tag(path).ok_or(Error::FileNotFound)?;
         let file = read(path).map_err(|_| Error::FailedToReadFile)?;
         return ringhopper_structs::read_any_tag_from_file_buffer(&file, ParseStrictness::Strict)
@@ -350,3 +352,6 @@ impl TagTree for VirtualTagDirectory {
 
 #[cfg(test)]
 mod test;
+
+#[cfg(test)]
+pub(crate) use self::test::MockTagTree;

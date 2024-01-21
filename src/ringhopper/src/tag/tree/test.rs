@@ -7,6 +7,36 @@ use primitives::primitive::{TagGroup, TagPath};
 use primitives::tag::PrimaryTagStructDyn;
 use tag::tree::{CachingTagTree, CachingTagTreeWriteStrategy, TagTree, TagTreeItem, VirtualTagDirectory};
 
+
+#[derive(Default)]
+pub(crate) struct MockTagTree {
+    pub items: HashMap<String, Option<Box<dyn PrimaryTagStructDyn>>>,
+    pub get_tag_calls: Mutex<Vec<TagPath>>,
+    pub write_tag_calls: Mutex<Vec<TagPath>>
+}
+
+impl TagTree for MockTagTree {
+    fn open_tag_copy(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
+        let b = self
+            .items
+            .get(&path.to_string())
+            .unwrap_or_else(|| panic!("can't open {path} in mocked tag tree", path=path))
+            .as_ref()
+            .unwrap()
+            .clone_inner();
+        self.get_tag_calls.lock().unwrap().push(path.to_owned());
+        Ok(b)
+    }
+    fn files_in_path(&self, _path: &str) -> Option<Vec<TagTreeItem>> {
+        unimplemented!()
+    }
+    fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<()> {
+        self.write_tag_calls.lock().unwrap().push(path.to_owned());
+        self.items.insert(path.to_string(), Some(tag.clone_inner()));
+        Ok(())
+    }
+}
+
 #[test]
 fn test_tag_tree_traversal() {
     let path = Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -49,29 +79,6 @@ fn test_tag_tree_traversal() {
 
 #[test]
 fn caching_tag_tree() {
-    #[derive(Default)]
-    struct MockTagTree {
-        items: HashMap<String, Option<Box<dyn PrimaryTagStructDyn>>>,
-        get_tag_calls: Mutex<Vec<TagPath>>,
-        write_tag_calls: Mutex<Vec<TagPath>>
-    }
-
-    impl TagTree for MockTagTree {
-        fn open_tag(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
-            let b = self.items.get(&path.to_string()).unwrap().as_ref().unwrap().clone_inner();
-            self.get_tag_calls.lock().unwrap().push(path.to_owned());
-            Ok(b)
-        }
-        fn files_in_path(&self, _path: &str) -> Option<Vec<TagTreeItem>> {
-            unimplemented!()
-        }
-        fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<()> {
-            self.write_tag_calls.lock().unwrap().push(path.to_owned());
-            self.items.insert(path.to_string(), Some(tag.clone_inner()));
-            Ok(())
-        }
-    }
-
     fn generate_test_data(write_strategy: CachingTagTreeWriteStrategy) -> CachingTagTree<MockTagTree> {
         let mut tag_tree = MockTagTree::default();
         tag_tree.items.insert("weapons".to_owned(), None);
@@ -87,28 +94,28 @@ fn caching_tag_tree() {
     let dummy_model = TagPath::from_path("weapons\\dummy\\dummy.model").unwrap();
 
     let mut instant = generate_test_data(CachingTagTreeWriteStrategy::Instant);
-    let mut tag_data = instant.open_tag(&TagPath::from_path("weapons\\dummy\\dummy.model").unwrap()).unwrap();
+    let mut tag_data = instant.open_tag_copy(&TagPath::from_path("weapons\\dummy\\dummy.model").unwrap()).unwrap();
     let model = tag_data.get_mut::<Model>().unwrap();
     model.flags.blend_shared_normals = true;
     instant.write_tag(&dummy_model, model).unwrap();
     assert_eq!(instant.inner().get_tag_calls.lock().unwrap().as_slice(), &[dummy_model.clone()]);
     assert_eq!(instant.inner().write_tag_calls.lock().unwrap().as_slice(), &[dummy_model.clone()]);
-    assert!(instant.inner.open_tag(&dummy_model).unwrap().get_ref::<Model>().unwrap().flags.blend_shared_normals);
+    assert!(instant.inner.open_tag_copy(&dummy_model).unwrap().get_ref::<Model>().unwrap().flags.blend_shared_normals);
 
     let mut manual = generate_test_data(CachingTagTreeWriteStrategy::Manual);
-    let mut tag_data = manual.open_tag(&TagPath::from_path("weapons\\dummy\\dummy.model").unwrap()).unwrap();
+    let mut tag_data = manual.open_tag_copy(&TagPath::from_path("weapons\\dummy\\dummy.model").unwrap()).unwrap();
     let model = tag_data.get_mut::<Model>().unwrap();
     model.flags.blend_shared_normals = true;
     manual.write_tag(&dummy_model, model).unwrap();
     assert_eq!(manual.inner().get_tag_calls.lock().unwrap().as_slice(), &[dummy_model.clone()]);
     assert_eq!(manual.inner().write_tag_calls.lock().unwrap().as_slice(), &[]); // should not have actually been written yet
-    assert!(!manual.inner.open_tag(&dummy_model).unwrap().get_ref::<Model>().unwrap().flags.blend_shared_normals);
-    assert!(manual.open_tag(&dummy_model).unwrap().get_ref::<Model>().unwrap().flags.blend_shared_normals); // but the tag in the cache should be modified at least
+    assert!(!manual.inner.open_tag_copy(&dummy_model).unwrap().get_ref::<Model>().unwrap().flags.blend_shared_normals);
+    assert!(manual.open_tag_copy(&dummy_model).unwrap().get_ref::<Model>().unwrap().flags.blend_shared_normals); // but the tag in the cache should be modified at least
     assert!(manual.commit_all().is_empty());
     assert_eq!(manual.inner().write_tag_calls.lock().unwrap().as_slice(), &[dummy_model.clone()]); // now that we've written it, it should've been saved
-    assert!(manual.inner.open_tag(&dummy_model).unwrap().get_ref::<Model>().unwrap().flags.blend_shared_normals); // and it has
+    assert!(manual.inner.open_tag_copy(&dummy_model).unwrap().get_ref::<Model>().unwrap().flags.blend_shared_normals); // and it has
 
     // Editing tags in the cache directly should also work
     manual.get(&dummy_model).unwrap().lock().unwrap().get_mut::<Model>().unwrap().flags.blend_shared_normals = false;
-    assert!(!manual.open_tag(&dummy_model).unwrap().get_ref::<Model>().unwrap().flags.blend_shared_normals);
+    assert!(!manual.open_tag_copy(&dummy_model).unwrap().get_ref::<Model>().unwrap().flags.blend_shared_normals);
 }
