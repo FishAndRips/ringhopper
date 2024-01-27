@@ -122,7 +122,7 @@ pub(crate) fn fits(size: usize, at: usize, vec_size: usize) -> RinghopperResult<
 
     // If we're outside of the data bounds, fail.
     if end > vec_size {
-        Err(Error::CorruptedTagFile)
+        Err(Error::TagParseFailure)
     }
     else {
         Ok(end)

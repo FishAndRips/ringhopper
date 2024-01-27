@@ -8,7 +8,7 @@ use std::fmt::Write;
 use crate::dynamic::{DynamicTagData, DynamicTagDataType};
 
 /// Halo path separator
-pub(crate) const HALO_PATH_SEPARATOR: char = '\\';
+pub const HALO_PATH_SEPARATOR: char = '\\';
 
 /// Refers to a tag path and provides functions for handling these.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -159,7 +159,7 @@ impl TagPath {
     /// assert_eq!(path.group(), TagGroup::Weapon);
     /// ```
     pub fn from_path(path: &str) -> RinghopperResult<Self> {
-        let (path_without_extension, group) = Self::split_str_path(path).ok_or(Error::InvalidTagFile)?;
+        let (path_without_extension, group) = Self::split_str_path(path).ok_or(Error::InvalidTagPath)?;
         Self::new(path_without_extension, group)
     }
 
@@ -394,7 +394,7 @@ impl TagData for TagReference {
     fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> {
         let c_primitive = TagReferenceC::read_from_tag_file(data, at, struct_end, extra_data_cursor)?;
 
-        let group = c_primitive.tag_group.try_into()?;
+        let group = c_primitive.tag_group;
         let len = c_primitive.path_length as usize;
 
         if len == 0 {
@@ -425,7 +425,7 @@ impl TagData for TagReference {
         let construct_to_write = match self {
             TagReference::Null(group) => {
                 TagReferenceC {
-                    tag_group: group.as_fourcc(),
+                    tag_group: *group,
                     ..Default::default()
                 }
             },
@@ -433,7 +433,7 @@ impl TagData for TagReference {
                 data.extend_from_slice(path.path.as_bytes());
                 data.push(0x00);
                 TagReferenceC {
-                    tag_group: path.group.as_fourcc(),
+                    tag_group: path.group,
                     path_length: path.path.len().into_u32()?,
                     ..Default::default()
                 }
@@ -473,7 +473,7 @@ impl DynamicTagData for TagReference {
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 #[repr(C)]
 pub struct TagReferenceC {
-    pub tag_group: FourCC,
+    pub tag_group: TagGroup,
     pub path_address: Address,
     pub path_length: u32,
     pub tag_id: ID
@@ -484,7 +484,7 @@ impl TagDataSimplePrimitive for TagReferenceC {
     }
 
     fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
-        let tag_group = FourCC::read::<B>(data, at, struct_end)?;
+        let tag_group_fourcc = FourCC::read::<B>(data, at, struct_end)?;
         let path_address = Address::read::<B>(data, at + 0x4, struct_end)?;
         let path_length = u32::read::<B>(data, at + 0x8, struct_end)?;
 
@@ -496,6 +496,7 @@ impl TagDataSimplePrimitive for TagReferenceC {
             ID::from_u32(tag_id_int)
         };
 
+        let tag_group = TagGroup::from_fourcc(tag_group_fourcc).unwrap_or(TagGroup::_Unset);
         Ok(Self { tag_group, path_address, path_length, tag_id })
     }
 

@@ -297,7 +297,7 @@ impl TagFile {
         // As such, the data we just read CANNOT be trusted, as the data is potentially corrupt. Also, saving the tag in
         // this state will always corrupt it even further. Therefore, we have to error here.
         if cursor != data_after_header.len() {
-            return Err(Error::CorruptedTagFile);
+            return Err(Error::TagParseFailure);
         }
 
         Ok(result)

@@ -2,6 +2,7 @@ use std::process::ExitCode;
 
 mod cli;
 mod verb;
+mod util;
 
 extern crate ringhopper;
 

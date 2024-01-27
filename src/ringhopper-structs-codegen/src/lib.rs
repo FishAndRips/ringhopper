@@ -136,8 +136,8 @@ impl ToTokenStream for Struct {
                         writeln!(&mut default_code, "{field_name}: Default::default(),").unwrap();
                     }
                 }
-                fields_read_from_tags.push(!field.flags.cache_only);
-                fields_read_from_caches.push(!field.flags.non_cached);
+                fields_read_from_tags.push(!field.flags.cache_only && !field.flags.exclude);
+                fields_read_from_caches.push(!field.flags.non_cached && !field.flags.exclude);
             }
 
             fields_with_types.push(field_type);
@@ -162,28 +162,35 @@ impl ToTokenStream for Struct {
         for i in 0..field_count {
             let length = &fields_with_sizes[i];
 
+            let field_name = &fields_with_names[i];
+            let field_matcher = &fields_with_matchers[i];
+            let field_type = &fields_with_types[i];
+            let read_code = format!("<{field_type}>::read_from_tag_file(data, _pos, struct_end, extra_data_cursor)?");
+
             if fields_read_from_tags[i] {
-                let field_name = &fields_with_names[i];
-                let field_matcher = &fields_with_matchers[i];
-                let field_type = &fields_with_types[i];
-
-                let read_code = format!("<{field_type}>::read_from_tag_file(data, _pos, struct_end, extra_data_cursor)?");
-
-                if !self.fields[i].flags.exclude {
-                    writeln!(&mut read_in, "output.{field_name} = {read_code};").unwrap();
-                    writeln!(&mut write_out, "self.{field_name}.write_to_tag_file(data, _pos, struct_end)?;").unwrap();
-                    write!(&mut field_list, "\"{field_matcher}\",").unwrap();
-                    writeln!(&mut getter, "\"{field_matcher}\" => Some(&self.{field_name}),").unwrap();
-                    writeln!(&mut getter_mut, "\"{field_matcher}\" => Some(&mut self.{field_name}),").unwrap();
+                writeln!(&mut read_in, "output.{field_name} = {read_code};").unwrap();
+                writeln!(&mut write_out, "self.{field_name}.write_to_tag_file(data, _pos, struct_end)?;").unwrap();
+                write!(&mut field_list, "\"{field_matcher}\",").unwrap();
+                writeln!(&mut getter, "\"{field_matcher}\" => Some(&self.{field_name}),").unwrap();
+                writeln!(&mut getter_mut, "\"{field_matcher}\" => Some(&mut self.{field_name}),").unwrap();
+            }
+            else if let StructFieldType::Object(object_type) = &self.fields[i].field_type {
+                let should_output_code_anyway = if let ObjectType::NamedObject(o) = object_type {
+                    match definitions.objects[o] {
+                        NamedObject::Enum(_) | NamedObject::Bitfield(_) => false,
+                        NamedObject::Struct(_) => true
+                    }
                 }
                 else {
+                    true
+                };
+                if should_output_code_anyway {
                     writeln!(&mut read_in, "{read_code};").unwrap();
                     if !matches!(self.fields[i].field_type, StructFieldType::Object(ObjectType::TagReference(_))) {
                         writeln!(&mut write_out, "<{field_type}>::default().write_to_tag_file(data, _pos, struct_end)?;").unwrap();
                     }
                 }
             }
-
             writeln!(&mut write_out, "let _pos = _pos.add_overflow_checked({length})?;").unwrap();
             writeln!(&mut read_in, "let _pos = _pos.add_overflow_checked({length})?;").unwrap();
         }

@@ -1,10 +1,10 @@
 use std::borrow::Cow;
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::fs::{read, write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use primitives::error::{Error, RinghopperResult};
-use primitives::primitive::{TagGroup, TagPath};
+use primitives::primitive::{HALO_PATH_SEPARATOR, TagGroup, TagPath};
 use primitives::tag::{ParseStrictness, PrimaryTagStructDyn};
 
 /// Tag tree implementation for traversing and loading/saving tags.
@@ -35,6 +35,180 @@ pub trait TagTree {
     /// Get the root tag tree item.
     fn root(&self) -> TagTreeItem where Self: Sized {
         TagTreeItem::new(TagTreeItemType::Directory, Cow::default(), None, self)
+    }
+}
+
+/// Tag filter
+///
+/// This allows you to match groups with wildcard expressions.
+///
+/// # Wildcards:
+/// - `*` matches any number of characters, including no characters
+/// - `?` matches any one character
+///
+/// # Examples:
+/// - `*` matches anything as a catch-all
+/// - `*.bitmap` matches any bitmap if `group` is unset (if group is set, it matches any `.bitmap.<group>`)
+pub struct TagFilter {
+    filter: String,
+    group: Option<TagGroup>
+}
+
+impl TagFilter {
+    /// Check if the given path is likely a filter.
+    pub fn is_filter(path: &str) -> bool {
+        path.chars().any(|c| c == '?' || c == '*')
+    }
+
+    /// Create a tag filter.
+    ///
+    /// If `group` is None, then the filter matches the whole path including group. Otherwise, the filter matches only
+    /// the path, while the group matches the group.
+    pub fn new(filter: &str, group: Option<TagGroup>) -> Self {
+        let mut fixed = String::with_capacity(filter.len());
+        for c in filter.chars() {
+            if std::path::is_separator(c) {
+                fixed.push(HALO_PATH_SEPARATOR)
+            }
+            else {
+                fixed.push(c)
+            }
+        }
+        Self {
+            filter: fixed,
+            group
+        }
+    }
+
+    /// Test that the path passes the filter.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ringhopper::tag::tree::TagFilter;
+    /// use ringhopper::primitives::primitive::{TagPath, TagGroup};
+    ///
+    /// let all_bitmaps = TagFilter::new("*.bitmap", None);
+    /// assert!(all_bitmaps.passes(&TagPath::from_path("something.bitmap").unwrap()));
+    /// assert!(!all_bitmaps.passes(&TagPath::from_path("something.weapon").unwrap()));
+    ///
+    /// let all_bitmaps = TagFilter::new("*", Some(TagGroup::Bitmap));
+    /// assert!(all_bitmaps.passes(&TagPath::from_path("something.bitmap").unwrap()));
+    ///
+    /// let all_some_bitmaps = TagFilter::new("some*", Some(TagGroup::Bitmap));
+    /// assert!(all_some_bitmaps.passes(&TagPath::from_path("something.bitmap").unwrap()));
+    /// assert!(!all_some_bitmaps.passes(&TagPath::from_path("nothing.bitmap").unwrap()));
+    /// assert!(!all_some_bitmaps.passes(&TagPath::from_path("something.weapon").unwrap()));
+    ///
+    /// let campaign_maps = TagFilter::new("levels\\???\\???", Some(TagGroup::Scenario));
+    /// assert!(campaign_maps.passes(&TagPath::from_path("levels\\a10\\a10.scenario").unwrap()));
+    /// assert!(!campaign_maps.passes(&TagPath::from_path("levels\\test\\wizard\\wizard.scenario").unwrap()));
+    /// ```
+    pub fn passes(&self, path: &TagPath) -> bool {
+        if let Some(n) = self.group {
+            if path.group() != n {
+                return false
+            }
+            Self::filter_passes_raw(&self.filter, path.path())
+        }
+        else {
+            Self::filter_passes_raw(&self.filter, &path.to_internal_path())
+        }
+    }
+
+    fn filter_passes_raw(mut filter: &str, mut what: &str) -> bool {
+        loop {
+            let filter_first = filter.chars().next();
+            let what_first = what.chars().next();
+
+            if filter_first.is_none() && what_first.is_none() {
+                return true
+            }
+            else if filter_first.is_none() || what_first.is_none() {
+                return false
+            }
+
+            let filter_first = filter_first.unwrap();
+            let what_first = what_first.unwrap();
+
+            filter = &filter[1..];
+            what = &what[1..];
+
+            if filter_first == '?' || filter_first == what_first {
+                continue
+            }
+            else if filter_first == '*' {
+                while filter.chars().next() == Some('*') {
+                    filter = &filter[1..]
+                }
+                if filter.is_empty() {
+                    return true
+                }
+                while !what.is_empty() {
+                    if Self::filter_passes_raw(filter, what) {
+                        return true
+                    }
+                    what = &what[1..];
+                }
+                return false
+            }
+            else {
+                return false
+            }
+        }
+    }
+}
+
+pub struct TagTreeTagIterator<'a> {
+    stack: Vec<VecDeque<TagTreeItem<'a>>>,
+    filter: Option<TagFilter>
+}
+
+pub fn iterate_through_all_tags<T: TagTree>(what: &T, filter: Option<TagFilter>) -> TagTreeTagIterator {
+    let mut iterator = TagTreeTagIterator {
+        stack: vec![],
+        filter
+    };
+
+    if let Some(n) = what.root().files() {
+        iterator.stack.push(n.into())
+    }
+
+    iterator
+}
+
+impl<'a> Iterator for TagTreeTagIterator<'a> {
+    type Item = TagPath;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            let last = self.stack.last_mut()?;
+            let first = match last.pop_front() {
+                Some(n) => n,
+                None => {
+                    self.stack.pop();
+                    continue
+                }
+            };
+
+            let found = match first.item_type {
+                TagTreeItemType::Tag => first.tag_path().unwrap_or_else(|| panic!("found a tag in the tag tree tag iterator, but it does not have a TagPath")),
+                TagTreeItemType::Directory => {
+                    if let Some(n) = first.files() {
+                        self.stack.push(n.into());
+                    }
+                    continue
+                }
+            };
+
+            if let Some(n) = &self.filter {
+                if !n.passes(&found) {
+                    continue
+                }
+            }
+
+            return Some(found)
+        }
     }
 }
 
@@ -91,7 +265,7 @@ impl<'a> TagTreeItem<'a> {
     /// Get the inner files of this directory.
     ///
     /// Returns `None` if this is not a directory or it no longer exists.
-    pub fn files(&self) -> Option<Vec<TagTreeItem>> {
+    pub fn files(&self) -> Option<Vec<TagTreeItem<'a>>> {
         if self.item_type == TagTreeItemType::Directory {
             self.tag_tree.files_in_path(&self.path)
         }
@@ -189,10 +363,10 @@ impl<T: TagTree> CachingTagTree<T> {
 
     /// Write the tag to the delegate.
     ///
-    /// Returns `Err(Error::FileNotFound)` if the tag is not open, or some other [`Error`] if an error occurs on the delegate.
+    /// Returns `Err(Error::TagNotFound)` if the tag is not open, or some other [`Error`] if an error occurs on the delegate.
     pub fn commit(&mut self, path: &TagPath) -> RinghopperResult<()> {
         let cache = self.tag_cache.lock().unwrap();
-        let tag = cache.get(path).ok_or(Error::FileNotFound)?;
+        let tag = cache.get(path).ok_or_else(|| Error::TagNotFound(path.clone()))?;
         self.inner.write_tag(path, tag.as_ref().lock().unwrap().as_ref())?;
         Ok(())
     }
@@ -281,9 +455,13 @@ impl VirtualTagDirectory {
 
 impl TagTree for VirtualTagDirectory {
     fn open_tag_copy(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
-        let path = self.path_for_tag(path).ok_or(Error::FileNotFound)?;
-        let file = read(path).map_err(|_| Error::FailedToReadFile)?;
+        let file_path = self.path_for_tag(path).ok_or_else(|| Error::TagNotFound(path.clone()))?;
+        let file = read(file_path).map_err(|_| Error::FailedToReadFile)?;
         return ringhopper_structs::read_any_tag_from_file_buffer(&file, ParseStrictness::Strict)
+            .map_err(|e| match e {
+                Error::TagParseFailure => Error::CorruptedTag(path.clone()),
+                e => e
+            })
     }
     fn files_in_path(&self, path: &str) -> Option<Vec<TagTreeItem>> {
         let mut result = Vec::new();

@@ -339,7 +339,7 @@ pub struct Parameter {
     required: bool
 }
 impl Parameter {
-    fn new(
+    pub fn new(
         name: &'static str,
         short: char,
         description: &'static str,
@@ -368,7 +368,7 @@ impl Parameter {
         }
     }
 
-    fn single(name: &'static str, short: char, description: &'static str, usage: &'static str, value_type: Option<CommandLineValueType>) -> Parameter {
+    pub fn single(name: &'static str, short: char, description: &'static str, usage: &'static str, value_type: Option<CommandLineValueType>) -> Parameter {
         Parameter::new(name, short, description, usage, value_type, if value_type.is_some() { 1 } else { 0 }, None, false, false)
     }
 }
