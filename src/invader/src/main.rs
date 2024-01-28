@@ -3,6 +3,7 @@ use std::process::ExitCode;
 mod cli;
 mod verb;
 mod util;
+mod threading;
 
 extern crate ringhopper;
 

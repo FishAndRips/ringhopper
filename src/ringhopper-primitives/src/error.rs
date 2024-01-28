@@ -2,13 +2,14 @@
 
 use std::borrow::Cow;
 use std::fmt::Display;
+use std::path::PathBuf;
 use crate::primitive::TagPath;
 
 /// General Result type for Ringhopper that uses [`Error`].
 pub type RinghopperResult<T> = Result<T, Error>;
 
 /// General error type for Ringhopper.
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Debug)]
 pub enum Error {
     InvalidFourCC,
     InvalidTagPath,
@@ -26,9 +27,10 @@ pub enum Error {
     SizeLimitExceeded,
     String32SizeLimitExceeded,
     TagNotFound(TagPath),
-    FailedToReadFile,
-    FailedToWriteFile,
-    InvalidTagsDirectory
+    FailedToReadFile(PathBuf, std::io::Error),
+    FailedToWriteFile(PathBuf, std::io::Error),
+    InvalidTagsDirectory,
+    Other(String)
 }
 
 impl Error {
@@ -51,9 +53,10 @@ impl Error {
             Error::IndexLimitExceeded => Cow::Borrowed("index limit of 0xFFFF (65535) exceeded"),
             Error::String32SizeLimitExceeded => Cow::Borrowed("string data is longer than 31 characters"),
             Error::TagNotFound(tag) => Cow::Owned(format!("tag `{tag}` not found")),
-            Error::FailedToReadFile => Cow::Borrowed("failed to read file"),
-            Error::FailedToWriteFile => Cow::Borrowed("failed to write file"),
+            Error::FailedToReadFile(file, err) => Cow::Owned(format!("failed to read file `{}`: {err}", file.display())),
+            Error::FailedToWriteFile(file, err) => Cow::Owned(format!("failed to write file `{}`: {err}", file.display())),
             Error::InvalidTagsDirectory => Cow::Borrowed("invalid tags directory"),
+            Error::Other(explanation) => Cow::Owned(explanation.to_owned())
         }
     }
 }

@@ -1,8 +1,8 @@
 use std::borrow::Cow;
 use std::collections::{HashMap, VecDeque};
-use std::fs::{read, write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
+use crc64::crc64;
 use primitives::error::{Error, RinghopperResult};
 use primitives::primitive::{HALO_PATH_SEPARATOR, TagGroup, TagPath};
 use primitives::tag::{ParseStrictness, PrimaryTagStructDyn};
@@ -159,12 +159,12 @@ impl TagFilter {
     }
 }
 
-pub struct TagTreeTagIterator<'a> {
+pub struct TagTreeTagIterator<'a, 'b> {
     stack: Vec<VecDeque<TagTreeItem<'a>>>,
-    filter: Option<TagFilter>
+    filter: Option<&'b TagFilter>
 }
 
-pub fn iterate_through_all_tags<T: TagTree>(what: &T, filter: Option<TagFilter>) -> TagTreeTagIterator {
+pub fn iterate_through_all_tags<'a, 'b, T: TagTree>(what: &'a T, filter: Option<&'b TagFilter>) -> TagTreeTagIterator<'a, 'b> {
     let mut iterator = TagTreeTagIterator {
         stack: vec![],
         filter
@@ -177,7 +177,7 @@ pub fn iterate_through_all_tags<T: TagTree>(what: &T, filter: Option<TagFilter>)
     iterator
 }
 
-impl<'a> Iterator for TagTreeTagIterator<'a> {
+impl<'a, 'b> Iterator for TagTreeTagIterator<'a, 'b> {
     type Item = TagPath;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -416,8 +416,10 @@ impl<T: TagTree> TagTree for CachingTagTree<T> {
     }
 }
 
+#[derive(Clone)]
 pub struct VirtualTagDirectory {
-    directories: Vec<PathBuf>
+    directories: Vec<PathBuf>,
+    strictness: ParseStrictness
 }
 
 impl VirtualTagDirectory {
@@ -436,7 +438,7 @@ impl VirtualTagDirectory {
             }
         }
 
-        Ok(Self { directories })
+        Ok(Self { directories, strictness: ParseStrictness::Strict })
     }
 
     fn path_for_tag(&self, path: &TagPath) -> Option<PathBuf> {
@@ -456,12 +458,15 @@ impl VirtualTagDirectory {
 impl TagTree for VirtualTagDirectory {
     fn open_tag_copy(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
         let file_path = self.path_for_tag(path).ok_or_else(|| Error::TagNotFound(path.clone()))?;
-        let file = read(file_path).map_err(|_| Error::FailedToReadFile)?;
-        return ringhopper_structs::read_any_tag_from_file_buffer(&file, ParseStrictness::Strict)
+        let file = std::fs::read(&file_path).map_err(|e| Error::FailedToReadFile(file_path, e))?;
+        let hash = crc64::crc64(u64::MAX, file.as_slice());
+        let mut tag = ringhopper_structs::read_any_tag_from_file_buffer(&file, self.strictness)
             .map_err(|e| match e {
                 Error::TagParseFailure => Error::CorruptedTag(path.clone()),
                 e => e
-            })
+            })?;
+        tag.set_hash(hash);
+        Ok(tag)
     }
     fn files_in_path(&self, path: &str) -> Option<Vec<TagTreeItem>> {
         let mut result = Vec::new();
@@ -522,9 +527,15 @@ impl TagTree for VirtualTagDirectory {
         Some(result)
     }
     fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<()> {
+        let tag_file = tag.to_tag_file()?;
+        let hash = crc64(u64::MAX, tag_file.as_slice());
+        if tag.hash() == hash {
+            return Ok(())
+        }
         let file_to_write_to = self.path_for_tag(path).unwrap_or_else(|| self.directories[0].join(path.to_native_path()));
-        std::fs::create_dir_all(file_to_write_to.parent().unwrap()).map_err(|_| Error::FailedToWriteFile)?;
-        write(file_to_write_to, tag.to_tag_file()?).map_err(|_| Error::FailedToReadFile)
+        let parent = file_to_write_to.parent().unwrap();
+        std::fs::create_dir_all(&parent).map_err(|e| Error::FailedToWriteFile(parent.to_path_buf(), e))?;
+        std::fs::write(&file_to_write_to, tag_file).map_err(|e| Error::FailedToWriteFile(file_to_write_to, e))
     }
 }
 

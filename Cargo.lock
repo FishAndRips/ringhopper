@@ -9,6 +9,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
 
 [[package]]
+name = "crc64"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2707e3afba5e19b75d582d88bc79237418f2a2a2d673d01cf9b03633b46e98f3"
+
+[[package]]
 name = "invader"
 version = "0.2.0"
 dependencies = [
@@ -43,6 +49,7 @@ dependencies = [
 name = "ringhopper"
 version = "0.2.0"
 dependencies = [
+ "crc64",
  "ringhopper-primitives",
  "ringhopper-structs",
 ]

@@ -12,6 +12,7 @@ pub struct CommandLineParser {
     on_help: fn(&CommandLineParser) -> Result<(), String>,
 }
 
+#[derive(Clone)]
 pub struct CommandLineArgs {
     standard_parameters: HashMap<StandardParameterType, Parameter>,
     custom_parameters: HashMap<&'static str, Parameter>,
@@ -325,7 +326,7 @@ impl CommandLineArgs {
     }
 }
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct Parameter {
     name: &'static str,
     short: char,
@@ -373,7 +374,7 @@ impl Parameter {
     }
 }
 
-#[derive(PartialEq, Eq, Hash)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash)]
 enum StandardParameterType {
     Tags,
     Data,

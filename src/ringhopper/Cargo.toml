@@ -8,3 +8,4 @@ license = "GPL-3.0-only"
 [dependencies]
 ringhopper-primitives = { path = "../ringhopper-primitives" }
 ringhopper-structs = { path = "../ringhopper-structs" }
+crc64 = "2.0.0"

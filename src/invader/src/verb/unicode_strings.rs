@@ -2,8 +2,10 @@ use std::env::Args;
 use cli::CommandLineParser;
 use ringhopper::tag::unicode_string_list::*;
 use ringhopper::definitions::UnicodeStringList;
-use ringhopper::primitives::primitive::{TagGroup, TagPath};
+use ringhopper::error::Error;
+use ringhopper::primitives::primitive::TagGroup;
 use ringhopper::tag::tree::TagTree;
+use threading::do_with_threads;
 use util::read_file;
 
 pub fn unicode_strings(args: Args, description: &'static str) -> Result<(), String> {
@@ -14,18 +16,13 @@ pub fn unicode_strings(args: Args, description: &'static str) -> Result<(), Stri
         .set_required_extra_parameters(1)
         .parse(args)?;
 
-    let tag_path = str_unwrap!(TagPath::new(&parser.get_extra()[0], TagGroup::UnicodeStringList), "Invalid tag path: {error}");
-
-    let text_file_name = parser.get_extra()[0].to_owned() + ".txt";
-    let text_file = parser.get_data().join(text_file_name);
-
-    let file = read_file(&text_file)?;
-    let tag = str_unwrap!(UnicodeStringList::from_text_data(file.as_slice()), "Failed to parse {}: {error}", text_file.display());
-
-    str_unwrap!(parser.get_virtual_tags_directory()
-        .write_tag(&tag_path, &tag),
-        "Failed to write tag: {error}");
-
-    println!("Saved {tag_path} successfully");
-    Ok(())
+    let tag = parser.get_extra()[0].clone();
+    do_with_threads(parser, &tag, Some(TagGroup::UnicodeStringList), |context, path| {
+        let mut full_data_path = context.args.get_data().join(path.to_native_path());
+        full_data_path.set_extension("txt");
+        let text_file = read_file(full_data_path)?;
+        let tag = UnicodeStringList::from_text_data(text_file.as_slice())
+            .map_err(|e| Error::Other(e.to_string()))?;
+        context.tags_directory.write_tag(path, &tag)
+    })
 }

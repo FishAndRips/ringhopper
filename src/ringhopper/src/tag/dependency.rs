@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use definitions::get_all_referenceable_tag_groups_for_group;
 use primitives::dynamic::DynamicTagData;
 use primitives::error::RinghopperResult;
 use primitives::primitive::{TagPath, TagReference};
@@ -52,14 +53,20 @@ pub fn recursively_get_dependencies_for_tag<T: TagTree>(tag: &TagPath, tag_tree:
 
 /// Get all tags that depend on a tag.
 pub fn get_reverse_dependencies_for_tag<T: TagTree>(tag: &TagPath, tag_tree: &T) -> RinghopperResult<HashSet<TagPath>> {
-    let mut result: HashSet<TagPath> = HashSet::new();
+    let mut result = HashSet::new();
+
     for i in iterate_through_all_tags(tag_tree, None) {
+        if !get_all_referenceable_tag_groups_for_group(i.group()).contains(&tag.group()) {
+            continue
+        }
+
         let t = tag_tree.open_tag_shared(&i).unwrap();
         let t = t.lock().unwrap();
         if get_tag_dependencies_for_block(t.as_ref()).contains(tag) {
             result.insert(i);
         }
     }
+
     Ok(result)
 }
 

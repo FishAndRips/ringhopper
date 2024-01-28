@@ -17,6 +17,18 @@ pub trait PrimaryTagStruct: DynamicTagData + TagData {
 
     /// Get the version of the tag struct's tag file.
     fn version() -> u16 where Self: Sized;
+
+    /// Get the hash of the file.
+    ///
+    /// If the output hash matches this, hint to not save this on a real filesystem.
+    fn hash(&self) -> u64;
+
+    /// Set the hash of the file.
+    ///
+    /// This just sets the `hash` field on the struct. It does not spoof the actual hash.
+    ///
+    /// If the output hash matches this, hint to not save this on a real filesystem.
+    fn set_hash(&mut self, hash: u64);
 }
 
 /// Methods automatically implemented for all [`PrimaryTagStruct`] types that implement [`Any`].

@@ -6,6 +6,7 @@ use std::borrow::Cow;
 use ringhopper_definitions::{load_all_definitions, SizeableObject, Struct, NamedObject, Enum, Bitfield, StructFieldType, ObjectType, ParsedDefinitions, FieldCount, TagGroup};
 
 use proc_macro::TokenStream;
+use std::collections::HashSet;
 
 #[proc_macro]
 pub fn generate_ringhopper_structs(_: TokenStream) -> TokenStream {
@@ -17,11 +18,22 @@ pub fn generate_ringhopper_structs(_: TokenStream) -> TokenStream {
     }
 
     let mut read_any_tag_lines = String::new();
+    let mut referenceable_tag_groups_hint = String::new();
     for (group_name, group) in &definitions.groups {
-        stream.extend(group.to_token_stream(&definitions));
-
         let struct_name = &group.struct_name;
         let group_name_fixed = camel_case(&group_name);
+        stream.extend(group.to_token_stream(&definitions));
+
+        let mut groups: HashSet<String> = HashSet::new();
+        get_all_tags_this_object_can_depend_on(&definitions, &group.struct_name, &mut groups);
+
+        let mut list = String::new();
+        for g in groups {
+            list += &g;
+            list += ",";
+        }
+
+        writeln!(referenceable_tag_groups_hint, "TagGroup::{group_name_fixed} => &[{list}],").unwrap();
         writeln!(read_any_tag_lines, "TagGroup::{group_name_fixed} => b(TagFile::read_tag_from_file_buffer::<{struct_name}>(file, ParseStrictness::Relaxed)),").unwrap();
     }
 
@@ -40,9 +52,37 @@ pub fn generate_ringhopper_structs(_: TokenStream) -> TokenStream {
             {read_any_tag_lines}
             _ => Err(Error::TagGroupUnimplemented)
         }}
-    }}").parse::<TokenStream>());
+    }}
+
+    /// Get all tag groups this tag group can reference.
+    pub fn get_all_referenceable_tag_groups_for_group(what: TagGroup) -> &'static [TagGroup] {{
+        match what {{
+            {referenceable_tag_groups_hint}
+            _ => &[],
+        }}
+    }}
+    ").parse::<TokenStream>());
 
     stream
+}
+
+fn get_all_tags_this_object_can_depend_on(definitions: &ParsedDefinitions, object: &str, list: &mut HashSet<String>) {
+    let object = &definitions.objects[object];
+    if let NamedObject::Struct(s) = object {
+        for f in &s.fields {
+            if let StructFieldType::Object(n) = &f.field_type {
+                match n {
+                    ObjectType::NamedObject(n) | ObjectType::Reflexive(n) => get_all_tags_this_object_can_depend_on(definitions, n, list),
+                    ObjectType::TagReference(r) => {
+                        for g in &r.allowed_groups {
+                            list.insert(format!("TagGroup::{}", camel_case(g)));
+                        }
+                    },
+                    _ => continue
+                }
+            }
+        }
+    }
 }
 
 trait ToTokenStream {
@@ -74,6 +114,13 @@ impl ToTokenStream for Struct {
 
         let field_count = self.fields.len();
         let mut default_code = String::new();
+
+        for g in &definitions.groups {
+            if &g.1.struct_name == struct_name {
+                writeln!(fields, "#[doc=\"metadata (not part of the tag)\"] pub hash: u64,").unwrap();
+                writeln!(default_code, "hash: Default::default(),").unwrap();
+            }
+        }
 
         for i in 0..field_count {
             let field_name = &fields_with_names[i];
@@ -175,14 +222,14 @@ impl ToTokenStream for Struct {
                 writeln!(&mut getter_mut, "\"{field_matcher}\" => Some(&mut self.{field_name}),").unwrap();
             }
             else if let StructFieldType::Object(object_type) = &self.fields[i].field_type {
-                let should_output_code_anyway = if let ObjectType::NamedObject(o) = object_type {
-                    match definitions.objects[o] {
+                let should_output_code_anyway = match object_type {
+                    ObjectType::NamedObject(o) => match definitions.objects[o] {
                         NamedObject::Enum(_) | NamedObject::Bitfield(_) => false,
                         NamedObject::Struct(_) => true
-                    }
-                }
-                else {
-                    true
+                    },
+                    ObjectType::Reflexive(_) => true,
+                    ObjectType::TagReference(_) => true,
+                    _ => false
                 };
                 if should_output_code_anyway {
                     writeln!(&mut read_in, "{read_code};").unwrap();
@@ -509,6 +556,12 @@ impl ToTokenStream for TagGroup {
             }}
             fn version() -> u16 {{
                 {version}
+            }}
+            fn hash(&self) -> u64 {{
+                self.hash
+            }}
+            fn set_hash(&mut self, new_hash: u64) {{
+                self.hash = new_hash
             }}
         }}").parse().unwrap()
     }

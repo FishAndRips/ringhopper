@@ -59,7 +59,7 @@ impl<T: TagData> TagData for Bounds<T> {
         })
     }
     fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {
-        self.lower.write_to_tag_file(data, 0, struct_end)?;
+        self.lower.write_to_tag_file(data, at, struct_end)?;
         self.upper.write_to_tag_file(data, at.add_overflow_checked(T::size())?, struct_end)?;
         Ok(())
     }

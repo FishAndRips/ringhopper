@@ -2,7 +2,8 @@ use std::env::Args;
 use cli::{CommandLineParser, Parameter};
 use ringhopper::primitives::primitive::TagPath;
 use ringhopper::tag::dependency::{get_reverse_dependencies_for_tag, get_tag_dependencies_for_block, recursively_get_dependencies_for_tag};
-use ringhopper::tag::tree::{TagTree, VirtualTagDirectory};
+use ringhopper::tag::tree::TagTree;
+use util::get_tags_directory;
 
 pub fn dependencies(args: Args, description: &'static str) -> Result<(), String> {
     let parser = CommandLineParser::new(description, "<tag> [args]")
@@ -25,7 +26,7 @@ pub fn dependencies(args: Args, description: &'static str) -> Result<(), String>
         .set_required_extra_parameters(1)
         .parse(args)?;
 
-    let tags = str_unwrap!(VirtualTagDirectory::new(parser.get_tags().as_slice()), "Failed to find tags: {error}");
+    let tags = get_tags_directory(&parser)?;
     let tag_path = str_unwrap!(TagPath::from_path(&parser.get_extra()[0]), "Invalid tag path: {error}");
     let recursive = parser.get_custom("recursive").is_some();
     let reverse = parser.get_custom("reverse").is_some();
@@ -34,7 +35,7 @@ pub fn dependencies(args: Args, description: &'static str) -> Result<(), String>
         return Err("--reverse and --recursive are not yet supported together".to_owned());
     }
 
-    let mut result = if reverse {
+    let result = if reverse {
         str_unwrap!(get_reverse_dependencies_for_tag(&tag_path, &tags), "Failed to get reverse dependencies: {error}")
     }
     else {

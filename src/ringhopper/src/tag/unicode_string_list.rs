@@ -175,7 +175,7 @@ impl UnicodeStringListFunctions for UnicodeStringList {
             .map(|string| UnicodeStringListString { string })
             .collect::<Reflexive<UnicodeStringListString>>();
 
-        Ok(UnicodeStringList { strings })
+        Ok(UnicodeStringList { strings, ..Default::default() })
     }
 
     fn string_count(&self) -> usize {
