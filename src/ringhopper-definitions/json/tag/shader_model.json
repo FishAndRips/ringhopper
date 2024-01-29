@@ -270,14 +270,21 @@
             {
                 "type": "pad",
                 "size": 8
-            },
+            }
+        ],
+        "size": 64,
+        "type": "struct"
+    },
+    {
+        "name": "ShaderModelReflection",
+        "fields": [
             {
-                "name": "reflection falloff distance",
+                "name": "falloff distance",
                 "unit": "world units",
                 "type": "float"
             },
             {
-                "name": "reflection cutoff distance",
+                "name": "cutoff distance",
                 "unit": "world units",
                 "type": "float"
             },
@@ -302,7 +309,7 @@
                 "type": "ColorRGBFloat"
             },
             {
-                "name": "reflection cube map",
+                "name": "cube map",
                 "type": "TagReference",
                 "groups": [
                     "bitmap"
@@ -311,22 +318,32 @@
             {
                 "type": "pad",
                 "size": 16
-            },
+            }
+        ],
+        "size": 72,
+        "type": "struct"
+    },
+    {
+        "name": "ShaderModelBump",
+        "fields": [
             {
-                "name": "unknown",
+                "name": "bump map scale",
                 "type": "float",
-                "cache_only": true
+                "default": 1.0
             },
             {
-                "type": "pad",
-                "size": 16
+                "name": "bump map",
+                "type": "TagReference",
+                "groups": [
+                    "bitmap"
+                ]
             },
             {
                 "type": "pad",
                 "size": 32
             }
         ],
-        "size": 188,
+        "size": 52,
         "type": "struct"
     },
     {
@@ -356,6 +373,18 @@
                 "name": "texture scrolling animation",
                 "section": true,
                 "type": "ShaderModelTextureScrollingAnimation"
+            },
+            {
+                "name": "reflection",
+                "section": true,
+                "type": "ShaderModelReflection"
+            },
+            {
+                "name": "bump",
+                "exclude": true,
+                "section": true,
+                "type": "ShaderModelBump",
+                "comment": "removed before the game was released"
             }
         ],
         "type": "struct",
