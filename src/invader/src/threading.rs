@@ -33,7 +33,7 @@ pub fn do_with_threads(
         let tag_path = match group {
             Some(group) => TagPath::new(user_filter, group),
             None => TagPath::from_path(user_filter)
-        }.map_err(|f| format!("Invalid tag path `{user_filter}`"))?;
+        }.map_err(|_| format!("Invalid tag path `{user_filter}`"))?;
         process_tags(&mut context, &success, &total, &tag_path, function);
     }
     else {
@@ -70,6 +70,12 @@ pub fn do_with_threads(
             }
         }
     }
+
+    let total = Arc::into_inner(total).unwrap().into_inner();
+    if total == 0 {
+        return Err(format!("No tags matched `{user_filter}`"))
+    }
+
     Ok(())
 }
 

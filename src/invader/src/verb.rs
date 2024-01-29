@@ -10,6 +10,7 @@ mod dependencies;
 mod version;
 mod unicode_strings;
 mod strip;
+mod tag_collection;
 
 pub struct Verb {
     pub name: &'static str,
@@ -28,6 +29,8 @@ impl Verb {
 pub const ALL_VERBS: &'static [Verb] = &[
     Verb::new("dependencies", "View dependencies of tags", dependencies::dependencies),
     Verb::new("strip", "Clean tags", strip::strip),
+    Verb::new("tag-collection", "Generate tag_collection tags from data", tag_collection::tag_collection),
+    Verb::new("ui-widget-collection", "Generate ui_widget_collection tags from data", tag_collection::ui_widget_collection),
     Verb::new("unicode-strings", "Generate unicode_string_list tags from data", unicode_strings::unicode_strings),
     Verb::new("version", "View the version/license of Invader", version::version)
 ];

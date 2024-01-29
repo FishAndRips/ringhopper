@@ -109,7 +109,8 @@ pub trait UnicodeStringListFunctions {
     ///         UnicodeStringListString {
     ///             string: Data::new(vec!['h' as u8, 0u8, 'e' as u8, 0u8, 'l' as u8, 0u8, 'l' as u8, 0u8, 'o' as u8, 0u8, 0u8, 0u8])
     ///         }
-    ///     ])
+    ///     ]),
+    ///     ..Default::default()
     /// };
     ///
     /// assert_eq!(result.read_string_data(0).expect("should be valid"), "hello");
