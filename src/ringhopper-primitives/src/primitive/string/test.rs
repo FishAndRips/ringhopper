@@ -21,7 +21,7 @@ fn parse_string32() {
     assert_eq!("valid_", invalid.as_str());
 
     let long_string = "asfdkhljaesrfewragaewrkguieqw4i7w43qe5iy9oewsrayuoirewquigwre5gisgisaerfuhgewrq5oiuh453iop;juji;ls";
-    assert_eq!(Err(Error::String32SizeLimitExceeded), String32::from_str(long_string));
+    assert!(matches!(String32::from_str(long_string), Err(Error::String32SizeLimitExceeded)));
 
     assert_eq!(valid, String32::from_str("valid").expect("should be ok"));
     assert_eq!(valid, String32::read_from_tag_file(&valid_bytes, 0, valid_bytes.len(), &mut 0).unwrap());

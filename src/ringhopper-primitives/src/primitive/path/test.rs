@@ -44,6 +44,6 @@ fn banned_tag_paths() {
     assert!(TagPath::from_path("weapons\\pistol.\\pistol.weapon").is_err());
     assert!(TagPath::from_path("\\weapons\\pistol\\pistol.weapon").is_err());
 
-    assert_eq!(TagPath::from_path("weapons\\PISTOL\\pistol.weapon"), TagPath::from_path("weapons\\pistol\\pistol.weapon"));
-    assert_eq!(TagPath::from_path("weapons\\pistol\\\\pistol.weapon"), TagPath::from_path("weapons\\pistol\\pistol.weapon"));
+    assert_eq!(TagPath::from_path("weapons\\PISTOL\\pistol.weapon").unwrap(), TagPath::from_path("weapons\\pistol\\pistol.weapon").unwrap());
+    assert_eq!(TagPath::from_path("weapons\\pistol\\\\pistol.weapon").unwrap(), TagPath::from_path("weapons\\pistol\\pistol.weapon").unwrap());
 }

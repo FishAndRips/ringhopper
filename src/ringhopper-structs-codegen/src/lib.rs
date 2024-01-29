@@ -233,8 +233,12 @@ impl ToTokenStream for Struct {
                 };
                 if should_output_code_anyway {
                     writeln!(&mut read_in, "{read_code};").unwrap();
-                    if !matches!(self.fields[i].field_type, StructFieldType::Object(ObjectType::TagReference(_))) {
-                        writeln!(&mut write_out, "<{field_type}>::default().write_to_tag_file(data, _pos, struct_end)?;").unwrap();
+                    match &self.fields[i].field_type {
+                        StructFieldType::Object(ObjectType::TagReference(t)) => {
+                            let best_group = camel_case(&t.allowed_groups[0]);
+                            writeln!(&mut write_out, "TagReference::Null(TagGroup::{best_group}).write_to_tag_file(data, _pos, struct_end)?;").unwrap()
+                        }
+                        _ => writeln!(&mut write_out, "<{field_type}>::default().write_to_tag_file(data, _pos, struct_end)?;").unwrap()
                     }
                 }
             }

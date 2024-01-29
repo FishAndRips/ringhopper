@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use definitions::*;
 use primitives::primitive::{TagPath, TagReference};
-use primitives::tag::{PrimaryTagStructDyn, TagFile};
+use primitives::tag::PrimaryTagStructDyn;
 use tag::dependency::{get_tag_dependencies_for_block, recursively_get_dependencies_for_tag};
 use tag::tree::TagTree;
 use crate::tag::tree::MockTagTree;
