@@ -142,20 +142,42 @@
         "options": [
             "human fragmentation",
             "covenant plasma",
-            "grenade type 2",
-            "grenade type 3"
+            {
+                "name": "grenade type 2",
+                "supported_engines": [
+                    "mcc-cea"
+                ]
+            },
+            {
+                "name": "grenade type 3",
+                "supported_engines": [
+                    "mcc-cea"
+                ]
+            }
         ],
         "type": "enum"
     },
     {
         "name": "VertexType",
         "options": [
-            "structure bsp uncompressed rendered vertices",
-            "structure bsp compressed rendered vertices",
-            "structure bsp uncompressed lightmap vertices",
-            "structure bsp compressed lightmap vertices",
+            "environment uncompressed",
+            "environment compressed",
+            "environment lightmap uncompressed",
+            "environment lightmap compressed",
             "model uncompressed",
-            "model compressed"
+            "model compressed",
+            "dynamic unlit",
+            "dynamic lit",
+            "dynamic screen",
+            "debug",
+            "decal",
+            "detail object",
+            "environment uncompressed ff",
+            "environment lightmap uncompressed ff",
+            "model uncompressed ff",
+            "model processed",
+            "unlit zsprite",
+            "widget"
         ],
         "type": "enum"
     }
