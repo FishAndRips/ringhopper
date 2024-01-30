@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use ringhopper::tag::tree::VirtualTagDirectory;
+use ringhopper::tag::tree::VirtualTagsDirectory;
 
 pub struct CommandLineParser {
     description: &'static str,
@@ -120,6 +120,25 @@ impl CommandLineParser {
 
         assert!(self.standard_parameters.get(&StandardParameterType::Tags).is_none());
         self.standard_parameters.insert(StandardParameterType::Tags, p);
+        self
+    }
+
+    pub fn add_cow_tags(mut self) -> Self {
+        let p = Parameter {
+            values: None,
+            name: "cow",
+            short: 'C',
+            description: "Set a directory to output tags.",
+            default_values: Some(vec![]),
+            value_type: Some(CommandLineValueType::Path),
+            required: false,
+            value_count: 1,
+            usage: "<dir>",
+            multiple: false,
+        };
+
+        assert!(self.standard_parameters.get(&StandardParameterType::CowTags).is_none());
+        self.standard_parameters.insert(StandardParameterType::CowTags, p);
         self
     }
 
@@ -272,6 +291,22 @@ impl CommandLineParser {
             }
         }
 
+        let require_exists = |what: StandardParameterType| -> Result<(), String> {
+            if let Some(n) = self.standard_parameters.get(&what) {
+                for i in n.values.as_ref().unwrap() {
+                    let path = i.path();
+                    if !path.exists() {
+                        return Err(format!("Path `{}` does not exist for --{}", path.display(), n.name))
+                    }
+                }
+            }
+            Ok(())
+        };
+        require_exists(StandardParameterType::Tags)?;
+        require_exists(StandardParameterType::Data)?;
+        require_exists(StandardParameterType::Maps)?;
+        require_exists(StandardParameterType::CowTags)?;
+
         Ok(CommandLineArgs {
             custom_parameters: self.custom_parameters,
             standard_parameters: self.standard_parameters,
@@ -281,6 +316,9 @@ impl CommandLineParser {
 }
 
 impl CommandLineArgs {
+    /// Get the Tags parameter.
+    ///
+    /// Panics if Tags was not set.
     pub fn get_tags(&self) -> Vec<&Path> {
         self.standard_parameters
             .get(&StandardParameterType::Tags)
@@ -293,10 +331,24 @@ impl CommandLineArgs {
             .collect()
     }
 
-    pub fn get_virtual_tags_directory(&self) -> VirtualTagDirectory {
-        VirtualTagDirectory::new(self.get_tags().as_slice()).unwrap()
+    /// Create a `VirtualTagsDirectory` instance.
+    pub fn get_virtual_tags_directory(&self) -> VirtualTagsDirectory {
+        let cow = self.standard_parameters
+            .get(&StandardParameterType::CowTags)
+            .and_then(|v|
+                v.values
+                    .as_ref()
+                    .expect("cow should be present even if it's a default")
+                    .first()
+                    .map(|v| v.path().to_path_buf())
+            );
+
+        VirtualTagsDirectory::new(self.get_tags().as_slice(), cow).unwrap()
     }
 
+    /// Get the Data parameter.
+    ///
+    /// Panics if Data was not set.
     pub fn get_data(&self) -> &Path {
         self.standard_parameters
             .get(&StandardParameterType::Data)
@@ -307,6 +359,9 @@ impl CommandLineArgs {
             .path()
     }
 
+    /// Get the Maps parameter.
+    ///
+    /// Panics if Maps was not set.
     pub fn get_maps(&self) -> &Path {
         self.standard_parameters
             .get(&StandardParameterType::Maps)
@@ -317,10 +372,14 @@ impl CommandLineArgs {
             .path()
     }
 
+    /// Get the custom parameters.
+    ///
+    /// Panics if not set.
     pub fn get_custom(&self, what: &'static str) -> Option<&[CommandLineValue]> {
         self.custom_parameters.get(what).expect("custom parameter not added on init but expected").values.as_ref().map(Vec::as_slice)
     }
 
+    /// Get the extra parameters.
     pub fn get_extra(&self) -> &[String] {
         self.extra_parameters.as_slice()
     }
@@ -379,7 +438,8 @@ enum StandardParameterType {
     Tags,
     Data,
     Maps,
-    Help
+    Help,
+    CowTags
 }
 
 #[derive(Debug, Clone)]

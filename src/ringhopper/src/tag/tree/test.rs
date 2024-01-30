@@ -5,7 +5,7 @@ use definitions::{Model, ModelAnimations, Weapon};
 use primitives::error::RinghopperResult;
 use primitives::primitive::{TagGroup, TagPath};
 use primitives::tag::PrimaryTagStructDyn;
-use tag::tree::{CachingTagTree, CachingTagTreeWriteStrategy, TagTree, TagTreeItem, VirtualTagDirectory};
+use tag::tree::{CachingTagTree, CachingTagTreeWriteStrategy, TagTree, TagTreeItem, VirtualTagsDirectory};
 
 
 #[derive(Default)]
@@ -45,7 +45,7 @@ fn test_tag_tree_traversal() {
         .join("tree")
         .join("tags");
 
-    let tag_directory = VirtualTagDirectory::new(&[path]).unwrap();
+    let tag_directory = VirtualTagsDirectory::new(&[path]).unwrap();
 
     let root = tag_directory.root();
     assert!(root.is_directory());

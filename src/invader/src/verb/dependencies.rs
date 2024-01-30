@@ -3,7 +3,6 @@ use cli::{CommandLineParser, Parameter};
 use ringhopper::primitives::primitive::TagPath;
 use ringhopper::tag::dependency::{get_reverse_dependencies_for_tag, get_tag_dependencies_for_block, recursively_get_dependencies_for_tag};
 use ringhopper::tag::tree::TagTree;
-use util::get_tags_directory;
 
 pub fn dependencies(args: Args, description: &'static str) -> Result<(), String> {
     let parser = CommandLineParser::new(description, "<tag> [args]")
@@ -26,7 +25,7 @@ pub fn dependencies(args: Args, description: &'static str) -> Result<(), String>
         .set_required_extra_parameters(1)
         .parse(args)?;
 
-    let tags = get_tags_directory(&parser)?;
+    let tags = parser.get_virtual_tags_directory();
     let tag_path = str_unwrap!(TagPath::from_path(&parser.get_extra()[0]), "Invalid tag path: {error}");
     let recursive = parser.get_custom("recursive").is_some();
     let reverse = parser.get_custom("reverse").is_some();

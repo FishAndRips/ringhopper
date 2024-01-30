@@ -13,6 +13,7 @@ pub fn unicode_strings(args: Args, description: &'static str) -> Result<(), Stri
         .add_tags(false)
         .add_data()
         .add_help()
+        .add_cow_tags()
         .set_required_extra_parameters(1)
         .parse(args)?;
 

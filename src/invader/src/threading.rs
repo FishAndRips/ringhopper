@@ -5,12 +5,12 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use cli::CommandLineArgs;
 use ringhopper::error::RinghopperResult;
 use ringhopper::primitives::primitive::{TagGroup, TagPath};
-use ringhopper::tag::tree::{iterate_through_all_tags, TagFilter, VirtualTagDirectory};
+use ringhopper::tag::tree::{iterate_through_all_tags, TagFilter, VirtualTagsDirectory};
 
 #[derive(Clone)]
 pub struct ThreadingContext {
     pub args: CommandLineArgs,
-    pub tags_directory: VirtualTagDirectory
+    pub tags_directory: VirtualTagsDirectory
 }
 
 pub type ProcessFunction = fn(&mut ThreadingContext, &TagPath) -> RinghopperResult<()>;
@@ -22,7 +22,7 @@ pub fn do_with_threads(
     function: ProcessFunction
 ) -> Result<(), String> {
     let mut context = ThreadingContext {
-        tags_directory: VirtualTagDirectory::new(args.get_tags().as_slice()).map_err(|e| format!("Failed to load tags dir: {e}"))?,
+        tags_directory: args.get_virtual_tags_directory(),
         args,
     };
 

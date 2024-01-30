@@ -7,6 +7,7 @@ pub fn strip(args: Args, description: &'static str) -> Result<(), String> {
     let parser = CommandLineParser::new(description, "<tag> [args]")
         .add_tags(false)
         .add_help()
+        .add_cow_tags()
         .set_required_extra_parameters(1)
         .parse(args)?;
 

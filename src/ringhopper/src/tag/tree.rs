@@ -417,19 +417,22 @@ impl<T: TagTree> TagTree for CachingTagTree<T> {
 }
 
 #[derive(Clone)]
-pub struct VirtualTagDirectory {
+pub struct VirtualTagsDirectory {
     directories: Vec<PathBuf>,
-    strictness: ParseStrictness
+    strictness: ParseStrictness,
+    cow_output: Option<PathBuf>
 }
 
-impl VirtualTagDirectory {
+impl VirtualTagsDirectory {
     /// Initialize a virtual tags directory.
     ///
     /// Lower directories have higher priority and are chosen first, and it is where tags will be
-    /// written to by default.
+    /// written to by default. Tags that are unmodified will not be saved.
+    ///
+    /// `cow_output` is where new or modified tags will be written to.
     ///
     /// Returns `Error::InvalidTagsDirectory` if any directories passed do not exist.
-    pub fn new<P: AsRef<Path>>(directories: &[P]) -> RinghopperResult<Self> {
+    pub fn new<P: AsRef<Path>>(directories: &[P], cow_output: Option<PathBuf>) -> RinghopperResult<Self> {
         let directories: Vec<PathBuf> = directories.iter().map(|path| path.as_ref().to_path_buf()).collect();
 
         for i in &directories {
@@ -438,7 +441,7 @@ impl VirtualTagDirectory {
             }
         }
 
-        Ok(Self { directories, strictness: ParseStrictness::Strict })
+        Ok(Self { directories, strictness: ParseStrictness::Strict, cow_output })
     }
 
     fn path_for_tag(&self, path: &TagPath) -> Option<PathBuf> {
@@ -455,7 +458,7 @@ impl VirtualTagDirectory {
     }
 }
 
-impl TagTree for VirtualTagDirectory {
+impl TagTree for VirtualTagsDirectory {
     fn open_tag_copy(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
         let file_path = self.path_for_tag(path).ok_or_else(|| Error::TagNotFound(path.clone()))?;
         let file = std::fs::read(&file_path).map_err(|e| Error::FailedToReadFile(file_path, e))?;
@@ -529,10 +532,25 @@ impl TagTree for VirtualTagDirectory {
     fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<()> {
         let tag_file = tag.to_tag_file()?;
         let hash = crc64(u64::MAX, tag_file.as_slice());
-        if tag.hash() == hash {
+
+        // Open the original tag to get the hash if this is a new tag
+        let old_hash = match tag.hash() {
+            0 => match self.path_for_tag(path) {
+                Some(n) if n.exists() => self.open_tag_copy(path)?.hash(),
+                _ => 0
+            },
+            n => n
+        };
+
+        if hash == old_hash {
             return Ok(())
         }
-        let file_to_write_to = self.path_for_tag(path).unwrap_or_else(|| self.directories[0].join(path.to_native_path()));
+
+        let file_to_write_to = match &self.cow_output {
+            Some(n) => n.join(path.to_native_path()),
+            None => self.path_for_tag(path).unwrap_or_else(|| self.directories[0].join(path.to_native_path()))
+        };
+
         let parent = file_to_write_to.parent().unwrap();
         std::fs::create_dir_all(&parent).map_err(|e| Error::FailedToWriteFile(parent.to_path_buf(), e))?;
         std::fs::write(&file_to_write_to, tag_file).map_err(|e| Error::FailedToWriteFile(file_to_write_to, e))
