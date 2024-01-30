@@ -412,13 +412,20 @@
             {
                 "type": "pad",
                 "size": 16
-            },
+            }
+        ],
+        "type": "struct",
+        "size": 84
+    },
+    {
+        "name": "ShaderEnvironmentReflection",
+        "fields": [
             {
-                "name": "reflection flags",
+                "name": "flags",
                 "type": "ShaderEnvironmentReflectionFlags"
             },
             {
-                "name": "reflection type",
+                "name": "type",
                 "type": "ShaderEnvironmentReflectionType"
             },
             {
@@ -468,7 +475,7 @@
             }
         ],
         "type": "struct",
-        "size": 200
+        "size": 116
     },
     {
         "name": "ShaderEnvironment",
@@ -511,6 +518,11 @@
                 "name": "specular",
                 "section": true,
                 "type": "ShaderEnvironmentSpecular"
+            },
+            {
+                "name": "reflection",
+                "section": true,
+                "type": "ShaderEnvironmentReflection"
             }
         ],
         "type": "struct",
