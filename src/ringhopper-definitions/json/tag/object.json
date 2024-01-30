@@ -92,6 +92,14 @@
         "width": 32
     },
     {
+        "name": "ObjectRuntimeFlags",
+        "type": "bitfield",
+        "fields": [
+            "functions control color scale"
+        ],
+        "width": 32
+    },
+    {
         "name": "ObjectFlags",
         "type": "bitfield",
         "fields": [
@@ -381,8 +389,8 @@
                 "type": "float"
             },
             {
-                "name": "scales change colors",
-                "type": "uint32",
+                "name": "runtime flags",
+                "type": "ObjectRuntimeFlags",
                 "cache_only": true
             },
             {
