@@ -45,7 +45,7 @@ fn test_tag_tree_traversal() {
         .join("tree")
         .join("tags");
 
-    let tag_directory = VirtualTagsDirectory::new(&[path]).unwrap();
+    let tag_directory = VirtualTagsDirectory::new(&[path], None).unwrap();
 
     let root = tag_directory.root();
     assert!(root.is_directory());

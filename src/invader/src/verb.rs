@@ -11,6 +11,7 @@ mod version;
 mod unicode_strings;
 mod strip;
 mod tag_collection;
+mod nudge;
 
 pub struct Verb {
     pub name: &'static str,
@@ -28,6 +29,7 @@ impl Verb {
 
 pub const ALL_VERBS: &'static [Verb] = &[
     Verb::new("dependencies", "View dependencies of tags", dependencies::dependencies),
+    Verb::new("nudge", "Fix floating point precision errors from tag extraction", nudge::nudge),
     Verb::new("strip", "Clean tags", strip::strip),
     Verb::new("tag-collection", "Generate tag_collection tags from data", tag_collection::tag_collection),
     Verb::new("ui-widget-collection", "Generate ui_widget_collection tags from data", tag_collection::ui_widget_collection),
