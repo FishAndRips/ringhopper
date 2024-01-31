@@ -13,7 +13,7 @@ pub struct ThreadingContext {
     pub tags_directory: VirtualTagsDirectory
 }
 
-pub type ProcessFunction = fn(&mut ThreadingContext, &TagPath) -> RinghopperResult<()>;
+pub type ProcessFunction = fn(&mut ThreadingContext, &TagPath) -> RinghopperResult<bool>;
 
 pub fn do_with_threads(
     args: CommandLineArgs,
@@ -26,15 +26,16 @@ pub fn do_with_threads(
         args,
     };
 
-    let mut success = Arc::new(AtomicU64::new(0));
-    let mut total = Arc::new(AtomicU64::new(0));
+    let success = Arc::new(AtomicU64::new(0));
+    let total = Arc::new(AtomicU64::new(0));
+    let failure = Arc::new(AtomicU64::new(0));
 
     if !TagFilter::is_filter(user_filter) {
         let tag_path = match group {
             Some(group) => TagPath::new(user_filter, group),
             None => TagPath::from_path(user_filter)
         }.map_err(|_| format!("Invalid tag path `{user_filter}`"))?;
-        process_tags(&mut context, &success, &total, &tag_path, function);
+        process_tags(&mut context, &success, &failure, &total, &tag_path, function);
     }
     else {
         let filter = TagFilter::new(user_filter, group);
@@ -43,7 +44,7 @@ pub fn do_with_threads(
         match thread_count {
             1 => {
                 for path in tags {
-                    process_tags(&mut context, &success, &total, &path, function);
+                    process_tags(&mut context, &success, &failure, &total, &path, function);
                 }
             },
             n => {
@@ -54,13 +55,14 @@ pub fn do_with_threads(
                     let mut context = context.clone();
                     let success = success.clone();
                     let total = total.clone();
+                    let failure = failure.clone();
                     threads.push(std::thread::spawn(move || {
                         loop {
                             let next = match tags.lock().unwrap().pop_front() {
                                 Some(n) => n,
                                 None => break
                             };
-                            process_tags(&mut context, &success, &total, &next, function);
+                            process_tags(&mut context, &success, &failure, &total, &next, function);
                         }
                     }))
                 }
@@ -76,16 +78,27 @@ pub fn do_with_threads(
         return Err(format!("No tags matched `{user_filter}`"))
     }
 
+    let failure = Arc::into_inner(failure).unwrap().into_inner();
+    let success = Arc::into_inner(success).unwrap().into_inner();
+
+    if total > 1 {
+        println!("Processed {success} / {total} tags, with {failure} error{s}", s = if failure == 1 { "" } else { "s" })
+    }
+
     Ok(())
 }
 
-fn process_tags(context: &mut ThreadingContext, success: &Arc<AtomicU64>, total: &Arc<AtomicU64>, path: &TagPath, function: ProcessFunction) {
+fn process_tags(context: &mut ThreadingContext, success: &Arc<AtomicU64>, failure: &Arc<AtomicU64>, total: &Arc<AtomicU64>, path: &TagPath, function: ProcessFunction) {
     total.fetch_add(1, Ordering::Relaxed);
     match function(context, &path) {
-        Ok(_) => {
+        Ok(true) => {
             success.fetch_add(1, Ordering::Relaxed);
             writeln!(stdout().lock(), "Processed {path}").unwrap()
         },
-        Err(e) => writeln!(stderr().lock(), "Failed to process {path}: {e}").unwrap()
+        Ok(false) => (),
+        Err(e) => {
+            failure.fetch_add(1, Ordering::Relaxed);
+            writeln!(stderr().lock(), "Failed to process {path}: {e}").unwrap()
+        }
     }
 }

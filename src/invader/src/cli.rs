@@ -127,7 +127,7 @@ impl CommandLineParser {
         let p = Parameter {
             values: None,
             name: "cow",
-            short: 'C',
+            short: 'c',
             description: "Set a directory to output tags.",
             default_values: Some(vec![]),
             value_type: Some(CommandLineValueType::Path),

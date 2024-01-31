@@ -308,8 +308,9 @@ impl TagFile {
         //
         // As such, the data we just read CANNOT be trusted, as the data is potentially corrupt. Also, saving the tag in
         // this state will always corrupt it even further. Therefore, we have to error here.
-        if cursor != data_after_header.len() {
-            return Err(Error::TagParseFailure);
+        let actual_data_size = data_after_header.len();
+        if cursor != actual_data_size {
+            return Err(Error::TagParseFailure(format!("leftover data after parsing - 0x{cursor:08X} parsed, 0x{actual_data_size:08X} actual tag size")));
         }
 
         Ok(result)

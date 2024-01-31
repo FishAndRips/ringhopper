@@ -122,7 +122,7 @@ pub(crate) fn fits(size: usize, at: usize, vec_size: usize) -> RinghopperResult<
 
     // If we're outside of the data bounds, fail.
     if end > vec_size {
-        Err(Error::TagParseFailure)
+        Err(Error::TagParseFailure(format!("data is out-of-bounds: 0x{end:04X} (required) > 0x{vec_size:04X} (available)")))
     }
     else {
         Ok(end)

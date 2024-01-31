@@ -231,6 +231,7 @@ impl ToTokenStream for Struct {
                         NamedObject::Struct(_) => true
                     },
                     ObjectType::Reflexive(_) => true,
+                    ObjectType::Data => true,
                     ObjectType::TagReference(_) => true,
                     _ => false
                 };

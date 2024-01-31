@@ -30,7 +30,9 @@ pub trait TagTree {
     fn files_in_path(&self, path: &str) -> Option<Vec<TagTreeItem>>;
 
     /// Write the tag into the tag tree.
-    fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<()>;
+    ///
+    /// Returns `true` if the tag was actually saved.
+    fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<bool>;
 
     /// Get the root tag tree item.
     fn root(&self) -> TagTreeItem where Self: Sized {
@@ -364,11 +366,13 @@ impl<T: TagTree> CachingTagTree<T> {
     /// Write the tag to the delegate.
     ///
     /// Returns `Err(Error::TagNotFound)` if the tag is not open, or some other [`Error`] if an error occurs on the delegate.
-    pub fn commit(&mut self, path: &TagPath) -> RinghopperResult<()> {
+    ///
+    /// Otherwise, it forwards the result from the inner tag tree.
+    pub fn commit(&mut self, path: &TagPath) -> RinghopperResult<bool> {
         let cache = self.tag_cache.lock().unwrap();
         let tag = cache.get(path).ok_or_else(|| Error::TagNotFound(path.clone()))?;
-        self.inner.write_tag(path, tag.as_ref().lock().unwrap().as_ref())?;
-        Ok(())
+        let result = self.inner.write_tag(path, tag.as_ref().lock().unwrap().as_ref())?;
+        Ok(result)
     }
 
     /// Write all tags to the delegate.
@@ -407,12 +411,12 @@ impl<T: TagTree> TagTree for CachingTagTree<T> {
     fn files_in_path(&self, path: &str) -> Option<Vec<TagTreeItem>> {
         self.inner.files_in_path(path)
     }
-    fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<()> {
+    fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<bool> {
         if self.strategy == CachingTagTreeWriteStrategy::Instant {
             self.inner.write_tag(path, tag)?;
         }
         self.tag_cache.lock().unwrap().insert(path.to_owned(), Arc::new(Mutex::new(tag.clone_inner())));
-        Ok(())
+        Ok(true)
     }
 }
 
@@ -465,7 +469,7 @@ impl TagTree for VirtualTagsDirectory {
         let hash = crc64::crc64(u64::MAX, file.as_slice());
         let mut tag = ringhopper_structs::read_any_tag_from_file_buffer(&file, self.strictness)
             .map_err(|e| match e {
-                Error::TagParseFailure => Error::CorruptedTag(path.clone()),
+                Error::TagParseFailure(_) => Error::CorruptedTag(path.clone(), vec![e]),
                 e => e
             })?;
         tag.set_hash(hash);
@@ -529,7 +533,7 @@ impl TagTree for VirtualTagsDirectory {
 
         Some(result)
     }
-    fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<()> {
+    fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<bool> {
         let tag_file = tag.to_tag_file()?;
         let hash = crc64(u64::MAX, tag_file.as_slice());
 
@@ -543,7 +547,7 @@ impl TagTree for VirtualTagsDirectory {
         };
 
         if hash == old_hash {
-            return Ok(())
+            return Ok(false)
         }
 
         let file_to_write_to = match &self.cow_output {
@@ -553,7 +557,9 @@ impl TagTree for VirtualTagsDirectory {
 
         let parent = file_to_write_to.parent().unwrap();
         std::fs::create_dir_all(&parent).map_err(|e| Error::FailedToWriteFile(parent.to_path_buf(), e))?;
-        std::fs::write(&file_to_write_to, tag_file).map_err(|e| Error::FailedToWriteFile(file_to_write_to, e))
+        std::fs::write(&file_to_write_to, tag_file).map_err(|e| Error::FailedToWriteFile(file_to_write_to, e))?;
+
+        Ok(true)
     }
 }
 

@@ -30,10 +30,10 @@ impl TagTree for MockTagTree {
     fn files_in_path(&self, _path: &str) -> Option<Vec<TagTreeItem>> {
         unimplemented!()
     }
-    fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<()> {
+    fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<bool> {
         self.write_tag_calls.lock().unwrap().push(path.to_owned());
         self.items.insert(path.to_string(), Some(tag.clone_inner()));
-        Ok(())
+        Ok(true)
     }
 }
 
