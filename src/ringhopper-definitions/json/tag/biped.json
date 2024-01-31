@@ -44,14 +44,12 @@
     },
     {
         "name": "Biped",
-        "groups": [
-            {
-                "name": "biped",
-                "description": "attributes",
-                "first": "moving turning speed"
-            }
-        ],
         "fields": [
+            {
+                "name": "biped attributes",
+                "description": "TODO",
+                "type": "editor_section"
+            },
             {
                 "name": "moving turning speed",
                 "type": "Angle",

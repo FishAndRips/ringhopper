@@ -128,6 +128,7 @@ impl ToTokenStream for Struct {
             let field = &self.fields[i];
             let field_type = match &field.field_type {
                 StructFieldType::Padding(n) => format!("Padding<[u8; {n}]>"),
+                StructFieldType::EditorSection(_) => String::new(),
                 StructFieldType::Object(o) => match o {
                     ObjectType::Angle => "Angle".to_owned(),
                     ObjectType::ColorARGBFloat => "ColorARGBFloat".to_owned(),
@@ -169,22 +170,24 @@ impl ToTokenStream for Struct {
                 FieldCount::One => field_type
             };
 
-            if let StructFieldType::Padding(_) = &field.field_type {
-                fields_read_from_tags.push(false);
-                fields_read_from_caches.push(false);
-            }
-            else {
-                if !field.flags.exclude {
-                    writeln!(&mut fields, "pub {field_name}: {field_type},").unwrap();
-                    if let StructFieldType::Object(ObjectType::TagReference(reference)) = &field.field_type {
-                        writeln!(&mut default_code, "{field_name}: TagReference::Null(TagGroup::{}),", camel_case(&reference.allowed_groups[0])).unwrap();
+            match &field.field_type {
+                StructFieldType::Object(o) => {
+                    if !field.flags.exclude {
+                        writeln!(&mut fields, "pub {field_name}: {field_type},").unwrap();
+                        if let ObjectType::TagReference(reference) = &o {
+                            writeln!(&mut default_code, "{field_name}: TagReference::Null(TagGroup::{}),", camel_case(&reference.allowed_groups[0])).unwrap();
+                        }
+                        else {
+                            writeln!(&mut default_code, "{field_name}: Default::default(),").unwrap();
+                        }
                     }
-                    else {
-                        writeln!(&mut default_code, "{field_name}: Default::default(),").unwrap();
-                    }
+                    fields_read_from_tags.push(!field.flags.cache_only && !field.flags.exclude);
+                    fields_read_from_caches.push(!field.flags.non_cached && !field.flags.exclude);
+                },
+                _ => {
+                    fields_read_from_tags.push(false);
+                    fields_read_from_caches.push(false);
                 }
-                fields_read_from_tags.push(!field.flags.cache_only && !field.flags.exclude);
-                fields_read_from_caches.push(!field.flags.non_cached && !field.flags.exclude);
             }
 
             fields_with_types.push(field_type);

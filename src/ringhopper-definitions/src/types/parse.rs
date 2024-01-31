@@ -570,7 +570,17 @@ impl LoadFromSerdeJSON for StructField {
                 maximum: None,
                 minimum: None,
                 limit: None
-            }
+            },
+            StructFieldType::EditorSection(e) => return Self {
+                name: e.name.clone(),
+                count: FieldCount::One,
+                default_value: None,
+                field_type,
+                flags: Flags::default(),
+                maximum: None,
+                minimum: None,
+                limit: None
+            },
         };
 
         let name = oget_str!(object, "name").to_owned();
@@ -721,11 +731,20 @@ impl LoadFromSerdeJSON for ObjectType {
 
 impl LoadFromSerdeJSON for StructFieldType {
     fn load_from_json(object: &Map<String, Value>) -> Self {
-        if oget_str!(object, "type") == "pad" {
-            Self::Padding(oget_size!(object))
+        match oget_str!(object, "type") {
+            "pad" => Self::Padding(oget_size!(object)),
+            "editor_section" => Self::EditorSection(EditorSectionData::load_from_json(object)),
+            _ => Self::Object(ObjectType::load_from_json(object))
         }
-        else {
-            Self::Object(ObjectType::load_from_json(object))
+    }
+}
+
+impl LoadFromSerdeJSON for EditorSectionData {
+    fn load_from_json(object: &Map<String, Value>) -> Self {
+        let name = oget_str!(object, "name").to_owned();
+        let description = oget_str!(object, "description").to_owned();
+        Self {
+            name, description
         }
     }
 }

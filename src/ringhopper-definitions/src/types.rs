@@ -118,9 +118,15 @@ impl SizeableObject for StructField {
     }
 }
 
+pub struct EditorSectionData {
+    pub name: String,
+    pub description: String
+}
+
 pub enum StructFieldType {
     Object(ObjectType),
-    Padding(usize)
+    Padding(usize),
+    EditorSection(EditorSectionData)
 }
 
 impl SizeableObject for StructFieldType {
@@ -128,6 +134,7 @@ impl SizeableObject for StructFieldType {
         match self {
             StructFieldType::Object(o) => o.size(parsed_tag_data),
             StructFieldType::Padding(u) => *u,
+            StructFieldType::EditorSection(_) => 0
         }
     }
 }
