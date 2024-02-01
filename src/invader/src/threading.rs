@@ -5,24 +5,34 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use cli::CommandLineArgs;
 use ringhopper::error::RinghopperResult;
 use ringhopper::primitives::primitive::{TagGroup, TagPath};
-use ringhopper::tag::tree::{iterate_through_all_tags, TagFilter, VirtualTagsDirectory};
+use ringhopper::tag::tree::{AtomicTagTree, TagFilter, TagTree};
 
-#[derive(Clone)]
-pub struct ThreadingContext {
+pub struct ThreadingContext<T: TagTree + Send> {
     pub args: CommandLineArgs,
-    pub tags_directory: VirtualTagsDirectory
+    pub tags_directory: AtomicTagTree<T>
 }
 
-pub type ProcessFunction = fn(&mut ThreadingContext, &TagPath) -> RinghopperResult<bool>;
+impl<T: TagTree + Send> Clone for ThreadingContext<T> {
+    fn clone(&self) -> Self {
+        Self {
+            args: self.args.clone(),
+            tags_directory: self.tags_directory.clone()
+        }
+    }
+}
 
-pub fn do_with_threads(
+pub type ProcessFunction<T, U> = fn(&mut ThreadingContext<T>, &TagPath, &U) -> RinghopperResult<bool>;
+
+pub fn do_with_threads<T: TagTree + Send + 'static, U: Clone + Send + 'static>(
+    tags_directory: T,
     args: CommandLineArgs,
     user_filter: &str,
     group: Option<TagGroup>,
-    function: ProcessFunction
+    user_data: U,
+    function: ProcessFunction<T, U>,
 ) -> Result<(), String> {
     let mut context = ThreadingContext {
-        tags_directory: args.get_virtual_tags_directory(),
+        tags_directory: AtomicTagTree::new(tags_directory),
         args,
     };
 
@@ -35,16 +45,16 @@ pub fn do_with_threads(
             Some(group) => TagPath::new(user_filter, group),
             None => TagPath::from_path(user_filter)
         }.map_err(|_| format!("Invalid tag path `{user_filter}`"))?;
-        process_tags(&mut context, &success, &failure, &total, &tag_path, function);
+        process_tags(&mut context, &success, &failure, &total, &tag_path, &user_data, function);
     }
     else {
         let filter = TagFilter::new(user_filter, group);
-        let tags: VecDeque<TagPath> = iterate_through_all_tags(&context.tags_directory, Some(&filter)).collect();
+        let tags: VecDeque<TagPath> = context.tags_directory.get_all_tags(Some(&filter)).into();
         let thread_count = std::thread::available_parallelism().map(|t| t.get().max(1)).unwrap_or(1);
         match thread_count {
             1 => {
                 for path in tags {
-                    process_tags(&mut context, &success, &failure, &total, &path, function);
+                    process_tags(&mut context, &success, &failure, &total, &path, &user_data, function);
                 }
             },
             n => {
@@ -56,13 +66,14 @@ pub fn do_with_threads(
                     let success = success.clone();
                     let total = total.clone();
                     let failure = failure.clone();
+                    let user_data = user_data.clone();
                     threads.push(std::thread::spawn(move || {
                         loop {
                             let next = match tags.lock().unwrap().pop_front() {
                                 Some(n) => n,
                                 None => break
                             };
-                            process_tags(&mut context, &success, &failure, &total, &next, function);
+                            process_tags(&mut context, &success, &failure, &total, &next, &user_data, function);
                         }
                     }))
                 }
@@ -88,9 +99,17 @@ pub fn do_with_threads(
     Ok(())
 }
 
-fn process_tags(context: &mut ThreadingContext, success: &Arc<AtomicU64>, failure: &Arc<AtomicU64>, total: &Arc<AtomicU64>, path: &TagPath, function: ProcessFunction) {
+fn process_tags<T: TagTree + Send, U: Clone + Send + 'static>(
+    context: &mut ThreadingContext<T>,
+    success: &Arc<AtomicU64>,
+    failure: &Arc<AtomicU64>,
+    total: &Arc<AtomicU64>,
+    path: &TagPath,
+    user_data: &U,
+    function: ProcessFunction<T, U>
+) {
     total.fetch_add(1, Ordering::Relaxed);
-    match function(context, &path) {
+    match function(context, &path, user_data) {
         Ok(true) => {
             success.fetch_add(1, Ordering::Relaxed);
             writeln!(stdout().lock(), "Processed {path}").unwrap()

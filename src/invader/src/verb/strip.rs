@@ -12,7 +12,7 @@ pub fn strip(args: Args, description: &'static str) -> Result<(), String> {
         .parse(args)?;
 
     let tag = parser.get_extra()[0].clone();
-    do_with_threads(parser, &tag, None, |context, path| {
+    do_with_threads(parser.get_virtual_tags_directory(), parser, &tag, None, (), |context, path, _| {
         let tag = context.tags_directory.open_tag_copy(&path)?;
         context.tags_directory.write_tag(path, tag.as_ref())
     })

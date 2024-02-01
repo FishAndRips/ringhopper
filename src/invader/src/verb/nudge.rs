@@ -13,7 +13,7 @@ pub fn nudge(args: Args, description: &'static str) -> Result<(), String> {
         .parse(args)?;
 
     let tag = parser.get_extra()[0].clone();
-    do_with_threads(parser, &tag, None, |context, path| {
+    do_with_threads(parser.get_virtual_tags_directory(), parser, &tag, None, (), |context, path, _| {
         if !is_nudgeable(path.group()) {
             return Ok(false)
         }

@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 use std::collections::{HashMap, VecDeque};
+use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use crc64::crc64;
@@ -560,6 +561,78 @@ impl TagTree for VirtualTagsDirectory {
         std::fs::write(&file_to_write_to, tag_file).map_err(|e| Error::FailedToWriteFile(file_to_write_to, e))?;
 
         Ok(true)
+    }
+}
+
+/// Thread-safe wrapper for tag trees.
+///
+/// This internally uses an `Arc`, so cloning this tag tree clones a reference.
+///
+/// The `files_in_path` function is unavailable, as is `iterate_through_all_tags`.
+///
+/// Use `get_all_tags` to get all tags in the tree.
+pub struct AtomicTagTree<T: TagTree + Send> {
+    tree: Arc<Mutex<T>>
+}
+
+impl<T: TagTree + Send> TagTree for AtomicTagTree<T> {
+    fn open_tag_copy(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
+        self.tree.lock().unwrap().open_tag_copy(path)
+    }
+
+    fn open_tag_shared(&self, path: &TagPath) -> RinghopperResult<Arc<Mutex<Box<dyn PrimaryTagStructDyn>>>> {
+        self.tree.lock().unwrap().open_tag_shared(path)
+    }
+
+    fn files_in_path(&self, _path: &str) -> Option<Vec<TagTreeItem>> {
+        unimplemented!("files_in_path not implemented for AtomicTagTree")
+    }
+
+    fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<bool> {
+        self.tree.lock().unwrap().write_tag(path, tag)
+    }
+}
+
+impl<T: TagTree + Send> Clone for AtomicTagTree<T> {
+    fn clone(&self) -> Self {
+        Self {
+            tree: self.tree.clone()
+        }
+    }
+}
+
+impl<T: TagTree + Send> AtomicTagTree<T> {
+    /// Instantiate a new AtomicTagTree instance.
+    pub fn new(tree: T) -> Self {
+        Self { tree: Arc::new(Mutex::new(tree)) }
+    }
+
+    /// Get all tags in the tag tree.
+    pub fn get_all_tags(&self, filter: Option<&TagFilter>) -> Vec<TagPath> {
+        iterate_through_all_tags(self.tree.lock().unwrap().deref(), filter).collect()
+    }
+
+    /// Decompose the atomic tag tree into its inner tree.
+    pub fn into_inner(self) -> T {
+        Arc::into_inner(self.tree).unwrap().into_inner().unwrap()
+    }
+}
+
+impl TagTree for Box<dyn TagTree + Send> {
+    fn open_tag_copy(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
+        self.as_ref().open_tag_copy(path)
+    }
+
+    fn open_tag_shared(&self, path: &TagPath) -> RinghopperResult<Arc<Mutex<Box<dyn PrimaryTagStructDyn>>>> {
+        self.as_ref().open_tag_shared(path)
+    }
+
+    fn files_in_path(&self, path: &str) -> Option<Vec<TagTreeItem>> {
+        self.as_ref().files_in_path(path)
+    }
+
+    fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<bool> {
+        self.as_mut().write_tag(path, tag)
     }
 }
 
