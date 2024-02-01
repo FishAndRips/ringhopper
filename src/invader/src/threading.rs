@@ -23,12 +23,22 @@ impl<T: TagTree + Send> Clone for ThreadingContext<T> {
 
 pub type ProcessFunction<T, U> = fn(&mut ThreadingContext<T>, &TagPath, &U) -> RinghopperResult<bool>;
 
+#[derive(PartialEq, Copy, Clone)]
+pub enum DisplayMode {
+    /// Show all tags successfully processed
+    ShowProcessed,
+
+    /// Only show errors
+    Silent
+}
+
 pub fn do_with_threads<T: TagTree + Send + 'static, U: Clone + Send + 'static>(
     tags_directory: T,
     args: CommandLineArgs,
     user_filter: &str,
     group: Option<TagGroup>,
     user_data: U,
+    display_mode: DisplayMode,
     function: ProcessFunction<T, U>,
 ) -> Result<(), String> {
     let mut context = ThreadingContext {
@@ -45,16 +55,16 @@ pub fn do_with_threads<T: TagTree + Send + 'static, U: Clone + Send + 'static>(
             Some(group) => TagPath::new(user_filter, group),
             None => TagPath::from_path(user_filter)
         }.map_err(|_| format!("Invalid tag path `{user_filter}`"))?;
-        process_tags(&mut context, &success, &failure, &total, &tag_path, &user_data, function);
+        process_tags(&mut context, &success, &failure, &total, &tag_path, &user_data, display_mode, function);
     }
     else {
         let filter = TagFilter::new(user_filter, group);
-        let tags: VecDeque<TagPath> = context.tags_directory.get_all_tags(Some(&filter)).into();
+        let tags: VecDeque<TagPath> = context.tags_directory.get_all_tags_with_filter(Some(&filter)).into();
         let thread_count = std::thread::available_parallelism().map(|t| t.get().max(1)).unwrap_or(1);
         match thread_count {
             1 => {
                 for path in tags {
-                    process_tags(&mut context, &success, &failure, &total, &path, &user_data, function);
+                    process_tags(&mut context, &success, &failure, &total, &path, &user_data, display_mode, function);
                 }
             },
             n => {
@@ -73,7 +83,7 @@ pub fn do_with_threads<T: TagTree + Send + 'static, U: Clone + Send + 'static>(
                                 Some(n) => n,
                                 None => break
                             };
-                            process_tags(&mut context, &success, &failure, &total, &next, &user_data, function);
+                            process_tags(&mut context, &success, &failure, &total, &next, &user_data, display_mode, function);
                         }
                     }))
                 }
@@ -92,8 +102,15 @@ pub fn do_with_threads<T: TagTree + Send + 'static, U: Clone + Send + 'static>(
     let failure = Arc::into_inner(failure).unwrap().into_inner();
     let success = Arc::into_inner(success).unwrap().into_inner();
 
-    if total > 1 {
-        println!("Processed {success} / {total} tags, with {failure} error{s}", s = if failure == 1 { "" } else { "s" })
+    if total > 1 && display_mode == DisplayMode::ShowProcessed {
+        println!("Processed {success} / {total} tags");
+        if failure > 0 {
+            print!(", with {failure} error{s}", s = if failure == 1 { "" } else { "s" });
+        }
+        println!();
+    }
+    else if display_mode == DisplayMode::Silent && failure > 0 {
+        println!("Failed to parse {failure} tag{s}", s = if failure == 1 { "" } else { "s" });
     }
 
     Ok(())
@@ -106,13 +123,16 @@ fn process_tags<T: TagTree + Send, U: Clone + Send + 'static>(
     total: &Arc<AtomicU64>,
     path: &TagPath,
     user_data: &U,
+    display_mode: DisplayMode,
     function: ProcessFunction<T, U>
 ) {
     total.fetch_add(1, Ordering::Relaxed);
     match function(context, &path, user_data) {
         Ok(true) => {
             success.fetch_add(1, Ordering::Relaxed);
-            writeln!(stdout().lock(), "Processed {path}").unwrap()
+            if display_mode == DisplayMode::ShowProcessed {
+                writeln!(stdout().lock(), "Processed {path}").unwrap()
+            }
         },
         Ok(false) => (),
         Err(e) => {

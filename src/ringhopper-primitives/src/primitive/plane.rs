@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+use crate::dynamic::SimplePrimitiveType;
 use super::*;
 
 /// General functionality for planar types.
@@ -13,6 +15,12 @@ pub trait Plane {
 pub struct Plane2D {
     pub vector: Vector2D,
     pub d: f32
+}
+
+impl Display for Plane2D {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("{{ vector = {}; d = {} }}", self.vector, self.d))
+    }
 }
 
 impl Plane for Plane2D {
@@ -40,6 +48,10 @@ impl TagDataSimplePrimitive for Plane2D {
         self.vector.write::<B>(data, at, struct_end)?;
         self.d.write::<B>(data, at + 0x8, struct_end)?;
         Ok(())
+    }
+
+    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+        SimplePrimitiveType::Plane2D
     }
 }
 
@@ -75,5 +87,15 @@ impl TagDataSimplePrimitive for Plane3D {
         self.vector.write::<B>(data, at, struct_end)?;
         self.d.write::<B>(data, at + 0xC, struct_end)?;
         Ok(())
+    }
+
+    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+        SimplePrimitiveType::Plane3D
+    }
+}
+
+impl Display for Plane3D {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("{{ vector = {}; d = {} }}", self.vector, self.d))
     }
 }

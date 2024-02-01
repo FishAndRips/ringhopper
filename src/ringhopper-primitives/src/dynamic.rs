@@ -103,6 +103,7 @@ pub trait DynamicReflexive: DynamicTagDataArray {
     fn insert_moved(&mut self, index: usize, item: &mut dyn DynamicTagData);
 }
 
+#[derive(PartialEq, Debug)]
 pub enum DynamicTagDataType {
     Reflexive,
     Array,
@@ -110,7 +111,49 @@ pub enum DynamicTagDataType {
     Data,
     TagReference,
     Enum,
-    SimplePrimitive
+    SimplePrimitive(SimplePrimitiveType)
+}
+
+#[derive(PartialEq, Debug)]
+pub enum SimplePrimitiveType {
+    Bool,
+    String32,
+    I8,
+    U8,
+    I16,
+    U16,
+    I32,
+    U32,
+    F32,
+
+    Angle,
+    Vector2D,
+    Vector3D,
+    Plane2D,
+    Plane3D,
+    Euler2D,
+    Euler3D,
+    Quaternion,
+    Matrix3x3,
+    Vector2DInt,
+    Rectangle,
+
+    ColorRGBFloat,
+    ColorARGBInt,
+    ColorARGBIntBytes,
+    ColorARGBFloat,
+
+    Padding,
+    ID,
+    TagGroup,
+    Address,
+
+    Size,
+    ScenarioScriptNodeValue,
+    TagFileHeader,
+    DataC,
+    ReflexiveC,
+    TagReferenceC,
 }
 
 macro_rules! generate_access_function {

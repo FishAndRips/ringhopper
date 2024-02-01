@@ -1,4 +1,5 @@
 use std::fmt::{Display, Debug};
+use crate::dynamic::SimplePrimitiveType;
 
 use super::*;
 
@@ -90,6 +91,10 @@ impl TagDataSimplePrimitive for String32 {
         tag_data_fits::<Self>(at, struct_end, data.len()).expect("should fit");
         data[at..at+32].clone_from_slice(&self.string_data[..]);
         Ok(())
+    }
+
+    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+        SimplePrimitiveType::String32
     }
 }
 

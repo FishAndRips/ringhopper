@@ -2,7 +2,7 @@ use std::any::Any;
 use crate::error::{Error, OverflowCheck};
 
 use byteorder::*;
-use crate::dynamic::{DynamicTagData, DynamicTagDataType};
+use crate::dynamic::{DynamicTagData, DynamicTagDataType, SimplePrimitiveType};
 
 use crate::error::RinghopperResult;
 
@@ -77,6 +77,9 @@ pub trait TagDataSimplePrimitive: Sized {
     ///
     /// In all other error cases, it will panic.
     fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()>;
+
+    /// Get the primitive type.
+    fn primitive_type() -> SimplePrimitiveType where Self: Sized;
 }
 
 impl<T: TagDataSimplePrimitive + Sized> TagData for T {
@@ -113,7 +116,7 @@ impl <T: TagDataSimplePrimitive + Sized + 'static> DynamicTagData for T {
     }
 
     fn data_type(&self) -> DynamicTagDataType {
-        DynamicTagDataType::SimplePrimitive
+        DynamicTagDataType::SimplePrimitive(T::primitive_type())
     }
 }
 
@@ -140,7 +143,7 @@ pub(crate) fn tag_data_fits<T: TagDataSimplePrimitive>(at: usize, struct_end: us
 }
 
 macro_rules! generate_tag_data_for_number {
-    ($type:tt, $bo_read:tt, $bo_write:tt) => {
+    ($type:tt, $bo_read:tt, $bo_write:tt, $primitive_type:tt) => {
         impl TagDataSimplePrimitive for $type {
             fn size() -> usize {
                 std::mem::size_of::<Self>()
@@ -154,15 +157,18 @@ macro_rules! generate_tag_data_for_number {
                 B::$bo_write(&mut data[at..], *self);
                 Ok(())
             }
+            fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+                SimplePrimitiveType::$primitive_type
+            }
         }
     };
 }
 
-generate_tag_data_for_number!(i16, read_i16, write_i16);
-generate_tag_data_for_number!(u16, read_u16, write_u16);
-generate_tag_data_for_number!(i32, read_i32, write_i32);
-generate_tag_data_for_number!(u32, read_u32, write_u32);
-generate_tag_data_for_number!(f32, read_f32, write_f32);
+generate_tag_data_for_number!(i16, read_i16, write_i16, I16);
+generate_tag_data_for_number!(u16, read_u16, write_u16, U16);
+generate_tag_data_for_number!(i32, read_i32, write_i32, I32);
+generate_tag_data_for_number!(u32, read_u32, write_u32, U32);
+generate_tag_data_for_number!(f32, read_f32, write_f32, F32);
 
 impl TagDataSimplePrimitive for bool {
     fn size() -> usize {
@@ -173,6 +179,9 @@ impl TagDataSimplePrimitive for bool {
     }
     fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
         (*self as u8).write::<B>(data, at, struct_end)
+    }
+    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+        SimplePrimitiveType::Bool
     }
 }
 
@@ -189,6 +198,9 @@ impl TagDataSimplePrimitive for u8 {
         data[at] = *self;
         Ok(())
     }
+    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+        SimplePrimitiveType::U8
+    }
 }
 
 impl TagDataSimplePrimitive for i8 {
@@ -203,6 +215,10 @@ impl TagDataSimplePrimitive for i8 {
         tag_data_fits::<Self>(at, struct_end, data.len()).expect("should fit");
         data[at] = *self as u8;
         Ok(())
+    }
+
+    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+        SimplePrimitiveType::I8
     }
 }
 
@@ -223,6 +239,9 @@ impl TagDataSimplePrimitive for usize {
         }
         let self_as_u32 = *self as u32;
         self_as_u32.write::<B>(data, at, struct_end)
+    }
+    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+        SimplePrimitiveType::Size
     }
 }
 

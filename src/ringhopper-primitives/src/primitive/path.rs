@@ -507,6 +507,10 @@ impl TagDataSimplePrimitive for TagReferenceC {
         self.tag_id.write::<B>(data, at + 0xC, struct_end)?;
         Ok(())
     }
+
+    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+        SimplePrimitiveType::TagReferenceC
+    }
 }
 
 #[cfg(test)]

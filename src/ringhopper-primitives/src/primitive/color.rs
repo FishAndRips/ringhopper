@@ -1,7 +1,9 @@
+use std::fmt::{Debug, Display, Formatter};
 use crate::primitive::Vector3D;
 use crate::parse::*;
 use crate::error::*;
 use byteorder::*;
+use crate::dynamic::SimplePrimitiveType;
 
 /// General functionality for color types.
 pub trait Color: Sized {
@@ -282,7 +284,36 @@ impl Color for ColorARGBInt {
     }
 }
 
-generate_tag_data_simple_primitive_code!(ColorARGBInt, u32, color);
+impl TagDataSimplePrimitive for ColorARGBInt {
+    fn size() -> usize {
+        <u32 as TagDataSimplePrimitive>::size()
+    }
+
+    fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
+        Ok(Self { color: u32::read::<B>(data, at, struct_end)? })
+    }
+
+    fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
+        self.color.write::<B>(data, at, struct_end)
+    }
+
+    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+        SimplePrimitiveType::ColorARGBInt
+    }
+}
+
+impl Display for ColorARGBInt {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let bytes: ColorARGBIntBytes = (*self).into();
+        Display::fmt(&bytes, f)
+    }
+}
+
+impl Display for ColorARGBIntBytes {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("{{ alpha = {}, red = {}, green = {}, blue = {} }}", self.alpha, self.red, self.green, self.blue ))
+    }
+}
 
 
 /// Refers to a color composed of 8-bit integer color with alpha.
@@ -376,5 +407,9 @@ impl TagDataSimplePrimitive for ColorARGBIntBytes {
     fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
         let v: u32 = (*self).into();
         v.write::<B>(data, at, struct_end)
+    }
+
+    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+        SimplePrimitiveType::ColorARGBIntBytes
     }
 }

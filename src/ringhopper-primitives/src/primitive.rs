@@ -31,8 +31,19 @@ pub(crate) mod macros {
         }
     }
 
+    macro_rules! generate_display_simple_primitive_code {
+        ($self: expr, $fmt: expr, $field: tt) => {
+            $fmt.write_fmt(format_args!("{} = {}", stringify!($field), $self.$field))?;
+        };
+        ($self: expr, $fmt: expr, $field: tt, $($fields: tt), +) => {
+            generate_display_simple_primitive_code!($self, $fmt, $field);
+            $fmt.write_str(", ")?;
+            generate_display_simple_primitive_code!($self, $fmt, $($fields), +);
+        };
+    }
+
     macro_rules! generate_tag_data_simple_primitive_code {
-        ($what: ty, $field_type: ty, $($fields: tt),+) => {
+        ($what: tt, $field_type: ty, $($fields: tt),+) => {
             #[allow(unused_assignments)]
             impl TagDataSimplePrimitive for $what {
                 fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
@@ -49,6 +60,18 @@ pub(crate) mod macros {
                 fn size() -> usize {
                     count_sizes!(<$field_type as TagDataSimplePrimitive>::size(), $($fields), +)
                 }
+                fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+                    SimplePrimitiveType::$what
+                }
+            }
+
+            impl std::fmt::Display for $what {
+                fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    f.write_str("{")?;
+                    generate_display_simple_primitive_code!(self, f, $($fields), +);
+                    f.write_str("}")?;
+                    Ok(())
+                }
             }
         };
     }
@@ -61,6 +84,7 @@ use crate::parse::TagDataSimplePrimitive;
 use crate::error::*;
 use crate::parse::tag_data_fits;
 use byteorder::*;
+use crate::dynamic::SimplePrimitiveType;
 
 pub use self::vector::*;
 

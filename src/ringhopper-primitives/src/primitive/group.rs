@@ -4,6 +4,7 @@ use std::fmt::Display;
 use std::convert::{TryFrom, TryInto};
 use crate::parse::TagDataSimplePrimitive;
 use byteorder::ByteOrder;
+use crate::dynamic::SimplePrimitiveType;
 
 /// Tag groups are serialized as a 32-bit FourCC integer.
 pub type FourCC = u32;
@@ -263,5 +264,9 @@ impl TagDataSimplePrimitive for TagGroup {
     fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
         let v: u32 = (*self).as_fourcc();
         v.write::<B>(data, at, struct_end)
+    }
+
+    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+        SimplePrimitiveType::TagGroup
     }
 }

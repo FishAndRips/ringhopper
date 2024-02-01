@@ -786,7 +786,7 @@ impl LoadFromSerdeJSON for Struct {
 
         if let Some(parent) = object.get("inherits").map(|p| p.as_str().unwrap().to_owned()) {
             fields.push_front(StructField {
-                name: "parent".to_owned(),
+                name: parent.to_ascii_lowercase(),
                 count: FieldCount::One,
                 field_type: StructFieldType::Object(ObjectType::NamedObject(parent)),
                 default_value: None,

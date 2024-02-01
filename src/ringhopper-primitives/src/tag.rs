@@ -174,6 +174,10 @@ impl TagDataSimplePrimitive for TagFileHeader {
         self.blam_fourcc.write::<B>(data, at + 0x3C, struct_end)?;
         Ok(())
     }
+
+    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+        SimplePrimitiveType::TagFileHeader
+    }
 }
 
 impl TagFileHeader {

@@ -5,7 +5,7 @@ use ringhopper::error::Error;
 use ringhopper::primitives::primitive::TagGroup;
 use ringhopper::tag::tag_collection::TagCollectionFunctions;
 use ringhopper::tag::tree::TagTree;
-use threading::do_with_threads;
+use threading::*;
 use util::read_file;
 
 macro_rules! make_tag_collection_fn {
@@ -20,7 +20,7 @@ macro_rules! make_tag_collection_fn {
                 .parse(args)?;
 
             let tag = parser.get_extra()[0].clone();
-            do_with_threads(parser.get_virtual_tags_directory(), parser, &tag, Some(TagGroup::$tag_struct), (), |context, path, _| {
+            do_with_threads(parser.get_virtual_tags_directory(), parser, &tag, Some(TagGroup::$tag_struct), (), DisplayMode::ShowProcessed, |context, path, _| {
                 let mut full_data_path = context.args.get_data().join(path.to_native_path());
                 full_data_path.set_extension("txt");
                 let text_file = read_file(full_data_path)?;

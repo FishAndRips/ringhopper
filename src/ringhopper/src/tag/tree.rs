@@ -1,6 +1,5 @@
 use std::borrow::Cow;
 use std::collections::{HashMap, VecDeque};
-use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use crc64::crc64;
@@ -38,6 +37,11 @@ pub trait TagTree {
     /// Get the root tag tree item.
     fn root(&self) -> TagTreeItem where Self: Sized {
         TagTreeItem::new(TagTreeItemType::Directory, Cow::default(), None, self)
+    }
+
+    /// Get all tags in the tree.
+    fn get_all_tags_with_filter(&self, filter: Option<&TagFilter>) -> Vec<TagPath> where Self: Sized {
+        iterate_through_all_tags(self, filter).collect()
     }
 }
 
@@ -566,11 +570,11 @@ impl TagTree for VirtualTagsDirectory {
 
 /// Thread-safe wrapper for tag trees.
 ///
-/// This internally uses an `Arc`, so cloning this tag tree clones a reference.
+/// This internally uses an `Arc`, so cloning this tag tree actually clones a reference.
 ///
 /// The `files_in_path` function is unavailable, as is `iterate_through_all_tags`.
 ///
-/// Use `get_all_tags` to get all tags in the tree.
+/// Use `get_all_tags_with_filter` to get all tags in the tree.
 pub struct AtomicTagTree<T: TagTree + Send> {
     tree: Arc<Mutex<T>>
 }
@@ -591,6 +595,10 @@ impl<T: TagTree + Send> TagTree for AtomicTagTree<T> {
     fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<bool> {
         self.tree.lock().unwrap().write_tag(path, tag)
     }
+
+    fn get_all_tags_with_filter(&self, filter: Option<&TagFilter>) -> Vec<TagPath> {
+        self.tree.lock().unwrap().get_all_tags_with_filter(filter)
+    }
 }
 
 impl<T: TagTree + Send> Clone for AtomicTagTree<T> {
@@ -607,14 +615,14 @@ impl<T: TagTree + Send> AtomicTagTree<T> {
         Self { tree: Arc::new(Mutex::new(tree)) }
     }
 
-    /// Get all tags in the tag tree.
-    pub fn get_all_tags(&self, filter: Option<&TagFilter>) -> Vec<TagPath> {
-        iterate_through_all_tags(self.tree.lock().unwrap().deref(), filter).collect()
-    }
-
     /// Decompose the atomic tag tree into its inner tree.
     pub fn into_inner(self) -> T {
         Arc::into_inner(self.tree).unwrap().into_inner().unwrap()
+    }
+
+    /// Return a clone of the inner tag tree.
+    pub fn clone_inner(&self) -> T where T: Clone {
+        self.tree.lock().unwrap().clone()
     }
 }
 

@@ -5,7 +5,7 @@ use crate::parse::*;
 use crate::error::*;
 use byteorder::*;
 use std::fmt::Display;
-use crate::dynamic::{DynamicReflexive, DynamicTagData, DynamicTagDataArray, DynamicTagDataType};
+use crate::dynamic::{DynamicReflexive, DynamicTagData, DynamicTagDataArray, DynamicTagDataType, SimplePrimitiveType};
 
 /// 16-bit index type
 pub type Index = u16;
@@ -159,6 +159,10 @@ impl TagDataSimplePrimitive for ID {
         let id: u32 = (*self).into();
         id.write::<B>(data, at, struct_end)
     }
+
+    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+        SimplePrimitiveType::ID
+    }
 }
 
 impl From<ID> for u32 {
@@ -203,6 +207,10 @@ impl<T: Copy + Default> TagDataSimplePrimitive for Padding<T> {
         fits(<Self as TagDataSimplePrimitive>::size(), at, struct_end).expect("should fit");
         data[at..at+<Self as TagDataSimplePrimitive>::size()].fill(0u8);
         Ok(())
+    }
+
+    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+        SimplePrimitiveType::Padding
     }
 }
 
@@ -409,7 +417,25 @@ impl From<Address> for u32 {
     }
 }
 
-generate_tag_data_simple_primitive_code!(Address, u32, address);
+impl TagDataSimplePrimitive for Address {
+    fn size() -> usize {
+        <u32 as TagDataSimplePrimitive>::size()
+    }
+
+    fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
+        Ok(Self {
+            address: u32::read::<B>(data, at, struct_end)?
+        })
+    }
+
+    fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
+        self.address.write::<B>(data, at, struct_end)
+    }
+
+    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+        SimplePrimitiveType::Address
+    }
+}
 
 pub(crate) type ReflexiveAccessRange = (usize, usize); // [start, end]
 pub(crate) fn parse_range(matcher: &str, len: usize) -> Result<Vec<ReflexiveAccessRange>, &'static str> {
@@ -618,6 +644,10 @@ impl<T: TagData + Sized> TagDataSimplePrimitive for ReflexiveC<T> {
         self.padding.write::<B>(data, at + 0x8, struct_end)?;
         Ok(())
     }
+
+    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+        SimplePrimitiveType::ReflexiveC
+    }
 }
 
 impl<T: TagData + Sized> ReflexiveC<T> {
@@ -692,6 +722,10 @@ impl TagDataSimplePrimitive for DataC {
         self.address.write::<B>(data, at + 0x10, struct_end)?;
         Ok(())
     }
+
+    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+        SimplePrimitiveType::DataC
+    }
 }
 
 #[derive(Copy, Clone, Default, Debug, PartialEq)]
@@ -751,14 +785,17 @@ impl From<ScenarioScriptNodeValue> for ID {
 }
 
 impl TagDataSimplePrimitive for ScenarioScriptNodeValue {
-    fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
-        Ok(Self { data: u32::read::<B>(data, at, struct_end)? })
-    }
     fn size() -> usize {
         <u32 as TagDataSimplePrimitive>::size()
     }
+    fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
+        Ok(Self { data: u32::read::<B>(data, at, struct_end)? })
+    }
     fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
         self.data.write::<B>(data, at, struct_end)
+    }
+    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+        SimplePrimitiveType::ScenarioScriptNodeValue
     }
 }
 

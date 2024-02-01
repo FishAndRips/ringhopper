@@ -1,7 +1,8 @@
-use std::fmt::{Display, Debug};
+use std::fmt::{Display, Debug, Formatter};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 use byteorder::ByteOrder;
+use crate::dynamic::SimplePrimitiveType;
 use crate::error::*;
 
 use super::*;
@@ -309,6 +310,12 @@ pub struct Matrix3x3 {
     pub vectors: [Vector3D; 3]
 }
 
+impl Display for Matrix3x3 {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("{{ vectors[0] = {}; vectors[1] = {}; vectors[2] = {} }}", self.vectors[0], self.vectors[1], self.vectors[2]))
+    }
+}
+
 impl TagDataSimplePrimitive for Matrix3x3 {
     fn size() -> usize {
         <Vector3D as TagDataSimplePrimitive>::size() * 3
@@ -336,6 +343,10 @@ impl TagDataSimplePrimitive for Matrix3x3 {
         self.vectors[2].write::<B>(data, at3, struct_end)?;
 
         Ok(())
+    }
+
+    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+        SimplePrimitiveType::Matrix3x3
     }
 }
 
@@ -372,13 +383,13 @@ impl Angle {
 }
 
 impl Display for Angle {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:.05}°", self.to_degrees())
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} [{}°]", self.angle, self.to_degrees())
     }
 }
 
 impl Debug for Angle {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         Display::fmt(&self, f)
     }
 }
@@ -457,7 +468,25 @@ impl Neg for Angle {
     }
 }
 
-generate_tag_data_simple_primitive_code!(Angle, f32, angle);
+impl TagDataSimplePrimitive for Angle {
+    fn size() -> usize {
+        <f32 as TagDataSimplePrimitive>::size()
+    }
+
+    fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
+        Ok(Self {
+            angle: f32::read::<B>(data, at, struct_end)?
+        })
+    }
+
+    fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
+        self.angle.write::<B>(data, at, struct_end)
+    }
+
+    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+        SimplePrimitiveType::Angle
+    }
+}
 
 macro_rules! define_ops_for_vector {
     ($vector:ty) => {
