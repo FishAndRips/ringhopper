@@ -1,5 +1,6 @@
 use std::collections::{HashMap, VecDeque};
 use std::env::Args;
+use std::path::Path;
 use std::sync::{Arc, Mutex};
 use cli::{CommandLineParser, CommandLineValue, CommandLineValueType, Parameter};
 use ringhopper::error::Error;
@@ -22,7 +23,7 @@ struct UserData {
 }
 
 pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
-    let parser = CommandLineParser::new(description, "<tag> [args]")
+    let parser = CommandLineParser::new(description, "<source1> <source2> [args]")
         .add_help()
         .add_custom_parameter(Parameter::new(
             "verbose",
@@ -47,28 +48,17 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
             false
         ))
         .add_custom_parameter(Parameter::new(
-            "tags-source",
-            'T',
-            "Add a tags directory to compare against.",
-            "<tags>",
-            Some(CommandLineValueType::Path),
+            "filter",
+            'f',
+            "Filter tags to be compared. By default, all tags are compared.",
+            "<param>",
+            Some(CommandLineValueType::String),
             1,
-            None,
-            true,
+            Some(vec![CommandLineValue::String("*".to_owned())]),
+            false,
             false
         ))
-        .add_custom_parameter(Parameter::new(
-            "map-source",
-            'M',
-            "Add a map to compare against.",
-            "<map>",
-            Some(CommandLineValueType::Path),
-            1,
-            None,
-            true,
-            false
-        ))
-        .set_required_extra_parameters(1)
+        .set_required_extra_parameters(2)
         .parse(args)?;
 
     let display_mode = match parser.get_custom("show").unwrap()[0].string() {
@@ -81,29 +71,29 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
     let verbose = parser.get_custom("verbose").is_some();
 
     let mut source: VecDeque<Box<dyn TagTree + Send>> = VecDeque::new();
-    if let Some(n) = parser.get_custom("tags-source") {
-        for i in n {
-            let path = i.path();
+    for i in parser.get_extra() {
+        let path: &Path = i.as_ref();
+        if !path.exists() {
+            return Err(format!("Source `{i}` does not exist"))
+        }
+        else if path.is_file() && path.extension() == Some("map".as_ref()) {
+            return Err(format!("Source `{i}` refers to a cache file (which is unsupported right now)"))
+        }
+        else if path.is_dir() {
             let dir = match VirtualTagsDirectory::new(&[path], None) {
                 Ok(n) => n,
                 Err(e) => return Err(format!("Error with tags directory {}: {e}", path.display()))
             };
             source.push_back(Box::new(dir));
         }
-    }
-    if let Some(n) = parser.get_custom("map-source") {
-        for _ in n {
-            return Err("Map comparison is not yet implemented!".to_string());
+        else {
+            return Err(format!("Source `{i}` does not refer to a directory"))
         }
-    }
-
-    if source.len() != 2 {
-        return Err("Only two sources are supported.".to_string());
     }
 
     let primary = source.pop_front().unwrap();
     let secondary = AtomicTagTree::new(source.pop_front().unwrap());
-    let tag = parser.get_extra()[0].clone();
+    let tag = parser.get_custom("filter").unwrap()[0].string().to_owned();
 
     let user_data = UserData {
         tags: secondary,
