@@ -30,6 +30,7 @@ pub enum Error {
     FailedToReadFile(PathBuf, std::io::Error),
     FailedToWriteFile(PathBuf, std::io::Error),
     InvalidTagsDirectory,
+    InvalidTagData(String),
     Other(String)
 }
 
@@ -50,11 +51,12 @@ impl Error {
             Error::ChecksumMismatch => Cow::Borrowed("refused to parse the data (CRC32 mismatch)"),
             Error::SizeLimitExceeded => Cow::Borrowed("usize limit exceeded"),
             Error::ArrayLimitExceeded => Cow::Borrowed("array limit of 0xFFFFFFFF (4294967295) exceeded"),
-            Error::IndexLimitExceeded => Cow::Borrowed("index limit of 0xFFFF (65535) exceeded"),
+            Error::IndexLimitExceeded => Cow::Borrowed("index limit of 0xFFFF (65535) reached/exceeded"),
             Error::String32SizeLimitExceeded => Cow::Borrowed("string data is longer than 31 characters"),
             Error::TagNotFound(tag) => Cow::Owned(format!("tag `{tag}` not found")),
             Error::FailedToReadFile(file, err) => Cow::Owned(format!("failed to read file `{}`: {err}", file.display())),
             Error::FailedToWriteFile(file, err) => Cow::Owned(format!("failed to write file `{}`: {err}", file.display())),
+            Error::InvalidTagData(explanation) => Cow::Owned(format!("out of bounds index: `{explanation}`")),
             Error::InvalidTagsDirectory => Cow::Borrowed("invalid tags directory"),
             Error::Other(explanation) => Cow::Owned(explanation.to_owned())
         }

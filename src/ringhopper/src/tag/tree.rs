@@ -34,6 +34,9 @@ pub trait TagTree {
     /// Returns `true` if the tag was actually saved.
     fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<bool>;
 
+    /// Check if the tag is present in the tree.
+    fn contains(&self, path: &TagPath) -> bool;
+
     /// Get the root tag tree item.
     fn root(&self) -> TagTreeItem where Self: Sized {
         TagTreeItem::new(TagTreeItemType::Directory, Cow::default(), None, self)
@@ -423,6 +426,9 @@ impl<T: TagTree> TagTree for CachingTagTree<T> {
         self.tag_cache.lock().unwrap().insert(path.to_owned(), Arc::new(Mutex::new(tag.clone_inner())));
         Ok(true)
     }
+    fn contains(&self, path: &TagPath) -> bool {
+        self.inner.contains(path)
+    }
 }
 
 #[derive(Clone)]
@@ -566,6 +572,10 @@ impl TagTree for VirtualTagsDirectory {
 
         Ok(true)
     }
+
+    fn contains(&self, path: &TagPath) -> bool {
+        self.path_for_tag(&path).is_some()
+    }
 }
 
 /// Thread-safe wrapper for tag trees.
@@ -576,16 +586,16 @@ impl TagTree for VirtualTagsDirectory {
 ///
 /// Use `get_all_tags_with_filter` to get all tags in the tree.
 pub struct AtomicTagTree<T: TagTree + Send> {
-    tree: Arc<Mutex<T>>
+    inner: Arc<Mutex<T>>
 }
 
 impl<T: TagTree + Send> TagTree for AtomicTagTree<T> {
     fn open_tag_copy(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
-        self.tree.lock().unwrap().open_tag_copy(path)
+        self.inner.lock().unwrap().open_tag_copy(path)
     }
 
     fn open_tag_shared(&self, path: &TagPath) -> RinghopperResult<Arc<Mutex<Box<dyn PrimaryTagStructDyn>>>> {
-        self.tree.lock().unwrap().open_tag_shared(path)
+        self.inner.lock().unwrap().open_tag_shared(path)
     }
 
     fn files_in_path(&self, _path: &str) -> Option<Vec<TagTreeItem>> {
@@ -593,18 +603,22 @@ impl<T: TagTree + Send> TagTree for AtomicTagTree<T> {
     }
 
     fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<bool> {
-        self.tree.lock().unwrap().write_tag(path, tag)
+        self.inner.lock().unwrap().write_tag(path, tag)
     }
 
     fn get_all_tags_with_filter(&self, filter: Option<&TagFilter>) -> Vec<TagPath> {
-        self.tree.lock().unwrap().get_all_tags_with_filter(filter)
+        self.inner.lock().unwrap().get_all_tags_with_filter(filter)
+    }
+
+    fn contains(&self, path: &TagPath) -> bool {
+        self.inner.lock().unwrap().contains(path)
     }
 }
 
 impl<T: TagTree + Send> Clone for AtomicTagTree<T> {
     fn clone(&self) -> Self {
         Self {
-            tree: self.tree.clone()
+            inner: self.inner.clone()
         }
     }
 }
@@ -612,17 +626,17 @@ impl<T: TagTree + Send> Clone for AtomicTagTree<T> {
 impl<T: TagTree + Send> AtomicTagTree<T> {
     /// Instantiate a new AtomicTagTree instance.
     pub fn new(tree: T) -> Self {
-        Self { tree: Arc::new(Mutex::new(tree)) }
+        Self { inner: Arc::new(Mutex::new(tree)) }
     }
 
     /// Decompose the atomic tag tree into its inner tree.
     pub fn into_inner(self) -> T {
-        Arc::into_inner(self.tree).unwrap().into_inner().unwrap()
+        Arc::into_inner(self.inner).unwrap().into_inner().unwrap()
     }
 
     /// Return a clone of the inner tag tree.
     pub fn clone_inner(&self) -> T where T: Clone {
-        self.tree.lock().unwrap().clone()
+        self.inner.lock().unwrap().clone()
     }
 }
 
@@ -641,6 +655,10 @@ impl TagTree for Box<dyn TagTree + Send> {
 
     fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<bool> {
         self.as_mut().write_tag(path, tag)
+    }
+
+    fn contains(&self, path: &TagPath) -> bool {
+        self.as_ref().contains(path)
     }
 }
 

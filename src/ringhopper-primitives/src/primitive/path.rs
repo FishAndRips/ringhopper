@@ -253,6 +253,20 @@ impl TagPath {
             path: path_fixed.to_owned(), group
         })
     }
+
+    /// Change the group of the path.
+    ///
+    /// ```
+    /// use ringhopper_primitives::primitive::{TagPath, TagGroup};
+    ///
+    /// let mut path = TagPath::new("weapons\\myweapon\\myweapon.isthebest", TagGroup::Weapon)
+    ///                 .expect("tag path should be valid");
+    /// path.set_group(TagGroup::Model);
+    /// assert_eq!(path.group(), TagGroup::Model);
+    /// ```
+    pub fn set_group(&mut self, new_group: TagGroup) {
+        self.group = new_group;
+    }
 }
 
 #[cfg(target_family="windows")]

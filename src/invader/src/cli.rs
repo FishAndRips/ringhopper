@@ -123,6 +123,25 @@ impl CommandLineParser {
         self
     }
 
+    pub fn add_overwrite(mut self) -> Self {
+        let p = Parameter {
+            values: None,
+            name: "overwrite",
+            short: 'o',
+            description: "Overwrite if the output file already exists.",
+            default_values: None,
+            value_type: None,
+            required: false,
+            value_count: 0,
+            usage: "",
+            multiple: false,
+        };
+
+        assert!(self.standard_parameters.get(&StandardParameterType::Overwrite).is_none());
+        self.standard_parameters.insert(StandardParameterType::Overwrite, p);
+        self
+    }
+
     pub fn add_cow_tags(mut self) -> Self {
         let p = Parameter {
             values: None,
@@ -372,6 +391,17 @@ impl CommandLineArgs {
             .path()
     }
 
+    /// Get the Overwrite parameter.
+    ///
+    /// Panics if Overwrite was not set.
+    pub fn get_overwrite(&self) -> bool {
+        self.standard_parameters
+            .get(&StandardParameterType::Overwrite)
+            .expect("overwrite not added as standard parameter")
+            .values
+            .is_some()
+    }
+
     /// Get the custom parameters.
     ///
     /// Panics if not set.
@@ -439,7 +469,8 @@ enum StandardParameterType {
     Data,
     Maps,
     Help,
-    CowTags
+    CowTags,
+    Overwrite,
 }
 
 #[derive(Debug, Clone)]

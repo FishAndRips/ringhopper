@@ -8,7 +8,32 @@ use std::fmt::Display;
 use crate::dynamic::{DynamicReflexive, DynamicTagData, DynamicTagDataArray, DynamicTagDataType, SimplePrimitiveType};
 
 /// 16-bit index type
-pub type Index = u16;
+pub type Index = Option<u16>;
+
+impl TagDataSimplePrimitive for Index {
+    fn size() -> usize {
+        <u16 as TagDataSimplePrimitive>::size()
+    }
+
+    fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
+        match u16::read::<B>(data, at, struct_end)? {
+            0xFFFF => Ok(None),
+            n => Ok(Some(n))
+        }
+    }
+
+    fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
+        match self {
+            Some(0xFFFF) => return Err(Error::IndexLimitExceeded),
+            Some(n) => n.write::<B>(data, at, struct_end),
+            None => 0xFFFFu16.write::<B>(data, at, struct_end)
+        }
+    }
+
+    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+        SimplePrimitiveType::Index
+    }
+}
 
 /// Nullable index for referring to an element in an array.
 ///
@@ -30,11 +55,18 @@ impl ID {
     /// ```rust
     /// use ringhopper_primitives::primitive::ID;
     ///
-    /// let value = ID::new(0x1234, 0x5678);
+    /// let value = ID::new(Some(0x1234), 0x5678);
     /// assert_eq!(value.index().unwrap(), 0x1234);
     /// assert_eq!(value.salt().unwrap(), 0x5678);
     /// ```
     pub const fn new(index: Index, salt: u16) -> Self {
+        let index = if let Some(n) = index {
+            n
+        }
+        else {
+            return ID::null()
+        };
+
         let id = (((salt ^ index) as u32 | 0x8000) << 16) | (index as u32);
         let rv = Self { id };
         debug_assert!(!rv.is_null());
@@ -57,17 +89,15 @@ impl ID {
 
     /// Get the index value of the ID.
     ///
-    /// Returns `None` if the ID is null.
-    ///
     /// # Examples
     ///
     /// ```rust
     /// use ringhopper_primitives::primitive::ID;
     ///
-    /// let value = ID::new(0x1234, 0x5678).index().expect("not null");
+    /// let value = ID::new(Some(0x1234), 0x5678).index().expect("not null");
     /// assert_eq!(value, 0x1234);
     /// ```
-    pub const fn index(self) -> Option<Index> {
+    pub const fn index(self) -> Index {
         match self.is_null() {
             false => Some((self.id & 0xFFFF) as u16),
             true => None
@@ -83,7 +113,7 @@ impl ID {
     /// ```rust
     /// use ringhopper_primitives::primitive::ID;
     ///
-    /// let value = ID::new(0x1234, 0x5678).salt().expect("not null");
+    /// let value = ID::new(Some(0x1234), 0x5678).salt().expect("not null");
     /// assert_eq!(value, 0x5678);
     /// ```
     pub const fn salt(self) -> Option<u16> {
@@ -149,11 +179,11 @@ impl IDType {
 }
 
 impl TagDataSimplePrimitive for ID {
-    fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
-        Ok(ID::from_u32(<u32 as TagDataSimplePrimitive>::read::<B>(data, at, struct_end)?))
-    }
     fn size() -> usize {
         <u32 as TagDataSimplePrimitive>::size()
+    }
+    fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
+        Ok(ID::from_u32(<u32 as TagDataSimplePrimitive>::read::<B>(data, at, struct_end)?))
     }
     fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
         let id: u32 = (*self).into();

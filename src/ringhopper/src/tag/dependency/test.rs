@@ -8,8 +8,8 @@ use crate::tag::tree::MockTagTree;
 
 fn generate_test_tag_tree() -> MockTagTree {
     let mut weapon_tag = Weapon::default();
-    weapon_tag.parent.parent.model = TagReference::Set(TagPath::from_path("weapons\\myweapon\\myweapon.model").unwrap());
-    weapon_tag.parent.parent.collision_model = TagReference::Set(TagPath::from_path("weapons\\myweapon\\myweapon.model_collision_geometry").unwrap());
+    weapon_tag.item.object.model = TagReference::Set(TagPath::from_path("weapons\\myweapon\\myweapon.model").unwrap());
+    weapon_tag.item.object.collision_model = TagReference::Set(TagPath::from_path("weapons\\myweapon\\myweapon.model_collision_geometry").unwrap());
     weapon_tag.first_person_model = TagReference::Set(TagPath::from_path("weapons\\myweapon\\fp\\fp.model").unwrap());
     weapon_tag.first_person_animations = TagReference::Set(TagPath::from_path("weapons\\myweapon\\fp\\fp.model_animations").unwrap());
     let mut weapon_trigger = WeaponTrigger::default();

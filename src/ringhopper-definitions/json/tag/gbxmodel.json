@@ -4,7 +4,10 @@
         "type": "bitfield",
         "fields": [
             "blend shared normals",
-            "parts have local nodes",
+            {
+                "name": "parts have local nodes",
+                "read_only": true
+            },
             "ignore skinning"
         ],
         "width": 32
@@ -89,68 +92,14 @@
                 "type": "int32"
             },
             {
-                "name": "super high detail cutoff",
-                "unit": "pixels",
-                "read_only": false,
-                "type": "float"
+                "name": "detail cutoff",
+                "type": "ModelDetailCutoff",
+                "read_only": false
             },
             {
-                "name": "high detail cutoff",
-                "unit": "pixels",
-                "read_only": false,
-                "type": "float"
-            },
-            {
-                "name": "medium detail cutoff",
-                "unit": "pixels",
-                "read_only": false,
-                "type": "float"
-            },
-            {
-                "name": "low detail cutoff",
-                "unit": "pixels",
-                "read_only": false,
-                "type": "float"
-            },
-            {
-                "name": "super low detail cutoff",
-                "unit": "pixels",
-                "read_only": false,
-                "type": "float"
-            },
-            {
-                "name": "super low detail node count",
-                "unit": "nodes",
-                "type": "uint16",
+                "name": "detail node count",
+                "type": "ModelDetailNodeCount",
                 "cache_only": true
-            },
-            {
-                "name": "low detail node count",
-                "unit": "nodes",
-                "type": "uint16",
-                "cache_only": true
-            },
-            {
-                "name": "medium detail node count",
-                "unit": "nodes",
-                "type": "uint16",
-                "cache_only": true
-            },
-            {
-                "name": "high detail node count",
-                "unit": "nodes",
-                "type": "uint16",
-                "cache_only": true
-            },
-            {
-                "name": "super high detail node count",
-                "unit": "nodes",
-                "type": "uint16",
-                "cache_only": true
-            },
-            {
-                "type": "pad",
-                "size": 2
             },
             {
                 "type": "pad",
@@ -171,7 +120,7 @@
                 "size": 116
             },
             {
-                "name": "markers",
+                "name": "runtime markers",
                 "type": "Reflexive",
                 "struct": "ModelMarker",
                 "hidden": true,

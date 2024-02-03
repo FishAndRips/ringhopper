@@ -13,6 +13,7 @@ mod strip;
 mod tag_collection;
 mod nudge;
 mod compare;
+mod convert;
 
 pub struct Verb {
     pub name: &'static str,
@@ -30,6 +31,7 @@ impl Verb {
 
 pub const ALL_VERBS: &'static [Verb] = &[
     Verb::new("compare", "Compare tags between two tag sources", compare::compare),
+    Verb::new("convert", "Convert tags to another tag group", convert::convert),
     Verb::new("dependencies", "View dependencies of tags", dependencies::dependencies),
     Verb::new("nudge", "Fix floating point precision errors from tag extraction", nudge::nudge),
     Verb::new("strip", "Clean tags", strip::strip),

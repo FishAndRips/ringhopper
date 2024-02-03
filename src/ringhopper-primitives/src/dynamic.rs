@@ -143,6 +143,7 @@ pub enum SimplePrimitiveType {
     ColorARGBIntBytes,
     ColorARGBFloat,
 
+    Index,
     Padding,
     ID,
     TagGroup,

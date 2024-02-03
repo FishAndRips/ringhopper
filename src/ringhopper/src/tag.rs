@@ -4,3 +4,5 @@ pub mod dependency;
 pub mod tag_collection;
 pub mod nudge;
 pub mod compare;
+pub mod convert;
+pub mod model;

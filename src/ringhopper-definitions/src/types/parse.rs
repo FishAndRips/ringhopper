@@ -785,8 +785,18 @@ impl LoadFromSerdeJSON for Struct {
                                                     .collect::<VecDeque<StructField>>();
 
         if let Some(parent) = object.get("inherits").map(|p| p.as_str().unwrap().to_owned()) {
+            let mut parent_snake_case = String::with_capacity(parent.len() * 2);
+            let mut last_char = 'A';
+            for c in parent.chars() {
+                if c.is_ascii_uppercase() && !last_char.is_ascii_uppercase() {
+                    parent_snake_case.push('_');
+                }
+                last_char = c;
+                parent_snake_case.push(c.to_ascii_lowercase());
+            }
+
             fields.push_front(StructField {
-                name: parent.to_ascii_lowercase(),
+                name: parent_snake_case,
                 count: FieldCount::One,
                 field_type: StructFieldType::Object(ObjectType::NamedObject(parent)),
                 default_value: None,

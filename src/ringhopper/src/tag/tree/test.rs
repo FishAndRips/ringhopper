@@ -35,6 +35,10 @@ impl TagTree for MockTagTree {
         self.items.insert(path.to_string(), Some(tag.clone_inner()));
         Ok(true)
     }
+
+    fn contains(&self, path: &TagPath) -> bool {
+        self.items.contains_key(&path.to_internal_path())
+    }
 }
 
 #[test]

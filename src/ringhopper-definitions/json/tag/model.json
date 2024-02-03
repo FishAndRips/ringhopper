@@ -14,9 +14,7 @@
             "stripped internal",
             {
                 "name": "zoner",
-                "supported_engines": [
-                    "pc"
-                ]
+                "description": "must be set if \"parts have local nodes\" is set, and unset otherwise"
             }
         ],
         "width": 32
@@ -364,19 +362,19 @@
             },
             {
                 "name": "texture coordinate u",
-                "type": "int16"
+                "type": "uint16"
             },
             {
                 "name": "texture coordinate v",
-                "type": "int16"
+                "type": "uint16"
             },
             {
                 "name": "node0 index",
-                "type": "int8"
+                "type": "uint8"
             },
             {
                 "name": "node1 index",
-                "type": "int8"
+                "type": "uint8"
             },
             {
                 "name": "node0 weight",
@@ -594,6 +592,74 @@
         "size": 32
     },
     {
+        "name": "ModelDetailCutoff",
+        "fields": [
+            {
+                "name": "super high",
+                "unit": "pixels",
+                "type": "float"
+            },
+            {
+                "name": "high",
+                "unit": "pixels",
+                "type": "float"
+            },
+            {
+                "name": "medium",
+                "unit": "pixels",
+                "type": "float"
+            },
+            {
+                "name": "low",
+                "unit": "pixels",
+                "type": "float"
+            },
+            {
+                "name": "super low",
+                "unit": "pixels",
+                "type": "float"
+            }
+        ],
+        "size": 20,
+        "type": "struct"
+    },
+    {
+        "name": "ModelDetailNodeCount",
+        "fields": [
+            {
+                "name": "super low",
+                "unit": "pixels",
+                "type": "uint16"
+            },
+            {
+                "name": "low",
+                "unit": "pixels",
+                "type": "uint16"
+            },
+            {
+                "name": "medium",
+                "unit": "pixels",
+                "type": "uint16"
+            },
+            {
+                "name": "high",
+                "unit": "pixels",
+                "type": "uint16"
+            },
+            {
+                "name": "super high",
+                "unit": "pixels",
+                "type": "uint16"
+            },
+            {
+                "type": "pad",
+                "size": 2
+            }
+        ],
+        "size": 12,
+        "type": "struct"
+    },
+    {
         "name": "Model",
         "groups": [
             {
@@ -613,68 +679,14 @@
                 "type": "int32"
             },
             {
-                "name": "super high detail cutoff",
-                "unit": "pixels",
-                "read_only": false,
-                "type": "float"
+                "name": "detail cutoff",
+                "type": "ModelDetailCutoff",
+                "read_only": false
             },
             {
-                "name": "high detail cutoff",
-                "unit": "pixels",
-                "read_only": false,
-                "type": "float"
-            },
-            {
-                "name": "medium detail cutoff",
-                "unit": "pixels",
-                "read_only": false,
-                "type": "float"
-            },
-            {
-                "name": "low detail cutoff",
-                "unit": "pixels",
-                "read_only": false,
-                "type": "float"
-            },
-            {
-                "name": "super low detail cutoff",
-                "unit": "pixels",
-                "read_only": false,
-                "type": "float"
-            },
-            {
-                "name": "super low detail node count",
-                "unit": "nodes",
-                "type": "uint16",
+                "name": "detail node count",
+                "type": "ModelDetailNodeCount",
                 "cache_only": true
-            },
-            {
-                "name": "low detail node count",
-                "unit": "nodes",
-                "type": "uint16",
-                "cache_only": true
-            },
-            {
-                "name": "medium detail node count",
-                "unit": "nodes",
-                "type": "uint16",
-                "cache_only": true
-            },
-            {
-                "name": "high detail node count",
-                "unit": "nodes",
-                "type": "uint16",
-                "cache_only": true
-            },
-            {
-                "name": "super high detail node count",
-                "unit": "nodes",
-                "type": "uint16",
-                "cache_only": true
-            },
-            {
-                "type": "pad",
-                "size": 2
             },
             {
                 "type": "pad",
@@ -695,7 +707,7 @@
                 "size": 116
             },
             {
-                "name": "markers",
+                "name": "runtime markers",
                 "type": "Reflexive",
                 "struct": "ModelMarker",
                 "hidden": true,

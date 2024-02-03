@@ -1,7 +1,7 @@
 use std::fmt::Display;
 use crc64::crc64;
 use primitives::dynamic::{DynamicEnum, DynamicTagData, DynamicTagDataArray, DynamicTagDataType, SimplePrimitiveType};
-use primitives::primitive::{Address, Angle, ColorARGBFloat, ColorARGBInt, ColorARGBIntBytes, ColorRGBFloat, Data, Euler2D, Euler3D, ID, Matrix3x3, Plane2D, Plane3D, Quaternion, Rectangle, String32, TagGroup, TagReference, Vector2D, Vector2DInt, Vector3D};
+use primitives::primitive::{Address, Angle, ColorARGBFloat, ColorARGBInt, ColorARGBIntBytes, ColorRGBFloat, Data, Euler2D, Euler3D, ID, Index, Matrix3x3, Plane2D, Plane3D, Quaternion, Rectangle, String32, TagGroup, TagReference, Vector2D, Vector2DInt, Vector3D};
 use primitives::tag::PrimaryTagStructDyn;
 
 #[derive(Clone)]
@@ -97,6 +97,7 @@ fn compare_tag_data<T: DynamicTagData + ?Sized>(first: &T, second: &T, path: &mu
                 SimplePrimitiveType::ColorARGBInt => do_compare!(ColorARGBInt),
                 SimplePrimitiveType::ColorARGBIntBytes => do_compare!(ColorARGBIntBytes),
                 SimplePrimitiveType::ColorARGBFloat => do_compare!(ColorARGBFloat),
+                SimplePrimitiveType::Index => compare_index(first.as_any().downcast_ref().unwrap(), second.as_any().downcast_ref().unwrap(), path, comparison, depth),
                 SimplePrimitiveType::Padding => (),
                 SimplePrimitiveType::ID => do_compare!(ID),
                 SimplePrimitiveType::TagGroup => do_compare!(TagGroup),
@@ -113,6 +114,16 @@ fn compare_primitive<T: PartialEq + Display>(first: &T, second: &T, path: &mut S
             depth,
             path: path[1..].to_owned(),
             difference: format!("value is different ({first} != {second})")
+        });
+    }
+}
+
+fn compare_index(first: &Index, second: &Index, path: &mut String, comparison: &mut Vec<TagComparisonDifference>, depth: usize) {
+    if first != second {
+        comparison.push(TagComparisonDifference {
+            depth,
+            path: path[1..].to_owned(),
+            difference: format!("value is different ({first:?} != {second:?})")
         });
     }
 }
