@@ -332,11 +332,11 @@ impl ParsedDefinitions {
                     validate_flags(&s.flags, "(self)");
 
                     for i in 0..s.fields.len() {
-                        if matches!(s.fields[i].field_type, StructFieldType::Padding(_)) {
+                        if matches!(s.fields[i].field_type, StructFieldType::Padding(_) | StructFieldType::EditorSection(_)) {
                             continue
                         }
                         for j in i+1..s.fields.len() {
-                            if matches!(s.fields[j].field_type, StructFieldType::Padding(_)) {
+                            if matches!(s.fields[j].field_type, StructFieldType::Padding(_) | StructFieldType::EditorSection(_)) {
                                 continue
                             }
                             let field_name = &s.fields[i].name;
