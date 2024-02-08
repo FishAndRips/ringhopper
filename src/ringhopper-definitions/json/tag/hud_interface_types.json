@@ -117,10 +117,14 @@
             },
             {
                 "name": "opacity",
+                "minimum": 0.0,
+                "maximum": 1.0,
                 "type": "float"
             },
             {
                 "name": "translucency",
+                "minimum": 0.0,
+                "maximum": 1.0,
                 "type": "float"
             },
             {
@@ -129,6 +133,8 @@
             },
             {
                 "name": "min alpha",
+                "minimum": 0.0,
+                "maximum": 1.0,
                 "supported_engines": [
                     "mcc-cea"
                 ],
