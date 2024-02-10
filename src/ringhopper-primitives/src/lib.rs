@@ -8,3 +8,4 @@ pub mod parse;
 pub mod tag;
 pub mod crc32;
 pub mod dynamic;
+pub mod map;

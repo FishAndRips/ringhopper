@@ -6,18 +6,25 @@ use std::convert::From;
 use std::fmt::Display;
 use std::fmt::Write;
 use crate::dynamic::{DynamicTagData, DynamicTagDataType};
+use crate::map::{DomainType, Map};
 
 /// Halo path separator
 pub const HALO_PATH_SEPARATOR: char = '\\';
 
 /// Refers to a tag path and provides functions for handling these.
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, Eq, Hash)]
 pub struct TagPath {
     /// The path of the tag, not including the extension
     pub(crate) path: String,
 
     /// The group of the tag (also used for determining the file extension)
     pub(crate) group: TagGroup
+}
+
+impl PartialEq for TagPath {
+    fn eq(&self, other: &Self) -> bool {
+        self.group == other.group && self.path == other.path
+    }
 }
 
 impl Ord for TagPath {
@@ -454,6 +461,19 @@ impl TagData for TagReference {
             }
         };
         construct_to_write.write_to_tag_file(data, at, struct_end)
+    }
+
+    fn read_from_map<M: Map>(map: &M, address: usize, domain_type: &DomainType) -> RinghopperResult<Self> {
+        let c_primitive = TagReferenceC::read_from_map(map, address, domain_type)?;
+        if c_primitive.tag_id.is_null() {
+            return Ok(TagReference::Null(c_primitive.tag_group));
+        }
+
+        let tag = map
+            .get_tag(c_primitive.tag_id)
+            .ok_or_else(|| Error::MapDataOutOfBounds(format!("invalid tag id 0x{:08X}", c_primitive.tag_id.as_u32())))?;
+
+        Ok(TagReference::Set(tag.tag_path.clone()))
     }
 }
 

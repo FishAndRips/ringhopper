@@ -1,3 +1,4 @@
+use crate::map::{DomainType, Map};
 use crate::parse::*;
 use super::*;
 
@@ -22,6 +23,10 @@ impl TagData for String {
     fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {
         self.string.write_to_tag_file(data, at, struct_end)
     }
+
+    fn read_from_map<M: Map>(map: &M, address: usize, domain_type: &DomainType) -> RinghopperResult<Self> where Self: Sized {
+        unimplemented!()
+    }
 }
 
 impl TagData for UnicodeStringList {
@@ -33,6 +38,10 @@ impl TagData for UnicodeStringList {
     }
     fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {
         self.strings.write_to_tag_file(data, at, struct_end)
+    }
+
+    fn read_from_map<M: Map>(map: &M, address: usize, domain_type: &DomainType) -> RinghopperResult<Self> where Self: Sized {
+        unimplemented!()
     }
 }
 

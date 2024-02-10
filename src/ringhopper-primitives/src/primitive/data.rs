@@ -6,6 +6,7 @@ use crate::error::*;
 use byteorder::*;
 use std::fmt::Display;
 use crate::dynamic::{DynamicReflexive, DynamicTagData, DynamicTagDataArray, DynamicTagDataType, SimplePrimitiveType};
+use crate::map::{DomainType, Map, ResourceMapType};
 
 /// 16-bit index type
 pub type Index = Option<u16>;
@@ -312,6 +313,27 @@ impl TagData for Data {
         data.extend_from_slice(&self.bytes);
         Ok(())
     }
+
+    fn read_from_map<M: Map>(map: &M, address: usize, domain_type: &DomainType) -> RinghopperResult<Self> {
+        let c_primitive = DataC::read_from_map(map, address, domain_type)?;
+
+        // If in a sounds.map file
+        let domain_to_use = if (c_primitive.flags & 1) != 0 {
+            &DomainType::ResourceMapFile(ResourceMapType::Sounds)
+        }
+        else {
+            domain_type
+        };
+
+        let address = c_primitive.address.address as usize;
+        let data = map.get_data_at_address(address, domain_to_use, c_primitive.size as usize);
+        let data = match data {
+            Some(n) => n,
+            None => return Err(Error::MapDataOutOfBounds(format!("can't read 0x{address:08X} bytes from {domain_to_use:?}")))
+        };
+
+        Ok(Self { bytes: data.to_vec() })
+    }
 }
 
 impl DynamicTagData for Data {
@@ -418,6 +440,28 @@ impl<T: TagData + Sized> TagData for Reflexive<T> {
         }
 
         Ok(())
+    }
+
+    fn read_from_map<M: Map>(map: &M, address: usize, domain_type: &DomainType) -> RinghopperResult<Self> {
+        let c_primitive = ReflexiveC::<T>::read_from_map(map, address, domain_type)?;
+
+        let count = c_primitive.count as usize;
+        let item_size = T::size();
+        let mut address = c_primitive.address.address as usize;
+
+        // Make sure we can add all of these
+        count.mul_overflow_checked(item_size)?.add_overflow_checked(address)?;
+
+        let mut result = Reflexive {
+            items: Vec::with_capacity(count)
+        };
+
+        for _ in 0..count {
+            result.items.push(T::read_from_map(map, address, domain_type)?);
+            address += item_size;
+        }
+
+        Ok(result)
     }
 }
 

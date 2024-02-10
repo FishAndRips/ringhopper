@@ -5,6 +5,7 @@ use byteorder::*;
 use crate::dynamic::{DynamicTagData, DynamicTagDataType, SimplePrimitiveType};
 
 use crate::error::RinghopperResult;
+use crate::map::{DomainType, Map};
 
 /// Maximum length for an array.
 ///
@@ -36,6 +37,9 @@ pub trait TagData {
     ///
     /// This can get an error if some form of invariant is violated, such as a size being greater than [`MAX_ARRAY_LENGTH`].
     fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()>;
+
+    /// Read data from the map.
+    fn read_from_map<M: Map>(map: &M, address: usize, domain_type: &DomainType) -> RinghopperResult<Self> where Self: Sized;
 }
 
 /// Automatically implements types for [`TagData`] for simple types.
@@ -91,6 +95,14 @@ impl<T: TagDataSimplePrimitive + Sized> TagData for T {
     }
     fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {
         self.write::<BE>(data, at, struct_end)
+    }
+    fn read_from_map<M: Map>(map: &M, address: usize, domain_type: &DomainType) -> RinghopperResult<Self> {
+        let size = <T as TagDataSimplePrimitive>::size();
+        let data = match map.get_data_at_address(address, domain_type, size) {
+            Some(n) => n,
+            None => return Err(Error::MapDataOutOfBounds(format!("cannot read 0x{size:04X} bytes from {domain_type:?}")))
+        };
+        T::read::<LittleEndian>(data, 0, data.len())
     }
 }
 

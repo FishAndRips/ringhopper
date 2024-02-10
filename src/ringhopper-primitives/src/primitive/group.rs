@@ -237,6 +237,9 @@ impl TagGroup {
             }
             i += 1;
         }
+        if fourcc == u32::MAX {
+            return Some(TagGroup::_Unset);
+        }
         None
     }
 }

@@ -475,6 +475,8 @@ pub(crate) fn get_all_definitions() -> Vec<Map<String, Value>> {
     jsons.insert("tag/weather_particle_system.json", include_bytes!("../../json/tag/weather_particle_system.json"));
     jsons.insert("tag/wind.json", include_bytes!("../../json/tag/wind.json"));
 
+    jsons.insert("map/cache.json", include_bytes!("../../json/map/cache.json"));
+
     jsons.insert("engine/halo macintosh demo.json", include_bytes!("../../json/engine/halo macintosh demo.json"));
     jsons.insert("engine/halo macintosh retail.json", include_bytes!("../../json/engine/halo macintosh retail.json"));
     jsons.insert("engine/halo mcc cea.json", include_bytes!("../../json/engine/halo mcc cea.json"));

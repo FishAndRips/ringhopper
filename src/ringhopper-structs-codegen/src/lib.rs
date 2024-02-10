@@ -203,22 +203,24 @@ impl ToTokenStream for Struct {
         let structure_size = self.size;
 
         let mut write_out = String::new();
-        let mut read_in = String::new();
+        let mut read_tag_in = String::new();
+        let mut read_map_in = String::new();
 
         let mut field_list = String::new();
         let mut getter = String::new();
         let mut getter_mut = String::new();
 
+        // Tag I/O
         for i in 0..field_count {
             let length = &fields_with_sizes[i];
 
             let field_name = &fields_with_names[i];
             let field_matcher = &fields_with_matchers[i];
             let field_type = &fields_with_types[i];
-            let read_code = format!("<{field_type}>::read_from_tag_file(data, _pos, struct_end, extra_data_cursor)?");
+            let read_tag_code = format!("<{field_type}>::read_from_tag_file(data, _pos, struct_end, extra_data_cursor)?");
 
             if fields_read_from_tags[i] {
-                writeln!(&mut read_in, "output.{field_name} = {read_code};").unwrap();
+                writeln!(&mut read_tag_in, "output.{field_name} = {read_tag_code};").unwrap();
                 writeln!(&mut write_out, "self.{field_name}.write_to_tag_file(data, _pos, struct_end)?;").unwrap();
                 write!(&mut field_list, "\"{field_matcher}\",").unwrap();
                 writeln!(&mut getter, "\"{field_matcher}\" => Some(&self.{field_name}),").unwrap();
@@ -236,7 +238,7 @@ impl ToTokenStream for Struct {
                     _ => false
                 };
                 if should_output_code_anyway {
-                    writeln!(&mut read_in, "{read_code};").unwrap();
+                    writeln!(&mut read_tag_in, "{read_tag_code};").unwrap();
                     match &self.fields[i].field_type {
                         StructFieldType::Object(ObjectType::TagReference(t)) => {
                             let best_group = camel_case(&t.allowed_groups[0]);
@@ -247,7 +249,19 @@ impl ToTokenStream for Struct {
                 }
             }
             writeln!(&mut write_out, "let _pos = _pos.add_overflow_checked({length})?;").unwrap();
-            writeln!(&mut read_in, "let _pos = _pos.add_overflow_checked({length})?;").unwrap();
+            writeln!(&mut read_tag_in, "let _pos = _pos.add_overflow_checked({length})?;").unwrap();
+        }
+
+        // Map I/O
+        for i in 0..field_count {
+            let length = &fields_with_sizes[i];
+            if fields_read_from_caches[i] {
+                let field_name = &fields_with_names[i];
+                let field_type = &fields_with_types[i];
+                let read_map_code = format!("<{field_type}>::read_from_map(map, _pos, domain_type)?");
+                writeln!(&mut read_map_in, "output.{field_name} = {read_map_code};").unwrap();
+            }
+            writeln!(&mut read_map_in, "let _pos = _pos.add_overflow_checked({length})?;").unwrap();
         }
 
         let functions = format!("impl TagData for {struct_name} {{
@@ -256,9 +270,9 @@ impl ToTokenStream for Struct {
             }}
 
             fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> {{
-                let mut _pos = at;
+                let _pos = at;
                 let mut output = Self::default();
-                {read_in}
+                {read_tag_in}
                 Ok(output)
             }}
 
@@ -266,6 +280,13 @@ impl ToTokenStream for Struct {
                 let mut _pos = at;
                 {write_out}
                 Ok(())
+            }}
+
+            fn read_from_map<M: Map>(map: &M, address: usize, domain_type: &DomainType) -> RinghopperResult<Self> {{
+                let _pos = address;
+                let mut output = Self::default();
+                {read_map_in}
+                Ok(output)
             }}
         }}
 
@@ -353,21 +374,32 @@ impl ToTokenStream for Enum {
         }}").parse::<TokenStream>().unwrap();
 
         let functions = format!("
+
+        impl TryFrom<u16> for {struct_name} {{
+            type Error = Error;
+            fn try_from(value: u16) -> Result<Self, Self::Error> {{
+                match value {{
+                    {read_in}
+                    _ => Err(Error::InvalidEnum)
+                }}
+            }}
+        }}
+
         impl TagData for {struct_name} {{
             fn size() -> usize {{
                 <u16 as TagDataSimplePrimitive>::size()
             }}
 
             fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> {{
-                let input = u16::read_from_tag_file(data, at, struct_end, extra_data_cursor)?;
-                match input {{
-                    {read_in}
-                    _ => Err(Error::InvalidEnum)
-                }}
+                u16::read_from_tag_file(data, at, struct_end, extra_data_cursor)?.try_into()
             }}
 
             fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {{
                 (*self as u16).write_to_tag_file(data, at, struct_end)
+            }}
+
+            fn read_from_map<M: Map>(map: &M, address: usize, domain_type: &DomainType) -> RinghopperResult<Self> {{
+                u16::read_from_map(map, address, domain_type)?.try_into()
             }}
         }}
 
@@ -540,6 +572,11 @@ impl ToTokenStream for Bitfield {
             fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {{
                 let write_out: u{width} = (*self).into();
                 (write_out & {not_cache_only}).write_to_tag_file(data, at, struct_end)
+            }}
+
+            fn read_from_map<M: Map>(map: &M, address: usize, domain_type: &DomainType) -> RinghopperResult<Self> {{
+                let read_in = u{width}::read_from_map(map, address, domain_type)?;
+                Ok(read_in.into())
             }}
         }}").parse::<TokenStream>().unwrap();
 

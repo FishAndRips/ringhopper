@@ -17,6 +17,7 @@ pub enum Error {
     InvalidEnum,
     InvalidTagFile,
     TagParseFailure(String),
+    MapParseFailure(String),
     CorruptedTag(TagPath, Vec<Error>),
     TagHeaderGroupTypeMismatch,
     TagHeaderGroupVersionMismatch,
@@ -30,6 +31,7 @@ pub enum Error {
     FailedToReadFile(PathBuf, std::io::Error),
     FailedToWriteFile(PathBuf, std::io::Error),
     InvalidTagsDirectory,
+    MapDataOutOfBounds(String),
     InvalidTagData(String),
     Other(String)
 }
@@ -44,6 +46,7 @@ impl Error {
             Error::InvalidFourCC => Cow::Borrowed("invalid tag group FourCC"),
             Error::InvalidTagFile => Cow::Borrowed("tag file is invalid (bad header)"),
             Error::TagParseFailure(reason) => Cow::Owned(format!("failed to parse the tag (tag is likely corrupt): {reason}")),
+            Error::MapParseFailure(reason) => Cow::Owned(format!("failed to parse the map: {reason}")),
             Error::CorruptedTag(tag, error) => Cow::Owned(format!("tag `{tag}` is unreadable and/or corrupt: {error:?}")),
             Error::TagHeaderGroupTypeMismatch => Cow::Borrowed("failed to parse the tag due to it being the wrong group"),
             Error::TagHeaderGroupVersionMismatch => Cow::Borrowed("failed to parse the tag due to it being the wrong group version"),
@@ -56,6 +59,7 @@ impl Error {
             Error::TagNotFound(tag) => Cow::Owned(format!("tag `{tag}` not found")),
             Error::FailedToReadFile(file, err) => Cow::Owned(format!("failed to read file `{}`: {err}", file.display())),
             Error::FailedToWriteFile(file, err) => Cow::Owned(format!("failed to write file `{}`: {err}", file.display())),
+            Error::MapDataOutOfBounds(explanation) => Cow::Owned(format!("map data out of bounds: {explanation}")),
             Error::InvalidTagData(explanation) => Cow::Owned(format!("out of bounds index: `{explanation}`")),
             Error::InvalidTagsDirectory => Cow::Borrowed("invalid tags directory"),
             Error::Other(explanation) => Cow::Owned(explanation.to_owned())
