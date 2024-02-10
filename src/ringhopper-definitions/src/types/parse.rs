@@ -742,7 +742,9 @@ impl LoadFromSerdeJSON for StructFieldType {
 impl LoadFromSerdeJSON for EditorSectionData {
     fn load_from_json(object: &Map<String, Value>) -> Self {
         let name = oget_str!(object, "name").to_owned();
-        let description = oget_str!(object, "description").to_owned();
+        let description = object
+            .get("description")
+            .map(|d| d.as_str().expect("description must be a string").to_owned());
         Self {
             name, description
         }
