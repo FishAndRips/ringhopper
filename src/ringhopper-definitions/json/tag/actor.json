@@ -839,52 +839,82 @@
             },
             {
                 "name": "perception",
-                "section": true,
+                "type": "editor_section"
+            },
+            {
+                "name": "perception",
                 "type": "ActorPerception"
             },
             {
                 "name": "movement",
-                "section": true,
+                "type": "editor_section"
+            },
+            {
+                "name": "movement",
                 "type": "ActorMovement"
             },
             {
                 "name": "looking",
-                "section": true,
+                "type": "editor_section"
+            },
+            {
+                "name": "looking",
                 "type": "ActorLooking"
             },
             {
                 "name": "unopposable",
-                "section": true,
+                "type": "editor_section"
+            },
+            {
+                "name": "unopposable",
                 "type": "ActorUnopposable"
             },
             {
                 "name": "panic",
-                "section": true,
+                "type": "editor_section"
+            },
+            {
+                "name": "panic",
                 "type": "ActorPanic"
             },
             {
                 "name": "defensive",
-                "section": true,
+                "type": "editor_section"
+            },
+            {
+                "name": "defensive",
                 "type": "ActorDefensive"
             },
             {
                 "name": "pursuit",
-                "section": true,
+                "type": "editor_section"
+            },
+            {
+                "name": "pursuit",
                 "type": "ActorPursuit"
             },
             {
                 "name": "berserk",
-                "section": true,
+                "type": "editor_section"
+            },
+            {
+                "name": "berserk",
                 "type": "ActorBerserk"
             },
             {
                 "name": "firing positions",
-                "section": true,
+                "type": "editor_section"
+            },
+            {
+                "name": "firing positions",
                 "type": "ActorFiringPositions"
             },
             {
                 "name": "communication",
-                "section": true,
+                "type": "editor_section"
+            },
+            {
+                "name": "communication",
                 "type": "ActorCommunication"
             }
         ],

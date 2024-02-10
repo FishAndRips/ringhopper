@@ -588,7 +588,10 @@
             },
             {
                 "name": "metagame properties",
-                "section": true,
+                "type": "editor_section"
+            },
+            {
+                "name": "metagame properties",
                 "type": "MetagameProperties"
             },
             {
@@ -597,47 +600,74 @@
             },
             {
                 "name": "movement switching",
-                "section": true,
+                "type": "editor_section"
+            },
+            {
+                "name": "movement switching",
                 "type": "ActorVariantMovementSwitching"
             },
             {
                 "name": "ranged combat",
-                "section": true,
+                "type": "editor_section"
+            },
+            {
+                "name": "ranged combat",
                 "type": "ActorVariantRangedCombat"
             },
             {
                 "name": "burst geometry",
-                "section": true,
+                "type": "editor_section"
+            },
+            {
+                "name": "burst geometry",
                 "type": "ActorVariantBurstGeometry"
             },
             {
                 "name": "firing patterns",
-                "section": true,
+                "type": "editor_section"
+            },
+            {
+                "name": "firing patterns",
                 "type": "ActorVariantFiringPatterns"
             },
             {
                 "name": "special-case firing properties",
-                "section": true,
+                "type": "editor_section"
+            },
+            {
+                "name": "special-case firing properties",
                 "type": "ActorVariantSpecialCaseFiringProperties"
             },
             {
                 "name": "berserking and melee",
-                "section": true,
+                "type": "editor_section"
+            },
+            {
+                "name": "berserking and melee",
                 "type": "ActorVariantBerserkingAndMelee"
             },
             {
                 "name": "grenades",
-                "section": true,
+                "type": "editor_section"
+            },
+            {
+                "name": "grenades",
                 "type": "ActorVariantGrenades"
             },
             {
                 "name": "items",
-                "section": true,
+                "type": "editor_section"
+            },
+            {
+                "name": "items",
                 "type": "ActorVariantItems"
             },
             {
                 "name": "unit properties",
-                "section": true,
+                "type": "editor_section"
+            },
+            {
+                "name": "unit properties",
                 "type": "ActorVariantUnitProperties"
             }
         ],
