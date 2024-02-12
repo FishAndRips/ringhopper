@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use crate::error::RinghopperResult;
 use crate::primitive::{ID, IDType, Index, TagPath};
 use crate::tag::PrimaryTagStructDyn;
@@ -52,12 +51,10 @@ pub trait Map {
     fn get_name(&self) -> &str;
 
     /// Extract the tag.
-    ///
-    /// This will return a shared reference which may be cached on subsequent calls to this function.
     fn extract_tag(
         &self,
         path: &TagPath
-    ) -> RinghopperResult<Arc<Box<dyn PrimaryTagStructDyn>>>;
+    ) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>>;
 
     /// Get the domain data, returning a slice and the base address offset.
     fn get_domain(
@@ -68,9 +65,17 @@ pub trait Map {
     /// Get the tag for the tag id.
     ///
     /// Returns None if the ID is invalid or null.
-    fn get_tag(
+    fn get_tag_by_id(
         &self,
         id: ID
+    ) -> Option<&Tag>;
+
+    /// Get the tag for the tag path.
+    ///
+    /// Returns None if the tag does not exist in the map.
+    fn get_tag(
+        &self,
+        path: &TagPath
     ) -> Option<&Tag>;
 
     /// Get the scenario tag for the tag ID.
@@ -89,7 +94,7 @@ pub trait Map {
             return None
         }
         let id = ID::new(Index::from(index.try_into().ok()), IDType::Tag as u16);
-        self.get_tag(id)
+        self.get_tag_by_id(id)
     }
 
     /// Get the data at the given location.

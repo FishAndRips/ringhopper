@@ -18,6 +18,7 @@ pub fn generate_ringhopper_structs(_: TokenStream) -> TokenStream {
     }
 
     let mut read_any_tag_lines = String::new();
+    let mut read_any_map_lines = String::new();
     let mut referenceable_tag_groups_hint = String::new();
     for (group_name, group) in &definitions.groups {
         let struct_name = &group.struct_name;
@@ -35,21 +36,37 @@ pub fn generate_ringhopper_structs(_: TokenStream) -> TokenStream {
 
         writeln!(referenceable_tag_groups_hint, "TagGroup::{group_name_fixed} => &[{list}],").unwrap();
         writeln!(read_any_tag_lines, "TagGroup::{group_name_fixed} => b(TagFile::read_tag_from_file_buffer::<{struct_name}>(file, ParseStrictness::Relaxed)),").unwrap();
+        writeln!(read_any_map_lines, "TagGroup::{group_name_fixed} => b({struct_name}::read_from_map(map, tag_info.address, &tag_info.domain)),").unwrap();
     }
 
     stream.extend(format!("
+    fn b<T: PrimaryTagStruct + Clone + 'static>(what: RinghopperResult<T>) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {{
+        what.map(|b| Box::<T>::new(b) as Box<dyn PrimaryTagStructDyn>)
+    }}
+
     /// Read the tag file buffer.
     ///
     /// Returns `Err` if the tag data is invalid, corrupt, or does not correspond to any known tag group.
     pub fn read_any_tag_from_file_buffer(file: &[u8], strictness: ParseStrictness) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {{
         let (header, _) = TagFile::load_header_and_data(file, strictness)?;
 
-        fn b<T: PrimaryTagStruct + Clone + 'static>(what: RinghopperResult<T>) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {{
-            what.map(|b| Box::<T>::new(b) as Box<dyn PrimaryTagStructDyn>)
-        }}
-
         match header.group {{
             {read_any_tag_lines}
+            _ => Err(Error::TagGroupUnimplemented)
+        }}
+    }}
+
+    /// Read the tag from the map.
+    ///
+    /// It is not recommended to call this directly, instead using extract_tag, as extract_tag will also fix any extraction
+    /// artifacts, such as adding missing bitmap data.
+    ///
+    /// Returns `Err` if the tag data is invalid, corrupt, or does not correspond to any gettable tag group.
+    pub fn read_any_tag_from_map<M: Map>(path: &TagPath, map: &M) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {{
+        let tag_info = map.get_tag(path).ok_or_else(|| Error::TagNotFound(path.to_owned()))?;
+
+        match path.group() {{
+            {read_any_map_lines}
             _ => Err(Error::TagGroupUnimplemented)
         }}
     }}
@@ -399,7 +416,11 @@ impl ToTokenStream for Enum {
             }}
 
             fn read_from_map<M: Map>(map: &M, address: usize, domain_type: &DomainType) -> RinghopperResult<Self> {{
-                u16::read_from_map(map, address, domain_type)?.try_into()
+                match u16::read_from_map(map, address, domain_type)?.try_into() {{
+                    Ok(n) => Ok(n),
+                    Err(Error::InvalidEnum) => Ok(Self::default()),
+                    Err(n) => Err(n)
+                }}
             }}
         }}
 

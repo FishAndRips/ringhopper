@@ -1,11 +1,14 @@
+use std::collections::HashMap;
 use std::ops::Range;
-use std::sync::Arc;
-use definitions::{CacheFileHeaderPCDemo, CacheFileTag, CacheFileTagDataHeaderPC, Scenario};
+use definitions::{CacheFileHeaderPCDemo, CacheFileTag, CacheFileTagDataHeaderPC, read_any_tag_from_map, Scenario, ScenarioStructureBSPCompiledHeader};
+use map::extract::fix_extracted_weapon_tag;
 use primitives::error::{Error, OverflowCheck, RinghopperResult};
 use primitives::map::{DomainType, Map, Tag};
 use primitives::primitive::{ID, TagGroup, TagPath};
 use primitives::tag::PrimaryTagStructDyn;
 use primitives::parse::TagData;
+
+mod extract;
 
 type SizeRange = Range<usize>;
 
@@ -19,6 +22,8 @@ pub struct GearboxCacheFile {
     bsp_data: Vec<BSPDomain>,
     base_memory_address: usize,
     tags: Vec<Tag>,
+    ids: HashMap<TagPath, ID>,
+    scenario_tag_data: Scenario,
     scenario_tag: ID
 }
 
@@ -39,7 +44,9 @@ impl GearboxCacheFile {
             bsp_data: Default::default(),
             base_memory_address: 0x4BF10000, // TODO: use engine definitions for this
             tags: Default::default(),
-            scenario_tag: ID::null()
+            scenario_tag: ID::null(),
+            scenario_tag_data: Scenario::default(),
+            ids: Default::default()
         };
 
         let header = CacheFileHeaderPCDemo::read_from_map(&map, 0, &DomainType::MapData)?;
@@ -81,8 +88,20 @@ impl GearboxCacheFile {
         let mut tag_address = tag_data_header.cache_file_tag_data_header.tag_array_address.address as usize;
         let mut tags = Vec::with_capacity(tag_data_header.cache_file_tag_data_header.tag_count as usize);
 
-        for t in 0..tag_data_header.cache_file_tag_data_header.tag_count {
+        let tag_count = tag_data_header.cache_file_tag_data_header.tag_count as usize;
+        if tag_count > u16::MAX as usize {
+            return Err(
+                Error::MapParseFailure(format!("maximum tag count exceeded (map claims to have {tag_count} tags"))
+            )
+        }
+
+        for t in 0..tag_count {
             let cached_tag = CacheFileTag::read_from_map(&map, tag_address, &DomainType::TagData)?;
+
+            let expected_index = cached_tag.id.index();
+            if expected_index != Some(t as u16) {
+                return Err(Error::MapParseFailure(format!("tag #{t} has an invalid tag ID")))
+            }
 
             let tag_path_address = cached_tag.path.address as usize;
             let path = map
@@ -94,6 +113,13 @@ impl GearboxCacheFile {
 
             if cached_tag.external != 0 {
                 todo!("handle external indexed tags")
+            }
+
+            if tag_path.group() != TagGroup::_Unset {
+                if map.ids.get(&tag_path).is_some() {
+                    return Err(Error::MapParseFailure(format!("multiple instances of tag {tag_path} detected")))
+                }
+                map.ids.insert(tag_path.clone(), cached_tag.id);
             }
 
             let tag = Tag {
@@ -108,7 +134,7 @@ impl GearboxCacheFile {
         map.tags = tags;
 
         // Get the scenario tag to get the BSP data
-        let scenario = match map.get_tag(map.scenario_tag) {
+        let scenario = match map.get_tag_by_id(map.scenario_tag) {
             Some(n) => n,
             None => return Err(Error::MapParseFailure(format!("unable to get the scenario tag due to an invalid tag ID {}", map.scenario_tag)))
         };
@@ -116,48 +142,56 @@ impl GearboxCacheFile {
             return Err(Error::MapParseFailure(format!("scenario tag is marked as a {} tag; likely protected/corrupted map", scenario.tag_path.group())))
         }
 
-        // TODO: maybe cache the scenario tag for later?
+        // Now get BSPs from the scenario tag
         let scenario_tag = Scenario::read_from_map(&map, scenario.address, &scenario.domain)?;
-        for b in &scenario_tag.structure_bsps.items {
-            let start = b.bsp_start as usize;
-            let range = start..start.add_overflow_checked(b.bsp_size as usize)?;
+        for bsp_index in 0..scenario_tag.structure_bsps.items.len() {
+            let bsp = &scenario_tag.structure_bsps.items[bsp_index];
+            let path = &bsp.structure_bsp;
+            let start = bsp.bsp_start as usize;
+            let range = start..start.add_overflow_checked(bsp.bsp_size as usize)?;
 
             if map.data.get(range.clone()).is_none() {
-                return Err(Error::MapParseFailure(format!("BSP tag {} has an invalid range", b.structure_bsp)))
+                return Err(Error::MapParseFailure(format!("BSP tag {path} has an invalid range")))
             }
 
-            if let Some(n) = b.structure_bsp.path() {
+            let bsp_base_address = bsp.bsp_address as usize;
+            map.bsp_data.push(BSPDomain {
+                range,
+                base_address: bsp_base_address
+            });
+
+            let header = ScenarioStructureBSPCompiledHeader::read_from_map(
+                &map,
+                bsp_base_address,
+                &DomainType::BSP(bsp_index)
+            )?;
+            let bsp_tag_base_address = header.pointer.address as usize;
+
+            if let Some(n) = bsp.structure_bsp.path() {
                 for t in &mut map.tags {
                     if &t.tag_path == n {
-                        t.domain = DomainType::BSP(map.bsp_data.len());
-                        t.address = b.bsp_address as usize;
+                        if matches!(t.domain, DomainType::BSP(_)) {
+                            return Err(Error::MapParseFailure(format!("BSP tag {path} has ambiguous data")))
+                        }
+
+                        t.domain = DomainType::BSP(bsp_index);
+                        t.address = bsp_tag_base_address;
                         break
                     }
                 }
             }
-
-            map.bsp_data.push(BSPDomain {
-                range,
-                base_address: b.bsp_address as usize
-            })
         }
 
-        for i in 0..map.tags.len() {
-            let t = &map.tags[i];
+        for t in &map.tags {
             if t.tag_path.group() == TagGroup::ScenarioStructureBSP {
-                if matches!(t.domain, DomainType::TagData) {
+                if !matches!(t.domain, DomainType::BSP(_)) {
                     return Err(Error::MapParseFailure(format!("BSP tag {} has no corresponding data in the scenario tag", t.tag_path)))
                 }
             }
-
-            if t.tag_path.group() != TagGroup::_Unset {
-                for j in 0..i {
-                    if map.tags[j].tag_path == t.tag_path {
-                        return Err(Error::MapParseFailure(format!("Duplicate {} tags found", t.tag_path)))
-                    }
-                }
-            }
         }
+
+        // Cache the scenario tag for later usages
+        map.scenario_tag_data = scenario_tag;
 
         // Done one more time to make sure everything's good
         debug_assert!(map.data.get(map.tag_data.clone()).is_some());
@@ -174,8 +208,15 @@ impl Map for GearboxCacheFile {
         &self.name
     }
 
-    fn extract_tag(&self, path: &TagPath) -> RinghopperResult<Arc<Box<dyn PrimaryTagStructDyn>>> {
-        todo!()
+    fn extract_tag(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
+        let mut tag = read_any_tag_from_map(path, self)?;
+
+        match path.group() {
+            TagGroup::Weapon => fix_extracted_weapon_tag(tag.as_any_mut().downcast_mut().unwrap(), path, &self.scenario_tag_data),
+            _ => ()
+        };
+
+        Ok(tag)
     }
 
     fn get_domain(&self, domain: &DomainType) -> Option<(&[u8], usize)> {
@@ -184,7 +225,7 @@ impl Map for GearboxCacheFile {
 
             // OK because these are checked on load
             DomainType::TagData => Some((unsafe { self.data.get_unchecked(self.tag_data.clone()) }, self.base_memory_address)),
-            DomainType::ModelTriangleData => Some((unsafe { self.data.get_unchecked(self.vertex_data.clone()) }, 0)),
+            DomainType::ModelVertexData => Some((unsafe { self.data.get_unchecked(self.vertex_data.clone()) }, 0)),
             DomainType::ModelTriangleData => Some((unsafe { self.data.get_unchecked(self.triangle_data.clone()) }, 0)),
             DomainType::BSP(b) => {
                 let bsp = self.bsp_data.get(*b)?;
@@ -195,11 +236,15 @@ impl Map for GearboxCacheFile {
         }
     }
 
-    fn get_tag(&self, id: ID) -> Option<&Tag> {
+    fn get_tag_by_id(&self, id: ID) -> Option<&Tag> {
         self.tags.get(id.index()? as usize)
     }
 
+    fn get_tag(&self, path: &TagPath) -> Option<&Tag> {
+        self.get_tag_by_id(*self.ids.get(path)?)
+    }
+
     fn get_scenario_tag(&self) -> &Tag {
-        self.get_tag(self.scenario_tag).unwrap()
+        self.get_tag_by_id(self.scenario_tag).unwrap()
     }
 }

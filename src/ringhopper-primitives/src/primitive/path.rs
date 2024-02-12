@@ -470,7 +470,7 @@ impl TagData for TagReference {
         }
 
         let tag = map
-            .get_tag(c_primitive.tag_id)
+            .get_tag_by_id(c_primitive.tag_id)
             .ok_or_else(|| Error::MapDataOutOfBounds(format!("invalid tag id 0x{:08X}", c_primitive.tag_id.as_u32())))?;
 
         Ok(TagReference::Set(tag.tag_path.clone()))
