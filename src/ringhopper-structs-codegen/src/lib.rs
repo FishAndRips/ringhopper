@@ -275,7 +275,14 @@ impl ToTokenStream for Struct {
             if fields_read_from_caches[i] {
                 let field_name = &fields_with_names[i];
                 let field_type = &fields_with_types[i];
-                let read_map_code = format!("<{field_type}>::read_from_map(map, _pos, domain_type)?");
+
+                let read_map_code;
+                if self.flags.shifted_by_one {
+                    read_map_code = "(u16::read_from_map(map, _pos, domain_type)?.wrapping_add(1)).try_into()?".to_owned();
+                }
+                else {
+                    read_map_code = format!("<{field_type}>::read_from_map(map, _pos, domain_type)?");
+                }
                 writeln!(&mut read_map_in, "output.{field_name} = {read_map_code};").unwrap();
             }
             writeln!(&mut read_map_in, "let _pos = _pos.add_overflow_checked({length})?;").unwrap();
@@ -657,7 +664,7 @@ fn camel_case(string: &str) -> String {
         result.push(c);
     }
 
-    let prefixes = &["Gbxm", "Ui", "Bsp", "Hud"];
+    let prefixes = &["Gbxm", "Ui", "Bsp", "Hud", "Dxt"];
 
     for p in prefixes {
         if result.contains(p) {

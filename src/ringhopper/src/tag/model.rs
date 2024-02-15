@@ -1,4 +1,5 @@
-use definitions::{GBXModel, GBXModelFlags, GBXModelGeometry, GBXModelGeometryPart, Model, ModelFlags, ModelGeometry, ModelGeometryPart, ModelNode, ModelRegion, ModelShaderReference, ModelVertexCompressed, ModelVertexUncompressed};
+use definitions::{GBXModel, GBXModelFlags, GBXModelGeometry, GBXModelGeometryPart, Model, ModelFlags, ModelGeometry, ModelGeometryPart, ModelNode, ModelRegion, ModelRegionPermutationMarker, ModelShaderReference, ModelVertexCompressed, ModelVertexUncompressed};
+use primitives::dynamic::DynamicTagDataArray;
 use primitives::error::{Error, RinghopperResult};
 use primitives::primitive::{Index, Reflexive, Vector2D, Vector3D};
 
@@ -27,6 +28,50 @@ pub trait ModelFunctions {
 
     /// Get the number of geometries in the model.
     fn geometry_count(&self) -> usize;
+
+    /// Fix runtime markers in model.
+    fn fix_runtime_markers(&mut self) -> RinghopperResult<bool>;
+}
+
+macro_rules! fix_runtime_markers {
+    ($model:expr) => {{
+        let mut changes_made = false;
+
+        for marker in &$model.runtime_markers.items {
+            changes_made = true;
+            for instance in &marker.instances.items {
+                let node = instance.node_index as u16;
+                let region = instance.region_index as usize;
+                let permutation = instance.permutation_index as usize;
+
+                if node as usize >= $model.nodes.items.len() {
+                    return Err(Error::InvalidTagData(format!("marker {} has out-of-bounds node", marker.name)))
+                }
+                if region >= $model.regions.items.len() {
+                    return Err(Error::InvalidTagData(format!("marker {} has out-of-bounds region", marker.name)))
+                }
+
+                let region = &mut $model.regions.items[region];
+                if permutation >= region.permutations.items.len() {
+                    return Err(Error::InvalidTagData(format!("marker {} has out-of-bounds permutation", marker.name)))
+                }
+
+                let permutation = &mut region.permutations.items[permutation];
+                permutation.markers.items.push(ModelRegionPermutationMarker {
+                    name: marker.name,
+                    node_index: Some(node),
+                    rotation: instance.rotation,
+                    translation: instance.translation
+                })
+            }
+        }
+
+        // Runtime markers have to be cleared since they are not marked as cache only in the definitions despite being
+        // (technically) cache only fields. See the comment in the definition for more information.
+        $model.runtime_markers.items.clear();
+
+        Ok(changes_made)
+    }};
 }
 
 impl ModelFunctions for Model {
@@ -97,6 +142,9 @@ impl ModelFunctions for Model {
     }
     fn geometry_count(&self) -> usize {
         self.geometries.items.len()
+    }
+    fn fix_runtime_markers(&mut self) -> RinghopperResult<bool> {
+        fix_runtime_markers!(self)
     }
 }
 
@@ -188,6 +236,9 @@ impl ModelFunctions for GBXModel {
     }
     fn geometry_count(&self) -> usize {
         self.geometries.items.len()
+    }
+    fn fix_runtime_markers(&mut self) -> RinghopperResult<bool> {
+        fix_runtime_markers!(self)
     }
 }
 

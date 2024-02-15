@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::ops::Range;
-use definitions::{CacheFileHeaderPCDemo, CacheFileTag, CacheFileTagDataHeaderPC, read_any_tag_from_map, Scenario, ScenarioStructureBSPCompiledHeader};
-use map::extract::fix_extracted_weapon_tag;
+use definitions::{Bitmap, CacheFileHeaderPCDemo, CacheFileTag, CacheFileTagDataHeaderPC, Model, read_any_tag_from_map, Scenario, ScenarioStructureBSPCompiledHeader};
+use map::extract::*;
 use primitives::error::{Error, OverflowCheck, RinghopperResult};
 use primitives::map::{DomainType, Map, Tag};
 use primitives::primitive::{ID, TagGroup, TagPath};
@@ -203,20 +203,44 @@ impl GearboxCacheFile {
     }
 }
 
+fn extract_tag_from_map<M: Map>(
+    map: &M,
+    path: &TagPath,
+    scenario_tag: &Scenario,
+
+    bitmap_extraction_fn: fn(tag: &mut Bitmap, map: &M) -> RinghopperResult<()>,
+    model_extraction_fn: fn(tag: &mut Model, map: &M) -> RinghopperResult<()>,
+
+
+) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
+    let mut tag = read_any_tag_from_map(path, map)?;
+
+    match path.group() {
+        TagGroup::ActorVariant => fix_extracted_actor_variant_tag(tag.as_any_mut().downcast_mut().unwrap()),
+        TagGroup::Bitmap => bitmap_extraction_fn(tag.as_any_mut().downcast_mut().unwrap(), map)?,
+        TagGroup::ContinuousDamageEffect => fix_continuous_damage_effect_tag(tag.as_any_mut().downcast_mut().unwrap()),
+        TagGroup::DamageEffect => fix_damage_effect_tag(tag.as_any_mut().downcast_mut().unwrap()),
+        TagGroup::GBXModel => fix_gbxmodel_tag(tag.as_any_mut().downcast_mut().unwrap(), map)?,
+        TagGroup::Light => fix_light_tag(tag.as_any_mut().downcast_mut().unwrap()),
+        TagGroup::ModelAnimations => fix_model_animations_tag(tag.as_any_mut().downcast_mut().unwrap())?,
+        TagGroup::Model => { model_extraction_fn(tag.as_any_mut().downcast_mut().unwrap(), map)?; },
+        TagGroup::PointPhysics => fix_point_physics_tag(tag.as_any_mut().downcast_mut().unwrap()),
+        TagGroup::Projectile => fix_projectile_tag(tag.as_any_mut().downcast_mut().unwrap()),
+        TagGroup::Scenario => fix_scenario_tag(tag.as_any_mut().downcast_mut().unwrap())?,
+        TagGroup::Weapon => fix_extracted_weapon_tag(tag.as_any_mut().downcast_mut().unwrap(), path, &scenario_tag),
+        _ => ()
+    };
+
+    Ok(tag)
+}
+
 impl Map for GearboxCacheFile {
     fn get_name(&self) -> &str {
         &self.name
     }
 
     fn extract_tag(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
-        let mut tag = read_any_tag_from_map(path, self)?;
-
-        match path.group() {
-            TagGroup::Weapon => fix_extracted_weapon_tag(tag.as_any_mut().downcast_mut().unwrap(), path, &self.scenario_tag_data),
-            _ => ()
-        };
-
-        Ok(tag)
+        extract_tag_from_map(self, path, &self.scenario_tag_data, fix_bitmap_tag_normal, fix_model_tag_normal)
     }
 
     fn get_domain(&self, domain: &DomainType) -> Option<(&[u8], usize)> {

@@ -553,7 +553,8 @@ impl LoadFromSerdeJSON for Flags {
             hidden_in_editor: get_flag("hidden"),
             exclude: get_flag("exclude"),
             little_endian_in_tags: get_flag("little_endian"),
-            supported_engines: SupportedEngines::load_from_json(object)
+            supported_engines: SupportedEngines::load_from_json(object),
+            shifted_by_one: get_flag("shifted_by_one")
         }
     }
 }

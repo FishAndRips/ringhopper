@@ -251,6 +251,9 @@ pub struct Flags {
     /// Store in little endian in tag format
     pub little_endian_in_tags: bool,
 
+    /// The value is subtracted by 1 when put into a cache file (and incremented by 1 if extracted).
+    pub shifted_by_one: bool,
+
     /// Supported engines for the field
     pub supported_engines: SupportedEngines
 }
