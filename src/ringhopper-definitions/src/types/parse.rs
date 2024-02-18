@@ -701,6 +701,7 @@ impl LoadFromSerdeJSON for ObjectType {
             "TagReference" => Self::TagReference(TagReference::load_from_json(object)),
             "TagGroup" => Self::TagGroup,
             "Data" => Self::Data,
+            "FileData" => Self::FileData,
             "float" => Self::F32,
             "uint8" => Self::U8,
             "uint16" => Self::U16,

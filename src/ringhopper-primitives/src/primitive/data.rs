@@ -251,10 +251,8 @@ impl<T: Copy + Default> Debug for Padding<T> {
     }
 }
 
-/// Container of bytes for data that isn't structured tag data.
-///
-/// A `Data` type is used to store data that isn't read as structured tag data, such as audio samples, and it may or
-/// may not be stored in big or little endian.
+/// Container of bytes for data that isn't structured tag data but is stored in tag data when built into a cache file
+/// and uses a memory address pointer.
 ///
 /// In Ringhopper, this type simply wraps a `Vec<u8>` object.
 ///
@@ -269,98 +267,151 @@ pub struct Data {
     pub bytes: Vec<u8>
 }
 
-impl Data {
-    pub fn new(bytes: Vec<u8>) -> Data {
-        Self {
-            bytes
-        }
-    }
+/// Container of bytes for data that is explicitly stored outside of tag data when built into a cache file and uses a
+/// file offset.
+///
+/// In Ringhopper, this type simply wraps a `Vec<u8>` object.
+///
+/// # Limitations
+///
+/// A limitation over [`Vec`] is that the number of elements cannot exceed [`u32::MAX`] (i.e. 2<sup>32</sup> − 1), as
+/// lengths are internally stored as 32-bit. As such, serialization in tag or cache format is not possible if this
+/// limit is exceeded.
+#[derive(Clone, Default, PartialEq, Debug)]
+#[repr(transparent)]
+pub struct FileData {
+    pub bytes: Vec<u8>
 }
 
-impl FromIterator<u8> for Data {
-    fn from_iter<I: IntoIterator<Item=u8>>(iter: I) -> Self {
-        let mut bytes = Vec::new();
-        for i in iter {
-            bytes.push(i);
+macro_rules! make_data_tag_data_fns {
+    () => {
+        fn size() -> usize {
+            <DataC as TagData>::size()
         }
-        Self { bytes }
-    }
+
+        fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> {
+            let c_primitive = DataC::read_from_tag_file(data, at, struct_end, extra_data_cursor)?;
+
+            let size = c_primitive.size as usize;
+            let data_location = *extra_data_cursor;
+            fits(size, data_location, data.len())?;
+            *extra_data_cursor += size;
+
+            Ok(Self {
+                bytes: data[data_location..*extra_data_cursor].to_owned()
+            })
+        }
+
+        fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {
+            (DataC {
+                size: self.bytes.len().into_u32()?,
+                ..Default::default()
+            }).write_to_tag_file(data, at, struct_end)?;
+            data.extend_from_slice(&self.bytes);
+            Ok(())
+        }
+    };
 }
 
-impl TagData for Data {
-    fn size() -> usize {
-        <DataC as TagData>::size()
-    }
-
-    fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> {
-        let c_primitive = DataC::read_from_tag_file(data, at, struct_end, extra_data_cursor)?;
-
-        let size = c_primitive.size as usize;
-        let data_location = *extra_data_cursor;
-        fits(size, data_location, data.len())?;
-        *extra_data_cursor += size;
-
-        Ok(Data {
-            bytes: data[data_location..*extra_data_cursor].to_owned()
-        })
-    }
-
-    fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {
-        (DataC {
-            size: self.bytes.len().into_u32()?,
-            ..Default::default()
-        }).write_to_tag_file(data, at, struct_end)?;
-        data.extend_from_slice(&self.bytes);
-        Ok(())
-    }
+impl TagData for FileData {
+    make_data_tag_data_fns!();
 
     fn read_from_map<M: Map>(map: &M, address: usize, domain_type: &DomainType) -> RinghopperResult<Self> {
         let c_primitive = DataC::read_from_map(map, address, domain_type)?;
+
+        let address = c_primitive.file_offset as usize;
+        let length = c_primitive.size as usize;
+        if length == 0 {
+            return Ok(Self::default())
+        }
 
         // If in a sounds.map file
         let domain_to_use = if (c_primitive.flags & 1) != 0 {
             &DomainType::ResourceMapFile(ResourceMapType::Sounds)
         }
         else {
-            domain_type
+            &DomainType::MapData
         };
-
-        let address = c_primitive.address.address as usize;
-        let data = map.get_data_at_address(address, domain_to_use, c_primitive.size as usize);
+        let data = map.get_data_at_address(address, domain_to_use, length);
         let data = match data {
             Some(n) => n,
-            None => return Err(Error::MapDataOutOfBounds(format!("can't read 0x{address:08X} bytes from {domain_to_use:?}")))
+            None => return Err(Error::MapDataOutOfBounds(format!("can't read 0x{address:08X}[{length:08X}] bytes from {domain_to_use:?}")))
         };
 
         Ok(Self { bytes: data.to_vec() })
     }
 }
 
-impl DynamicTagData for Data {
-    fn get_field(&self, _field: &str) -> Option<&dyn DynamicTagData> {
-        None
-    }
+impl TagData for Data {
+    make_data_tag_data_fns!();
 
-    fn get_field_mut(&mut self, _field: &str) -> Option<&mut dyn DynamicTagData> {
-        None
-    }
+    fn read_from_map<M: Map>(map: &M, address: usize, domain_type: &DomainType) -> RinghopperResult<Self> {
+        let c_primitive = DataC::read_from_map(map, address, domain_type)?;
+        let address = c_primitive.address.address as usize;
+        let length = c_primitive.size as usize;
+        if length == 0 {
+            return Ok(Self::default())
+        }
+        let data = map.get_data_at_address(address, domain_type, length);
+        let data = match data {
+            Some(n) => n,
+            None => return Err(Error::MapDataOutOfBounds(format!("can't read 0x{address:08X}[0x{length}] bytes from {domain_type:?}")))
+        };
 
-    fn fields(&self) -> &'static [&'static str] {
-        &[]
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
-
-    fn data_type(&self) -> DynamicTagDataType {
-        DynamicTagDataType::Data
+        Ok(Self { bytes: data.to_vec() })
     }
 }
+
+macro_rules! make_data_dynamic_tag_data {
+    ($t:ty) => {
+        impl $t {
+            pub fn new(bytes: Vec<u8>) -> $t {
+                Self {
+                    bytes
+                }
+            }
+        }
+
+        impl FromIterator<u8> for $t {
+            fn from_iter<I: IntoIterator<Item=u8>>(iter: I) -> Self {
+                let mut bytes = Vec::new();
+                for i in iter {
+                    bytes.push(i);
+                }
+                Self { bytes }
+            }
+        }
+
+        impl DynamicTagData for $t {
+            fn get_field(&self, _field: &str) -> Option<&dyn DynamicTagData> {
+                None
+            }
+
+            fn get_field_mut(&mut self, _field: &str) -> Option<&mut dyn DynamicTagData> {
+                None
+            }
+
+            fn fields(&self) -> &'static [&'static str] {
+                &[]
+            }
+
+            fn as_any(&self) -> &dyn Any {
+                self
+            }
+
+            fn as_any_mut(&mut self) -> &mut dyn Any {
+                self
+            }
+
+            fn data_type(&self) -> DynamicTagDataType {
+                DynamicTagDataType::Data
+            }
+        }
+    };
+}
+
+make_data_dynamic_tag_data!(Data);
+make_data_dynamic_tag_data!(FileData);
 
 /// Container for contiguously stored blocks.
 ///

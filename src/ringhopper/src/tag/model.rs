@@ -30,7 +30,19 @@ pub trait ModelFunctions {
     fn geometry_count(&self) -> usize;
 
     /// Fix runtime markers in model.
+    ///
+    /// Returns true if the model was fixed, false if the model was OK, and an error if the model is broken.
     fn fix_runtime_markers(&mut self) -> RinghopperResult<bool>;
+
+    /// Fix compressed vertices being missing from a model.
+    ///
+    /// Returns true if the model was fixed, false if the model was OK, and an error if the model is broken.
+    fn fix_compressed_vertices(&mut self) -> bool;
+
+    /// Fix uncompressed vertices being missing from a model.
+    ///
+    /// Returns true if the model was fixed, false if the model was OK, and an error if the model is broken.
+    fn fix_uncompressed_vertices(&mut self) -> bool;
 }
 
 macro_rules! fix_runtime_markers {
@@ -72,6 +84,46 @@ macro_rules! fix_runtime_markers {
 
         Ok(changes_made)
     }};
+}
+
+macro_rules! fix_vertices {
+    ($model:expr, $fixer:tt) => {{
+        let mut fixed = false;
+
+        for g in &mut $model.geometries.items {
+            for p in &mut g.parts.items {
+                fixed |= $fixer(p.get_model_part_mut())
+            }
+        }
+
+        fixed
+    }};
+}
+
+pub(crate) trait ModelPartGet {
+    /// Get the base model part.
+    fn get_model_part(&self) -> &ModelGeometryPart;
+
+    /// Get the base model part.
+    fn get_model_part_mut(&mut self) -> &mut ModelGeometryPart;
+}
+
+impl ModelPartGet for ModelGeometryPart {
+    fn get_model_part(&self) -> &ModelGeometryPart {
+        self
+    }
+    fn get_model_part_mut(&mut self) -> &mut ModelGeometryPart {
+        self
+    }
+}
+
+impl ModelPartGet for GBXModelGeometryPart {
+    fn get_model_part(&self) -> &ModelGeometryPart {
+        &self.model_geometry_part
+    }
+    fn get_model_part_mut(&mut self) -> &mut ModelGeometryPart {
+        &mut self.model_geometry_part
+    }
 }
 
 impl ModelFunctions for Model {
@@ -146,7 +198,21 @@ impl ModelFunctions for Model {
     fn fix_runtime_markers(&mut self) -> RinghopperResult<bool> {
         fix_runtime_markers!(self)
     }
+
+    fn fix_compressed_vertices(&mut self) -> bool {
+        if self.nodes.len() > MAX_NODES_FOR_COMPRESSED_VERTICES {
+            return false
+        }
+
+        fix_vertices!(self, restore_missing_compressed_vertices)
+    }
+
+    fn fix_uncompressed_vertices(&mut self) -> bool {
+        fix_vertices!(self, restore_missing_uncompressed_vertices)
+    }
 }
+
+const MAX_NODES_FOR_COMPRESSED_VERTICES: usize = 127 / 3;
 
 impl ModelFunctions for GBXModel {
     fn convert_to_model(self) -> Model {
@@ -240,6 +306,18 @@ impl ModelFunctions for GBXModel {
     fn fix_runtime_markers(&mut self) -> RinghopperResult<bool> {
         fix_runtime_markers!(self)
     }
+
+    fn fix_compressed_vertices(&mut self) -> bool {
+        if self.nodes.len() > MAX_NODES_FOR_COMPRESSED_VERTICES || self.flags.parts_have_local_nodes {
+            return false
+        }
+
+        fix_vertices!(self, restore_missing_compressed_vertices)
+    }
+
+    fn fix_uncompressed_vertices(&mut self) -> bool {
+        fix_vertices!(self, restore_missing_uncompressed_vertices)
+    }
 }
 
 // Check everything except geometries
@@ -320,6 +398,14 @@ fn decompress_vector3d(vector: u32) -> Vector3D {
     }
 }
 
+fn compress_vector3d(vector: &Vector3D) -> u32 {
+    let x = compress_float::<11>(vector.x);
+    let y = compress_float::<11>(vector.y) << 11;
+    let z = compress_float::<10>(vector.z) << 22;
+
+    x | y | z
+}
+
 fn decompress_float<const BITS: usize>(float: u32) -> f32 {
     let signed_bit = 1u32 << BITS;
     let mask = signed_bit - 1;
@@ -329,6 +415,20 @@ fn decompress_float<const BITS: usize>(float: u32) -> f32 {
     }
     else {
         value as f32
+    }
+}
+
+fn compress_float<const BITS: usize>(float: f32) -> u32 {
+    let signed_bit = 1u32 << BITS;
+    let mask = signed_bit - 1;
+    let clamped = float.clamp(-1.0, 1.0);
+    let multiplied = ((mask as f32) * clamped) as u32;
+
+    if float < 0.0 {
+        multiplied | signed_bit
+    }
+    else {
+        multiplied
     }
 }
 
@@ -353,6 +453,28 @@ fn decompress_model_vertex(model_vertex_compressed: &ModelVertexCompressed) -> M
             x: decompress_float::<16>(model_vertex_compressed.texture_coordinate_u as u32),
             y: decompress_float::<16>(model_vertex_compressed.texture_coordinate_v as u32)
         }
+    }
+}
+
+fn compress_model_vertex(model_vertex_uncompressed: &ModelVertexUncompressed) -> ModelVertexCompressed {
+    let mut total_weight = model_vertex_uncompressed.node0_weight + model_vertex_uncompressed.node1_weight;
+    if total_weight == 0.0 {
+        total_weight = 1.0;
+    }
+
+    let partial_weight = model_vertex_uncompressed.node0_weight / total_weight;
+    let compressed_weight = (partial_weight * (u16::MAX as f32)) as u16;
+
+    ModelVertexCompressed {
+        node0_weight: compressed_weight,
+        node0_index: model_vertex_uncompressed.node0_index.unwrap_or(253) as u8,
+        node1_index: model_vertex_uncompressed.node1_index.unwrap_or(253) as u8,
+        texture_coordinate_u: compress_float::<16>(model_vertex_uncompressed.texture_coords.x) as u16,
+        texture_coordinate_v: compress_float::<16>(model_vertex_uncompressed.texture_coords.y) as u16,
+        position: model_vertex_uncompressed.position,
+        tangent: compress_vector3d(&model_vertex_uncompressed.tangent),
+        normal: compress_vector3d(&model_vertex_uncompressed.normal),
+        binormal: compress_vector3d(&model_vertex_uncompressed.binormal),
     }
 }
 
@@ -405,4 +527,30 @@ fn check_indices_for_gbxpart(gbxmodel: &GBXModel, gbxpart: &GBXModelGeometryPart
     }
 
     Ok(())
+}
+
+fn restore_missing_compressed_vertices(part: &mut ModelGeometryPart) -> bool {
+    if !part.compressed_vertices.items.is_empty() {
+        return false
+    }
+
+    part.compressed_vertices.items.reserve_exact(part.uncompressed_vertices.items.len());
+    for vert in &part.uncompressed_vertices.items {
+        part.compressed_vertices.items.push(compress_model_vertex(&vert));
+    }
+
+    true
+}
+
+fn restore_missing_uncompressed_vertices(part: &mut ModelGeometryPart) -> bool {
+    if !part.uncompressed_vertices.items.is_empty() {
+        return false
+    }
+
+    part.uncompressed_vertices.items.reserve_exact(part.compressed_vertices.items.len());
+    for vert in &part.compressed_vertices.items {
+        part.uncompressed_vertices.items.push(decompress_model_vertex(&vert));
+    }
+
+    true
 }

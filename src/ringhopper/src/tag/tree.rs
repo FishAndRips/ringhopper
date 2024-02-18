@@ -606,12 +606,12 @@ impl<T: TagTree + Send> TagTree for AtomicTagTree<T> {
         self.inner.lock().unwrap().write_tag(path, tag)
     }
 
-    fn get_all_tags_with_filter(&self, filter: Option<&TagFilter>) -> Vec<TagPath> {
-        self.inner.lock().unwrap().get_all_tags_with_filter(filter)
-    }
-
     fn contains(&self, path: &TagPath) -> bool {
         self.inner.lock().unwrap().contains(path)
+    }
+
+    fn get_all_tags_with_filter(&self, filter: Option<&TagFilter>) -> Vec<TagPath> {
+        self.inner.lock().unwrap().get_all_tags_with_filter(filter)
     }
 }
 

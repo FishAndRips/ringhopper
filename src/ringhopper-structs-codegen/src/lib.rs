@@ -152,6 +152,7 @@ impl ToTokenStream for Struct {
                     ObjectType::ColorRGBFloat => "ColorRGBFloat".to_owned(),
                     ObjectType::ColorARGBInt => "ColorARGBInt".to_owned(),
                     ObjectType::Data => "Data".to_owned(),
+                    ObjectType::FileData => "FileData".to_owned(),
                     ObjectType::Euler2D => "Euler2D".to_owned(),
                     ObjectType::Euler3D => "Euler3D".to_owned(),
                     ObjectType::F32 => "f32".to_owned(),
@@ -664,7 +665,7 @@ fn camel_case(string: &str) -> String {
         result.push(c);
     }
 
-    let prefixes = &["Gbxm", "Ui", "Bsp", "Hud", "Dxt"];
+    let prefixes = &["Gbxm", "Ui", "Bsp", "Hud", "Dxt", "Pcm", "Adpcm"];
 
     for p in prefixes {
         if result.contains(p) {

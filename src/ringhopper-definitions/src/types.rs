@@ -306,6 +306,7 @@ pub enum ObjectType {
     TagReference(TagReference),
     TagGroup,
     Data,
+    FileData,
     F32,
     U8,
     U16,
@@ -339,7 +340,7 @@ impl ObjectType {
         match self {
             Self::Reflexive(_) => 0xC,
             Self::TagReference(_) => 0x10,
-            Self::Data => 0x14,
+            Self::Data | Self::FileData => 0x14,
             Self::F32 | Self::Angle | Self::U32 | Self::Address | Self::I32 | Self::ColorARGBInt | Self::TagID => 0x4,
             Self::U16 | Self::I16 | Self::Index => 0x2,
             Self::U8 | Self::I8 => 0x1,
@@ -367,7 +368,7 @@ impl ObjectType {
             Self::Reflexive(_) => 1,
             Self::TagReference(_) => 1,
             Self::NamedObject(_) => 1,
-            Self::Data => 1,
+            Self::Data | Self::FileData => 1,
             Self::TagID => 1,
             Self::TagGroup => 1,
             Self::F32 | Self::Angle | Self::U32 | Self::Address | Self::I32 | Self::ColorARGBInt => 1,
@@ -394,6 +395,7 @@ impl ObjectType {
         match self {
             Self::NamedObject(_)
             | Self::Data
+            | Self::FileData
             | Self::TagID
             | Self::Address
             | Self::ScenarioScriptNodeValue

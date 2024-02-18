@@ -3,10 +3,11 @@ use std::ops::Range;
 use definitions::{Bitmap, CacheFileHeaderPCDemo, CacheFileTag, CacheFileTagDataHeaderPC, Model, read_any_tag_from_map, Scenario, ScenarioStructureBSPCompiledHeader};
 use map::extract::*;
 use primitives::error::{Error, OverflowCheck, RinghopperResult};
-use primitives::map::{DomainType, Map, Tag};
+use primitives::map::{DomainType, Map, ResourceMapType, Tag};
 use primitives::primitive::{ID, TagGroup, TagPath};
 use primitives::tag::PrimaryTagStructDyn;
 use primitives::parse::TagData;
+use tag::tree::{TagFilter, TagTree, TagTreeItem};
 
 mod extract;
 
@@ -24,7 +25,9 @@ pub struct GearboxCacheFile {
     tags: Vec<Tag>,
     ids: HashMap<TagPath, ID>,
     scenario_tag_data: Scenario,
-    scenario_tag: ID
+    scenario_tag: ID,
+    bitmaps: Vec<u8>,
+    sounds: Vec<u8>
 }
 
 #[derive(Clone)]
@@ -34,7 +37,7 @@ struct BSPDomain {
 }
 
 impl GearboxCacheFile {
-    pub fn new(data: Vec<u8>) -> RinghopperResult<Self> {
+    pub fn new(data: Vec<u8>, bitmaps: Vec<u8>, sounds: Vec<u8>) -> RinghopperResult<Self> {
         let mut map = Self {
             name: String::new(),
             data,
@@ -46,7 +49,9 @@ impl GearboxCacheFile {
             tags: Default::default(),
             scenario_tag: ID::null(),
             scenario_tag_data: Scenario::default(),
-            ids: Default::default()
+            ids: Default::default(),
+            bitmaps,
+            sounds
         };
 
         let header = CacheFileHeaderPCDemo::read_from_map(&map, 0, &DomainType::MapData)?;
@@ -227,6 +232,7 @@ fn extract_tag_from_map<M: Map>(
         TagGroup::PointPhysics => fix_point_physics_tag(tag.as_any_mut().downcast_mut().unwrap()),
         TagGroup::Projectile => fix_projectile_tag(tag.as_any_mut().downcast_mut().unwrap()),
         TagGroup::Scenario => fix_scenario_tag(tag.as_any_mut().downcast_mut().unwrap())?,
+        TagGroup::Sound => fix_sound_tag(tag.as_any_mut().downcast_mut().unwrap())?,
         TagGroup::Weapon => fix_extracted_weapon_tag(tag.as_any_mut().downcast_mut().unwrap(), path, &scenario_tag),
         _ => ()
     };
@@ -256,6 +262,9 @@ impl Map for GearboxCacheFile {
                 Some((unsafe { self.data.get_unchecked(bsp.range.clone()) }, bsp.base_address))
             }
 
+            DomainType::ResourceMapFile(ResourceMapType::Bitmaps) => Some((self.bitmaps.as_slice(), 0)),
+            DomainType::ResourceMapFile(ResourceMapType::Sounds) => Some((self.sounds.as_slice(), 0)),
+
             _ => None
         }
     }
@@ -270,5 +279,37 @@ impl Map for GearboxCacheFile {
 
     fn get_scenario_tag(&self) -> &Tag {
         self.get_tag_by_id(self.scenario_tag).unwrap()
+    }
+
+    fn get_all_tags(&self) -> Vec<TagPath> {
+        self.ids.keys().map(|key| key.to_owned()).collect()
+    }
+}
+
+impl<M: Map> TagTree for M {
+    fn open_tag_copy(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
+        self.extract_tag(path)
+    }
+
+    fn files_in_path(&self, _path: &str) -> Option<Vec<TagTreeItem>> {
+        unimplemented!()
+    }
+
+    fn write_tag(&mut self, _path: &TagPath, _tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<bool> {
+        unimplemented!()
+    }
+
+    fn contains(&self, path: &TagPath) -> bool {
+        self.get_tag(path).is_some()
+    }
+
+    fn get_all_tags_with_filter(&self, filter: Option<&TagFilter>) -> Vec<TagPath> where Self: Sized {
+        let all_tags = self.get_all_tags();
+        if let Some(n) = filter {
+            all_tags.into_iter().filter(|t| n.passes(t)).collect()
+        }
+        else {
+            all_tags
+        }
     }
 }

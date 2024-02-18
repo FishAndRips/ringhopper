@@ -218,10 +218,7 @@
             },
             {
                 "name": "samples",
-                "type": "Data",
-                "file_offset": true,
-                "external_file_offset": "sounds.map",
-                "compile_ignore": true,
+                "type": "FileData",
                 "read_only": true,
                 "limit": 4194304
             },

@@ -123,6 +123,9 @@ pub trait Map {
         }
     }
 
+    /// Returns all tags in the cache file.
+    fn get_all_tags(&self) -> Vec<TagPath>;
+
     /// Get the C string at the given location.
     ///
     /// Returns `None` if the data is unavailable or out-of-bounds, or it is not UTF-8.

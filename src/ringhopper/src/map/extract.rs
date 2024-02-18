@@ -1,9 +1,11 @@
 use std::convert::TryInto;
+use tag::model::ModelPartGet;
 use constants::{TICK_RATE, TICK_RATE_RECIPROCOL};
-use definitions::{ActorVariant, Bitmap, BitmapData, BitmapDataFormat, ContinuousDamageEffect, DamageEffect, GBXModel, Light, Model, ModelAnimations, PointPhysics, Projectile, Scenario, ScenarioType, Weapon};
+use definitions::{ActorVariant, Bitmap, BitmapData, BitmapDataFormat, ContinuousDamageEffect, DamageEffect, GBXModel, Light, Model, ModelAnimations, ModelTriangle, ModelVertexUncompressed, PointPhysics, Projectile, Scenario, ScenarioType, Sound, SoundFormat, Weapon};
 use primitives::error::{Error, OverflowCheck, RinghopperResult};
 use primitives::map::{DomainType, Map, ResourceMapType};
-use primitives::primitive::{Angle, Bounds, TagPath};
+use primitives::parse::TagData;
+use primitives::primitive::{Angle, Bounds, Index, TagPath};
 use tag::model::ModelFunctions;
 use tag::nudge::nudge_tag;
 
@@ -71,14 +73,80 @@ pub fn fix_light_tag(light: &mut Light) {
     nudge_tag(light);
 }
 
+macro_rules! recover_model_vertices {
+    ($model:expr, $map:expr) => {{
+        for geo in &mut $model.geometries.items {
+            for part in &mut geo.parts.items {
+                let part = part.get_model_part_mut();
+
+                let vertex_count = part.vertex_count as usize;
+                let triangle_count = part.triangle_count as usize;
+
+                if vertex_count > 0xFFFF {
+                    return Err(Error::InvalidTagData(format!("Model data is invalid: vertex count is too high (0x{vertex_count:X} > 0xFFFF)")))
+                }
+                let max_triangles = 0xFFFE*3;
+                if triangle_count > max_triangles {
+                    return Err(Error::InvalidTagData(format!("Model data is invalid: triangle count is too high (0x{triangle_count:X} > 0x{max_triangles:X})")))
+                }
+
+                part.uncompressed_vertices.items.reserve_exact(vertex_count);
+
+                let vertex_size = ModelVertexUncompressed::size();
+                let vertex_offset = part.vertex_offset as usize;
+                let vertex_end = vertex_offset + (vertex_size * vertex_count);
+                for v in (vertex_end..vertex_end).step_by(vertex_size) {
+                    let vertex = ModelVertexUncompressed::read_from_map($map, v, &DomainType::ModelVertexData)?;
+                    part.uncompressed_vertices.items.push(vertex);
+                }
+
+                let mut triangles: Vec<Index> = Vec::with_capacity(triangle_count + 2);
+                let triangle_size = Index::size();
+                let triangle_offset = part.triangle_offset as usize;
+                let triangle_end = triangle_offset + (triangle_offset * triangle_size);
+                for t in (triangle_offset..triangle_end).step_by(triangle_size) {
+                    let triangle = Index::read_from_map($map, t, &DomainType::ModelTriangleData)?;
+                    triangles.push(triangle);
+                }
+                triangles.push(None);
+                triangles.push(None);
+
+                let full_triangles = triangles.len() / 3;
+                part.triangles.items.reserve_exact(full_triangles);
+
+                let full_triangle_indices = full_triangles * 3;
+                let iterator = (0..full_triangle_indices)
+                    .step_by(3)
+                    .map(|index| unsafe {(
+                        // Fine because we checked above
+                        *triangles.get_unchecked(index),
+                        *triangles.get_unchecked(index + 1),
+                        *triangles.get_unchecked(index + 2)
+                    )})
+                    .map(|(vertex0_index, vertex1_index, vertex2_index)| {
+                        ModelTriangle {
+                            vertex0_index,
+                            vertex1_index,
+                            vertex2_index
+                        }
+                    });
+                part.triangles.items.extend(iterator);
+            }
+        }
+        $model.fix_compressed_vertices();
+    }};
+}
+
 pub fn fix_model_tag_normal<M: Map>(model: &mut Model, map: &M) -> RinghopperResult<()> {
     model.fix_runtime_markers()?;
-    todo!("get vertices/triangles back into the model")
+    recover_model_vertices!(model, map);
+    Ok(())
 }
 
 pub fn fix_gbxmodel_tag<M: Map>(gbxmodel: &mut GBXModel, map: &M) -> RinghopperResult<()> {
     gbxmodel.fix_runtime_markers()?;
-    todo!("get vertices/triangles back into the model")
+    recover_model_vertices!(gbxmodel, map);
+    Ok(())
 }
 
 pub fn fix_scenario_tag(scenario: &mut Scenario) -> RinghopperResult<()> {
@@ -145,5 +213,23 @@ fn fix_bitmap_tag<M: Map, F>(tag: &mut Bitmap, map: &M, mut compressed_data_hand
 }
 
 pub fn fix_bitmap_tag_normal<M: Map>(tag: &mut Bitmap, map: &M) -> RinghopperResult<()> {
-    fix_bitmap_tag(tag, map, None)
+    fix_bitmap_tag(tag, map, Option::<fn(&mut BitmapData, &mut Vec<u8>) -> RinghopperResult<()>>::None)
+}
+
+pub fn fix_sound_tag(tag: &mut Sound) -> RinghopperResult<()> {
+    let permutations = tag.pitch_ranges.items.iter_mut().flat_map(|p| p.permutations.items.iter_mut());
+    for permutation in permutations {
+        if permutation.format != SoundFormat::PCM {
+            continue;
+        }
+        if permutation.samples.bytes.len() % 2 == 1 {
+            return Err(Error::InvalidTagData("Sound data is 16-bit PCM, but one or more permutations have an odd number of bytes".to_owned()));
+        }
+
+        // swap endian of 16-bit PCM
+        let swapped: Vec<u8> = permutation.samples.bytes.chunks(2).map(|b| [b[1], b[0]]).flatten().collect();
+        permutation.samples.bytes = swapped;
+    }
+
+    Ok(())
 }
