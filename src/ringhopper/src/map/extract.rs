@@ -1,12 +1,14 @@
 use std::convert::TryInto;
 use tag::model::ModelPartGet;
 use constants::{TICK_RATE, TICK_RATE_RECIPROCOL};
-use definitions::{ActorVariant, Bitmap, BitmapData, BitmapDataFormat, ContinuousDamageEffect, DamageEffect, GBXModel, Light, Model, ModelAnimations, ModelTriangle, ModelVertexUncompressed, PointPhysics, Projectile, Scenario, ScenarioType, Sound, SoundFormat, Weapon};
+use definitions::{ActorVariant, Bitmap, BitmapData, BitmapDataFormat, ContinuousDamageEffect, DamageEffect, GBXModel, Light, Model, ModelAnimations, ModelAnimationsAnimation, ModelTriangle, ModelVertexUncompressed, PointPhysics, Projectile, Scenario, ScenarioType, Sound, SoundFormat, Weapon};
+use primitives::byteorder::{BigEndian, LittleEndian};
 use primitives::error::{Error, OverflowCheck, RinghopperResult};
 use primitives::map::{DomainType, Map, ResourceMapType};
 use primitives::parse::TagData;
 use primitives::primitive::{Angle, Bounds, Index, TagPath};
 use tag::model::ModelFunctions;
+use tag::model_animations::{flip_endianness_for_model_animations_animation, FrameDataIterator};
 use tag::nudge::nudge_tag;
 
 pub fn fix_extracted_weapon_tag(tag: &mut Weapon, tag_path: &TagPath, scenario_tag: &Scenario) {
@@ -154,7 +156,31 @@ pub fn fix_scenario_tag(scenario: &mut Scenario) -> RinghopperResult<()> {
 }
 
 pub fn fix_model_animations_tag(model_animations: &mut ModelAnimations) -> RinghopperResult<()> {
-    Err(Error::TagGroupUnimplemented)
+    for i in &mut model_animations.animations.items {
+        fix_model_animations_animation(i)?;
+    }
+    Ok(())
+}
+
+fn fix_model_animations_animation(animation: &mut ModelAnimationsAnimation) -> RinghopperResult<()> {
+    if animation.flags.compressed_data {
+        // TODO: decompress animations
+        let offset = FrameDataIterator::for_animation(animation).to_size();
+        let expected_final_data = offset.add_overflow_checked(animation.frame_data.bytes.len())?;
+        if expected_final_data > u32::MAX as usize {
+            return Err(Error::ArrayLimitExceeded)
+        }
+
+        let mut new_frame_data = Vec::with_capacity(offset.add_overflow_checked(animation.frame_data.bytes.len())?);
+        new_frame_data.resize(offset, 0);
+        new_frame_data.extend_from_slice(&animation.frame_data.bytes);
+        animation.frame_data.bytes = new_frame_data;
+        animation.offset_to_compressed_data = offset as u32;
+
+        animation.default_data.bytes = vec![0; FrameDataIterator::for_animation_inverted(animation).to_size()];
+    }
+
+    flip_endianness_for_model_animations_animation::<LittleEndian, BigEndian>(animation)
 }
 
 fn fix_bitmap_tag<M: Map, F>(tag: &mut Bitmap, map: &M, mut compressed_data_handler: Option<F>) -> RinghopperResult<()>

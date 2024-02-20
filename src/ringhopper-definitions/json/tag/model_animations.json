@@ -69,9 +69,20 @@
         "name": "ModelAnimationsRotation",
         "fields": [
             {
-                "name": "rotation",
-                "type": "int16",
-                "count": 4
+                "name": "x",
+                "type": "int16"
+            },
+            {
+                "name": "y",
+                "type": "int16"
+            },
+            {
+                "name": "z",
+                "type": "int16"
+            },
+            {
+                "name": "w",
+                "type": "int16"
             }
         ],
         "type": "struct",
@@ -89,7 +100,7 @@
         "size": 12
     },
     {
-        "name": "ModelAnimationscale",
+        "name": "ModelAnimationsScale",
         "fields": [
             {
                 "name": "scale",

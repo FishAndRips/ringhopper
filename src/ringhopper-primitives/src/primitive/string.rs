@@ -1,5 +1,6 @@
 use std::fmt::{Display, Debug};
 use crate::dynamic::SimplePrimitiveType;
+use crate::parse::SimplePrimitive;
 
 use super::*;
 
@@ -77,8 +78,8 @@ impl String32 {
     }
 }
 
-impl TagDataSimplePrimitive for String32 {
-    fn size() -> usize {
+impl SimpleTagData for String32 {
+    fn simple_size() -> usize {
         32
     }
 
@@ -92,8 +93,9 @@ impl TagDataSimplePrimitive for String32 {
         data[at..at+32].clone_from_slice(&self.string_data[..]);
         Ok(())
     }
-
-    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+}
+impl SimplePrimitive for String32 {
+    fn primitive_type() -> SimplePrimitiveType {
         SimplePrimitiveType::String32
     }
 }

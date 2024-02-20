@@ -1,5 +1,6 @@
 use std::fmt::{Display, Formatter};
 use crate::dynamic::SimplePrimitiveType;
+use crate::parse::SimplePrimitive;
 use super::*;
 
 /// General functionality for planar types.
@@ -33,8 +34,8 @@ impl Plane for Plane2D {
     }
 }
 
-impl TagDataSimplePrimitive for Plane2D {
-    fn size() -> usize {
+impl SimpleTagData for Plane2D {
+    fn simple_size() -> usize {
         std::mem::size_of::<Self>()
     }
     fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
@@ -49,8 +50,10 @@ impl TagDataSimplePrimitive for Plane2D {
         self.d.write::<B>(data, at + 0x8, struct_end)?;
         Ok(())
     }
+}
 
-    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+impl SimplePrimitive for Plane2D {
+    fn primitive_type() -> SimplePrimitiveType {
         SimplePrimitiveType::Plane2D
     }
 }
@@ -72,8 +75,8 @@ impl Plane for Plane3D {
     }
 }
 
-impl TagDataSimplePrimitive for Plane3D {
-    fn size() -> usize {
+impl SimpleTagData for Plane3D {
+    fn simple_size() -> usize {
         std::mem::size_of::<Self>()
     }
     fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
@@ -88,8 +91,10 @@ impl TagDataSimplePrimitive for Plane3D {
         self.d.write::<B>(data, at + 0xC, struct_end)?;
         Ok(())
     }
+}
 
-    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+impl SimplePrimitive for Plane3D {
+    fn primitive_type() -> SimplePrimitiveType {
         SimplePrimitiveType::Plane3D
     }
 }

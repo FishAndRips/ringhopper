@@ -139,6 +139,7 @@ impl SizeableObject for StructFieldType {
     }
 }
 
+#[derive(Copy, Clone, PartialEq)]
 pub enum FieldCount {
     /// A single field
     One,

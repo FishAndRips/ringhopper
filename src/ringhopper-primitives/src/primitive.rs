@@ -2,8 +2,8 @@
 pub(crate) mod macros {
     macro_rules! generate_tag_data_simple_primitive_code_read {
         ($self: expr, $b: tt, $field_type: ty, $data: expr, $current_offset: tt, $struct_end: expr, $field: tt) => {
-            $self.$field = <$field_type as TagDataSimplePrimitive>::read::<$b>($data, $current_offset, $struct_end)?.into();
-            $current_offset = $current_offset.add_overflow_checked(<$field_type as TagDataSimplePrimitive>::size())?;
+            $self.$field = <$field_type as SimpleTagData>::read::<$b>($data, $current_offset, $struct_end)?.into();
+            $current_offset = $current_offset.add_overflow_checked(<$field_type>::simple_size())?;
         };
         ($self: expr, $b: tt, $field_type: ty, $data: expr, $current_offset: tt, $struct_end: expr, $field: tt, $($fields: tt), +) => {
             generate_tag_data_simple_primitive_code_read!($self, $b, $field_type, $data, $current_offset, $struct_end, $field);
@@ -14,7 +14,7 @@ pub(crate) mod macros {
     macro_rules! generate_tag_data_simple_primitive_code_write {
         ($self: expr, $b: tt, $field_type: ty, $data: expr, $current_offset: tt, $struct_end: expr, $field: tt) => {
             $self.$field.write::<$b>($data, $current_offset, $struct_end)?;
-            $current_offset = $current_offset.add_overflow_checked(<$field_type as TagDataSimplePrimitive>::size())?;
+            $current_offset = $current_offset.add_overflow_checked(<$field_type>::simple_size())?;
         };
         ($self: expr, $b: tt, $field_type: ty, $data: expr, $current_offset: tt, $struct_end: expr, $field: tt, $($fields: tt), +) => {
             generate_tag_data_simple_primitive_code_write!($self, $b, $field_type, $data, $current_offset, $struct_end, $field);
@@ -45,7 +45,7 @@ pub(crate) mod macros {
     macro_rules! generate_tag_data_simple_primitive_code {
         ($what: tt, $field_type: ty, $($fields: tt),+) => {
             #[allow(unused_assignments)]
-            impl TagDataSimplePrimitive for $what {
+            impl SimpleTagData for $what {
                 fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
                     let mut current_offset = at;
                     let mut r = Self::default();
@@ -57,10 +57,13 @@ pub(crate) mod macros {
                     generate_tag_data_simple_primitive_code_write!(self, B, $field_type, data, current_offset, struct_end, $($fields), +);
                     Ok(())
                 }
-                fn size() -> usize {
-                    count_sizes!(<$field_type as TagDataSimplePrimitive>::size(), $($fields), +)
+                fn simple_size() -> usize {
+                    count_sizes!(<$field_type>::simple_size(), $($fields), +)
                 }
-                fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+            }
+
+            impl SimplePrimitive for $what {
+                fn primitive_type() -> SimplePrimitiveType {
                     SimplePrimitiveType::$what
                 }
             }
@@ -80,11 +83,10 @@ pub(crate) mod macros {
 mod vector;
 use std::convert::TryInto;
 
-use crate::parse::TagDataSimplePrimitive;
+use crate::parse::SimpleTagData;
 use crate::error::*;
 use crate::parse::tag_data_fits;
 use byteorder::*;
-use crate::dynamic::SimplePrimitiveType;
 
 pub use self::vector::*;
 

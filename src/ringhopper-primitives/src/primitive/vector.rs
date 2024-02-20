@@ -3,6 +3,7 @@ use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssi
 
 use byteorder::ByteOrder;
 use crate::dynamic::SimplePrimitiveType;
+use crate::parse::SimplePrimitive;
 use crate::error::*;
 
 use super::*;
@@ -316,14 +317,14 @@ impl Display for Matrix3x3 {
     }
 }
 
-impl TagDataSimplePrimitive for Matrix3x3 {
-    fn size() -> usize {
-        <Vector3D as TagDataSimplePrimitive>::size() * 3
+impl SimpleTagData for Matrix3x3 {
+    fn simple_size() -> usize {
+        Vector3D::simple_size() * 3
     }
     fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
         let at1 = at;
-        let at2 = at1.add_overflow_checked(<Vector3D as TagDataSimplePrimitive>::size())?;
-        let at3 = at2.add_overflow_checked(<Vector3D as TagDataSimplePrimitive>::size())?;
+        let at2 = at1.add_overflow_checked(Vector3D::simple_size())?;
+        let at3 = at2.add_overflow_checked(Vector3D::simple_size())?;
 
         Ok(Matrix3x3 {
             vectors: [
@@ -335,8 +336,8 @@ impl TagDataSimplePrimitive for Matrix3x3 {
     }
     fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
         let at1 = at;
-        let at2 = at1.add_overflow_checked(<Vector3D as TagDataSimplePrimitive>::size())?;
-        let at3 = at2.add_overflow_checked(<Vector3D as TagDataSimplePrimitive>::size())?;
+        let at2 = at1.add_overflow_checked(Vector3D::simple_size())?;
+        let at3 = at2.add_overflow_checked(Vector3D::simple_size())?;
 
         self.vectors[0].write::<B>(data, at1, struct_end)?;
         self.vectors[1].write::<B>(data, at2, struct_end)?;
@@ -344,9 +345,11 @@ impl TagDataSimplePrimitive for Matrix3x3 {
 
         Ok(())
     }
+}
 
-    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
-        SimplePrimitiveType::Matrix3x3
+impl SimplePrimitive for Matrix3x3 {
+    fn primitive_type() -> SimplePrimitiveType {
+        SimplePrimitiveType::Angle
     }
 }
 
@@ -468,9 +471,9 @@ impl Neg for Angle {
     }
 }
 
-impl TagDataSimplePrimitive for Angle {
-    fn size() -> usize {
-        <f32 as TagDataSimplePrimitive>::size()
+impl SimpleTagData for Angle {
+    fn simple_size() -> usize {
+        f32::simple_size()
     }
 
     fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
@@ -482,8 +485,10 @@ impl TagDataSimplePrimitive for Angle {
     fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
         self.angle.write::<B>(data, at, struct_end)
     }
+}
 
-    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+impl SimplePrimitive for Angle {
+    fn primitive_type() -> SimplePrimitiveType {
         SimplePrimitiveType::Angle
     }
 }

@@ -4,7 +4,7 @@ fn primitive_sizes() {
 
     use super::*;
 
-    fn correct_size<T: TagDataSimplePrimitive + Sized>(expected: usize) {
+    fn correct_size<T: SimpleTagData + Sized>(expected: usize) {
         let actual = std::mem::size_of::<T>();
         assert_eq!(actual, expected, "expected: {expected}, got {actual} instead");
         let actual_parsed = T::size();

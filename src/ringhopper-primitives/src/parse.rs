@@ -9,7 +9,7 @@ use crate::map::{DomainType, Map};
 
 /// Maximum length for an array.
 ///
-/// This is enforced by the [`TagDataSimplePrimitive`] (and, by extension, [`TagData`]) implementation of [`usize`].
+/// This is enforced by the [`SimpleTagData`] (and, by extension, [`TagData`]) implementation of [`usize`].
 pub const MAX_ARRAY_LENGTH: usize = u32::MAX as usize;
 
 /// Tag data parsing/writing methods.
@@ -43,24 +43,9 @@ pub trait TagData {
 }
 
 /// Automatically implements types for [`TagData`] for simple types.
-///
-/// These types include:
-/// - All [`Color`](crate::primitive::Color) types
-/// - All [`Plane`](crate::primitive::Plane) types
-/// - All [`Vector`](crate::primitive::Vector) types
-/// - [`Address`](crate::primitive::Address)
-/// - [`String32`](crate::primitive::String32)
-/// - [`TagGroup`](crate::primitive::TagGroup)
-/// - [`u8`]
-/// - [`i8`]
-/// - [`u16`]
-/// - [`i16`]
-/// - [`u32`]
-/// - [`i32`]
-/// - [`f32`]
-pub trait TagDataSimplePrimitive: Sized {
+pub trait SimpleTagData: Sized {
     /// Get the raw size of the data in bytes.
-    fn size() -> usize;
+    fn simple_size() -> usize;
 
     /// Read a number from tag data.
     ///
@@ -81,14 +66,17 @@ pub trait TagDataSimplePrimitive: Sized {
     ///
     /// In all other error cases, it will panic.
     fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()>;
-
-    /// Get the primitive type.
-    fn primitive_type() -> SimplePrimitiveType where Self: Sized;
 }
 
-impl<T: TagDataSimplePrimitive + Sized> TagData for T {
+/// Automatically implements DynamicTagData for simple primitives.
+pub trait SimplePrimitive: SimpleTagData {
+    /// Get the primitive type.
+    fn primitive_type() -> SimplePrimitiveType;
+}
+
+impl<T: SimpleTagData + Sized> TagData for T {
     fn size() -> usize {
-        <T as TagDataSimplePrimitive>::size()
+        T::simple_size()
     }
     fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, _: &mut usize) -> RinghopperResult<Self> {
         T::read::<BE>(data, at, struct_end)
@@ -97,7 +85,7 @@ impl<T: TagDataSimplePrimitive + Sized> TagData for T {
         self.write::<BE>(data, at, struct_end)
     }
     fn read_from_map<M: Map>(map: &M, address: usize, domain_type: &DomainType) -> RinghopperResult<Self> {
-        let size = <T as TagDataSimplePrimitive>::size();
+        let size = T::simple_size();
         let data = match map.get_data_at_address(address, domain_type, size) {
             Some(n) => n,
             None => return Err(Error::MapDataOutOfBounds(format!("cannot read 0x{size:04X} bytes from {domain_type:?}")))
@@ -106,7 +94,7 @@ impl<T: TagDataSimplePrimitive + Sized> TagData for T {
     }
 }
 
-impl <T: TagDataSimplePrimitive + Sized + 'static> DynamicTagData for T {
+impl <T: SimplePrimitive + SimpleTagData + Sized + 'static> DynamicTagData for T {
     fn get_field(&self, _field: &str) -> Option<&dyn DynamicTagData> {
         None
     }
@@ -144,7 +132,7 @@ pub(crate) fn fits(size: usize, at: usize, vec_size: usize) -> RinghopperResult<
     }
 }
 
-pub(crate) fn tag_data_fits<T: TagDataSimplePrimitive>(at: usize, struct_end: usize, vec_size: usize) -> RinghopperResult<usize> {
+pub(crate) fn tag_data_fits<T: SimpleTagData>(at: usize, struct_end: usize, vec_size: usize) -> RinghopperResult<usize> {
     let size = T::size();
     let end = fits(size, at, vec_size)?;
 
@@ -156,8 +144,8 @@ pub(crate) fn tag_data_fits<T: TagDataSimplePrimitive>(at: usize, struct_end: us
 
 macro_rules! generate_tag_data_for_number {
     ($type:tt, $bo_read:tt, $bo_write:tt, $primitive_type:tt) => {
-        impl TagDataSimplePrimitive for $type {
-            fn size() -> usize {
+        impl SimpleTagData for $type {
+            fn simple_size() -> usize {
                 std::mem::size_of::<Self>()
             }
             fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
@@ -169,7 +157,9 @@ macro_rules! generate_tag_data_for_number {
                 B::$bo_write(&mut data[at..], *self);
                 Ok(())
             }
-            fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+        }
+        impl SimplePrimitive for $type {
+            fn primitive_type() -> SimplePrimitiveType {
                 SimplePrimitiveType::$primitive_type
             }
         }
@@ -182,9 +172,9 @@ generate_tag_data_for_number!(i32, read_i32, write_i32, I32);
 generate_tag_data_for_number!(u32, read_u32, write_u32, U32);
 generate_tag_data_for_number!(f32, read_f32, write_f32, F32);
 
-impl TagDataSimplePrimitive for bool {
-    fn size() -> usize {
-        <u8 as TagDataSimplePrimitive>::size()
+impl SimpleTagData for bool {
+    fn simple_size() -> usize {
+        u8::simple_size()
     }
     fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
         Ok(u8::read::<B>(data, at, struct_end)? != 0)
@@ -192,13 +182,15 @@ impl TagDataSimplePrimitive for bool {
     fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
         (*self as u8).write::<B>(data, at, struct_end)
     }
-    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+}
+impl SimplePrimitive for bool {
+    fn primitive_type() -> SimplePrimitiveType {
         SimplePrimitiveType::Bool
     }
 }
 
-impl TagDataSimplePrimitive for u8 {
-    fn size() -> usize {
+impl SimpleTagData for u8 {
+    fn simple_size() -> usize {
         std::mem::size_of::<u8>()
     }
     fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
@@ -210,13 +202,15 @@ impl TagDataSimplePrimitive for u8 {
         data[at] = *self;
         Ok(())
     }
-    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
-        SimplePrimitiveType::U8
+}
+impl SimplePrimitive for u8 {
+    fn primitive_type() -> SimplePrimitiveType {
+        SimplePrimitiveType::I8
     }
 }
 
-impl TagDataSimplePrimitive for i8 {
-    fn size() -> usize {
+impl SimpleTagData for i8 {
+    fn simple_size() -> usize {
         std::mem::size_of::<i8>()
     }
     fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
@@ -228,8 +222,9 @@ impl TagDataSimplePrimitive for i8 {
         data[at] = *self as u8;
         Ok(())
     }
-
-    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+}
+impl SimplePrimitive for i8 {
+    fn primitive_type() -> SimplePrimitiveType {
         SimplePrimitiveType::I8
     }
 }
@@ -238,8 +233,8 @@ impl TagDataSimplePrimitive for i8 {
 ///
 /// We have special handling for `usize` because Rust internally uses `usize` for vectors, but tags are defined using
 /// 32-bit sizes, instead.
-impl TagDataSimplePrimitive for usize {
-    fn size() -> usize {
+impl SimpleTagData for usize {
+    fn simple_size() -> usize {
         std::mem::size_of::<u32>()
     }
     fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
@@ -252,7 +247,9 @@ impl TagDataSimplePrimitive for usize {
         let self_as_u32 = *self as u32;
         self_as_u32.write::<B>(data, at, struct_end)
     }
-    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+}
+impl SimplePrimitive for usize {
+    fn primitive_type() -> SimplePrimitiveType {
         SimplePrimitiveType::Size
     }
 }

@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use crate::error::*;
 use std::fmt::Display;
 use std::convert::{TryFrom, TryInto};
-use crate::parse::TagDataSimplePrimitive;
+use crate::parse::{SimplePrimitive, SimpleTagData};
 use byteorder::ByteOrder;
 use crate::dynamic::SimplePrimitiveType;
 
@@ -257,8 +257,8 @@ impl TryFrom<FourCC> for TagGroup {
     }
 }
 
-impl TagDataSimplePrimitive for TagGroup {
-    fn size() -> usize {
+impl SimpleTagData for TagGroup {
+    fn simple_size() -> usize {
         std::mem::size_of::<FourCC>()
     }
     fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
@@ -268,8 +268,10 @@ impl TagDataSimplePrimitive for TagGroup {
         let v: u32 = (*self).as_fourcc();
         v.write::<B>(data, at, struct_end)
     }
+}
 
-    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+impl SimplePrimitive for TagGroup {
+    fn primitive_type() -> SimplePrimitiveType {
         SimplePrimitiveType::TagGroup
     }
 }

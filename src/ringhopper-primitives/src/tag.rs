@@ -139,8 +139,8 @@ pub struct TagFileHeader {
     pub blam_fourcc: u32,
 }
 
-impl TagDataSimplePrimitive for TagFileHeader {
-    fn size() -> usize {
+impl SimpleTagData for TagFileHeader {
+    fn simple_size() -> usize {
         const _: () = assert!(std::mem::size_of::<TagFileHeader>() == 0x40);
         std::mem::size_of::<TagFileHeader>()
     }
@@ -174,10 +174,6 @@ impl TagDataSimplePrimitive for TagFileHeader {
         self.blam_fourcc.write::<B>(data, at + 0x3C, struct_end)?;
         Ok(())
     }
-
-    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
-        SimplePrimitiveType::TagFileHeader
-    }
 }
 
 impl TagFileHeader {
@@ -185,7 +181,7 @@ impl TagFileHeader {
     ///
     /// Return `Err(Error::InvalidTagFile)` if the header is not valid.
     pub fn validate(&self) -> RinghopperResult<()> {
-        if self.blam_fourcc == BLAM_FOURCC && self.u16_255 == 0x00FF && self.header_size as usize == <Self as TagDataSimplePrimitive>::size() {
+        if self.blam_fourcc == BLAM_FOURCC && self.u16_255 == 0x00FF && self.header_size as usize == Self::simple_size() {
             Ok(())
         }
         else {

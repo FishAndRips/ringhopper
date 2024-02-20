@@ -91,7 +91,6 @@ impl GearboxCacheFile {
         map.scenario_tag = tag_data_header.cache_file_tag_data_header.scenario_tag;
 
         let mut tag_address = tag_data_header.cache_file_tag_data_header.tag_array_address.address as usize;
-        let mut tags = Vec::with_capacity(tag_data_header.cache_file_tag_data_header.tag_count as usize);
 
         let tag_count = tag_data_header.cache_file_tag_data_header.tag_count as usize;
         if tag_count > u16::MAX as usize {
@@ -100,6 +99,7 @@ impl GearboxCacheFile {
             )
         }
 
+        let mut tags = Vec::with_capacity(tag_data_header.cache_file_tag_data_header.tag_count as usize);
         for t in 0..tag_count {
             let cached_tag = CacheFileTag::read_from_map(&map, tag_address, &DomainType::TagData)?;
 
@@ -187,11 +187,16 @@ impl GearboxCacheFile {
             }
         }
 
-        for t in &map.tags {
-            if t.tag_path.group() == TagGroup::ScenarioStructureBSP {
-                if !matches!(t.domain, DomainType::BSP(_)) {
+        for i in 0..tag_count {
+            let t= &map.tags[i];
+            match t.tag_path.group() {
+                TagGroup::ScenarioStructureBSP => if !matches!(t.domain, DomainType::BSP(_)) {
                     return Err(Error::MapParseFailure(format!("BSP tag {} has no corresponding data in the scenario tag", t.tag_path)))
                 }
+                TagGroup::Scenario => if i != map.scenario_tag.index().unwrap() as usize {
+                    return Err(Error::MapParseFailure(format!("Extraneous scenario tag {} in the map (map likely protected/corrupted)", t.tag_path)))
+                }
+                _ => ()
             }
         }
 

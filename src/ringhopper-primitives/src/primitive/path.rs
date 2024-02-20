@@ -409,7 +409,7 @@ impl Display for TagReference {
 
 impl TagData for TagReference {
     fn size() -> usize {
-        <TagReferenceC as TagDataSimplePrimitive>::size()
+        <TagReferenceC>::simple_size()
     }
 
     fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> {
@@ -512,8 +512,8 @@ pub struct TagReferenceC {
     pub path_length: u32,
     pub tag_id: ID
 }
-impl TagDataSimplePrimitive for TagReferenceC {
-    fn size() -> usize {
+impl SimpleTagData for TagReferenceC {
+    fn simple_size() -> usize {
         std::mem::size_of::<Self>()
     }
 
@@ -540,10 +540,6 @@ impl TagDataSimplePrimitive for TagReferenceC {
         self.path_length.write::<B>(data, at + 0x8, struct_end)?;
         self.tag_id.write::<B>(data, at + 0xC, struct_end)?;
         Ok(())
-    }
-
-    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
-        SimplePrimitiveType::TagReferenceC
     }
 }
 

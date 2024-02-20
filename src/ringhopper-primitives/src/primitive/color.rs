@@ -284,9 +284,9 @@ impl Color for ColorARGBInt {
     }
 }
 
-impl TagDataSimplePrimitive for ColorARGBInt {
-    fn size() -> usize {
-        <u32 as TagDataSimplePrimitive>::size()
+impl SimpleTagData for ColorARGBInt {
+    fn simple_size() -> usize {
+        u32::simple_size()
     }
 
     fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
@@ -296,8 +296,9 @@ impl TagDataSimplePrimitive for ColorARGBInt {
     fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
         self.color.write::<B>(data, at, struct_end)
     }
-
-    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+}
+impl SimplePrimitive for ColorARGBInt {
+    fn primitive_type() -> SimplePrimitiveType {
         SimplePrimitiveType::ColorARGBInt
     }
 }
@@ -397,8 +398,8 @@ impl From<ColorARGBInt> for ColorARGBIntBytes {
     }
 }
 
-impl TagDataSimplePrimitive for ColorARGBIntBytes {
-    fn size() -> usize {
+impl SimpleTagData for ColorARGBIntBytes {
+    fn simple_size() -> usize {
         std::mem::size_of::<u32>()
     }
     fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
@@ -408,8 +409,9 @@ impl TagDataSimplePrimitive for ColorARGBIntBytes {
         let v: u32 = (*self).into();
         v.write::<B>(data, at, struct_end)
     }
-
-    fn primitive_type() -> SimplePrimitiveType where Self: Sized {
+}
+impl SimplePrimitive for ColorARGBIntBytes {
+    fn primitive_type() -> SimplePrimitiveType {
         SimplePrimitiveType::ColorARGBIntBytes
     }
 }

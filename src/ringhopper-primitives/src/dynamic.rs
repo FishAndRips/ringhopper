@@ -155,6 +155,8 @@ pub enum SimplePrimitiveType {
     DataC,
     ReflexiveC,
     TagReferenceC,
+
+    Object
 }
 
 macro_rules! generate_access_function {
