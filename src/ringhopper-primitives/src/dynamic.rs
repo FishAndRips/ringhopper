@@ -144,17 +144,12 @@ pub enum SimplePrimitiveType {
     ColorARGBFloat,
 
     Index,
-    Padding,
     ID,
     TagGroup,
     Address,
 
     Size,
     ScenarioScriptNodeValue,
-    TagFileHeader,
-    DataC,
-    ReflexiveC,
-    TagReferenceC,
 
     Object
 }
