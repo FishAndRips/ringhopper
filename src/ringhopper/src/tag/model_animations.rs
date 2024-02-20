@@ -91,6 +91,25 @@ impl FrameDataIterator {
         }
         size
     }
+    fn flip_all<From: ByteOrder, To: ByteOrder>(self, data: &mut [u8], offset: &mut usize) {
+        for i in self {
+            let frame_data = &mut data[*offset..];
+
+            macro_rules! flip {
+                ($type:ty) => {{
+                    let q = <$type>::read::<From>(frame_data, 0, frame_data.len()).unwrap();
+                    q.write::<To>(frame_data, 0, frame_data.len()).unwrap();
+                    *offset += <$type>::simple_size();
+                }};
+            }
+
+            match i {
+                FrameDataType::Rotate => flip!(ModelAnimationsRotation),
+                FrameDataType::Transform => flip!(ModelAnimationsTransform),
+                FrameDataType::Scale => flip!(ModelAnimationsScale)
+            }
+        }
+    }
 }
 
 pub(crate) fn flip_endianness_for_model_animations_animation<From: ByteOrder, To: ByteOrder>(animation: &mut ModelAnimationsAnimation) -> RinghopperResult<()> {
@@ -155,23 +174,7 @@ fn flip_endianness_for_frame_data<From: ByteOrder, To: ByteOrder>(animation: &mu
 
     let mut offset = 0usize;
     for _ in 0..frame_count {
-        for i in frame_data_iterator.clone() {
-            let frame_data = &mut animation.frame_data.bytes[offset..total_size];
-
-            macro_rules! flip {
-                ($type:ty) => {{
-                    let q = <$type>::read::<From>(frame_data, 0, frame_data.len()).unwrap();
-                    q.write::<To>(frame_data, 0, frame_data.len()).unwrap();
-                    offset += <$type>::simple_size();
-                }};
-            }
-
-            match i {
-                FrameDataType::Rotate => flip!(ModelAnimationsRotation),
-                FrameDataType::Transform => flip!(ModelAnimationsTransform),
-                FrameDataType::Scale => flip!(ModelAnimationsScale)
-            }
-        }
+        frame_data_iterator.clone().flip_all::<From, To>(&mut animation.frame_data.bytes[..total_size], &mut offset);
     }
 
     debug_assert_eq!(offset, total_size);
@@ -189,24 +192,7 @@ fn flip_endianness_for_default_data<From: ByteOrder, To: ByteOrder>(animation: &
     }
 
     let mut offset = 0usize;
-    for i in frame_data_iterator.clone() {
-        let frame_data = &mut animation.default_data.bytes[offset..frame_size];
-
-        macro_rules! flip {
-            ($type:ty) => {{
-                let q = <$type>::read::<From>(frame_data, 0, frame_data.len()).unwrap();
-                q.write::<To>(frame_data, 0, frame_data.len()).unwrap();
-                offset += <$type>::simple_size();
-            }};
-        }
-
-        match i {
-            FrameDataType::Rotate => flip!(ModelAnimationsRotation),
-            FrameDataType::Transform => flip!(ModelAnimationsTransform),
-            FrameDataType::Scale => flip!(ModelAnimationsScale)
-        }
-    }
-
+    frame_data_iterator.flip_all::<From, To>(&mut animation.default_data.bytes, &mut offset);
     debug_assert_eq!(offset, frame_size);
 
     Ok(())
