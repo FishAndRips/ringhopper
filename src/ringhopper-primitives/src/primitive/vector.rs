@@ -349,7 +349,7 @@ impl SimpleTagData for Matrix3x3 {
 
 impl SimplePrimitive for Matrix3x3 {
     fn primitive_type() -> SimplePrimitiveType {
-        SimplePrimitiveType::Angle
+        SimplePrimitiveType::Matrix3x3
     }
 }
 

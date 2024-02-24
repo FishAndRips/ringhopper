@@ -205,7 +205,7 @@ impl SimpleTagData for u8 {
 }
 impl SimplePrimitive for u8 {
     fn primitive_type() -> SimplePrimitiveType {
-        SimplePrimitiveType::I8
+        SimplePrimitiveType::U8
     }
 }
 

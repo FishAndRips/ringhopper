@@ -1,5 +1,5 @@
 use std::any::Any;
-use std::fmt::Debug;
+use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 use crate::parse::*;
 use crate::error::*;
@@ -844,11 +844,22 @@ impl SimpleTagData for DataC {
     }
 }
 
-#[derive(Copy, Clone, Default, Debug, PartialEq)]
+#[derive(Copy, Clone, Default, PartialEq)]
 #[repr(transparent)]
 pub struct ScenarioScriptNodeValue {
     pub data: u32
 }
+impl Display for ScenarioScriptNodeValue {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("0x{:08X}", self.data))
+    }
+}
+impl Debug for ScenarioScriptNodeValue {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(self, f)
+    }
+}
+
 impl From<bool> for ScenarioScriptNodeValue {
     fn from(value: bool) -> Self {
         Self::from(value as i8)

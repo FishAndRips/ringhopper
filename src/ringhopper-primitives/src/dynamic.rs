@@ -149,9 +149,7 @@ pub enum SimplePrimitiveType {
     Address,
 
     Size,
-    ScenarioScriptNodeValue,
-
-    Object
+    ScenarioScriptNodeValue
 }
 
 macro_rules! generate_access_function {
