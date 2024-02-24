@@ -144,6 +144,7 @@ fn is_simple_struct(structure: &Struct, definitions: &ParsedDefinitions) -> bool
                 ObjectType::I16 => (),
                 ObjectType::I32 => (),
                 ObjectType::TagID => (),
+                ObjectType::ID => (),
                 ObjectType::Index => (),
                 ObjectType::Angle => (),
                 ObjectType::Address => (),
@@ -199,6 +200,7 @@ impl ToTokenStream for Struct {
 
         // Can we write a simpler implementation?
         let simple_struct = !main_group_struct && is_simple_struct(&self, definitions);
+        let clone = if simple_struct { "Copy, Clone" } else { "Clone" };
 
         for i in 0..field_count {
             let field_name = &fields_with_names[i];
@@ -228,6 +230,7 @@ impl ToTokenStream for Struct {
                     ObjectType::Quaternion => "Quaternion".to_owned(),
                     ObjectType::String32 => "String32".to_owned(),
                     ObjectType::TagID => "ID".to_owned(),
+                    ObjectType::ID => "ID".to_owned(),
                     ObjectType::TagReference(_) => "TagReference".to_owned(),
                     ObjectType::TagGroup => "TagGroup".to_owned(),
                     ObjectType::U16 => "u16".to_owned(),
@@ -274,7 +277,7 @@ impl ToTokenStream for Struct {
         }
 
         let structure = format!("
-        #[derive(Clone, PartialEq, Debug)]
+        #[derive({clone}, PartialEq, Debug)]
         pub struct {struct_name} {{
             {fields}
         }}").parse::<TokenStream>().unwrap();

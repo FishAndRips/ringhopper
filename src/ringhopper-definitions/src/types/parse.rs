@@ -727,6 +727,7 @@ impl LoadFromSerdeJSON for ObjectType {
             "Index" => Self::Index,
             "Vector2DInt" => Self::Vector2DInt,
             "TagID" => Self::TagID,
+            "ID" => Self::ID,
             "ScenarioScriptNodeValue" => Self::ScenarioScriptNodeValue,
             n => Self::NamedObject(n.to_owned()),
         }

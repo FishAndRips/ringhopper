@@ -2949,7 +2949,7 @@
             },
             {
                 "name": "root expression index",
-                "type": "uint32"
+                "type": "ID"
             },
             {
                 "type": "pad",
@@ -2991,7 +2991,7 @@
             },
             {
                 "name": "initialization expression index",
-                "type": "uint32"
+                "type": "ID"
             },
             {
                 "type": "pad",
@@ -3231,7 +3231,7 @@
             },
             {
                 "name": "next node",
-                "type": "uint32"
+                "type": "ID"
             },
             {
                 "name": "string offset",

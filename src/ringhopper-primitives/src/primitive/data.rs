@@ -849,6 +849,11 @@ impl SimpleTagData for DataC {
 pub struct ScenarioScriptNodeValue {
     pub data: u32
 }
+impl From<bool> for ScenarioScriptNodeValue {
+    fn from(value: bool) -> Self {
+        Self::from(value as i8)
+    }
+}
 impl From<i8> for ScenarioScriptNodeValue {
     fn from(value: i8) -> Self {
         Self { data: value as u32 }
@@ -872,6 +877,11 @@ impl From<f32> for ScenarioScriptNodeValue {
 impl From<ID> for ScenarioScriptNodeValue {
     fn from(value: ID) -> Self {
         Self { data: value.as_u32() }
+    }
+}
+impl From<ScenarioScriptNodeValue> for bool {
+    fn from(value: ScenarioScriptNodeValue) -> Self {
+        i8::from(value) == 0
     }
 }
 impl From<ScenarioScriptNodeValue> for i8 {

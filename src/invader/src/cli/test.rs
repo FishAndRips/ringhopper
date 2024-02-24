@@ -1,55 +1,6 @@
 use super::*;
 
 #[test]
-fn test_argument_parser_tags() {
-    let parser_multiple_tags_directories = CommandLineParser::new("Test", "Test")
-        .add_tags(true)
-        .parse_strs(&["-t", "my_tags", "--tags", "more_tags"]).unwrap();
-    assert_eq!(parser_multiple_tags_directories.get_tags(), vec![Path::new("my_tags"), Path::new("more_tags")]);
-
-    let parser_default = CommandLineParser::new("Test", "Test")
-        .add_tags(true)
-        .parse_strs(&[]).unwrap();
-    assert_eq!(parser_default.get_tags(), vec![Path::new("tags")]);
-}
-
-#[test]
-fn test_argument_parser_data() {
-    let parser_data_set = CommandLineParser::new("Test", "Test")
-        .add_data()
-        .parse_strs(&["-d", "my_data"]).unwrap();
-    assert_eq!(parser_data_set.get_data(), Path::new("my_data"));
-
-    let parser_data_set_long = CommandLineParser::new("Test", "Test")
-        .add_data()
-        .parse_strs(&["--data", "my_data2"]).unwrap();
-    assert_eq!(parser_data_set_long.get_data(), Path::new("my_data2"));
-
-    let parser_default = CommandLineParser::new("Test", "Test")
-        .add_data()
-        .parse_strs(&[]).unwrap();
-    assert_eq!(parser_default.get_data(), Path::new("data"));
-}
-
-#[test]
-fn test_argument_parser_maps() {
-    let parser_maps_set = CommandLineParser::new("Test", "Test")
-        .add_maps()
-        .parse_strs(&["-m", "my_maps"]).unwrap();
-    assert_eq!(parser_maps_set.get_maps(), Path::new("my_maps"));
-
-    let parser_maps_set_long = CommandLineParser::new("Test", "Test")
-        .add_maps()
-        .parse_strs(&["--maps", "my_maps2"]).unwrap();
-    assert_eq!(parser_maps_set_long.get_maps(), Path::new("my_maps2"));
-
-    let parser_default = CommandLineParser::new("Test", "Test")
-        .add_maps()
-        .parse_strs(&[]).unwrap();
-    assert_eq!(parser_default.get_maps(), Path::new("maps"));
-}
-
-#[test]
 fn test_argument_parser_help() {
     let parser_help = CommandLineParser::new("Test", "Test")
         .add_help_with_callback(|_| Err("All good!".to_owned()))

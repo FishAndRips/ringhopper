@@ -236,7 +236,7 @@ fn extract_tag_from_map<M: Map>(
         TagGroup::Model => { model_extraction_fn(tag.as_any_mut().downcast_mut().unwrap(), map)?; },
         TagGroup::PointPhysics => fix_point_physics_tag(tag.as_any_mut().downcast_mut().unwrap()),
         TagGroup::Projectile => fix_projectile_tag(tag.as_any_mut().downcast_mut().unwrap()),
-        TagGroup::Scenario => fix_scenario_tag(tag.as_any_mut().downcast_mut().unwrap())?,
+        TagGroup::Scenario => fix_scenario_tag(tag.as_any_mut().downcast_mut().unwrap(), path.base_name())?,
         TagGroup::Sound => fix_sound_tag(tag.as_any_mut().downcast_mut().unwrap())?,
         TagGroup::Weapon => fix_extracted_weapon_tag(tag.as_any_mut().downcast_mut().unwrap(), path, &scenario_tag),
         _ => ()

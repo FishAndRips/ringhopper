@@ -95,6 +95,25 @@ impl TagPath {
         self.group
     }
 
+    /// Get the base name of the tag path, not including file extension.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ringhopper_primitives::primitive::{TagPath, TagGroup};
+    ///
+    /// let path = TagPath::from_path("weapons\\myweapon\\myweapon.weapon")
+    ///                       .unwrap();
+    ///
+    /// assert_eq!("myweapon", path.base_name());
+    /// ```
+    pub fn base_name(&self) -> &str {
+        match self.path.rfind(HALO_PATH_SEPARATOR) {
+            Some(n) => self.path.split_at(n + 1).1,
+            None => self.path.as_str()
+        }
+    }
+
     /// Return an internal path of the tag reference.
     ///
     /// This is what is internally stored in tags.

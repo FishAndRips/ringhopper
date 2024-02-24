@@ -7,3 +7,4 @@ pub mod compare;
 pub mod convert;
 pub mod model;
 pub mod model_animations;
+pub mod scenario;

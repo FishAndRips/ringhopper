@@ -10,6 +10,7 @@ use primitives::primitive::{Angle, Bounds, Index, TagPath};
 use tag::model::ModelFunctions;
 use tag::model_animations::{flip_endianness_for_model_animations_animation, FrameDataIterator};
 use tag::nudge::nudge_tag;
+use tag::scenario::{decompile_scripts, flip_scenario_script_endianness};
 
 pub fn fix_extracted_weapon_tag(tag: &mut Weapon, tag_path: &TagPath, scenario_tag: &Scenario) {
     if scenario_tag._type == ScenarioType::Singleplayer && !scenario_tag.flags.do_not_apply_bungie_campaign_tag_patches {
@@ -151,8 +152,10 @@ pub fn fix_gbxmodel_tag<M: Map>(gbxmodel: &mut GBXModel, map: &M) -> RinghopperR
     Ok(())
 }
 
-pub fn fix_scenario_tag(scenario: &mut Scenario) -> RinghopperResult<()> {
-    Err(Error::TagGroupUnimplemented)
+pub fn fix_scenario_tag(scenario: &mut Scenario, scenario_name: &str) -> RinghopperResult<()> {
+    flip_scenario_script_endianness::<LittleEndian, BigEndian>(scenario)?;
+    decompile_scripts(scenario, scenario_name)?;
+    Ok(())
 }
 
 pub fn fix_model_animations_tag(model_animations: &mut ModelAnimations) -> RinghopperResult<()> {

@@ -316,6 +316,7 @@ pub enum ObjectType {
     I16,
     I32,
     TagID,
+    ID,
     Index,
     Angle,
     Address,
@@ -342,7 +343,7 @@ impl ObjectType {
             Self::Reflexive(_) => 0xC,
             Self::TagReference(_) => 0x10,
             Self::Data | Self::FileData => 0x14,
-            Self::F32 | Self::Angle | Self::U32 | Self::Address | Self::I32 | Self::ColorARGBInt | Self::TagID => 0x4,
+            Self::F32 | Self::Angle | Self::U32 | Self::Address | Self::I32 | Self::ColorARGBInt | Self::ID | Self::TagID => 0x4,
             Self::U16 | Self::I16 | Self::Index => 0x2,
             Self::U8 | Self::I8 => 0x1,
             Self::Rectangle | Self::Vector2DInt => Self::I16.primitive_size() * self.composite_count(),
@@ -370,7 +371,7 @@ impl ObjectType {
             Self::TagReference(_) => 1,
             Self::NamedObject(_) => 1,
             Self::Data | Self::FileData => 1,
-            Self::TagID => 1,
+            Self::TagID | Self::ID => 1,
             Self::TagGroup => 1,
             Self::F32 | Self::Angle | Self::U32 | Self::Address | Self::I32 | Self::ColorARGBInt => 1,
             Self::U16 | Self::I16 | Self::Index => 1,
@@ -398,6 +399,7 @@ impl ObjectType {
             | Self::Data
             | Self::FileData
             | Self::TagID
+            | Self::ID
             | Self::Address
             | Self::ScenarioScriptNodeValue
             | Self::TagGroup => None,

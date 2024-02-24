@@ -14,7 +14,7 @@ fn strlen(bytes: &[u8; 32]) -> usize {
 }
 
 /// A 32-byte null-terminated string.
-#[derive(Copy, Clone, Default, PartialEq)]
+#[derive(Copy, Clone, Default, PartialEq, Eq, Hash)]
 #[repr(transparent)]
 pub struct String32 {
     string_data: [u8; 32] // NOTE: ALWAYS UTF-8, NULL-TERMINATED!
