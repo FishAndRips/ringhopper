@@ -367,7 +367,7 @@ fn decompile_token<'a>(
 
 fn sanitize(mut string: Cow<str>) -> Cow<str> {
     if string == "" {
-        string = Cow::Borrowed("\"\"");
+        return Cow::Borrowed("\"\"");
     }
     if string.contains("\"") {
         string = Cow::Owned(string.replace("\"", "\\\""));
