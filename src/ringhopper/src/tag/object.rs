@@ -128,10 +128,12 @@ macro_rules! get_base_device_tag_memes {
     }};
 }
 
+/// Get a reference to the base device struct of the tag if the tag is a device tag.
 pub fn downcast_base_device(tag: &dyn PrimaryTagStructDyn) -> Option<&Device> {
     get_base_device_tag_memes!(tag, as_any, downcast_ref, |o| &o.device)
 }
 
+/// Get a reference to the base device struct of the tag if the tag is a device tag.
 pub fn downcast_base_device_mut(tag: &mut dyn PrimaryTagStructDyn) -> Option<&mut Device> {
     get_base_device_tag_memes!(tag, as_any_mut, downcast_mut, |o| &mut o.device)
 }

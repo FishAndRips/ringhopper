@@ -107,7 +107,7 @@ macro_rules! recover_uncompressed_model_vertices {
                 let mut triangles: Vec<Index> = Vec::with_capacity(triangle_count + 2);
                 let triangle_size = Index::size();
                 let triangle_offset = part.triangle_offset as usize;
-                let triangle_end = triangle_offset + (triangle_offset * triangle_size);
+                let triangle_end = triangle_offset + (triangle_count * triangle_size);
                 for t in (triangle_offset..triangle_end).step_by(triangle_size) {
                     let triangle = Index::read_from_map($map, t, &DomainType::ModelTriangleData)?;
                     triangles.push(triangle);

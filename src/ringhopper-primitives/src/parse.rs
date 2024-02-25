@@ -88,7 +88,15 @@ impl<T: SimpleTagData + Sized> TagData for T {
         let size = T::simple_size();
         let data = match map.get_data_at_address(address, domain_type, size) {
             Some(n) => n,
-            None => return Err(Error::MapDataOutOfBounds(format!("cannot read 0x{size:04X} bytes from {domain_type:?}")))
+            None => {
+                return match map.get_domain(domain_type) {
+                    Some((data, base)) => {
+                        let len = data.len();
+                        Err(Error::MapDataOutOfBounds(format!("cannot read 0x{address:08X}[0x{size:04X}] bytes from {domain_type:?} because it's out of bounds (range: 0x{base:08X}[0x{len:08X}])")))
+                    },
+                    None => Err(Error::MapDataOutOfBounds(format!("cannot read 0x{address:08X}[0x{size:04X}] bytes from {domain_type:?} because the domain doesn't exist")))
+                }
+            }
         };
         T::read::<LittleEndian>(data, 0, data.len())
     }
