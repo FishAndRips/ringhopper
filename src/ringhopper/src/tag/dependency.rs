@@ -3,7 +3,7 @@ use definitions::get_all_referenceable_tag_groups_for_group;
 use primitives::dynamic::DynamicTagData;
 use primitives::error::RinghopperResult;
 use primitives::primitive::{TagPath, TagReference};
-use tag::tree::{iterate_through_all_tags, TagTree};
+use crate::tag::tree::{iterate_through_all_tags, TagTree};
 
 /// Get all dependencies for a block of tag data or a tag itself.
 pub fn get_tag_dependencies_for_block<T: DynamicTagData + ?Sized>(data: &T) -> HashSet<TagPath> {

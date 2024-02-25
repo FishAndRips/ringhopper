@@ -103,7 +103,7 @@ pub fn do_with_threads<T: TagTree + Send + 'static, U: Clone + Send + 'static>(
     let success = Arc::into_inner(success).unwrap().into_inner();
 
     if total > 1 && display_mode == DisplayMode::ShowProcessed {
-        println!("Processed {success} / {total} tags");
+        print!("Processed {success} / {total} tags");
         if failure > 0 {
             print!(", with {failure} error{s}", s = if failure == 1 { "" } else { "s" });
         }

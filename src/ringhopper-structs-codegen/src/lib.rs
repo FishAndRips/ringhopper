@@ -518,7 +518,7 @@ impl ToTokenStream for Enum {
             }}
 
             fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {{
-                u16::read::<B>(data, at, struct_end)?.try_into()
+                Ok(u16::read::<B>(data, at, struct_end)?.try_into().unwrap_or_else(|_| Default::default()))
             }}
 
             fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {{

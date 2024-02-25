@@ -25,13 +25,13 @@ const CONVERTIBLE_FUNCTIONS: &'static [ConvertibleFunctions] = &[
 ];
 
 fn gbxmodel_to_model(tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
-    let model: GBXModel = PrimaryTagStructDyn::as_any(tag).downcast_ref::<GBXModel>().unwrap().to_owned();
+    let model: GBXModel = tag.as_any().downcast_ref::<GBXModel>().unwrap().to_owned();
     model.check_indices()?;
     Ok(Box::new(model.convert_to_model()))
 }
 
 fn model_to_gbxmodel(tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
-    let model: Model = PrimaryTagStructDyn::as_any(tag).downcast_ref::<Model>().unwrap().to_owned();
+    let model: Model = tag.as_any().downcast_ref::<Model>().unwrap().to_owned();
     model.check_indices()?;
     Ok(Box::new(model.convert_to_gbxmodel()))
 }

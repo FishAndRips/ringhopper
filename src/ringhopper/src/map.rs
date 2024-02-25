@@ -1,13 +1,14 @@
 use std::collections::HashMap;
 use std::ops::Range;
 use definitions::{Bitmap, CacheFileHeaderPCDemo, CacheFileTag, CacheFileTagDataHeaderPC, Model, read_any_tag_from_map, Scenario, ScenarioStructureBSPCompiledHeader};
-use map::extract::*;
+use crate::map::extract::*;
 use primitives::error::{Error, OverflowCheck, RinghopperResult};
 use primitives::map::{DomainType, Map, ResourceMapType, Tag};
 use primitives::primitive::{ID, TagGroup, TagPath};
 use primitives::tag::PrimaryTagStructDyn;
 use primitives::parse::TagData;
-use tag::tree::{TagFilter, TagTree, TagTreeItem};
+use crate::tag::object::downcast_base_object_mut;
+use crate::tag::tree::{TagFilter, TagTree, TagTreeItem};
 
 mod extract;
 
@@ -226,7 +227,7 @@ fn extract_tag_from_map<M: Map>(
     let mut tag = read_any_tag_from_map(path, map)?;
 
     match path.group() {
-        TagGroup::ActorVariant => fix_extracted_actor_variant_tag(tag.as_any_mut().downcast_mut().unwrap()),
+        TagGroup::ActorVariant => fix_actor_variant_tag(tag.as_any_mut().downcast_mut().unwrap()),
         TagGroup::Bitmap => bitmap_extraction_fn(tag.as_any_mut().downcast_mut().unwrap(), map)?,
         TagGroup::ContinuousDamageEffect => fix_continuous_damage_effect_tag(tag.as_any_mut().downcast_mut().unwrap()),
         TagGroup::DamageEffect => fix_damage_effect_tag(tag.as_any_mut().downcast_mut().unwrap()),
@@ -238,9 +239,13 @@ fn extract_tag_from_map<M: Map>(
         TagGroup::Projectile => fix_projectile_tag(tag.as_any_mut().downcast_mut().unwrap()),
         TagGroup::Scenario => fix_scenario_tag(tag.as_any_mut().downcast_mut().unwrap(), path.base_name())?,
         TagGroup::Sound => fix_sound_tag(tag.as_any_mut().downcast_mut().unwrap())?,
-        TagGroup::Weapon => fix_extracted_weapon_tag(tag.as_any_mut().downcast_mut().unwrap(), path, &scenario_tag),
+        TagGroup::Weapon => fix_weapon_tag(tag.as_any_mut().downcast_mut().unwrap(), path, &scenario_tag),
         _ => ()
     };
+
+    if let Some(n) = downcast_base_object_mut(tag.as_mut()) {
+        fix_object_tag(n)?;
+    }
 
     Ok(tag)
 }

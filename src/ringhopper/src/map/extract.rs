@@ -1,18 +1,19 @@
 use std::convert::TryInto;
-use tag::model::ModelPartGet;
-use constants::{TICK_RATE, TICK_RATE_RECIPROCOL};
-use definitions::{ActorVariant, Bitmap, BitmapData, BitmapDataFormat, ContinuousDamageEffect, DamageEffect, GBXModel, Light, Model, ModelAnimations, ModelAnimationsAnimation, ModelTriangle, ModelVertexUncompressed, PointPhysics, Projectile, Scenario, ScenarioType, Sound, SoundFormat, Weapon};
-use primitives::byteorder::{BigEndian, LittleEndian};
-use primitives::error::{Error, OverflowCheck, RinghopperResult};
-use primitives::map::{DomainType, Map, ResourceMapType};
-use primitives::parse::TagData;
-use primitives::primitive::{Angle, Bounds, Index, TagPath};
-use tag::model::ModelFunctions;
-use tag::model_animations::{flip_endianness_for_model_animations_animation, FrameDataIterator};
-use tag::nudge::nudge_tag;
-use tag::scenario::{decompile_scripts, flip_scenario_script_endianness};
+use crate::tag::model::ModelPartGet;
+use crate::constants::{TICK_RATE, TICK_RATE_RECIPROCOL};
+use crate::definitions::{ActorVariant, Bitmap, BitmapData, BitmapDataFormat, ContinuousDamageEffect, DamageEffect, GBXModel, Light, Model, ModelAnimations, ModelAnimationsAnimation, ModelTriangle, ModelVertexUncompressed, Object, PointPhysics, Projectile, Scenario, ScenarioType, Sound, SoundFormat, Weapon};
+use crate::primitives::byteorder::{BigEndian, LittleEndian};
+use crate::primitives::dynamic::DynamicTagDataArray;
+use crate::primitives::error::{Error, OverflowCheck, RinghopperResult};
+use crate::primitives::map::{DomainType, Map, ResourceMapType};
+use crate::primitives::parse::TagData;
+use crate::primitives::primitive::{Angle, Bounds, Index, TagPath};
+use crate::tag::model::ModelFunctions;
+use crate::tag::model_animations::{flip_endianness_for_model_animations_animation, FrameDataIterator};
+use crate::tag::nudge::nudge_tag;
+use crate::tag::scenario::{decompile_scripts, flip_scenario_script_endianness};
 
-pub fn fix_extracted_weapon_tag(tag: &mut Weapon, tag_path: &TagPath, scenario_tag: &Scenario) {
+pub fn fix_weapon_tag(tag: &mut Weapon, tag_path: &TagPath, scenario_tag: &Scenario) {
     if scenario_tag._type == ScenarioType::Singleplayer && !scenario_tag.flags.do_not_apply_bungie_campaign_tag_patches {
         match tag_path.path() {
             "weapons\\pistol\\pistol" => {
@@ -37,7 +38,7 @@ pub fn fix_extracted_weapon_tag(tag: &mut Weapon, tag_path: &TagPath, scenario_t
     }
 }
 
-pub fn fix_extracted_actor_variant_tag(actor_variant: &mut ActorVariant) {
+pub fn fix_actor_variant_tag(actor_variant: &mut ActorVariant) {
     actor_variant.grenades.grenade_velocity /= TICK_RATE_RECIPROCOL;
     nudge_tag(actor_variant);
 }
@@ -160,6 +161,36 @@ pub fn fix_gbxmodel_tag<M: Map>(gbxmodel: &mut GBXModel, map: &M) -> RinghopperR
 pub fn fix_scenario_tag(scenario: &mut Scenario, scenario_name: &str) -> RinghopperResult<()> {
     flip_scenario_script_endianness::<LittleEndian, BigEndian>(scenario)?;
     decompile_scripts(scenario, scenario_name)?;
+    Ok(())
+}
+
+pub fn fix_object_tag(object: &mut Object) -> RinghopperResult<()> {
+    for cc in &mut object.change_colors.items {
+        match cc.permutations.len() {
+            0 => (),
+            1 => cc.permutations.items[0].weight = 1.0,
+
+            // Weights aren't actually weights in a cache file but partial weights from 0.0 - 1.0
+            permutation_count => {
+                // Check that the weights are valid
+                let mut last_weight = 0.0;
+                for i in &cc.permutations.items {
+                    if i.weight < last_weight || i.weight > 1.0 {
+                        return Err(Error::InvalidTagData("change colors has invalid weights".to_owned()))
+                    }
+                    last_weight = i.weight;
+                }
+
+                // Apply the weights
+                for i in 1..permutation_count {
+                    let last = cc.permutations.items[i - 1].weight;
+                    let this = &mut cc.permutations.items[i].weight;
+                    *this = *this - last;
+                }
+            }
+        }
+    }
+
     Ok(())
 }
 

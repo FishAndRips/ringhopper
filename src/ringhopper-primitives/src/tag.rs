@@ -39,12 +39,6 @@ pub trait PrimaryTagStructDyn: PrimaryTagStruct + Any {
     /// Get this as a mutable [`DynamicTagData`] to allow for accessing tag data without needing the underlying structure.
     fn as_mut_dynamic(&mut self) -> &mut dyn DynamicTagData;
 
-    /// Get this as an [`Any`] reference to downcast.
-    fn as_any(&self) -> &dyn Any;
-
-    /// Get this as a mutable [`Any`] reference to downcast.
-    fn as_mut_any(&mut self) -> &mut dyn Any;
-
     /// Convert this to a tag file.
     ///
     /// See [`TagFile::to_tag_file`] for information.
@@ -64,7 +58,7 @@ impl dyn PrimaryTagStructDyn {
     ///
     /// Convenience function for `.as_any().downcast_ref::<T>()` with some extra compile-time checks.
     pub fn get_ref<T: PrimaryTagStructDyn>(&self) -> Option<&T> {
-        PrimaryTagStructDyn::as_any(self).downcast_ref::<T>()
+        self.as_any().downcast_ref::<T>()
     }
 
     /// Get a mutable reference to the tag as a concrete type.
@@ -73,7 +67,7 @@ impl dyn PrimaryTagStructDyn {
     ///
     /// Convenience function for `.as_mut_any().downcast_mut::<T>()` with some extra compile-time checks.
     pub fn get_mut<T: PrimaryTagStructDyn>(&mut self) -> Option<&mut T> {
-        PrimaryTagStructDyn::as_mut_any(self).downcast_mut::<T>()
+        self.as_any_mut().downcast_mut::<T>()
     }
 }
 
@@ -82,12 +76,6 @@ impl<T: PrimaryTagStruct + Sized + Clone + Any> PrimaryTagStructDyn for T {
         self
     }
     fn as_mut_dynamic(&mut self) -> &mut dyn DynamicTagData {
-        self
-    }
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-    fn as_mut_any(&mut self) -> &mut dyn Any {
         self
     }
     fn to_tag_file(&self) -> RinghopperResult<Vec<u8>> {
