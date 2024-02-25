@@ -1,4 +1,4 @@
-use definitions::{GBXModel, GBXModelFlags, GBXModelGeometry, GBXModelGeometryPart, Model, ModelFlags, ModelGeometry, ModelGeometryPart, ModelNode, ModelRegion, ModelRegionPermutationMarker, ModelShaderReference, ModelVertexCompressed, ModelVertexUncompressed};
+use definitions::{GBXModel, GBXModelFlags, GBXModelGeometry, GBXModelGeometryPart, Model, ModelDetailCutoff, ModelFlags, ModelGeometry, ModelGeometryPart, ModelNode, ModelRegion, ModelRegionPermutationMarker, ModelShaderReference, ModelVertexCompressed, ModelVertexUncompressed};
 use primitives::dynamic::DynamicTagDataArray;
 use primitives::error::{Error, RinghopperResult};
 use primitives::primitive::{Index, Reflexive, Vector2D, Vector3D};
@@ -43,6 +43,11 @@ pub trait ModelFunctions {
     ///
     /// Returns true if the model was fixed, false if the model was OK, and an error if the model is broken.
     fn fix_uncompressed_vertices(&mut self) -> bool;
+
+    /// Flip LoD cutoffs.
+    ///
+    /// This must be called when a model tag enters/exits a cache file.
+    fn flip_lod_cutoffs(&mut self);
 }
 
 macro_rules! fix_runtime_markers {
@@ -210,6 +215,10 @@ impl ModelFunctions for Model {
     fn fix_uncompressed_vertices(&mut self) -> bool {
         fix_vertices!(self, restore_missing_uncompressed_vertices)
     }
+
+    fn flip_lod_cutoffs(&mut self) {
+        flip_lod_cutoffs(&mut self.detail_cutoff)
+    }
 }
 
 const MAX_NODES_FOR_COMPRESSED_VERTICES: usize = 127 / 3;
@@ -317,6 +326,10 @@ impl ModelFunctions for GBXModel {
 
     fn fix_uncompressed_vertices(&mut self) -> bool {
         fix_vertices!(self, restore_missing_uncompressed_vertices)
+    }
+
+    fn flip_lod_cutoffs(&mut self) {
+        flip_lod_cutoffs(&mut self.detail_cutoff)
     }
 }
 
@@ -553,4 +566,9 @@ fn restore_missing_uncompressed_vertices(part: &mut ModelGeometryPart) -> bool {
     }
 
     true
+}
+
+fn flip_lod_cutoffs(cutoff: &mut ModelDetailCutoff) {
+    std::mem::swap(&mut cutoff.super_low, &mut cutoff.super_high);
+    std::mem::swap(&mut cutoff.low, &mut cutoff.high);
 }

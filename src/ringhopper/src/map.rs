@@ -251,7 +251,7 @@ impl Map for GearboxCacheFile {
     }
 
     fn extract_tag(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
-        extract_tag_from_map(self, path, &self.scenario_tag_data, fix_bitmap_tag_normal, fix_model_tag_normal)
+        extract_tag_from_map(self, path, &self.scenario_tag_data, fix_bitmap_tag_normal, fix_model_tag_uncompressed)
     }
 
     fn get_domain(&self, domain: &DomainType) -> Option<(&[u8], usize)> {

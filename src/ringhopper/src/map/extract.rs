@@ -76,7 +76,7 @@ pub fn fix_light_tag(light: &mut Light) {
     nudge_tag(light);
 }
 
-macro_rules! recover_model_vertices {
+macro_rules! recover_uncompressed_model_vertices {
     ($model:expr, $map:expr) => {{
         for geo in &mut $model.geometries.items {
             for part in &mut geo.parts.items {
@@ -98,7 +98,7 @@ macro_rules! recover_model_vertices {
                 let vertex_size = ModelVertexUncompressed::size();
                 let vertex_offset = part.vertex_offset as usize;
                 let vertex_end = vertex_offset + (vertex_size * vertex_count);
-                for v in (vertex_end..vertex_end).step_by(vertex_size) {
+                for v in (vertex_offset..vertex_end).step_by(vertex_size) {
                     let vertex = ModelVertexUncompressed::read_from_map($map, v, &DomainType::ModelVertexData)?;
                     part.uncompressed_vertices.items.push(vertex);
                 }
@@ -140,16 +140,21 @@ macro_rules! recover_model_vertices {
     }};
 }
 
-pub fn fix_model_tag_normal<M: Map>(model: &mut Model, map: &M) -> RinghopperResult<()> {
-    model.fix_runtime_markers()?;
-    recover_model_vertices!(model, map);
-    Ok(())
+macro_rules! fix_uncompressed_model {
+    ($model:expr, $map:expr) => {{
+        $model.flip_lod_cutoffs();
+        $model.fix_runtime_markers()?;
+        recover_uncompressed_model_vertices!($model, $map);
+        Ok(())
+    }}
+}
+
+pub fn fix_model_tag_uncompressed<M: Map>(model: &mut Model, map: &M) -> RinghopperResult<()> {
+    fix_uncompressed_model!(model, map)
 }
 
 pub fn fix_gbxmodel_tag<M: Map>(gbxmodel: &mut GBXModel, map: &M) -> RinghopperResult<()> {
-    gbxmodel.fix_runtime_markers()?;
-    recover_model_vertices!(gbxmodel, map);
-    Ok(())
+    fix_uncompressed_model!(gbxmodel, map)
 }
 
 pub fn fix_scenario_tag(scenario: &mut Scenario, scenario_name: &str) -> RinghopperResult<()> {
