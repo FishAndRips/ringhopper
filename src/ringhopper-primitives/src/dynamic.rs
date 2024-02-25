@@ -109,6 +109,7 @@ pub enum DynamicTagDataType {
     Array,
     Block,
     Data,
+    FileData,
     TagReference,
     Enum,
     SimplePrimitive(SimplePrimitiveType)

@@ -1,7 +1,7 @@
 use std::fmt::Display;
 use crc64::crc64;
 use primitives::dynamic::{DynamicEnum, DynamicTagData, DynamicTagDataArray, DynamicTagDataType, SimplePrimitiveType};
-use primitives::primitive::{Address, Angle, ColorARGBFloat, ColorARGBInt, ColorARGBIntBytes, ColorRGBFloat, Data, Euler2D, Euler3D, ID, Index, Matrix3x3, Plane2D, Plane3D, Quaternion, Rectangle, ScenarioScriptNodeValue, String32, TagGroup, TagReference, Vector2D, Vector2DInt, Vector3D};
+use primitives::primitive::{Address, Angle, ColorARGBFloat, ColorARGBInt, ColorARGBIntBytes, ColorRGBFloat, Data, Euler2D, Euler3D, FileData, ID, Index, Matrix3x3, Plane2D, Plane3D, Quaternion, Rectangle, ScenarioScriptNodeValue, String32, TagGroup, TagReference, Vector2D, Vector2DInt, Vector3D};
 use primitives::tag::PrimaryTagStructDyn;
 
 #[derive(Clone)]
@@ -56,7 +56,13 @@ fn compare_tag_data<T: DynamicTagData + ?Sized>(first: &T, second: &T, path: &mu
         DynamicTagDataType::Data => {
             let first = first.as_any().downcast_ref::<Data>().unwrap();
             let second = second.as_any().downcast_ref::<Data>().unwrap();
-            return compare_data(first, second, path, comparison, depth);
+            return compare_data(&first.bytes, &second.bytes, path, comparison, depth);
+        },
+
+        DynamicTagDataType::FileData => {
+            let first = first.as_any().downcast_ref::<FileData>().unwrap();
+            let second = second.as_any().downcast_ref::<FileData>().unwrap();
+            return compare_data(&first.bytes, &second.bytes, path, comparison, depth);
         },
 
         DynamicTagDataType::SimplePrimitive(primitive_type) => {
@@ -149,9 +155,9 @@ fn compare_tag_data_blocks<T: DynamicTagData + ?Sized>(first: &T, second: &T, pa
     return;
 }
 
-fn compare_data(first: &Data, second: &Data, path: &mut String, comparison: &mut Vec<TagComparisonDifference>, depth: usize) {
-    let flength = first.bytes.len();
-    let slength = second.bytes.len();
+fn compare_data(first: &[u8], second: &[u8], path: &mut String, comparison: &mut Vec<TagComparisonDifference>, depth: usize) {
+    let flength = first.len();
+    let slength = second.len();
 
     if flength != slength {
         comparison.push(TagComparisonDifference {
@@ -163,8 +169,8 @@ fn compare_data(first: &Data, second: &Data, path: &mut String, comparison: &mut
     }
 
     if first != second {
-        let first = crc64(0, first.bytes.as_slice());
-        let second = crc64(0, second.bytes.as_slice());
+        let first = crc64(0, first);
+        let second = crc64(0, second);
         comparison.push(TagComparisonDifference {
             depth,
             path: path[1..].to_owned(),

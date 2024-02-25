@@ -361,7 +361,7 @@ impl TagData for Data {
 }
 
 macro_rules! make_data_dynamic_tag_data {
-    ($t:ty) => {
+    ($t:tt) => {
         impl $t {
             pub fn new(bytes: Vec<u8>) -> $t {
                 Self {
@@ -402,7 +402,7 @@ macro_rules! make_data_dynamic_tag_data {
             }
 
             fn data_type(&self) -> DynamicTagDataType {
-                DynamicTagDataType::Data
+                DynamicTagDataType::$t
             }
         }
     };

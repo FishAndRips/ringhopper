@@ -6,7 +6,7 @@ use crate::primitives::byteorder::{BigEndian, LittleEndian};
 use crate::primitives::dynamic::DynamicTagDataArray;
 use crate::primitives::error::{Error, OverflowCheck, RinghopperResult};
 use crate::primitives::map::{DomainType, Map, ResourceMapType};
-use crate::primitives::parse::TagData;
+use crate::primitives::parse::{TagData, SimpleTagData};
 use crate::primitives::primitive::{Angle, Bounds, Index, TagPath};
 use crate::tag::model::ModelFunctions;
 use crate::tag::model_animations::{flip_endianness_for_model_animations_animation, FrameDataIterator};
@@ -105,7 +105,7 @@ macro_rules! recover_uncompressed_model_vertices {
                 }
 
                 let mut triangles: Vec<Index> = Vec::with_capacity(triangle_count + 2);
-                let triangle_size = Index::size();
+                let triangle_size = Index::simple_size();
                 let triangle_offset = part.triangle_offset as usize;
                 let triangle_end = triangle_offset + (triangle_count * triangle_size);
                 for t in (triangle_offset..triangle_end).step_by(triangle_size) {
