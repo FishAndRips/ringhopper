@@ -432,7 +432,7 @@ fn decompress_float<const BITS: usize>(float: u32) -> f32 {
 }
 
 fn compress_float<const BITS: usize>(float: f32) -> u32 {
-    let signed_bit = 1u32 << BITS;
+    let signed_bit = 1u32 << (BITS - 1);
     let mask = signed_bit - 1;
     let clamped = float.clamp(-1.0, 1.0);
     let multiplied = ((mask as f32) * clamped) as u32;
@@ -446,7 +446,7 @@ fn compress_float<const BITS: usize>(float: f32) -> u32 {
 }
 
 fn decompress_model_vertex(model_vertex_compressed: &ModelVertexCompressed) -> ModelVertexUncompressed {
-    let node0_weight = model_vertex_compressed.node0_weight as f32 / u16::MAX as f32;
+    let node0_weight = model_vertex_compressed.node0_weight as f32 / i16::MAX as f32;
     ModelVertexUncompressed {
         position: model_vertex_compressed.position,
         node0_index: match model_vertex_compressed.node0_index {
@@ -476,12 +476,15 @@ fn compress_model_vertex(model_vertex_uncompressed: &ModelVertexUncompressed) ->
     }
 
     let partial_weight = model_vertex_uncompressed.node0_weight / total_weight;
-    let compressed_weight = (partial_weight * (u16::MAX as f32)) as u16;
+    let compressed_weight = (partial_weight * (i16::MAX as f32)) as u16;
+
+    debug_assert!(model_vertex_uncompressed.node0_index.unwrap_or(0) < 128 / 3);
+    debug_assert!(model_vertex_uncompressed.node1_index.unwrap_or(0) < 128 / 3);
 
     ModelVertexCompressed {
         node0_weight: compressed_weight,
-        node0_index: model_vertex_uncompressed.node0_index.unwrap_or(253) as u8,
-        node1_index: model_vertex_uncompressed.node1_index.unwrap_or(253) as u8,
+        node0_index: model_vertex_uncompressed.node0_index.map(|n| n * 3).unwrap_or(253) as u8,
+        node1_index: model_vertex_uncompressed.node1_index.map(|n| n * 3).unwrap_or(253) as u8,
         texture_coordinate_u: compress_float::<16>(model_vertex_uncompressed.texture_coords.x) as u16,
         texture_coordinate_v: compress_float::<16>(model_vertex_uncompressed.texture_coords.y) as u16,
         position: model_vertex_uncompressed.position,
