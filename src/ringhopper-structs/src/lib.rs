@@ -10,6 +10,6 @@ use ringhopper_primitives::tag::PrimaryTagStruct;
 use ringhopper_primitives::dynamic::*;
 use ringhopper_primitives::tag::{TagFile, ParseStrictness, PrimaryTagStructDyn};
 use ringhopper_primitives::map::*;
-use ringhopper_primitives::byteorder::ByteOrder;
+use ringhopper_primitives::byteorder::{ByteOrder, LittleEndian};
 
 ringhopper_structs_codegen::generate_ringhopper_structs!();
