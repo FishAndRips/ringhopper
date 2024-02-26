@@ -144,7 +144,7 @@ fn display_result(display_mode: Show, verbose: bool, user_data: UserData) {
         }
     }
 
-    println!("Matched {matched} / {} tag{s}", keys.len(), s = if keys.len() == 1 { "" } else { "s" });
+    println!("Matched {matched} / {} tag{s}", all_differences.len(), s = if all_differences.len() == 1 { "" } else { "s" });
 }
 
 #[derive(Default)]

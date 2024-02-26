@@ -173,10 +173,11 @@ fn compare_data(first: &[u8], second: &[u8], path: &mut String, comparison: &mut
     if first != second {
         let first = crc64(0, first);
         let second = crc64(0, second);
+        let op = if first != second { "!=" } else { "~= (forged??)" };
         comparison.push(TagComparisonDifference {
             depth,
             path: path[1..].to_owned(),
-            difference: format!("data is different (CRC64: {first:08X} != {second:08X})")
+            difference: format!("data is different (CRC64: {first:08X} {op} {second:08X})")
         });
         return;
     }
