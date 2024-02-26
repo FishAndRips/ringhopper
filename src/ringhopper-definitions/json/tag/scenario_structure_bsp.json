@@ -159,15 +159,15 @@
             },
             {
                 "name": "normal",
-                "type": "uint32"
+                "type": "CompressedVector3D"
             },
             {
                 "name": "binormal",
-                "type": "uint32"
+                "type": "CompressedVector3D"
             },
             {
                 "name": "tangent",
-                "type": "uint32"
+                "type": "CompressedVector3D"
             },
             {
                 "name": "texture coords",
@@ -199,7 +199,7 @@
         "fields": [
             {
                 "name": "normal",
-                "type": "uint32"
+                "type": "CompressedVector3D"
             },
             {
                 "name": "texture coords",

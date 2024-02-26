@@ -1,7 +1,7 @@
 use std::fmt::Display;
 use crc64::crc64;
 use primitives::dynamic::{DynamicEnum, DynamicTagData, DynamicTagDataArray, DynamicTagDataType, SimplePrimitiveType};
-use primitives::primitive::{Address, Angle, ColorARGBFloat, ColorARGBInt, ColorARGBIntBytes, ColorRGBFloat, Data, Euler2D, Euler3D, FileData, ID, Index, Matrix3x3, Plane2D, Plane3D, Quaternion, Rectangle, ScenarioScriptNodeValue, String32, TagGroup, TagReference, Vector2D, Vector2DInt, Vector3D};
+use primitives::primitive::{Address, Angle, ColorARGBFloat, ColorARGBInt, ColorARGBIntBytes, ColorRGBFloat, CompressedFloat, CompressedVector3D, Data, Euler2D, Euler3D, FileData, ID, Index, Matrix3x3, Plane2D, Plane3D, Quaternion, Rectangle, ScenarioScriptNodeValue, String32, TagGroup, TagReference, Vector2D, Vector2DInt, Vector3D};
 use primitives::tag::PrimaryTagStructDyn;
 
 #[derive(Clone)]
@@ -108,7 +108,9 @@ fn compare_tag_data<T: DynamicTagData + ?Sized>(first: &T, second: &T, path: &mu
                 SimplePrimitiveType::ID => do_compare!(ID),
                 SimplePrimitiveType::TagGroup => do_compare!(TagGroup),
                 SimplePrimitiveType::Address => do_compare!(Address),
-                SimplePrimitiveType::ScenarioScriptNodeValue => do_compare!(ScenarioScriptNodeValue)
+                SimplePrimitiveType::ScenarioScriptNodeValue => do_compare!(ScenarioScriptNodeValue),
+                SimplePrimitiveType::CompressedVector3D => do_compare!(CompressedVector3D),
+                SimplePrimitiveType::CompressedFloat => do_compare!(CompressedFloat)
             }
         }
     }

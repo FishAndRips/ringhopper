@@ -713,6 +713,8 @@ impl LoadFromSerdeJSON for ObjectType {
             "Rectangle" => Self::Rectangle,
             "Vector2D" => Self::Vector2D,
             "Vector3D" => Self::Vector3D,
+            "CompressedVector3D" => Self::CompressedVector3D,
+            "CompressedFloat" => Self::CompressedFloat,
             "Euler2D" => Self::Euler2D,
             "Euler3D" => Self::Euler3D,
             "Plane2D" => Self::Plane2D,

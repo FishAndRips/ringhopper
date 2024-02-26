@@ -350,23 +350,23 @@
             },
             {
                 "name": "normal",
-                "type": "uint32"
+                "type": "CompressedVector3D"
             },
             {
                 "name": "binormal",
-                "type": "uint32"
+                "type": "CompressedVector3D"
             },
             {
                 "name": "tangent",
-                "type": "uint32"
+                "type": "CompressedVector3D"
             },
             {
                 "name": "texture coordinate u",
-                "type": "uint16"
+                "type": "CompressedFloat"
             },
             {
                 "name": "texture coordinate v",
-                "type": "uint16"
+                "type": "CompressedFloat"
             },
             {
                 "name": "node0 index",
@@ -378,7 +378,7 @@
             },
             {
                 "name": "node0 weight",
-                "type": "uint16"
+                "type": "CompressedFloat"
             }
         ],
         "type": "struct",

@@ -138,6 +138,8 @@ pub enum SimplePrimitiveType {
     Matrix3x3,
     Vector2DInt,
     Rectangle,
+    CompressedVector3D,
+    CompressedFloat,
 
     ColorRGBFloat,
     ColorARGBInt,
@@ -150,7 +152,7 @@ pub enum SimplePrimitiveType {
     Address,
 
     Size,
-    ScenarioScriptNodeValue
+    ScenarioScriptNodeValue,
 }
 
 macro_rules! generate_access_function {

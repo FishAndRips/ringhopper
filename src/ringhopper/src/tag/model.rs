@@ -1,7 +1,7 @@
 use definitions::{GBXModel, GBXModelFlags, GBXModelGeometry, GBXModelGeometryPart, Model, ModelDetailCutoff, ModelFlags, ModelGeometry, ModelGeometryPart, ModelNode, ModelRegion, ModelRegionPermutationMarker, ModelShaderReference, ModelVertexCompressed, ModelVertexUncompressed};
 use primitives::dynamic::DynamicTagDataArray;
 use primitives::error::{Error, RinghopperResult};
-use primitives::primitive::{Index, Reflexive, Vector2D, Vector3D};
+use primitives::primitive::{Index, Reflexive, Vector2D};
 
 pub trait ModelFunctions {
     /// Convert into a model tag.
@@ -403,50 +403,8 @@ fn check_indices_for_part<M: ModelFunctions>(model: &M, part: &ModelGeometryPart
     Ok(())
 }
 
-fn decompress_vector3d(vector: u32) -> Vector3D {
-    Vector3D {
-        x: decompress_float::<11>(vector),
-        y: decompress_float::<11>(vector >> 11),
-        z: decompress_float::<10>(vector >> 22),
-    }
-}
-
-fn compress_vector3d(vector: &Vector3D) -> u32 {
-    let x = compress_float::<11>(vector.x);
-    let y = compress_float::<11>(vector.y) << 11;
-    let z = compress_float::<10>(vector.z) << 22;
-
-    x | y | z
-}
-
-fn decompress_float<const BITS: usize>(float: u32) -> f32 {
-    let signed_bit = 1u32 << BITS;
-    let mask = signed_bit - 1;
-    let value = (float & mask) as f64 / (mask as f64);
-    if (float & signed_bit) != 0 {
-        (value - 1.0) as f32
-    }
-    else {
-        value as f32
-    }
-}
-
-fn compress_float<const BITS: usize>(float: f32) -> u32 {
-    let signed_bit = 1u32 << (BITS - 1);
-    let mask = signed_bit - 1;
-    let clamped = float.clamp(-1.0, 1.0);
-    let multiplied = ((mask as f32) * clamped) as u32;
-
-    if float < 0.0 {
-        multiplied | signed_bit
-    }
-    else {
-        multiplied
-    }
-}
-
 fn decompress_model_vertex(model_vertex_compressed: &ModelVertexCompressed) -> ModelVertexUncompressed {
-    let node0_weight = model_vertex_compressed.node0_weight as f32 / i16::MAX as f32;
+    let node0_weight: f32 = model_vertex_compressed.node0_weight.into();
     ModelVertexUncompressed {
         position: model_vertex_compressed.position,
         node0_index: match model_vertex_compressed.node0_index {
@@ -457,14 +415,14 @@ fn decompress_model_vertex(model_vertex_compressed: &ModelVertexCompressed) -> M
             n if n >= 253 => None,
             n => Some((n as u16) / 3)
         },
-        normal: decompress_vector3d(model_vertex_compressed.normal),
-        binormal: decompress_vector3d(model_vertex_compressed.binormal),
-        tangent: decompress_vector3d(model_vertex_compressed.tangent),
+        normal: model_vertex_compressed.normal.into(),
+        binormal: model_vertex_compressed.binormal.into(),
+        tangent: model_vertex_compressed.tangent.into(),
         node0_weight,
         node1_weight: 1.0 - node0_weight,
         texture_coords: Vector2D {
-            x: decompress_float::<16>(model_vertex_compressed.texture_coordinate_u as u32),
-            y: decompress_float::<16>(model_vertex_compressed.texture_coordinate_v as u32)
+            x: model_vertex_compressed.texture_coordinate_u.into(),
+            y: model_vertex_compressed.texture_coordinate_v.into()
         }
     }
 }
@@ -476,21 +434,20 @@ fn compress_model_vertex(model_vertex_uncompressed: &ModelVertexUncompressed) ->
     }
 
     let partial_weight = model_vertex_uncompressed.node0_weight / total_weight;
-    let compressed_weight = (partial_weight * (i16::MAX as f32)) as u16;
 
     debug_assert!(model_vertex_uncompressed.node0_index.unwrap_or(0) < 128 / 3);
     debug_assert!(model_vertex_uncompressed.node1_index.unwrap_or(0) < 128 / 3);
 
     ModelVertexCompressed {
-        node0_weight: compressed_weight,
+        node0_weight: partial_weight.into(),
         node0_index: model_vertex_uncompressed.node0_index.map(|n| n * 3).unwrap_or(253) as u8,
         node1_index: model_vertex_uncompressed.node1_index.map(|n| n * 3).unwrap_or(253) as u8,
-        texture_coordinate_u: compress_float::<16>(model_vertex_uncompressed.texture_coords.x) as u16,
-        texture_coordinate_v: compress_float::<16>(model_vertex_uncompressed.texture_coords.y) as u16,
+        texture_coordinate_u: model_vertex_uncompressed.texture_coords.x.into(),
+        texture_coordinate_v: model_vertex_uncompressed.texture_coords.y.into(),
         position: model_vertex_uncompressed.position,
-        tangent: compress_vector3d(&model_vertex_uncompressed.tangent),
-        normal: compress_vector3d(&model_vertex_uncompressed.normal),
-        binormal: compress_vector3d(&model_vertex_uncompressed.binormal),
+        tangent: model_vertex_uncompressed.tangent.into(),
+        normal: model_vertex_uncompressed.normal.into(),
+        binormal: model_vertex_uncompressed.binormal.into(),
     }
 }
 

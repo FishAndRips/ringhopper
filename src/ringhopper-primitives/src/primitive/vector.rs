@@ -561,3 +561,155 @@ macro_rules! define_ops_for_vector {
 
 define_ops_for_vector!(Vector2D);
 define_ops_for_vector!(Vector3D);
+
+/// Denotes a float compressed into a 16-bit integer.
+#[derive(Clone, Copy, Default, PartialEq)]
+#[repr(transparent)]
+pub struct CompressedFloat {
+    pub data: u16
+}
+
+impl From<f32> for CompressedFloat {
+    fn from(value: f32) -> Self {
+        Self { data: compress_float::<16>(value) as u16 }
+    }
+}
+
+impl From<CompressedFloat> for f32 {
+    fn from(value: CompressedFloat) -> Self {
+        decompress_float::<16>(value.data as u32)
+    }
+}
+
+impl SimpleTagData for CompressedFloat {
+    fn simple_size() -> usize {
+        u16::simple_size()
+    }
+
+    fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
+        u16::read::<B>(data, at, struct_end).map(|data| Self { data })
+    }
+
+    fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
+        self.data.write::<B>(data, at, struct_end)
+    }
+}
+
+impl SimplePrimitive for CompressedFloat {
+    fn primitive_type() -> SimplePrimitiveType {
+        SimplePrimitiveType::CompressedFloat
+    }
+}
+
+impl Debug for CompressedFloat {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("compressed<0x{:02X} = {:?}>", self.data, f32::from(*self)))
+    }
+}
+
+impl Display for CompressedFloat {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("compressed<0x{:02X} = {}>", self.data, f32::from(*self)))
+    }
+}
+
+/// Denotes a 3D vector compressed into a 32-bit integer.
+#[derive(Clone, Copy, Default, PartialEq)]
+#[repr(transparent)]
+pub struct CompressedVector3D {
+    pub data: u32
+}
+
+impl From<Vector3D> for CompressedVector3D {
+    fn from(value: Vector3D) -> Self {
+        Self { data: compress_vector3d(&value) }
+    }
+}
+
+impl From<CompressedVector3D> for Vector3D {
+    fn from(value: CompressedVector3D) -> Self {
+        decompress_vector3d(value.data)
+    }
+}
+
+impl Debug for CompressedVector3D {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("compressed<0x{:08X} = {:?}>", self.data, Vector3D::from(*self)))
+    }
+}
+
+impl Display for CompressedVector3D {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("compressed<0x{:08X} = {}>", self.data, Vector3D::from(*self)))
+    }
+}
+
+impl SimpleTagData for CompressedVector3D {
+    fn simple_size() -> usize {
+        u32::simple_size()
+    }
+
+    fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
+        u32::read::<B>(data, at, struct_end).map(|data| Self { data })
+    }
+
+    fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
+        self.data.write::<B>(data, at, struct_end)
+    }
+}
+
+impl SimplePrimitive for CompressedVector3D {
+    fn primitive_type() -> SimplePrimitiveType {
+        SimplePrimitiveType::CompressedVector3D
+    }
+}
+
+fn compress_vector3d(vector: &Vector3D) -> u32 {
+    let x = compress_float::<11>(vector.x);
+    let y = compress_float::<11>(vector.y) << 11;
+    let z = compress_float::<10>(vector.z) << 22;
+
+    x | y | z
+}
+
+fn decompress_vector3d(vector: u32) -> Vector3D {
+    let x = decompress_float::<11>(vector);
+    let y = decompress_float::<11>(vector >> 11);
+    let z = decompress_float::<10>(vector >> 22);
+
+    Vector3D { x, y, z }
+}
+
+fn decompress_float<const BITS: usize>(float: u32) -> f32 {
+    let signed_bit = 1u32 << (BITS - 1);
+    let mask = signed_bit - 1;
+
+    let negative = (float & signed_bit) != 0;
+    let divisor;
+    let base;
+
+    if negative {
+        base = (float ^ mask) & mask;
+        divisor = -(mask as f32);
+    }
+    else {
+        base = float & mask;
+        divisor = mask as f32;
+    }
+
+    (base as f32) / divisor
+}
+
+fn compress_float<const BITS: usize>(float: f32) -> u32 {
+    let signed_bit = 1u32 << (BITS - 1);
+    let mask = signed_bit - 1;
+    let clamped = float.abs().clamp(0.0, 1.0);
+    let multiplied = ((mask as f32) * clamped).round() as u32;
+
+    if float < 0.0 {
+        (multiplied ^ mask) | signed_bit
+    }
+    else {
+        multiplied
+    }
+}
