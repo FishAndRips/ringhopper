@@ -1,5 +1,6 @@
 use std::collections::{HashMap, VecDeque};
 use std::env::Args;
+use std::io::{BufWriter, StdoutLock, Write};
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 use cli::{CommandLineParser, CommandLineValue, CommandLineValueType, Parameter};
@@ -126,25 +127,28 @@ fn display_result(display_mode: Show, verbose: bool, user_data: UserData) {
     let mut keys: Vec<TagPath> = all_differences.keys().map(|c| c.to_owned()).collect();
     keys.sort();
 
+    // Gets around slow terminals like the WSL (TODO: make this centralized to invader.exe itself, with color support)
+    let mut io = BufWriter::with_capacity(1024 * 64, std::io::stdout().lock());
+
     for k in &keys {
         let differences = &all_differences[k];
         if !differences.is_empty() {
             if display_mode == Show::All || display_mode == Show::Mismatched {
-                println!("Mismatched: {k}");
+                writeln!(io, "Mismatched: {k}").unwrap();
                 if verbose {
-                    display_diff(differences);
+                    display_diff(differences, &mut io);
                 }
             }
         }
         else {
             if display_mode == Show::All || display_mode == Show::Matched {
-                println!("Matched: {k}");
+                writeln!(io, "Matched: {k}").unwrap();
             }
             matched += 1;
         }
     }
 
-    println!("Matched {matched} / {} tag{s}", all_differences.len(), s = if all_differences.len() == 1 { "" } else { "s" });
+    writeln!(io, "Matched {matched} / {} tag{s}", all_differences.len(), s = if all_differences.len() == 1 { "" } else { "s" }).unwrap();
 }
 
 #[derive(Default)]
@@ -189,26 +193,26 @@ impl DifferenceMap {
     }
 }
 
-fn display_item(what: &DifferenceMap, depth: usize) {
+fn display_item(what: &DifferenceMap, depth: usize, io: &mut BufWriter<StdoutLock>) {
     if depth > 0 {
         for _ in 0..depth {
-            print!("    ");
+            write!(io, "    ").unwrap();
         }
-        print!("{}", what.field);
+        write!(io, "{}", what.field).unwrap();
         if let Some(n) = &what.difference {
-            print!(": {}", n.difference);
+            write!(io, ": {}", n.difference).unwrap();
         }
-        println!();
+        writeln!(io).unwrap();
     }
     for i in &what.children {
-        display_item(i, depth + 1);
+        display_item(i, depth + 1, io);
     }
 }
 
-fn display_diff(diff: &Vec<TagComparisonDifference>) {
+fn display_diff(diff: &Vec<TagComparisonDifference>, io: &mut BufWriter<StdoutLock>) {
     let mut map = DifferenceMap::default();
     for i in diff {
         map.access_mut(&i.path).difference = Some(i.clone());
     }
-    display_item(&map, 0);
+    display_item(&map, 0, io);
 }
