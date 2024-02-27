@@ -1,7 +1,8 @@
 use std::convert::TryInto;
+use definitions::BitmapType;
 use crate::tag::model::ModelPartGet;
 use crate::constants::{TICK_RATE, TICK_RATE_RECIPROCOL};
-use crate::definitions::{ActorVariant, Bitmap, BitmapData, BitmapDataFormat, ContinuousDamageEffect, DamageEffect, GBXModel, Light, Model, ModelAnimations, ModelAnimationsAnimation, ModelTriangle, ModelVertexUncompressed, Object, PointPhysics, Projectile, Scenario, ScenarioType, Sound, SoundFormat, Weapon};
+use crate::definitions::{ActorVariant, Bitmap, BitmapDataFormat, ContinuousDamageEffect, DamageEffect, GBXModel, Light, Model, ModelAnimations, ModelAnimationsAnimation, ModelTriangle, ModelVertexUncompressed, Object, PointPhysics, Projectile, Scenario, ScenarioType, Sound, SoundFormat, Weapon};
 use crate::primitives::byteorder::{BigEndian, LittleEndian};
 use crate::primitives::dynamic::DynamicTagDataArray;
 use crate::primitives::error::{Error, OverflowCheck, RinghopperResult};
@@ -77,7 +78,7 @@ pub fn fix_light_tag(light: &mut Light) {
     nudge_tag(light);
 }
 
-macro_rules! recover_uncompressed_model_vertices {
+macro_rules! extract_uncompressed_model_vertices {
     ($model:expr, $map:expr) => {{
         for geo in &mut $model.geometries.items {
             for part in &mut geo.parts.items {
@@ -145,7 +146,7 @@ macro_rules! fix_uncompressed_model {
     ($model:expr, $map:expr) => {{
         $model.flip_lod_cutoffs();
         $model.fix_runtime_markers()?;
-        recover_uncompressed_model_vertices!($model, $map);
+        extract_uncompressed_model_vertices!($model, $map);
         Ok(())
     }}
 }
@@ -222,8 +223,24 @@ fn fix_model_animations_animation(animation: &mut ModelAnimationsAnimation) -> R
     flip_endianness_for_model_animations_animation::<LittleEndian, BigEndian>(animation)
 }
 
-fn fix_bitmap_tag<M: Map, F>(tag: &mut Bitmap, map: &M, mut compressed_data_handler: Option<F>) -> RinghopperResult<()>
-    where F: FnMut(&mut BitmapData, &mut Vec<u8>) -> RinghopperResult<()> {
+fn fix_bitmap_tag<M: Map>(tag: &mut Bitmap, map: &M, xbox_map: bool) -> RinghopperResult<()> {
+    // Fix bitmap indices for sprites; for some horrible reason, these are zeroed out when put in maps
+    if tag._type == BitmapType::Sprites {
+        for sequence in &mut tag.bitmap_group_sequence.items {
+            sequence.bitmap_count = if sequence.sprites.items.len() == 1 { 1 } else { 0 };
+
+            let mut lowest_index = None;
+            for sprite in &mut sequence.sprites.items {
+                let this_index = if let Some(n) = sprite.bitmap_index { n } else { continue };
+                match lowest_index {
+                    Some(n) if n < this_index => (),
+                    _ => lowest_index = Some(this_index)
+                }
+            }
+
+            sequence.first_bitmap_index = lowest_index;
+        }
+    }
 
     let total_bitmap_data = tag
         .bitmap_data
@@ -241,44 +258,32 @@ fn fix_bitmap_tag<M: Map, F>(tag: &mut Bitmap, map: &M, mut compressed_data_hand
     for i in &mut tag.bitmap_data.items {
         let offset = i.pixel_data_offset as usize;
         let length = i.pixel_data_size as usize;
+        let domain = if i.flags.external { DomainType::ResourceMapFile(ResourceMapType::Bitmaps) } else { DomainType::MapData };
 
-        let bitmap_data = if i.flags.external {
-            map.get_data_at_address(offset, &DomainType::ResourceMapFile(ResourceMapType::Bitmaps), length)
-        }
-        else {
-            map.get_data_at_address(offset, &DomainType::MapData, length)
-        }.ok_or_else(
-            || Error::MapDataOutOfBounds(format!("Unable to extract bitmap data at offset 0x{offset:08X}"))
-        )?;
+        let bitmap_data = map.get_data_at_address(offset, &domain, length)
+            .ok_or_else(|| Error::MapDataOutOfBounds(format!("Unable to extract bitmap data at offset 0x{offset:08X} from {domain:?}")))?;
 
         i.flags.external = false;
         i.pixel_data_offset = processed_data.len().try_into().map_err(|_| Error::SizeLimitExceeded)?;
 
-        if i.flags.compressed ^ matches!(i.format, BitmapDataFormat::DXT1 | BitmapDataFormat::DXT3 | BitmapDataFormat::DXT5) {
-            return Err(Error::InvalidTagData(format!("Bitmap is marked as compressed, but is formatted as {:?}", i.format)))
+        let expected_compressed_flag = matches!(i.format, BitmapDataFormat::DXT1 | BitmapDataFormat::DXT3 | BitmapDataFormat::DXT5 | BitmapDataFormat::BC7);
+        if i.flags.compressed ^ expected_compressed_flag {
+            return Err(Error::InvalidTagData(format!("Bitmap is formatted as {:?}, but the compressed flag is wrong (should be {expected_compressed_flag}).", i.format)))
         }
 
-        if let Some(callback) = &mut compressed_data_handler {
-            if i.flags.compressed {
-                let mut data = bitmap_data.to_vec();
-                callback(i, &mut data)?;
-                processed_data.append(&mut data);
-            }
-            else {
-                processed_data.extend_from_slice(bitmap_data);
-            }
+        if xbox_map {
+            todo!("handle xbox")
         }
         else {
             processed_data.extend_from_slice(bitmap_data);
         }
-
     }
 
     Ok(())
 }
 
 pub fn fix_bitmap_tag_normal<M: Map>(tag: &mut Bitmap, map: &M) -> RinghopperResult<()> {
-    fix_bitmap_tag(tag, map, Option::<fn(&mut BitmapData, &mut Vec<u8>) -> RinghopperResult<()>>::None)
+    fix_bitmap_tag(tag, map, false)
 }
 
 pub fn fix_sound_tag(tag: &mut Sound) -> RinghopperResult<()> {
