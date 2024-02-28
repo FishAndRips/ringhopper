@@ -81,7 +81,7 @@ impl TagData for Vector3DHolder {
     fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {
         self.vector.write_to_tag_file(data, at, struct_end)
     }
-    fn read_from_map<M: Map>(map: &M, address: usize, domain_type: &DomainType) -> RinghopperResult<Self> where Self: Sized {
+    fn read_from_map<M: Map>(_map: &M, _address: usize, _domain_type: &DomainType) -> RinghopperResult<Self> where Self: Sized {
         unimplemented!()
     }
 }

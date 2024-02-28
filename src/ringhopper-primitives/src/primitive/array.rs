@@ -1,5 +1,6 @@
 use std::any::Any;
 use std::mem::MaybeUninit;
+use byteorder::ByteOrder;
 use crate::dynamic::*;
 use crate::parse::*;
 use crate::error::*;
@@ -113,42 +114,7 @@ fn make_array<T: TagData + Sized, const U: usize, F: FnMut() -> RinghopperResult
     }
 }
 
-impl<T: TagData + Sized, const U: usize> TagData for [T; U] {
-    fn size() -> usize {
-        T::size() * U
-    }
-    fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> where T: Sized {
-        let element_length = T::size();
-        let mut at_offset = at;
-        make_array(|| {
-            let result = T::read_from_tag_file(data, at_offset, struct_end, extra_data_cursor)?;
-            at_offset = at_offset.add_overflow_checked(element_length)?;
-            Ok(result)
-        })
-    }
-    fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {
-        let element_length = T::size();
-        let mut at_offset = at;
-
-        for i in 0..U {
-            self[i].write_to_tag_file(data, at_offset, struct_end)?;
-            at_offset = at_offset.add_overflow_checked(element_length)?;
-        }
-
-        Ok(())
-    }
-    fn read_from_map<M: Map>(map: &M, address: usize, domain_type: &DomainType) -> RinghopperResult<Self> {
-        let element_length = T::size();
-        let mut at_offset = address;
-        make_array(|| {
-            let result = T::read_from_map(map, at_offset, domain_type)?;
-            at_offset = at_offset.add_overflow_checked(element_length)?;
-            Ok(result)
-        })
-    }
-}
-
-impl<T: DynamicTagData + Sized, const U: usize> DynamicTagData for [T; U] {
+impl<T: DynamicTagData + SimpleTagData + Sized, const U: usize> DynamicTagData for [T; U] {
     fn get_field(&self, _field: &str) -> Option<&dyn DynamicTagData> {
         None
     }
@@ -182,7 +148,35 @@ impl<T: DynamicTagData + Sized, const U: usize> DynamicTagData for [T; U] {
     }
 }
 
-impl<T: DynamicTagData + Sized, const U: usize> DynamicTagDataArray for [T; U] {
+impl<T: DynamicTagData + SimpleTagData + Sized, const U: usize> SimpleTagData for [T; U] {
+    fn simple_size() -> usize {
+        T::simple_size() * U
+    }
+
+    fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
+        let element_length = T::size();
+        let mut at_offset = at;
+        make_array(|| {
+            let result = T::read::<B>(data, at_offset, struct_end)?;
+            at_offset = at_offset.add_overflow_checked(element_length)?;
+            Ok(result)
+        })
+    }
+
+    fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
+        let element_length = T::size();
+        let mut at_offset = at;
+
+        for i in self {
+            i.write::<B>(data, at_offset, struct_end)?;
+            at_offset = at_offset.add_overflow_checked(element_length)?;
+        }
+
+        Ok(())
+    }
+}
+
+impl<T: DynamicTagData + SimpleTagData + Sized, const U: usize> DynamicTagDataArray for [T; U] {
     fn get_at_index(&self, index: usize) -> Option<&dyn DynamicTagData> {
         Some(&self[index])
     }

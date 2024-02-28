@@ -784,6 +784,8 @@ impl LoadFromSerdeJSON for Struct {
         let name = oget_str!(object, "name").to_owned();
         assert!(!name.is_empty());
 
+        let flags = Flags::load_from_json(object);
+
         let mut fields = object.get("fields")
                                                     .unwrap_or_else(|| panic!("object {name} is missing fields"))
                                                     .as_array()
@@ -792,6 +794,10 @@ impl LoadFromSerdeJSON for Struct {
                                                     .map(|f| f.as_object().unwrap_or_else(|| panic!("object {name}'s fields contains non-objects")))
                                                     .map(|f| StructField::load_from_json(f))
                                                     .collect::<VecDeque<StructField>>();
+
+        for i in &mut fields {
+            i.flags.combine_with(&flags);
+        }
 
         if let Some(parent) = object.get("inherits").map(|p| p.as_str().unwrap().to_owned()) {
             let mut parent_snake_case = String::with_capacity(parent.len() * 2);
@@ -817,7 +823,7 @@ impl LoadFromSerdeJSON for Struct {
         }
 
         Self {
-            flags: Flags::load_from_json(object),
+            flags,
             fields: Vec::from(fields),
             name,
             size: oget_number!(object, "size", as_u64) as usize

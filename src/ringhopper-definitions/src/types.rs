@@ -259,6 +259,18 @@ pub struct Flags {
     pub supported_engines: SupportedEngines
 }
 
+impl Flags {
+    pub(crate) fn combine_with(&mut self, other: &Flags) {
+        self.cache_only |= other.cache_only;
+        self.non_cached |= other.non_cached;
+        self.uneditable_in_editor |= other.uneditable_in_editor;
+        self.hidden_in_editor |= other.hidden_in_editor;
+        self.exclude |= other.exclude;
+        self.little_endian_in_tags |= other.little_endian_in_tags;
+        self.shifted_by_one |= other.shifted_by_one;
+    }
+}
+
 pub struct Engine {
     pub name: String,
     pub display_name: String,

@@ -304,7 +304,8 @@ impl ToTokenStream for Struct {
             let field_matcher = &fields_with_matchers[i];
             let field_type = &fields_with_types[i];
 
-            let read_tag_code = if self.flags.little_endian_in_tags {
+            let little_endian = self.fields[i].flags.little_endian_in_tags;
+            let read_tag_code = if little_endian {
                 format!("<{field_type}>::read::<LittleEndian>(data, _pos, struct_end)?")
             }
             else if simple_struct {
@@ -320,7 +321,7 @@ impl ToTokenStream for Struct {
                 writeln!(&mut getter, "\"{field_matcher}\" => Some(&self.{field_name}),").unwrap();
                 writeln!(&mut getter_mut, "\"{field_matcher}\" => Some(&mut self.{field_name}),").unwrap();
 
-                if self.flags.little_endian_in_tags {
+                if little_endian {
                     writeln!(&mut write_out, "self.{field_name}.write::<LittleEndian>(data, _pos, struct_end)?;").unwrap();
                 }
                 else if simple_struct {

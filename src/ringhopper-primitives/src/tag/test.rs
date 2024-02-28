@@ -24,7 +24,7 @@ impl TagData for String {
         self.string.write_to_tag_file(data, at, struct_end)
     }
 
-    fn read_from_map<M: Map>(map: &M, address: usize, domain_type: &DomainType) -> RinghopperResult<Self> where Self: Sized {
+    fn read_from_map<M: Map>(_map: &M, _address: usize, _domain_type: &DomainType) -> RinghopperResult<Self> where Self: Sized {
         unimplemented!()
     }
 }
@@ -40,7 +40,7 @@ impl TagData for UnicodeStringList {
         self.strings.write_to_tag_file(data, at, struct_end)
     }
 
-    fn read_from_map<M: Map>(map: &M, address: usize, domain_type: &DomainType) -> RinghopperResult<Self> where Self: Sized {
+    fn read_from_map<M: Map>(_map: &M, _address: usize, _domain_type: &DomainType) -> RinghopperResult<Self> where Self: Sized {
         unimplemented!()
     }
 }
