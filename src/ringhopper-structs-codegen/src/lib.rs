@@ -116,20 +116,35 @@ impl ToTokenStream for NamedObject {
     }
 }
 
-fn is_simple_struct(structure: &Struct, definitions: &ParsedDefinitions) -> bool {
+fn is_simple_bitfield(bitfield: &Bitfield) -> bool {
+    for f in &bitfield.fields {
+        if f.flags.cache_only || f.flags.non_cached {
+            return false
+        }
+    }
+    return true
+}
+
+fn is_simple_struct(structure: &Struct, parsed_definitions: &ParsedDefinitions) -> bool {
     for f in &structure.fields {
         if f.count != FieldCount::One {
             return false
         }
 
+        if f.flags.cache_only || f.flags.non_cached {
+            return false
+        }
+
         match &f.field_type {
             StructFieldType::Object(o) => match o {
-                ObjectType::NamedObject(o) => match &definitions.objects[o] {
-                    NamedObject::Struct(s) => if !is_simple_struct(s, definitions) {
+                ObjectType::NamedObject(o) => match &parsed_definitions.objects[o] {
+                    NamedObject::Struct(s) => if !is_simple_struct(s, parsed_definitions) {
                         return false
                     },
                     NamedObject::Enum(_) => (),
-                    NamedObject::Bitfield(_) => ()
+                    NamedObject::Bitfield(b) => if !is_simple_bitfield(b) {
+                        return false
+                    }
                 },
                 ObjectType::Reflexive(_) => return false,
                 ObjectType::TagReference(_) => return false,
@@ -275,7 +290,6 @@ impl ToTokenStream for Struct {
                     fields_read_from_caches.push(false);
                 }
             }
-
             fields_with_types.push(field_type);
             fields_with_sizes.push(field.size(definitions));
         }
@@ -643,6 +657,12 @@ impl ToTokenStream for Bitfield {
             .unwrap();
         let not_cache_only = !cache_only_mask;
 
+        let tag_only_mask = self.fields.iter()
+            .map(|f| match f.flags.non_cached { true => f.value, false => 0 } )
+            .reduce(|a, b| a | b)
+            .unwrap();
+        let not_tag_only = !tag_only_mask;
+
         let functions = format!("
         impl From<u{width}> for {struct_name} {{
             fn from(value: u{width}) -> Self {{
@@ -692,28 +712,53 @@ impl ToTokenStream for Bitfield {
             fn data_type(&self) -> DynamicTagDataType {{
                 DynamicTagDataType::Block
             }}
-        }}
-
-        impl SimpleTagData for {struct_name} {{
-            fn simple_size() -> usize {{
-                u{width}::simple_size()
-            }}
-
-            fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {{
-                let read_in = u{width}::read::<B>(data, at, struct_end)? & {not_cache_only};
-                Ok(read_in.into())
-            }}
-
-            fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {{
-                let write_out: u{width} = (*self).into();
-                (write_out & {not_cache_only}).write::<B>(data, at, struct_end)
-            }}
         }}").parse::<TokenStream>().unwrap();
+
+        let parse_functions = if is_simple_bitfield(self) {
+            format!("impl SimpleTagData for {struct_name} {{
+                fn simple_size() -> usize {{
+                    u{width}::simple_size()
+                }}
+
+                fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {{
+                    let read_in = u{width}::read::<B>(data, at, struct_end)?;
+                    Ok(read_in.into())
+                }}
+
+                fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {{
+                    let write_out: u{width} = (*self).into();
+                    write_out.write::<B>(data, at, struct_end)
+                }}
+            }}").parse::<TokenStream>().unwrap()
+        }
+        else {
+            format!("impl TagData for {struct_name} {{
+                fn size() -> usize {{
+                    u{width}::simple_size()
+                }}
+
+                fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> {{
+                    let read_in = u{width}::read_from_tag_file(data, at, struct_end, extra_data_cursor)? & {not_cache_only};
+                    Ok(read_in.into())
+                }}
+
+                fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {{
+                    let output = u{width}::from(*self) & {not_cache_only};
+                    output.write_to_tag_file(data, at, struct_end)
+                }}
+
+                fn read_from_map<M: Map>(map: &M, address: usize, domain_type: &DomainType) -> RinghopperResult<Self> {{
+                    let read_in = u{width}::read_from_map(map, address, domain_type)? & {not_tag_only};
+                    Ok(read_in.into())
+                }}
+            }}").parse::<TokenStream>().unwrap()
+        };
 
         let mut tokens = TokenStream::default();
 
         tokens.extend(structure);
         tokens.extend(functions);
+        tokens.extend(parse_functions);
 
         tokens
     }

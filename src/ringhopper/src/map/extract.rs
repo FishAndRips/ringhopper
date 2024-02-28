@@ -263,7 +263,6 @@ fn fix_bitmap_tag<M: Map>(tag: &mut Bitmap, map: &M, xbox_map: bool) -> Ringhopp
         let bitmap_data = map.get_data_at_address(offset, &domain, length)
             .ok_or_else(|| Error::MapDataOutOfBounds(format!("Unable to extract bitmap data at offset 0x{offset:08X} from {domain:?}")))?;
 
-        i.flags.external = false;
         i.pixel_data_offset = processed_data.len().try_into().map_err(|_| Error::SizeLimitExceeded)?;
 
         let expected_compressed_flag = matches!(i.format, BitmapDataFormat::DXT1 | BitmapDataFormat::DXT3 | BitmapDataFormat::DXT5 | BitmapDataFormat::BC7);
@@ -278,6 +277,7 @@ fn fix_bitmap_tag<M: Map>(tag: &mut Bitmap, map: &M, xbox_map: bool) -> Ringhopp
             processed_data.extend_from_slice(bitmap_data);
         }
     }
+    tag.processed_pixel_data.bytes = processed_data;
 
     Ok(())
 }

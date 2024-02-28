@@ -5,7 +5,7 @@ use definitions::{Model, ModelAnimations, Weapon};
 use primitives::error::RinghopperResult;
 use primitives::primitive::{TagGroup, TagPath};
 use primitives::tag::PrimaryTagStructDyn;
-use tag::tree::{CachingTagTree, CachingTagTreeWriteStrategy, TagTree, TagTreeItem, VirtualTagsDirectory};
+use crate::tag::tree::{CachingTagTree, CachingTagTreeWriteStrategy, TagTree, TagTreeItem, VirtualTagsDirectory};
 
 
 #[derive(Default)]
