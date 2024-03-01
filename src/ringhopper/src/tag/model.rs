@@ -48,6 +48,9 @@ pub trait ModelFunctions {
     ///
     /// This must be called when a model tag enters/exits a cache file.
     fn flip_lod_cutoffs(&mut self);
+
+    /// Return true if the model supports compressed vertices.
+    fn supports_compressed_vertices(&mut self) -> bool;
 }
 
 macro_rules! fix_runtime_markers {
@@ -205,7 +208,7 @@ impl ModelFunctions for Model {
     }
 
     fn fix_compressed_vertices(&mut self) -> bool {
-        if self.nodes.len() > MAX_NODES_FOR_COMPRESSED_VERTICES {
+        if !self.supports_compressed_vertices() {
             return false
         }
 
@@ -218,6 +221,10 @@ impl ModelFunctions for Model {
 
     fn flip_lod_cutoffs(&mut self) {
         flip_lod_cutoffs(&mut self.detail_cutoff)
+    }
+
+    fn supports_compressed_vertices(&mut self) -> bool {
+        self.nodes.len() <= MAX_NODES_FOR_COMPRESSED_VERTICES
     }
 }
 
@@ -317,7 +324,7 @@ impl ModelFunctions for GBXModel {
     }
 
     fn fix_compressed_vertices(&mut self) -> bool {
-        if self.nodes.len() > MAX_NODES_FOR_COMPRESSED_VERTICES || self.flags.parts_have_local_nodes {
+        if !self.supports_compressed_vertices() {
             return false
         }
 
@@ -330,6 +337,10 @@ impl ModelFunctions for GBXModel {
 
     fn flip_lod_cutoffs(&mut self) {
         flip_lod_cutoffs(&mut self.detail_cutoff)
+    }
+
+    fn supports_compressed_vertices(&mut self) -> bool {
+        self.nodes.len() <= MAX_NODES_FOR_COMPRESSED_VERTICES && !self.flags.parts_have_local_nodes
     }
 }
 

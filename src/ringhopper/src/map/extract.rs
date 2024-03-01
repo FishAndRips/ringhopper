@@ -1,8 +1,8 @@
 use std::convert::TryInto;
-use definitions::BitmapType;
+use definitions::{BitmapType, ModelTriangleStripData};
 use crate::tag::model::ModelPartGet;
 use crate::constants::{TICK_RATE, TICK_RATE_RECIPROCOL};
-use crate::definitions::{ActorVariant, Bitmap, BitmapDataFormat, ContinuousDamageEffect, DamageEffect, GBXModel, Light, Model, ModelAnimations, ModelAnimationsAnimation, ModelTriangle, ModelVertexUncompressed, Object, PointPhysics, Projectile, Scenario, ScenarioType, Sound, SoundFormat, Weapon};
+use crate::definitions::{ActorVariant, Bitmap, BitmapDataFormat, ContinuousDamageEffect, DamageEffect, GBXModel, Light, Model, ModelAnimations, ModelAnimationsAnimation, ModelVertexUncompressed, Object, PointPhysics, Projectile, Scenario, ScenarioType, Sound, SoundFormat, Weapon};
 use crate::primitives::byteorder::{BigEndian, LittleEndian};
 use crate::primitives::dynamic::DynamicTagDataArray;
 use crate::primitives::error::{Error, OverflowCheck, RinghopperResult};
@@ -95,6 +95,7 @@ macro_rules! extract_uncompressed_model_vertices {
                     return Err(Error::InvalidTagData(format!("Model data is invalid: triangle count is too high (0x{triangle_count:X} > 0x{max_triangles:X})")))
                 }
 
+                let index_count = triangle_count + 2;
                 part.uncompressed_vertices.items.reserve_exact(vertex_count);
 
                 let vertex_size = ModelVertexUncompressed::size();
@@ -105,37 +106,31 @@ macro_rules! extract_uncompressed_model_vertices {
                     part.uncompressed_vertices.items.push(vertex);
                 }
 
-                let mut triangles: Vec<Index> = Vec::with_capacity(triangle_count + 2);
+                let mut indices: Vec<Index> = Vec::with_capacity(index_count + 2);
                 let triangle_size = Index::simple_size();
                 let triangle_offset = part.triangle_offset as usize;
-                let triangle_end = triangle_offset + (triangle_count * triangle_size);
+                let triangle_end = triangle_offset + (index_count * triangle_size);
                 for t in (triangle_offset..triangle_end).step_by(triangle_size) {
-                    let triangle = Index::read_from_map($map, t, &DomainType::ModelTriangleData)?;
-                    triangles.push(triangle);
+                    let index = Index::read_from_map($map, t, &DomainType::ModelTriangleData)?;
+                    indices.push(index);
                 }
-                triangles.push(None);
-                triangles.push(None);
 
-                let full_triangles = triangles.len() / 3;
-                part.triangles.items.reserve_exact(full_triangles);
+                // Pad out the triangles
+                indices.push(None);
+                indices.push(None);
 
-                let full_triangle_indices = full_triangles * 3;
-                let iterator = (0..full_triangle_indices)
+                let iterator = (0..indices.len())
                     .step_by(3)
-                    .map(|index| unsafe {(
-                        // Fine because we checked above
-                        *triangles.get_unchecked(index),
-                        *triangles.get_unchecked(index + 1),
-                        *triangles.get_unchecked(index + 2)
-                    )})
-                    .map(|(vertex0_index, vertex1_index, vertex2_index)| {
-                        ModelTriangle {
-                            vertex0_index,
-                            vertex1_index,
-                            vertex2_index
-                        }
+                    .map(|index| ModelTriangleStripData {
+                        indices: unsafe {[
+                            // Fine because we checked above
+                            *indices.get_unchecked(index),
+                            *indices.get_unchecked(index + 1),
+                            *indices.get_unchecked(index + 2)
+                        ]}
                     });
-                part.triangles.items.extend(iterator);
+
+                part.triangle_data.items.extend(iterator);
             }
         }
         $model.fix_compressed_vertices();

@@ -386,22 +386,16 @@
         "size": 32
     },
     {
-        "name": "ModelTriangle",
+        "name": "ModelTriangleStripData",
         "fields": [
             {
-                "name": "vertex0 index",
-                "type": "Index"
-            },
-            {
-                "name": "vertex1 index",
-                "type": "Index"
-            },
-            {
-                "name": "vertex2 index",
-                "type": "Index"
+                "name": "indices",
+                "type": "Index",
+                "count": 3
             }
         ],
         "type": "struct",
+        "developer_note": "this is not actually one triangle; triangle data is stored in strips for model tags, and this is a section of a strip which could be part of 1-3 triangles; for example, two of these is actually four triangles (i.e. {A B C} {D E F} is actually {A B C} {B D C} {C D E} {D F E})",
         "read_only": true,
         "size": 6
     },
@@ -471,10 +465,11 @@
                 "limit": 65535
             },
             {
-                "name": "triangles",
+                "name": "triangle data",
                 "type": "Reflexive",
-                "struct": "ModelTriangle",
+                "struct": "ModelTriangleStripData",
                 "non_cached": true,
+                "developer_note": "a contiguous array of indices stored in strips; see ModelTriangleStripData's comment for more information",
                 "limit": 65535
             },
             {
@@ -489,7 +484,8 @@
             {
                 "name": "triangle count",
                 "cache_only": true,
-                "type": "uint32"
+                "type": "uint32",
+                "comment": "for triangle strips, the number of indices stored in the cache file = this + 2"
             },
             {
                 "name": "triangle offset",
