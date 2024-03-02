@@ -131,6 +131,10 @@ macro_rules! extract_uncompressed_model_vertices {
                     });
 
                 part.triangle_data.items.extend(iterator);
+
+                while part.triangle_data.items.last() == Some(&ModelTriangleStripData::default()) {
+                    part.triangle_data.items.pop();
+                }
             }
         }
         $model.fix_compressed_vertices();
@@ -178,7 +182,7 @@ pub fn fix_object_tag(object: &mut Object) -> RinghopperResult<()> {
                 }
 
                 // Apply the weights
-                for i in 1..permutation_count {
+                for i in (1..permutation_count).rev() {
                     let last = cc.permutations.items[i - 1].weight;
                     let this = &mut cc.permutations.items[i].weight;
                     *this = *this - last;
@@ -186,6 +190,8 @@ pub fn fix_object_tag(object: &mut Object) -> RinghopperResult<()> {
             }
         }
     }
+
+    nudge_tag(object);
 
     Ok(())
 }

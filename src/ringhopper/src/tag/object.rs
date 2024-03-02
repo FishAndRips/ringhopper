@@ -2,6 +2,28 @@ use definitions::*;
 use primitives::primitive::TagGroup;
 use primitives::tag::PrimaryTagStructDyn;
 
+pub fn is_object(group: TagGroup) -> bool {
+    match group {
+        TagGroup::Object
+        | TagGroup::Unit
+        | TagGroup::Biped
+        | TagGroup::Vehicle
+        | TagGroup::Item
+        | TagGroup::Weapon
+        | TagGroup::Garbage
+        | TagGroup::Equipment
+        | TagGroup::Device
+        | TagGroup::DeviceMachine
+        | TagGroup::DeviceControl
+        | TagGroup::DeviceLightFixture
+        | TagGroup::Projectile
+        | TagGroup::Scenery
+        | TagGroup::Placeholder
+        | TagGroup::SoundScenery => true,
+        _ => false
+    }
+}
+
 macro_rules! get_base_object_tag_memes {
     ($tag:expr, $as_any:tt, $downcast:tt, $map:expr, $unit:tt, $item:tt, $device:tt, $basic:tt) => {{
         let group = $tag.group();

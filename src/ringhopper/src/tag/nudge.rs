@@ -1,6 +1,7 @@
-use definitions::{ActorVariant, ContinuousDamageEffect, DamageEffect, Light, PointPhysics, Projectile, Scenario};
+use definitions::{ActorVariant, ContinuousDamageEffect, DamageEffect, Light, Object, PointPhysics, Projectile, Scenario};
 use primitives::primitive::TagGroup;
 use primitives::tag::PrimaryTagStructDyn;
+use crate::tag::object::{downcast_base_object_mut, is_object};
 
 /// Return `true` if the tag group can be nudged.
 pub fn is_nudgeable(group: TagGroup) -> bool {
@@ -32,8 +33,36 @@ fn get_nudgeable_function(tag_group: TagGroup) -> Option<fn(&mut dyn PrimaryTagS
         TagGroup::Projectile => Some(|tag| nudge_projectile(tag.as_any_mut().downcast_mut().unwrap())),
         TagGroup::Scenario => Some(|tag| nudge_scenario(tag.as_any_mut().downcast_mut().unwrap())),
         TagGroup::Light => Some(|tag| nudge_light(tag.as_any_mut().downcast_mut().unwrap())),
+        n if is_object(n) => Some(|tag| nudge_object(downcast_base_object_mut(tag).unwrap())),
         _ => None
     }
+}
+
+fn nudge_object(object: &mut Object) -> bool {
+    let mut result = false;
+    for cc in &mut object.change_colors.items {
+        if cc.permutations.items.is_empty() {
+            continue
+        }
+
+        let mut value = None;
+        let mut all_same = true;
+        for p in &mut cc.permutations.items {
+            nudge(&mut p.weight, &mut result);
+            match value {
+                Some(n) => if n != p.weight { all_same = false; }
+                None => value = Some(p.weight)
+            }
+        }
+
+        if all_same && value != Some(1.0) {
+            result = true;
+            for p in &mut cc.permutations.items {
+                p.weight = 1.0;
+            }
+        }
+    }
+    result
 }
 
 fn nudge_actor_variant(a: &mut ActorVariant) -> bool {
