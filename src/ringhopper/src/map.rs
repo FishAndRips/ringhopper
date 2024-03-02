@@ -91,7 +91,7 @@ impl GearboxCacheFile {
         map.triangle_data = vertex_end..model_data_end;
         map.scenario_tag = tag_data_header.cache_file_tag_data_header.scenario_tag;
 
-        let mut tag_address = tag_data_header.cache_file_tag_data_header.tag_array_address.address as usize;
+        let mut tag_address = tag_data_header.cache_file_tag_data_header.tag_array_address.into();
 
         let tag_count = tag_data_header.cache_file_tag_data_header.tag_count as usize;
         if tag_count > u16::MAX as usize {
@@ -109,7 +109,7 @@ impl GearboxCacheFile {
                 return Err(Error::MapParseFailure(format!("tag #{t} has an invalid tag ID")))
             }
 
-            let tag_path_address = cached_tag.path.address as usize;
+            let tag_path_address = cached_tag.path.into();
             let path = map
                 .get_c_string_at_address(tag_path_address, &DomainType::TagData)
                 .ok_or_else(|| Error::MapParseFailure(format!("unable to get the tag path for tag #{t} due to a bad address 0x{tag_path_address:08X}")))?;
@@ -130,7 +130,7 @@ impl GearboxCacheFile {
 
             let tag = Tag {
                 tag_path,
-                address: cached_tag.data.address as usize,
+                address: cached_tag.data.into(),
                 domain: DomainType::TagData
             };
 
@@ -171,7 +171,7 @@ impl GearboxCacheFile {
                 bsp_base_address,
                 &DomainType::BSP(bsp_index)
             )?;
-            let bsp_tag_base_address = header.pointer.address as usize;
+            let bsp_tag_base_address = header.pointer.into();
 
             if let Some(n) = bsp.structure_bsp.path() {
                 for t in &mut map.tags {

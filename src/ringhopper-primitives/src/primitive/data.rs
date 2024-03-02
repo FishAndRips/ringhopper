@@ -345,7 +345,7 @@ impl TagData for Data {
 
     fn read_from_map<M: Map>(map: &M, address: usize, domain_type: &DomainType) -> RinghopperResult<Self> {
         let c_primitive = DataC::read_from_map(map, address, domain_type)?;
-        let address = c_primitive.address.address as usize;
+        let address = c_primitive.address.into();
         let length = c_primitive.size as usize;
         if length == 0 {
             return Ok(Self::default())
@@ -496,7 +496,7 @@ impl<T: TagData + Sized> TagData for Reflexive<T> {
 
         let count = c_primitive.count as usize;
         let item_size = T::size();
-        let mut address = c_primitive.address.address as usize;
+        let mut address = c_primitive.address.into();
 
         // Make sure we can add all of these
         count.mul_overflow_checked(item_size)?.add_overflow_checked(address)?;
@@ -531,6 +531,12 @@ impl Display for Address {
 impl From<u32> for Address {
     fn from(value: u32) -> Self {
         Address { address: value }
+    }
+}
+
+impl From<Address> for usize {
+    fn from(value: Address) -> Self {
+        value.address as usize
     }
 }
 

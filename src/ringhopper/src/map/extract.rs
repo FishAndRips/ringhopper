@@ -99,7 +99,7 @@ macro_rules! extract_uncompressed_model_vertices {
                 part.uncompressed_vertices.items.reserve_exact(vertex_count);
 
                 let vertex_size = ModelVertexUncompressed::size();
-                let vertex_offset = part.vertex_offset as usize;
+                let vertex_offset = part.vertex_pointer.into();
                 let vertex_end = vertex_offset + (vertex_size * vertex_count);
                 for v in (vertex_offset..vertex_end).step_by(vertex_size) {
                     let vertex = ModelVertexUncompressed::read_from_map($map, v, &DomainType::ModelVertexData)?;
@@ -108,7 +108,7 @@ macro_rules! extract_uncompressed_model_vertices {
 
                 let mut indices: Vec<Index> = Vec::with_capacity(index_count + 2);
                 let triangle_size = Index::simple_size();
-                let triangle_offset = part.triangle_offset as usize;
+                let triangle_offset = part.triangle_pointer.into();
                 let triangle_end = triangle_offset + (index_count * triangle_size);
                 for t in (triangle_offset..triangle_end).step_by(triangle_size) {
                     let index = Index::read_from_map($map, t, &DomainType::ModelTriangleData)?;
