@@ -1,18 +1,110 @@
 use std::collections::HashMap;
 use std::ops::Range;
-use definitions::{Bitmap, CacheFileHeaderPCDemo, CacheFileTag, CacheFileTagDataHeaderPC, Model, read_any_tag_from_map, Scenario, ScenarioStructureBSPCompiledHeader};
+use definitions::{Bitmap, CacheFileHeader, CacheFileHeaderPCDemo, CacheFileTag, CacheFileTagDataHeaderPC, Model, read_any_tag_from_map, Scenario, ScenarioStructureBSPCompiledHeader, ScenarioType};
+use primitives::byteorder::LittleEndian;
 use crate::map::extract::*;
 use primitives::error::{Error, OverflowCheck, RinghopperResult};
 use primitives::map::{DomainType, Map, ResourceMapType, Tag};
-use primitives::primitive::{ID, TagGroup, TagPath};
+use primitives::primitive::{FourCC, ID, String32, TagGroup, TagPath};
 use primitives::tag::PrimaryTagStructDyn;
-use primitives::parse::TagData;
+use primitives::parse::{SimpleTagData, TagData};
 use crate::tag::object::downcast_base_object_mut;
 use crate::tag::tree::{TagFilter, TagTree, TagTreeItem};
 
 mod extract;
 
 type SizeRange = Range<usize>;
+
+/// Functionality to read headers of cache files.
+///
+/// This does not contain all fields, but does contain enough fields to identify the cache file.
+pub struct ParsedCacheFileHeader {
+    /// The name of the scenario.
+    ///
+    /// Note that this may not necessarily correspond to the actual scenario.
+    pub name: String32,
+
+    /// The build of the cache file.
+    ///
+    /// This is used to determine the engine on some engines depending on `cache_version`, but may be set to anything on others.
+    pub build: String32,
+
+    /// The cache version.
+    ///
+    /// This is used to determine the engine.
+    pub cache_version: u32,
+
+    /// The offset to the tag data in bytes.
+    pub tag_data_offset: usize,
+
+    /// The length of the tag data in bytes.
+    pub tag_data_size: usize,
+
+    /// The type of scenario.
+    ///
+    /// Note that this may not necessarily correspond to the actual scenario type.
+    pub map_type: ScenarioType,
+
+    /// The CRC32 of the cache file.
+    ///
+    /// Note that this may not necessarily be accurate.
+    pub crc32: u32
+}
+
+const HEAD_FOURCC: FourCC = 0x68656164;
+const FOOT_FOURCC: FourCC = 0x666F6F74;
+
+const HEAD_FOURCC_DEMO: FourCC = 0x45686564;
+const FOOT_FOURCC_DEMO: FourCC = 0x47666F74;
+
+impl ParsedCacheFileHeader {
+    /// Read the header from the map data.
+    pub fn read_from_map_data(header: &[u8]) -> RinghopperResult<ParsedCacheFileHeader> {
+        let header_slice = match header.get(0..0x800) {
+            Some(n) => n,
+            None => return Err(Error::MapParseFailure("can't read the cache file header (too small to be a cache file)".to_owned()))
+        };
+
+        match CacheFileHeader::read::<LittleEndian>(header_slice, 0, header_slice.len()) {
+            Ok(n) => if n.head_fourcc == HEAD_FOURCC && n.foot_fourcc == FOOT_FOURCC { return Ok(n.into()) },
+            Err(_) => ()
+        };
+
+        match CacheFileHeaderPCDemo::read::<LittleEndian>(header_slice, 0, header_slice.len()) {
+            Ok(n) => if n.head_fourcc == HEAD_FOURCC_DEMO && n.foot_fourcc == FOOT_FOURCC_DEMO { return Ok(n.into()) },
+            Err(_) => ()
+        };
+
+        return Err(Error::MapParseFailure("can't read the cache file header (not in retail or pc demo format)".to_owned()))
+    }
+}
+
+macro_rules! parse_cache_file_header {
+    ($header:expr) => {
+        ParsedCacheFileHeader {
+            name: $header.name,
+            build: $header.build,
+            cache_version: $header.cache_version,
+            tag_data_offset: $header.tag_data_offset as usize,
+            tag_data_size: $header.tag_data_size as usize,
+            map_type: $header.map_type,
+            crc32: $header.crc32
+        }
+    };
+}
+
+impl From<CacheFileHeaderPCDemo> for ParsedCacheFileHeader {
+    fn from(value: CacheFileHeaderPCDemo) -> Self {
+        parse_cache_file_header!(value)
+    }
+}
+
+impl From<CacheFileHeader> for ParsedCacheFileHeader {
+    fn from(value: CacheFileHeader) -> Self {
+        parse_cache_file_header!(value)
+    }
+}
+
 
 #[derive(Clone)]
 pub struct GearboxCacheFile {
@@ -55,9 +147,9 @@ impl GearboxCacheFile {
             sounds
         };
 
-        let header = CacheFileHeaderPCDemo::read_from_map(&map, 0, &DomainType::MapData)?;
-        let tag_data_start = header.tag_data_offset as usize;
-        let tag_data_end = tag_data_start.add_overflow_checked(header.tag_data_size as usize)?;
+        let header = ParsedCacheFileHeader::read_from_map_data(&map.data)?;
+        let tag_data_start = header.tag_data_offset;
+        let tag_data_end = tag_data_start.add_overflow_checked(header.tag_data_size)?;
         let tag_data_range = tag_data_start..tag_data_end;
         if map.data.get(tag_data_range.clone()).is_none() {
             return Err(
