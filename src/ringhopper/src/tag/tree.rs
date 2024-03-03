@@ -640,7 +640,7 @@ impl<T: TagTree + Send> AtomicTagTree<T> {
     }
 }
 
-impl TagTree for Box<dyn TagTree + Send> {
+impl TagTree for Box<dyn TagTree + Send + Sync> {
     fn open_tag_copy(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
         self.as_ref().open_tag_copy(path)
     }
@@ -655,6 +655,28 @@ impl TagTree for Box<dyn TagTree + Send> {
 
     fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<bool> {
         self.as_mut().write_tag(path, tag)
+    }
+
+    fn contains(&self, path: &TagPath) -> bool {
+        self.as_ref().contains(path)
+    }
+}
+
+impl TagTree for Arc<dyn TagTree + Send + Sync> {
+    fn open_tag_copy(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
+        self.as_ref().open_tag_copy(path)
+    }
+
+    fn open_tag_shared(&self, path: &TagPath) -> RinghopperResult<Arc<Mutex<Box<dyn PrimaryTagStructDyn>>>> {
+        self.as_ref().open_tag_shared(path)
+    }
+
+    fn files_in_path(&self, path: &str) -> Option<Vec<TagTreeItem>> {
+        self.as_ref().files_in_path(path)
+    }
+
+    fn write_tag(&mut self, _path: &TagPath, _tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<bool> {
+        unimplemented!("write_tag: Arc is non-mutable")
     }
 
     fn contains(&self, path: &TagPath) -> bool {

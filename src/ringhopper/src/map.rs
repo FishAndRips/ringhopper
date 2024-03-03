@@ -295,8 +295,10 @@ impl Map for GearboxCacheFile {
         self.ids.keys().map(|key| key.to_owned()).collect()
     }
 }
+impl MapTagTree for GearboxCacheFile {}
 
-impl<M: Map> TagTree for M {
+pub trait MapTagTree: Map {}
+impl<M: MapTagTree> TagTree for M {
     fn open_tag_copy(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
         self.extract_tag(path)
     }

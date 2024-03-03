@@ -5,14 +5,14 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use cli::CommandLineArgs;
 use ringhopper::error::RinghopperResult;
 use ringhopper::primitives::primitive::{TagGroup, TagPath};
-use ringhopper::tag::tree::{AtomicTagTree, TagFilter, TagTree};
+use ringhopper::tag::tree::{TagFilter, TagTree};
 
-pub struct ThreadingContext<T: TagTree + Send> {
+pub struct ThreadingContext<T: TagTree + Send + Clone> {
     pub args: CommandLineArgs,
-    pub tags_directory: AtomicTagTree<T>
+    pub tags_directory: T
 }
 
-impl<T: TagTree + Send> Clone for ThreadingContext<T> {
+impl<T: TagTree + Send + Clone> Clone for ThreadingContext<T> {
     fn clone(&self) -> Self {
         Self {
             args: self.args.clone(),
@@ -32,7 +32,7 @@ pub enum DisplayMode {
     Silent
 }
 
-pub fn do_with_threads<T: TagTree + Send + 'static, U: Clone + Send + 'static>(
+pub fn do_with_threads<T: TagTree + Send + 'static + Clone, U: Clone + Send + 'static>(
     tags_directory: T,
     args: CommandLineArgs,
     user_filter: &str,
@@ -42,7 +42,7 @@ pub fn do_with_threads<T: TagTree + Send + 'static, U: Clone + Send + 'static>(
     function: ProcessFunction<T, U>,
 ) -> Result<(), String> {
     let mut context = ThreadingContext {
-        tags_directory: AtomicTagTree::new(tags_directory),
+        tags_directory,
         args,
     };
 
@@ -116,7 +116,7 @@ pub fn do_with_threads<T: TagTree + Send + 'static, U: Clone + Send + 'static>(
     Ok(())
 }
 
-fn process_tags<T: TagTree + Send, U: Clone + Send + 'static>(
+fn process_tags<T: TagTree + Send + Clone, U: Clone + Send + 'static>(
     context: &mut ThreadingContext<T>,
     success: &Arc<AtomicU64>,
     failure: &Arc<AtomicU64>,

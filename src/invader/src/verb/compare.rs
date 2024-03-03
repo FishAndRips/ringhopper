@@ -7,7 +7,7 @@ use cli::{CommandLineParser, CommandLineValue, CommandLineValueType, Parameter};
 use ringhopper::error::Error;
 use ringhopper::primitives::primitive::TagPath;
 use ringhopper::tag::compare::{compare_tags, TagComparisonDifference};
-use ringhopper::tag::tree::{AtomicTagTree, TagTree, VirtualTagsDirectory};
+use ringhopper::tag::tree::{TagTree, VirtualTagsDirectory};
 use threading::{DisplayMode, do_with_threads};
 
 #[derive(PartialEq)]
@@ -19,7 +19,7 @@ enum Show {
 
 #[derive(Clone)]
 struct UserData {
-    tags: AtomicTagTree<Box<dyn TagTree + Send>>,
+    tags: Arc<dyn TagTree + Send + Sync>,
     differences: Arc<Mutex<HashMap<TagPath, Vec<TagComparisonDifference>>>>
 }
 
@@ -71,7 +71,7 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
 
     let verbose = parser.get_custom("verbose").is_some();
 
-    let mut source: VecDeque<Box<dyn TagTree + Send>> = VecDeque::new();
+    let mut source: VecDeque<Arc<dyn TagTree + Send + Sync>> = VecDeque::new();
     for i in parser.get_extra() {
         let path: &Path = i.as_ref();
         if !path.exists() {
@@ -85,7 +85,7 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
                 Ok(n) => n,
                 Err(e) => return Err(format!("Error with tags directory {}: {e}", path.display()))
             };
-            source.push_back(Box::new(dir));
+            source.push_back(Arc::new(dir));
         }
         else {
             return Err(format!("Source `{i}` does not refer to a directory"))
@@ -93,7 +93,7 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
     }
 
     let primary = source.pop_front().unwrap();
-    let secondary = AtomicTagTree::new(source.pop_front().unwrap());
+    let secondary = source.pop_front().unwrap();
     let tag = parser.get_custom("filter").unwrap()[0].string().to_owned();
 
     let user_data = UserData {
@@ -101,7 +101,7 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
         differences: Arc::new(Mutex::new(HashMap::new()))
     };
 
-    do_with_threads(AtomicTagTree::new(primary), parser, &tag, None, user_data.clone(), DisplayMode::Silent, |context, path, user_data| {
+    do_with_threads(primary, parser, &tag, None, user_data.clone(), DisplayMode::Silent, |context, path, user_data| {
         let secondary = user_data.tags.open_tag_copy(path);
         let secondary = match secondary {
             Ok(n) => n,
