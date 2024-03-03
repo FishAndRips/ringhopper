@@ -71,12 +71,18 @@
             "can see in darkness",
             "sneak uncovering target",
             "sneak uncovering pursuit position",
-            "unused",
+            {
+                "name": "unused",
+                "exclude": true
+            },
             "shoot at target s last location",
             "try to stay still when crouched",
             "crouch when not in combat",
             "crouch when guarding",
-            "unused 1",
+            {
+                "name": "unused1",
+                "exclude": true
+            },
             "must crouch to shoot",
             "panic when surprised",
             "always charge at enemies",
