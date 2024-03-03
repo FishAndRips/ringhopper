@@ -364,8 +364,10 @@
                 "default": 1.0
             },
             {
-                "name": "maximum bend per second",
-                "type": "float"
+                "name": "maximum bend rate",
+                "type": "float",
+                "unit": "per second",
+                "developer_note": "per second in tags, per tick when cached"
             },
             {
                 "type": "pad",

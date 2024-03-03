@@ -1,4 +1,4 @@
-use definitions::{ActorVariant, ContinuousDamageEffect, DamageEffect, Light, Object, PointPhysics, Projectile, Scenario};
+use definitions::{ActorVariant, ContinuousDamageEffect, DamageEffect, Light, Object, PointPhysics, Projectile, Scenario, Sound};
 use primitives::primitive::TagGroup;
 use primitives::tag::PrimaryTagStructDyn;
 use crate::tag::object::{downcast_base_object_mut, is_object};
@@ -33,6 +33,7 @@ fn get_nudgeable_function(tag_group: TagGroup) -> Option<fn(&mut dyn PrimaryTagS
         TagGroup::Projectile => Some(|tag| nudge_projectile(tag.as_any_mut().downcast_mut().unwrap())),
         TagGroup::Scenario => Some(|tag| nudge_scenario(tag.as_any_mut().downcast_mut().unwrap())),
         TagGroup::Light => Some(|tag| nudge_light(tag.as_any_mut().downcast_mut().unwrap())),
+        TagGroup::Sound => Some(|tag| nudge_sound(tag.as_any_mut().downcast_mut().unwrap())),
         n if is_object(n) => Some(|tag| nudge_object(downcast_base_object_mut(tag).unwrap())),
         _ => None
     }
@@ -62,6 +63,12 @@ fn nudge_object(object: &mut Object) -> bool {
             }
         }
     }
+    result
+}
+
+fn nudge_sound(sound: &mut Sound) -> bool {
+    let mut result = false;
+    nudge(&mut sound.maximum_bend_rate, &mut result);
     result
 }
 

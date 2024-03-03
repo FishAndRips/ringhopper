@@ -39,6 +39,17 @@ pub fn fix_weapon_tag(tag: &mut Weapon, tag_path: &TagPath, scenario_tag: &Scena
     }
 }
 
+pub fn fix_damage_effect_tag(damage_effect: &mut DamageEffect, tag_path: &TagPath, scenario_tag: &Scenario) {
+    damage_effect.camera_shaking.wobble_period /= TICK_RATE;
+    nudge_tag(damage_effect);
+
+    if scenario_tag._type == ScenarioType::Singleplayer
+        && !scenario_tag.flags.do_not_apply_bungie_campaign_tag_patches
+        && tag_path.path() == "weapons\\pistol\\bullet" {
+        damage_effect.damage.modifiers.elite_energy_shield = 1.0;
+    }
+}
+
 pub fn fix_actor_variant_tag(actor_variant: &mut ActorVariant) {
     actor_variant.grenades.grenade_velocity /= TICK_RATE_RECIPROCOL;
     nudge_tag(actor_variant);
@@ -47,11 +58,6 @@ pub fn fix_actor_variant_tag(actor_variant: &mut ActorVariant) {
 pub fn fix_continuous_damage_effect_tag(continuous_damage_effect: &mut ContinuousDamageEffect) {
     continuous_damage_effect.camera_shaking.wobble_period /= TICK_RATE;
     nudge_tag(continuous_damage_effect);
-}
-
-pub fn fix_damage_effect_tag(damage_effect: &mut DamageEffect) {
-    damage_effect.camera_shaking.wobble_period /= TICK_RATE;
-    nudge_tag(damage_effect);
 }
 
 pub fn fix_point_physics_tag(point_physics: &mut PointPhysics) {
@@ -161,6 +167,16 @@ pub fn fix_gbxmodel_tag<M: Map>(gbxmodel: &mut GBXModel, map: &M) -> RinghopperR
 pub fn fix_scenario_tag(scenario: &mut Scenario, scenario_name: &str) -> RinghopperResult<()> {
     flip_scenario_script_endianness::<LittleEndian, BigEndian>(scenario)?;
     decompile_scripts(scenario, scenario_name)?;
+
+    for i in &mut scenario.cutscene_titles.items {
+        i.up_time -= i.fade_in_time;
+        i.fade_in_time *= TICK_RATE_RECIPROCOL;
+        i.fade_out_time *= TICK_RATE_RECIPROCOL;
+        i.up_time *= TICK_RATE_RECIPROCOL;
+    }
+
+    nudge_tag(scenario);
+
     Ok(())
 }
 
@@ -301,6 +317,9 @@ pub fn fix_sound_tag(tag: &mut Sound) -> RinghopperResult<()> {
         let swapped: Vec<u8> = permutation.samples.bytes.chunks(2).map(|b| [b[1], b[0]]).flatten().collect();
         permutation.samples.bytes = swapped;
     }
+
+    tag.maximum_bend_rate = tag.maximum_bend_rate.powf(TICK_RATE);
+    nudge_tag(tag);
 
     Ok(())
 }
