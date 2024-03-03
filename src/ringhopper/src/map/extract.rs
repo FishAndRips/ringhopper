@@ -122,12 +122,12 @@ macro_rules! extract_uncompressed_model_vertices {
                 let iterator = (0..indices.len())
                     .step_by(3)
                     .map(|index| ModelTriangleStripData {
-                        indices: unsafe {[
-                            // Fine because we checked above
-                            *indices.get_unchecked(index),
-                            *indices.get_unchecked(index + 1),
-                            *indices.get_unchecked(index + 2)
-                        ]}
+                        indices: [
+                            // Fine because we loop on indices.len()
+                            unsafe { *indices.get_unchecked(index) },
+                            *indices.get(index + 1).unwrap_or(&None),
+                            *indices.get(index + 2).unwrap_or(&None)
+                        ]
                     });
 
                 part.triangle_data.items.extend(iterator);
