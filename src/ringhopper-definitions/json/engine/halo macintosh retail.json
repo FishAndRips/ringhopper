@@ -5,7 +5,10 @@
         "display_name": "Halo: Combat Evolved (Mac)",
         "version": "Halo macintosh 01.00.09.0620 Oct 20 2009 17:36:11",
         "build_target": true,
-        "build": "01.00.09.0620",
+        "build": {
+            "version": "01.00.09.0620",
+            "enforced": false
+        },
         "script_compile_target": "gbx-retail",
         "inherits": "pc"
     }

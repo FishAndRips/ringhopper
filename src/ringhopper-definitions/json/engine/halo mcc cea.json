@@ -5,7 +5,11 @@
         "display_name": "Halo: Combat Evolved Anniversary (MCC)",
         "version": "halo1 pc 01.03.43.0000 Sep  1 2023 10:51:22",
         "build_target": true,
-        "build": "01.03.43.0000",
+        "build": {
+            "version": "01.03.43.0000",
+            "enforced": false
+        },
+        "cache_default": true,
         "cache_file_version": 13,
         "max_tag_space": "0x4000000",
         "max_cache_file_size": "0x7FFFFFFF",

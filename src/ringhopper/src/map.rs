@@ -8,6 +8,7 @@ use primitives::map::{DomainType, Map, ResourceMapType, Tag};
 use primitives::primitive::{FourCC, ID, String32, TagGroup, TagPath};
 use primitives::tag::PrimaryTagStructDyn;
 use primitives::parse::{SimpleTagData, TagData};
+use ringhopper_engines::{ALL_SUPPORTED_ENGINES, Engine};
 use crate::tag::object::downcast_base_object_mut;
 use crate::tag::tree::{TagFilter, TagTree, TagTreeItem};
 
@@ -59,8 +60,8 @@ const FOOT_FOURCC_DEMO: FourCC = 0x47666F74;
 
 impl ParsedCacheFileHeader {
     /// Read the header from the map data.
-    pub fn read_from_map_data(header: &[u8]) -> RinghopperResult<ParsedCacheFileHeader> {
-        let header_slice = match header.get(0..0x800) {
+    pub fn read_from_map_data(map_data: &[u8]) -> RinghopperResult<ParsedCacheFileHeader> {
+        let header_slice = match map_data.get(0..0x800) {
             Some(n) => n,
             None => return Err(Error::MapParseFailure("can't read the cache file header (too small to be a cache file)".to_owned()))
         };
@@ -76,6 +77,57 @@ impl ParsedCacheFileHeader {
         };
 
         return Err(Error::MapParseFailure("can't read the cache file header (not in retail or pc demo format)".to_owned()))
+    }
+
+    /// Match the header to an engine.
+    pub fn match_engine(&self) -> Option<&'static Engine> {
+        let mut best_result = None;
+        let build_as_str = self.build.as_str();
+
+        for i in ALL_SUPPORTED_ENGINES {
+            // Must always be equal to match.
+            if i.cache_file_version != self.cache_version {
+                continue
+            }
+
+            if let Some(n) = &i.build {
+                // Exact match?
+                if n.string == build_as_str {
+                    return Some(i);
+                }
+
+                // Any past maps that were released for this engine with a matching build string?
+                for &fallback in n.fallback {
+                    if fallback == build_as_str {
+                        return Some(i);
+                    }
+                }
+
+                // Are non-exact matches not allowed?
+                if n.enforced {
+                    continue
+                }
+            }
+
+            // Default to this if cache_default (but only if we don't find something else first)
+            if i.cache_default {
+                debug_assert!(best_result.is_none());
+                best_result = Some(i)
+            }
+        }
+
+        best_result
+    }
+}
+
+/// Get the map details, returning a cache file header and an engine.
+///
+/// Returns an error if the map could not be identified.
+pub fn get_map_details(map_data: &[u8]) -> RinghopperResult<(ParsedCacheFileHeader, &'static Engine)> {
+    let header = ParsedCacheFileHeader::read_from_map_data(map_data)?;
+    match header.match_engine() {
+        Some(n) => Ok((header, n)),
+        None => Err(Error::MapParseFailure("unable to identify the map's engine (unknown engine)".to_string()))
     }
 }
 
@@ -131,6 +183,8 @@ struct BSPDomain {
 
 impl GearboxCacheFile {
     pub fn new(data: Vec<u8>, bitmaps: Vec<u8>, sounds: Vec<u8>) -> RinghopperResult<Self> {
+        let (header, engine) = get_map_details(&data)?;
+
         let mut map = Self {
             name: String::new(),
             data,
@@ -138,7 +192,7 @@ impl GearboxCacheFile {
             triangle_data: Default::default(),
             tag_data: Default::default(),
             bsp_data: Default::default(),
-            base_memory_address: 0x4BF10000, // TODO: use engine definitions for this
+            base_memory_address: engine.base_memory_address.address as usize,
             tags: Default::default(),
             scenario_tag: ID::null(),
             scenario_tag_data: Scenario::default(),
@@ -147,7 +201,6 @@ impl GearboxCacheFile {
             sounds
         };
 
-        let header = ParsedCacheFileHeader::read_from_map_data(&map.data)?;
         let tag_data_start = header.tag_data_offset;
         let tag_data_end = tag_data_start.add_overflow_checked(header.tag_data_size)?;
         let tag_data_range = tag_data_start..tag_data_end;
@@ -160,6 +213,12 @@ impl GearboxCacheFile {
         map.name = header.name.to_string();
 
         let tag_data_header = CacheFileTagDataHeaderPC::read_from_map(&map, map.base_memory_address, &DomainType::TagData)?;
+
+        let mut tag_address: usize = tag_data_header.cache_file_tag_data_header.tag_array_address.into();
+        if engine.base_memory_address.inferred {
+            map.base_memory_address = tag_address.sub_overflow_checked(CacheFileTagDataHeaderPC::simple_size())?;
+        }
+
         let model_data_start = tag_data_header.model_data_file_offset as usize;
         let model_data_size = tag_data_header.model_data_size as usize;
         let model_data_end = model_data_start.add_overflow_checked(model_data_size)?;
@@ -182,8 +241,6 @@ impl GearboxCacheFile {
         map.vertex_data = model_data_start..vertex_end;
         map.triangle_data = vertex_end..model_data_end;
         map.scenario_tag = tag_data_header.cache_file_tag_data_header.scenario_tag;
-
-        let mut tag_address = tag_data_header.cache_file_tag_data_header.tag_array_address.into();
 
         let tag_count = tag_data_header.cache_file_tag_data_header.tag_count as usize;
         if tag_count > u16::MAX as usize {

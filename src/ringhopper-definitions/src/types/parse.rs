@@ -21,6 +21,12 @@ macro_rules! oget_str {
     };
 }
 
+macro_rules! oget_bool {
+    ($obj:expr, $field:expr) => {
+        oget!($obj, $field).as_bool().unwrap_or_else(|| panic!("expected {name}::{field} to be a boolean", field=$field, name=oget_name!($obj)))
+    };
+}
+
 macro_rules! oget_number {
     ($obj:expr, $field:expr, $accessor:tt) => {
         oget!($obj, $field)
@@ -85,7 +91,7 @@ impl ParsedDefinitions {
             }
         }
 
-        for (engine_name, _) in &all_engines {
+        for (engine_name, engine) in &all_engines {
             // Values are ("engine::value", value)
             fn get_chain(what: &str, engine_name: &str, all_engines: &HashMap<String, Map<String, Value>>) -> Vec<(String, Value)> {
                 let mut v: Vec<(String, Value)> = Vec::new();
@@ -126,6 +132,7 @@ impl ParsedDefinitions {
                     .collect()
             };
 
+            let first_object = |what: &str, required: bool| get_chain(what, required).first().map(|(f, v)| v.as_object().unwrap_or_else(|| panic!("{f} is not an object")).to_owned());
             let first_string = |what: &str, required: bool| get_chain(what, required).first().map(|(f, v)| v.as_str().unwrap_or_else(|| panic!("{f} is nonstring")).to_owned());
             let first_u64 = |what: &str, required: bool| get_chain(what, required).first().map(|(f, v)| v.as_u64().unwrap_or_else(|| panic!("{f} is non-u64")).to_owned());
             let first_bool = |what: &str, required: bool| get_chain(what, required).first().map(|(f, v)| v.as_bool().unwrap_or_else(|| panic!("{f} is non-bool")).to_owned());
@@ -214,9 +221,23 @@ impl ParsedDefinitions {
                 required_tags
             };
 
+            let build = match first_object("build", false) {
+                Some(n) => {
+                    let fallback = match n.get("fallback") {
+                        Some(Value::Array(n)) => n.iter().map(|n| n.as_str().unwrap().to_string()).collect(),
+                        None => vec![],
+                        _ => unreachable!("fallback is a non-array")
+                    };
+
+                    Some(Build { string: oget_str!(&n, "version").to_string(), fallback, enforced: oget_bool!(&n, "enforced") })
+                },
+                None => None
+            };
+
             self.engines.insert(engine_name.to_owned(), Engine {
                 base_memory_address,
-                build: first_string("build", false),
+                build: build,
+                cache_default: engine.get("cache_default").unwrap_or(&Value::Bool(false)).as_bool().unwrap(),
                 build_target: first_bool("build_target", true).unwrap(),
                 cache_file_version: first_u64("cache_file_version", true).unwrap().try_into().unwrap_or_else(|_| panic!("where's the cache file version???")),
                 display_name: first_string("display_name", true).unwrap(),
@@ -229,8 +250,6 @@ impl ParsedDefinitions {
                 version: first_string("version", false)
             });
         }
-
-
     }
 
     // Fix all tag references to have child groups
@@ -270,6 +289,10 @@ impl ParsedDefinitions {
                 for engine in v {
                     if !self.engines.contains_key(engine) {
                         panic!("{object_name}::{field_name}'s limits references an engine {engine} which does not exist");
+                    }
+                    let engine = &self.engines[engine];
+                    if engine.build.as_ref().is_some_and(|b| b.enforced && engine.cache_default) {
+                        panic!("engine {object_name} is marked as enforced but also cache_default");
                     }
                 }
             }

@@ -2,7 +2,7 @@
 name = "ringhopper-definitions"
 authors = ["Snowy Mouse"]
 version = "0.2.0"
-description = "Tag structures for modding Halo: Combat Evolved"
+description = "Engine and tag structure definitions for Ringhopper"
 license = "GPL-3.0-only"
 edition = "2021"
 

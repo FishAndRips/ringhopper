@@ -2,11 +2,12 @@
 name = "ringhopper"
 authors = ["Snowy Mouse"]
 version = "0.2.0"
-description = "Library for modding Halo: Combat Evolved"
+description = "Library for creating and manipulating content for Halo: Combat Evolved"
 license = "GPL-3.0-only"
 edition = "2021"
 
 [dependencies]
 ringhopper-primitives = { path = "../ringhopper-primitives" }
 ringhopper-structs = { path = "../ringhopper-structs" }
+ringhopper-engines = { path = "../ringhopper-engines" }
 crc64 = "2.0.0"

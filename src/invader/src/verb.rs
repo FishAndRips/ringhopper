@@ -15,6 +15,7 @@ mod nudge;
 mod compare;
 mod convert;
 mod extract;
+mod list_engines;
 
 pub struct Verb {
     pub name: &'static str,
@@ -35,6 +36,7 @@ pub const ALL_VERBS: &'static [Verb] = &[
     Verb::new("convert", "Convert tags to another tag group", convert::convert),
     Verb::new("dependencies", "View dependencies of tags", dependencies::dependencies),
     Verb::new("extract", "Extract tags from a map", extract::extract),
+    Verb::new("list-engines", "List all available engine targets", list_engines::list_engines),
     Verb::new("nudge", "Fix floating point precision errors from tag extraction", nudge::nudge),
     Verb::new("strip", "Clean tags", strip::strip),
     Verb::new("tag-collection", "Generate tag_collection tags from data", tag_collection::tag_collection),

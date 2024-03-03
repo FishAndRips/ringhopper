@@ -5,7 +5,11 @@
         "display_name": "Halo: Combat Evolved (PC)",
         "version": "halo pc 01.00.10.0621 Apr 16 2014 15:54:48",
         "build_target": true,
-        "build": "01.00.10.0621",
+        "build": {
+            "version": "01.00.10.0621",
+            "fallback": ["01.00.00.0563", "01.00.00.0564"],
+            "enforced": false
+        },
         "inherits": "pc"
     }
 ]

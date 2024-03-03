@@ -76,12 +76,16 @@ impl Display for Error {
 /// Used for enforcing overflow checks for usize to prevent unexpected behavior even on release builds
 pub trait OverflowCheck: Sized {
     fn add_overflow_checked(self, other: Self) -> RinghopperResult<Self>;
+    fn sub_overflow_checked(self, other: Self) -> RinghopperResult<Self>;
     fn mul_overflow_checked(self, other: Self) -> RinghopperResult<Self>;
 }
 
 impl OverflowCheck for usize {
     fn add_overflow_checked(self, other: Self) -> RinghopperResult<Self> {
         self.checked_add(other).ok_or(Error::SizeLimitExceeded)
+    }
+    fn sub_overflow_checked(self, other: Self) -> RinghopperResult<Self> {
+        self.checked_sub(other).ok_or(Error::SizeLimitExceeded)
     }
     fn mul_overflow_checked(self, other: Self) -> RinghopperResult<Self> {
         self.checked_mul(other).ok_or(Error::SizeLimitExceeded)

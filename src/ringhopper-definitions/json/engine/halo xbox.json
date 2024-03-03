@@ -14,6 +14,7 @@
         "base_memory_address": "0x803A6000",
         "script_compile_target": "xbox",
         "max_script_nodes": 19001,
+        "cache_default": true,
         "required_tags": {
             "all": [
                 "globals\\globals.globals",

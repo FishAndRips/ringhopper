@@ -275,10 +275,11 @@ pub struct Engine {
     pub name: String,
     pub display_name: String,
     pub version: Option<String>,
-    pub build: Option<String>,
+    pub build: Option<Build>,
     pub inherits: Option<String>,
     pub build_target: bool,
     pub cache_file_version: u32,
+    pub cache_default: bool,
     pub max_script_nodes: u64,
     pub max_tag_space: u64,
     pub max_cache_file_size: EngineCacheFileSize,
@@ -303,6 +304,12 @@ pub struct EngineRequiredTags {
 pub struct BaseMemoryAddress {
     pub address: u64,
     pub inferred: bool
+}
+
+pub struct Build {
+    pub string: String,
+    pub fallback: Vec<String>,
+    pub enforced: bool
 }
 
 pub struct TagReference {

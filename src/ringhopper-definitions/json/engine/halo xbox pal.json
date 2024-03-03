@@ -5,7 +5,10 @@
         "display_name": "Halo: Combat Evolved (Xbox PAL)",
         "version": "halo xbox 01.01.14.2342 Jan 14 2002 13:03:45",
         "build_target": true,
-        "build": "01.01.14.2342",
+        "build": {
+            "version": "01.01.14.2342",
+            "enforced": true
+        },
         "required_tags": {
             "all": [
                 "ui\\shell\\strings\\temp_strings.unicode_string_list"

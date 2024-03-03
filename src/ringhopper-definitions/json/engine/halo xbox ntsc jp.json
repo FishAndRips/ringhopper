@@ -5,7 +5,10 @@
         "display_name": "Halo: Combat Evolved (Xbox NTSC-JP)",
         "version": "halo xbox 01.03.14.0009 Mar 15 2002 13:28:47",
         "build_target": true,
-        "build": "01.03.14.0009",
+        "build": {
+            "version": "01.03.14.0009",
+            "enforced": true
+        },
         "max_tag_space": "0x1648000",
         "inherits": "xbox-pal"
     }

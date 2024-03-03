@@ -2,7 +2,7 @@
 name = "ringhopper-primitives"
 authors = ["Snowy Mouse"]
 version = "0.2.0"
-description = "Library for modding Halo: Combat Evolved"
+description = "Types and utilities for Ringhopper"
 license = "GPL-3.0-only"
 edition = "2021"
 

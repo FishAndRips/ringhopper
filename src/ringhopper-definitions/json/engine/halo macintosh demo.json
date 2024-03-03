@@ -5,7 +5,10 @@
         "display_name": "Halo Demo (Mac)",
         "version": "Halo macintosh 01.00.00.0579 Jun 11 2005 12:15:14",
         "build_target": true,
-        "build": "01.00.00.0579",
+        "build": {
+            "version": "01.00.00.0579",
+            "enforced": false
+        },
         "script_compile_target": "gbx-retail",
         "inherits": "pc-demo"
     }

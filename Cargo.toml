@@ -7,6 +7,8 @@ members = [
     "src/ringhopper-primitives",
     "src/ringhopper-structs-codegen",
     "src/ringhopper-structs",
+    "src/ringhopper-engines-codegen",
+    "src/ringhopper-engines",
 
     "src/invader"
 ]
