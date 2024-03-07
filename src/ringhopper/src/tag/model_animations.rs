@@ -183,6 +183,11 @@ fn flip_endianness_for_frame_data<From: ByteOrder, To: ByteOrder>(animation: &mu
 }
 
 fn flip_endianness_for_default_data<From: ByteOrder, To: ByteOrder>(animation: &mut ModelAnimationsAnimation) -> RinghopperResult<()> {
+    if animation.flags.compressed_data {
+        animation.default_data.bytes.clear();
+        return Ok(())
+    }
+
     let frame_data_iterator = FrameDataIterator::for_animation_inverted(animation);
 
     let frame_size = frame_data_iterator.clone().to_size();

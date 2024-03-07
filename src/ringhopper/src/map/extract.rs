@@ -222,7 +222,7 @@ pub fn fix_model_animations_tag(model_animations: &mut ModelAnimations) -> Ringh
 fn fix_model_animations_animation(animation: &mut ModelAnimationsAnimation) -> RinghopperResult<()> {
     if animation.flags.compressed_data {
         // TODO: decompress animations
-        let offset = FrameDataIterator::for_animation(animation).to_size();
+        let offset = FrameDataIterator::for_animation(animation).to_size().mul_overflow_checked(animation.frame_count as usize)?;
         let expected_final_data = offset.add_overflow_checked(animation.frame_data.bytes.len())?;
         if expected_final_data > u32::MAX as usize {
             return Err(Error::ArrayLimitExceeded)
@@ -232,9 +232,8 @@ fn fix_model_animations_animation(animation: &mut ModelAnimationsAnimation) -> R
         new_frame_data.resize(offset, 0);
         new_frame_data.extend_from_slice(&animation.frame_data.bytes);
         animation.frame_data.bytes = new_frame_data;
-        animation.offset_to_compressed_data = offset as u32;
-
-        animation.default_data.bytes = vec![0; FrameDataIterator::for_animation_inverted(animation).to_size()];
+        animation.offset_to_compressed_data = offset as u32; // we are required to do this or tool.exe will error
+        animation.default_data.bytes = vec![0u8; FrameDataIterator::for_animation_inverted(animation).to_size()]; // compressed animations have no default data for some reason
     }
 
     flip_endianness_for_model_animations_animation::<LittleEndian, BigEndian>(animation)
