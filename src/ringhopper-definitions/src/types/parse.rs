@@ -236,7 +236,7 @@ impl ParsedDefinitions {
 
             self.engines.insert(engine_name.to_owned(), Engine {
                 base_memory_address,
-                build: build,
+                build,
                 cache_default: engine.get("cache_default").unwrap_or(&Value::Bool(false)).as_bool().unwrap(),
                 build_target: first_bool("build_target", true).unwrap(),
                 cache_file_version: first_u64("cache_file_version", true).unwrap().try_into().unwrap_or_else(|_| panic!("where's the cache file version???")),
@@ -245,6 +245,7 @@ impl ParsedDefinitions {
                 max_cache_file_size,
                 max_script_nodes: first_u64("max_script_nodes", true).unwrap() as u64,
                 max_tag_space: parse_hex_u64(get_chain("max_tag_space", true)).first().unwrap().1,
+                externally_indexed_tags: first_bool("externally_indexed_tags", false).unwrap_or(false),
                 name: engine_name.to_owned(),
                 required_tags,
                 version: first_string("version", false)
@@ -499,6 +500,7 @@ pub(crate) fn get_all_definitions() -> Vec<Map<String, Value>> {
     jsons.insert("tag/wind.json", include_bytes!("../../json/tag/wind.json"));
 
     jsons.insert("map/cache.json", include_bytes!("../../json/map/cache.json"));
+    jsons.insert("map/resource.json", include_bytes!("../../json/map/resource.json"));
 
     jsons.insert("engine/halo macintosh demo.json", include_bytes!("../../json/engine/halo macintosh demo.json"));
     jsons.insert("engine/halo macintosh retail.json", include_bytes!("../../json/engine/halo macintosh retail.json"));

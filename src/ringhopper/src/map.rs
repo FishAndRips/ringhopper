@@ -1,18 +1,22 @@
 use std::collections::HashMap;
 use std::ops::Range;
-use definitions::{Bitmap, CacheFileHeader, CacheFileHeaderPCDemo, CacheFileTag, CacheFileTagDataHeaderPC, Model, read_any_tag_from_map, Scenario, ScenarioStructureBSPCompiledHeader, ScenarioType};
+use definitions::{Bitmap, CacheFileHeader, CacheFileHeaderPCDemo, CacheFileTag, CacheFileTagDataHeaderPC, Model, read_any_tag_from_map, Scenario, ScenarioStructureBSPCompiledHeader, ScenarioType, Sound, SoundPitchRange};
 use primitives::byteorder::LittleEndian;
+use primitives::dynamic::DynamicTagData;
 use crate::map::extract::*;
 use primitives::error::{Error, OverflowCheck, RinghopperResult};
 use primitives::map::{DomainType, Map, ResourceMapType, Tag};
-use primitives::primitive::{FourCC, ID, String32, TagGroup, TagPath};
+use primitives::primitive::{Address, FourCC, ID, ReflexiveC, String32, TagGroup, TagPath};
 use primitives::tag::PrimaryTagStructDyn;
 use primitives::parse::{SimpleTagData, TagData};
 use ringhopper_engines::{ALL_SUPPORTED_ENGINES, Engine};
+use crate::map::resource::ResourceMap;
 use crate::tag::object::downcast_base_object_mut;
 use crate::tag::tree::{TagFilter, TagTree, TagTreeItem};
 
 mod extract;
+
+pub mod resource;
 
 type SizeRange = Range<usize>;
 
@@ -157,22 +161,23 @@ impl From<CacheFileHeader> for ParsedCacheFileHeader {
     }
 }
 
-
-#[derive(Clone)]
 pub struct GearboxCacheFile {
     name: String,
+    engine: &'static Engine,
     data: Vec<u8>,
     tag_data: SizeRange,
     vertex_data: SizeRange,
     triangle_data: SizeRange,
     bsp_data: Vec<BSPDomain>,
     base_memory_address: usize,
-    tags: Vec<Tag>,
+    tags: Vec<Option<Tag>>,
     ids: HashMap<TagPath, ID>,
     scenario_tag_data: Scenario,
     scenario_tag: ID,
-    bitmaps: Vec<u8>,
-    sounds: Vec<u8>
+    merged_sound_resources: HashMap<DomainType, Vec<u8>>, // for Halo Custom Edition
+    bitmaps: Option<ResourceMap>,
+    sounds: Option<ResourceMap>,
+    loc: Option<ResourceMap>
 }
 
 #[derive(Clone)]
@@ -182,12 +187,13 @@ struct BSPDomain {
 }
 
 impl GearboxCacheFile {
-    pub fn new(data: Vec<u8>, bitmaps: Vec<u8>, sounds: Vec<u8>) -> RinghopperResult<Self> {
+    pub fn new(data: Vec<u8>, bitmaps: Vec<u8>, sounds: Vec<u8>, loc: Vec<u8>) -> RinghopperResult<Self> {
         let (header, engine) = get_map_details(&data)?;
 
         let mut map = Self {
             name: String::new(),
             data,
+            engine,
             vertex_data: Default::default(),
             triangle_data: Default::default(),
             tag_data: Default::default(),
@@ -196,9 +202,11 @@ impl GearboxCacheFile {
             tags: Default::default(),
             scenario_tag: ID::null(),
             scenario_tag_data: Scenario::default(),
+            merged_sound_resources: HashMap::new(),
             ids: Default::default(),
-            bitmaps,
-            sounds
+            bitmaps: if bitmaps.is_empty() { None } else { Some(ResourceMap::from_data(bitmaps)?) },
+            sounds: if sounds.is_empty() { None } else { Some(ResourceMap::from_data(sounds)?) },
+            loc: if loc.is_empty() { None } else { Some(ResourceMap::from_data(loc)?) }
         };
 
         let tag_data_start = header.tag_data_offset;
@@ -252,6 +260,13 @@ impl GearboxCacheFile {
         let mut tags = Vec::with_capacity(tag_data_header.cache_file_tag_data_header.tag_count as usize);
         for t in 0..tag_count {
             let cached_tag = CacheFileTag::read_from_map(&map, tag_address, &DomainType::TagData)?;
+            tag_address += CacheFileTag::size();
+
+            let group = cached_tag.tag_group;
+            if group == TagGroup::_Unset {
+                tags.push(None);
+                continue
+            }
 
             let expected_index = cached_tag.id.index();
             if expected_index != Some(t as u16) {
@@ -263,28 +278,60 @@ impl GearboxCacheFile {
                 .get_c_string_at_address(tag_path_address, &DomainType::TagData)
                 .ok_or_else(|| Error::MapParseFailure(format!("unable to get the tag path for tag #{t} due to a bad address 0x{tag_path_address:08X}")))?;
 
-            let tag_path = TagPath::new(path, cached_tag.tag_group)
-                .map_err(|e| Error::MapParseFailure(format!("unable to get the tag path for tag #{t} due to a parse failure: {e}")))?;
+            let tag_path = TagPath::new(path, group)
+                .map_err(|e| Error::MapParseFailure(format!("unable to get the tag path for tag #{t} ({path}) due to a parse failure: {e}")))?;
 
-            if cached_tag.external != 0 {
-                todo!("handle external indexed tags")
-            }
-
-            if tag_path.group() != TagGroup::_Unset {
+            if group != TagGroup::_Unset {
                 if map.ids.get(&tag_path).is_some() {
                     return Err(Error::MapParseFailure(format!("multiple instances of tag {tag_path} detected")))
                 }
                 map.ids.insert(tag_path.clone(), cached_tag.id);
             }
 
-            let tag = Tag {
+            let mut tag = Tag {
                 tag_path,
                 address: cached_tag.data.into(),
                 domain: DomainType::TagData
             };
+            let tag_path = &tag.tag_path;
 
-            tag_address = tag_address.add_overflow_checked(CacheFileTag::size())?;
-            tags.push(tag);
+            if cached_tag.external != 0 {
+                if !engine.externally_indexed_tags {
+                    return Err(Error::MapParseFailure(format!("`{tag_path}` marked as external when engine {} doesn't allow it", engine.name)))
+                }
+
+                let match_indexed_tag = |resource_map: &ResourceMap, resource_map_type: ResourceMapType| -> RinghopperResult<()> {
+                    let item = resource_map.get(tag.address)
+                        .ok_or_else(|| Error::MapParseFailure(format!("mismatched resource maps; `{tag_path}` not found in {resource_map_type:?}")))?;
+                    let expected = item.get_path();
+                    if expected != tag_path.path() {
+                        return Err(Error::MapParseFailure(
+                            format!("mismatched resource maps; `{tag_path}` was actually `{expected}` in {resource_map_type:?}")
+                        ))
+                    }
+                    Ok(())
+                };
+
+                match group {
+                    TagGroup::Bitmap => {
+                        if let Some(n) = map.bitmaps.as_ref() {
+                            match_indexed_tag(n, ResourceMapType::Bitmaps)?;
+                        }
+                        tag.domain = DomainType::ResourceMapEntry(ResourceMapType::Bitmaps, tag_path.path().to_owned());
+                        tag.address = 0;
+                    }
+                    TagGroup::Sound => patch_up_external_custom_edition_sound_tag(&mut map, &mut tag)?,
+                    _ => {
+                        if let Some(n) = map.loc.as_ref() {
+                            match_indexed_tag(n, ResourceMapType::Loc)?;
+                        }
+                        tag.domain = DomainType::ResourceMapEntry(ResourceMapType::Loc, tag_path.path().to_owned());
+                        tag.address = 0;
+                    }
+                }
+            }
+
+            tags.push(Some(tag));
         }
         map.tags = tags;
 
@@ -323,14 +370,19 @@ impl GearboxCacheFile {
             let bsp_tag_base_address = header.pointer.into();
 
             if let Some(n) = bsp.structure_bsp.path() {
-                for t in &mut map.tags {
-                    if &t.tag_path == n {
-                        if matches!(t.domain, DomainType::BSP(_)) {
+                for past_tag in &mut map.tags {
+                    let tag = match past_tag {
+                        Some(n) => n,
+                        None => continue
+                    };
+
+                    if &tag.tag_path == n {
+                        if matches!(tag.domain, DomainType::BSP(_)) {
                             return Err(Error::MapParseFailure(format!("BSP tag {path} has ambiguous data")))
                         }
 
-                        t.domain = DomainType::BSP(bsp_index);
-                        t.address = bsp_tag_base_address;
+                        tag.domain = DomainType::BSP(bsp_index);
+                        tag.address = bsp_tag_base_address;
                         break
                     }
                 }
@@ -338,7 +390,10 @@ impl GearboxCacheFile {
         }
 
         for i in 0..tag_count {
-            let t= &map.tags[i];
+            let t= match &map.tags[i] {
+                Some(n) => n,
+                None => continue
+            };
             match t.tag_path.group() {
                 TagGroup::ScenarioStructureBSP => if !matches!(t.domain, DomainType::BSP(_)) {
                     return Err(Error::MapParseFailure(format!("BSP tag {} has no corresponding data in the scenario tag", t.tag_path)))
@@ -363,6 +418,49 @@ impl GearboxCacheFile {
     }
 }
 
+fn patch_up_external_custom_edition_sound_tag(map: &mut GearboxCacheFile, tag: &mut Tag) -> RinghopperResult<()> {
+    if let Some(n) = map.sounds.as_ref() {
+        let object = n.get_by_path(tag.tag_path.path())
+            .ok_or_else(|| Error::MapParseFailure(format!("mismatched resource maps; `{tag_path}` not found in {resource_map_type:?}", tag_path=tag.tag_path, resource_map_type = ResourceMapType::Sounds)))?;
+
+        let base_struct_size = Sound::size();
+        let data_in_sounds = object.get_data();
+        if data_in_sounds.len() < base_struct_size {
+            return Err(Error::MapParseFailure(format!("mismatched resource maps; `{tag_path}` is corrupt in sounds.map", tag_path=tag.tag_path)));
+        }
+        let (base_struct_in_sounds, pitch_ranges) = data_in_sounds.split_at(base_struct_size);
+        let base_struct_in_tags = map.get_data_at_address(tag.address, &tag.domain, base_struct_size)
+            .ok_or_else(|| Error::MapParseFailure(format!("corrupted map; `{tag_path}` has no base struct data", tag_path=tag.tag_path)))?;
+
+        // Pitch range data onwards starts at address 0
+        let mut data = Vec::new();
+        data.extend_from_slice(pitch_ranges);
+
+        // We now add our base struct here
+        tag.address = data.len();
+        data.extend_from_slice(base_struct_in_tags);
+        tag.domain = DomainType::ResourceMapEntry(ResourceMapType::Sounds, tag.tag_path.path().to_owned());
+
+        // Merge some data
+        let mut merged_base_struct = &mut data[tag.address..tag.address.add_overflow_checked(base_struct_size)?];
+
+        // pitch ranges
+        let pitch_range_reflexive_offset = 152;
+        let mut pitch_range_reflexive = ReflexiveC::<SoundPitchRange>::read::<LittleEndian>(base_struct_in_sounds, pitch_range_reflexive_offset, base_struct_size).unwrap();
+        pitch_range_reflexive.address = Address { address: 0 };
+        pitch_range_reflexive.write::<LittleEndian>(&mut merged_base_struct, pitch_range_reflexive_offset, base_struct_size).unwrap();
+
+        // sample rate
+        merged_base_struct[6..8].copy_from_slice(&base_struct_in_sounds[6..8]);
+
+        // channel count and format
+        merged_base_struct[108..112].copy_from_slice(&base_struct_in_sounds[108..112]);
+
+        map.merged_sound_resources.insert(tag.domain.clone(), data);
+    }
+    Ok(())
+}
+
 fn extract_tag_from_map<M: Map>(
     map: &M,
     path: &TagPath,
@@ -370,12 +468,11 @@ fn extract_tag_from_map<M: Map>(
 
     bitmap_extraction_fn: fn(tag: &mut Bitmap, map: &M) -> RinghopperResult<()>,
     model_extraction_fn: fn(tag: &mut Model, map: &M) -> RinghopperResult<()>,
-
-
 ) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
+    let group = path.group();
     let mut tag = read_any_tag_from_map(path, map)?;
 
-    match path.group() {
+    match group {
         TagGroup::ActorVariant => fix_actor_variant_tag(tag.as_any_mut().downcast_mut().unwrap()),
         TagGroup::Bitmap => bitmap_extraction_fn(tag.as_any_mut().downcast_mut().unwrap(), map)?,
         TagGroup::ContinuousDamageEffect => fix_continuous_damage_effect_tag(tag.as_any_mut().downcast_mut().unwrap()),
@@ -404,11 +501,19 @@ impl Map for GearboxCacheFile {
         &self.name
     }
 
+    fn get_engine(&self) -> &Engine {
+        self.engine
+    }
+
     fn extract_tag(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
         extract_tag_from_map(self, path, &self.scenario_tag_data, fix_bitmap_tag_normal, fix_model_tag_uncompressed)
     }
 
     fn get_domain(&self, domain: &DomainType) -> Option<(&[u8], usize)> {
+        if let Some(n) = self.merged_sound_resources.get(&domain) {
+            return Some((n, 0))
+        }
+
         match domain {
             DomainType::MapData => Some((self.data.as_slice(), 0)),
 
@@ -421,15 +526,22 @@ impl Map for GearboxCacheFile {
                 Some((unsafe { self.data.get_unchecked(bsp.range.clone()) }, bsp.base_address))
             }
 
-            DomainType::ResourceMapFile(ResourceMapType::Bitmaps) => Some((self.bitmaps.as_slice(), 0)),
-            DomainType::ResourceMapFile(ResourceMapType::Sounds) => Some((self.sounds.as_slice(), 0)),
+            DomainType::ResourceMapFile(ResourceMapType::Bitmaps) => self.bitmaps.as_ref().map(|b| (b.data(), 0)),
+            DomainType::ResourceMapFile(ResourceMapType::Sounds) => self.sounds.as_ref().map(|b| (b.data(), 0)),
+            DomainType::ResourceMapFile(ResourceMapType::Loc) => self.loc.as_ref().map(|b| (b.data(), 0)),
+
+            DomainType::ResourceMapEntry(r, path) => match r {
+                ResourceMapType::Bitmaps => Some((self.bitmaps.as_ref()?.get_by_path(path)?.get_data(), 0)),
+                ResourceMapType::Sounds => Some((self.sounds.as_ref()?.get_by_path(path)?.get_data(), 0)),
+                ResourceMapType::Loc => Some((self.loc.as_ref()?.get_by_path(path)?.get_data(), 0))
+            }
 
             _ => None
         }
     }
 
     fn get_tag_by_id(&self, id: ID) -> Option<&Tag> {
-        self.tags.get(id.index()? as usize)
+        self.tags.get(id.index()? as usize)?.as_ref()
     }
 
     fn get_tag(&self, path: &TagPath) -> Option<&Tag> {
@@ -453,11 +565,11 @@ impl<M: MapTagTree> TagTree for M {
     }
 
     fn files_in_path(&self, _path: &str) -> Option<Vec<TagTreeItem>> {
-        unimplemented!()
+        unimplemented!("files_in_path not implemented for TagTree")
     }
 
     fn write_tag(&mut self, _path: &TagPath, _tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<bool> {
-        unimplemented!()
+        unimplemented!("write_tag not implemented for TagTree")
     }
 
     fn contains(&self, path: &TagPath) -> bool {

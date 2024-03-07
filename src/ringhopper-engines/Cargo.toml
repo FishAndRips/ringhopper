@@ -9,3 +9,4 @@ edition = "2021"
 [dependencies]
 ringhopper-engines-codegen = { path = "../ringhopper-engines-codegen" }
 ringhopper-definitions = { path = "../ringhopper-definitions" }
+ringhopper-primitives = { path = "../ringhopper-primitives" }

@@ -21,7 +21,7 @@ impl<T: TagTree + Send + Clone> Clone for ThreadingContext<T> {
     }
 }
 
-pub type ProcessFunction<T, U> = fn(&mut ThreadingContext<T>, &TagPath, &U) -> RinghopperResult<bool>;
+pub type ProcessFunction<T, U> = fn(&mut ThreadingContext<T>, &TagPath, &mut U) -> RinghopperResult<bool>;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum DisplayMode {
@@ -37,7 +37,7 @@ pub fn do_with_threads<T: TagTree + Send + 'static + Clone, U: Clone + Send + 's
     args: CommandLineArgs,
     user_filter: &str,
     group: Option<TagGroup>,
-    user_data: U,
+    mut user_data: U,
     display_mode: DisplayMode,
     function: ProcessFunction<T, U>,
 ) -> Result<(), String> {
@@ -55,7 +55,7 @@ pub fn do_with_threads<T: TagTree + Send + 'static + Clone, U: Clone + Send + 's
             Some(group) => TagPath::new(user_filter, group),
             None => TagPath::from_path(user_filter)
         }.map_err(|_| format!("Invalid tag path `{user_filter}`"))?;
-        process_tags(&mut context, &success, &failure, &total, &tag_path, &user_data, display_mode, function);
+        process_tags(&mut context, &success, &failure, &total, &tag_path, &mut user_data, display_mode, function);
     }
     else {
         let filter = TagFilter::new(user_filter, group);
@@ -64,7 +64,7 @@ pub fn do_with_threads<T: TagTree + Send + 'static + Clone, U: Clone + Send + 's
         match thread_count {
             1 => {
                 for path in tags {
-                    process_tags(&mut context, &success, &failure, &total, &path, &user_data, display_mode, function);
+                    process_tags(&mut context, &success, &failure, &total, &path, &mut user_data, display_mode, function);
                 }
             },
             n => {
@@ -76,14 +76,14 @@ pub fn do_with_threads<T: TagTree + Send + 'static + Clone, U: Clone + Send + 's
                     let success = success.clone();
                     let total = total.clone();
                     let failure = failure.clone();
-                    let user_data = user_data.clone();
+                    let mut user_data = user_data.clone();
                     threads.push(std::thread::spawn(move || {
                         loop {
                             let next = match tags.lock().unwrap().pop_front() {
                                 Some(n) => n,
                                 None => break
                             };
-                            process_tags(&mut context, &success, &failure, &total, &next, &user_data, display_mode, function);
+                            process_tags(&mut context, &success, &failure, &total, &next, &mut user_data, display_mode, function);
                         }
                     }))
                 }
@@ -122,7 +122,7 @@ fn process_tags<T: TagTree + Send + Clone, U: Clone + Send + 'static>(
     failure: &Arc<AtomicU64>,
     total: &Arc<AtomicU64>,
     path: &TagPath,
-    user_data: &U,
+    user_data: &mut U,
     display_mode: DisplayMode,
     function: ProcessFunction<T, U>
 ) {

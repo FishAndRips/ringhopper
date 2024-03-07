@@ -9,3 +9,4 @@ pub mod tag;
 pub mod crc32;
 pub mod dynamic;
 pub mod map;
+pub mod engine;

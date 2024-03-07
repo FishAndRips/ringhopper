@@ -3,7 +3,7 @@ use std::path::Path;
 use std::sync::{Arc, Mutex};
 use cli::CommandLineParser;
 use ringhopper::map::GearboxCacheFile;
-use ringhopper::tag::tree::TagTree;
+use ringhopper::tag::tree::{AtomicTagTree, TagTree};
 use threading::{DisplayMode, do_with_threads};
 use util::read_file;
 
@@ -19,27 +19,24 @@ pub fn extract(args: Args, description: &'static str) -> Result<(), String> {
 
     let bitmaps_path = map_path.parent().unwrap().join("bitmaps.map");
     let sounds_path = map_path.parent().unwrap().join("sounds.map");
-
-    // todo: read the header, then determine what parser to use, and then use it
+    let loc_path = map_path.parent().unwrap().join("loc.map");
 
     let map_data = read_file(map_path).unwrap();
-    let bitmaps = read_file(bitmaps_path).unwrap();
-    let sounds = read_file(sounds_path).unwrap();
+    let bitmaps = read_file(bitmaps_path).unwrap_or(Vec::new());
+    let sounds = read_file(sounds_path).unwrap_or(Vec::new());
+    let loc = read_file(loc_path).unwrap_or(Vec::new());
 
-    let map = GearboxCacheFile::new(map_data, bitmaps, sounds).unwrap();
+    let map = GearboxCacheFile::new(map_data, bitmaps, sounds, loc).unwrap();
     let tag = parser.get_extra()[1].clone();
 
-    let output_tags_dir = Arc::new(Mutex::new(parser.get_virtual_tags_directory()));
+    let output_tags_dir = AtomicTagTree::new(parser.get_virtual_tags_directory());
 
-    do_with_threads(map, parser, &tag, None, output_tags_dir, DisplayMode::ShowProcessed, |context, path, output_tags_dir| {
-        let output = || output_tags_dir.lock().unwrap();
-
-        if !context.args.get_overwrite() && output().contains(path) {
+    do_with_threads(Arc::new(map), parser, &tag, None, output_tags_dir, DisplayMode::ShowProcessed, |context, path, output_tags_dir| {
+        if !context.args.get_overwrite() && output_tags_dir.contains(path) {
             return Ok(false)
         }
-
         let tag = context.tags_directory.open_tag_copy(path)?;
-        output().write_tag(path, tag.as_ref()).map(|_| true)
+        output_tags_dir.write_tag(path, tag.as_ref()).map(|_| true)
     })?;
 
     Ok(())

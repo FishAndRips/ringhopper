@@ -615,6 +615,36 @@ impl<T: TagTree + Send> TagTree for AtomicTagTree<T> {
     }
 }
 
+impl<T: TagTree> TagTree for Arc<T> {
+    fn open_tag_copy(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
+        self.as_ref().open_tag_copy(path)
+    }
+
+    fn open_tag_shared(&self, path: &TagPath) -> RinghopperResult<Arc<Mutex<Box<dyn PrimaryTagStructDyn>>>> {
+        self.as_ref().open_tag_shared(path)
+    }
+
+    fn files_in_path(&self, path: &str) -> Option<Vec<TagTreeItem>> {
+        self.as_ref().files_in_path(path)
+    }
+
+    fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<bool> {
+        unimplemented!("write_tag is not implemented in Arc<TagTree>")
+    }
+
+    fn contains(&self, path: &TagPath) -> bool {
+        self.as_ref().contains(path)
+    }
+
+    fn root(&self) -> TagTreeItem where Self: Sized {
+        self.as_ref().root()
+    }
+
+    fn get_all_tags_with_filter(&self, filter: Option<&TagFilter>) -> Vec<TagPath> {
+        self.as_ref().get_all_tags_with_filter(filter)
+    }
+}
+
 impl<T: TagTree + Send> Clone for AtomicTagTree<T> {
     fn clone(&self) -> Self {
         Self {

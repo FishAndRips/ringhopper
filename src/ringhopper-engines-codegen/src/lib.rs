@@ -36,12 +36,13 @@ pub fn generate_ringhopper_engines(_: TokenStream) -> TokenStream {
         let cache_file_version = engine.cache_file_version;
         let max_script_nodes = engine.max_script_nodes;
         let max_tag_space = engine.max_tag_space;
+        let externally_indexed_tags = engine.externally_indexed_tags;
         let max_cache_file_size = format!("EngineCacheFileSize {{
             user_interface: {user_interface},
             singleplayer: {singleplayer},
             multiplayer: {multiplayer},
         }}", user_interface=engine.max_cache_file_size.user_interface, singleplayer=engine.max_cache_file_size.singleplayer, multiplayer=engine.max_cache_file_size.multiplayer);
-        let base_memory_address = format!("BaseMemoryAddress {{
+        let base_memory_address = format!("EngineBaseMemoryAddress {{
             address: {address},
             inferred: {inferred}
         }}", address=engine.base_memory_address.address, inferred=engine.base_memory_address.inferred);
@@ -70,6 +71,7 @@ pub fn generate_ringhopper_engines(_: TokenStream) -> TokenStream {
             max_tag_space: {max_tag_space},
             max_cache_file_size: {max_cache_file_size},
             base_memory_address: {base_memory_address},
+            externally_indexed_tags: {externally_indexed_tags},
             required_tags: {required_tags},
         }},").unwrap();
     }

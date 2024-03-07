@@ -1,8 +1,9 @@
+use crate::engine::Engine;
 use crate::error::RinghopperResult;
 use crate::primitive::{ID, IDType, Index, TagPath};
 use crate::tag::PrimaryTagStructDyn;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum ResourceMapType {
     Bitmaps,
     Sounds,
@@ -10,7 +11,7 @@ pub enum ResourceMapType {
 }
 
 /// Domains are regions of memory that may have their own address space.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum DomainType {
     /// Map file data (0x0 = cache file header).
     MapData,
@@ -40,8 +41,13 @@ pub enum DomainType {
 /// Cached tag data.
 #[derive(Clone)]
 pub struct Tag {
+    /// Path of the tag.
     pub tag_path: TagPath,
+
+    /// Main address of the tag's base struct.
     pub address: usize,
+
+    /// Domain of the tag's base struct.
     pub domain: DomainType
 }
 
@@ -49,6 +55,9 @@ pub struct Tag {
 pub trait Map {
     /// Get the name of the map.
     fn get_name(&self) -> &str;
+
+    /// Get the engine for the map.
+    fn get_engine(&self) -> &Engine;
 
     /// Extract the tag.
     fn extract_tag(

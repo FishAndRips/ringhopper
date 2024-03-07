@@ -1,0 +1,67 @@
+[
+    {
+        "name": "ResourceMapType",
+        "type": "enum",
+        "options": [
+            {
+                "name": "none",
+                "exclude": true
+            },
+            "bitmap",
+            "sound",
+            {
+                "name": "loc",
+                "engines": [
+                    "pc-custom"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "ResourceMapHeader",
+        "type": "struct",
+        "fields": [
+            {
+                "name": "type",
+                "type": "ResourceMapType"
+            },
+            {
+                "type": "pad",
+                "size": 2
+            },
+            {
+                "name": "path data offset",
+                "type": "uint32"
+            },
+            {
+                "name": "array offset",
+                "type": "uint32"
+            },
+            {
+                "name": "count",
+                "type": "uint32"
+            }
+        ],
+        "size": 16
+    },
+    {
+        "name": "ResourceMapResource",
+        "type": "struct",
+        "fields": [
+            {
+                "name": "path offset",
+                "developer_note": "relative to path data offset",
+                "type": "uint32"
+            },
+            {
+                "name": "data size",
+                "type": "uint32"
+            },
+            {
+                "name": "data offset",
+                "type": "uint32"
+            }
+        ],
+        "size": 12
+    }
+]

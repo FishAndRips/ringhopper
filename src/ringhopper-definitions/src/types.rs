@@ -282,6 +282,9 @@ pub struct Engine {
     pub cache_default: bool,
     pub max_script_nodes: u64,
     pub max_tag_space: u64,
+
+    /// Supports externally indexed tags (Halo Custom Edition).
+    pub externally_indexed_tags: bool,
     pub max_cache_file_size: EngineCacheFileSize,
     pub base_memory_address: BaseMemoryAddress,
     pub required_tags: EngineRequiredTags

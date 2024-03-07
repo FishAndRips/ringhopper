@@ -11,6 +11,7 @@
             "enforced": false
         },
         "cache_default": true,
+        "externally_indexed_tags": true,
         "cache_file_version": 609,
         "script_compile_target": "gbx-custom",
         "inherits": "pc"
