@@ -3342,7 +3342,7 @@
                 "name": "child scenarios",
                 "type": "Reflexive",
                 "struct": "ScenarioChildScenario",
-                "ignore_cached": true,
+                "non_cached": true,
                 "limit": 16
             },
             {
