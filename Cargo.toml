@@ -12,3 +12,11 @@ members = [
 
     "src/invader"
 ]
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+strip = "debuginfo"
+lto = true
