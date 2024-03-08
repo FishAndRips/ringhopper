@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::char::REPLACEMENT_CHARACTER;
 use definitions::{Scenario, ScenarioScriptNode, ScenarioScriptNodeTable, ScenarioScriptType, ScenarioScriptValueType, ScenarioSourceFile};
 use primitives::byteorder::{BigEndian, ByteOrder};
 use primitives::dynamic::DynamicEnumImpl;
@@ -349,7 +350,7 @@ fn decompile_token<'a>(
     }
 
     if node.flags.is_global || node.flags.is_local_variable {
-        tokens.push(sanitize(Cow::Borrowed(get_string_data_for_node(scenario, node)?)));
+        tokens.push(sanitize(get_string_data_for_node(scenario, node)?));
         return Ok(())
     }
 
@@ -359,7 +360,7 @@ fn decompile_token<'a>(
         ScenarioScriptValueType::Short => Cow::Owned(i16::from(node.data).to_string()),
         ScenarioScriptValueType::Long => Cow::Owned(i32::from(node.data).to_string()),
         ScenarioScriptValueType::Void => return Ok(()),
-        _ => sanitize(Cow::Borrowed(get_string_data_for_node(scenario, node)?))
+        _ => sanitize(get_string_data_for_node(scenario, node)?)
     };
     tokens.push(token);
     return Ok(())
@@ -416,7 +417,7 @@ fn check_scripts_are_ok(scenario: &Scenario, extracted_nodes: &Vec<ScenarioScrip
     Ok(())
 }
 
-fn get_string_data_for_node<'a>(scenario: &'a Scenario, node: &ScenarioScriptNode) -> RinghopperResult<&'a str> {
+fn get_string_data_for_node<'a>(scenario: &'a Scenario, node: &ScenarioScriptNode) -> RinghopperResult<Cow<'a, str>> {
     let offset = node.string_offset as usize;
     let data = &scenario.script_string_data.bytes;
 
@@ -425,7 +426,15 @@ fn get_string_data_for_node<'a>(scenario: &'a Scenario, node: &ScenarioScriptNod
     }
 
     match std::ffi::CStr::from_bytes_until_nul(&data[offset..]) {
-        Ok(n) => n.to_str().map_err(|e| Error::InvalidTagData(format!("String data offset 0x{offset:04X} not valid UTF-8: {e:?}"))),
+        Ok(n) => {
+            let string = n.to_string_lossy();
+            if let Cow::Owned(q) = string {
+                Ok(Cow::Owned(q.replace(REPLACEMENT_CHARACTER, "?")))
+            }
+            else {
+                Ok(string)
+            }
+        },
         Err(_) => Err(Error::InvalidTagData(format!("String data offset 0x{offset:04X} not null-terminated!")))
     }
 }
