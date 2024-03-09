@@ -311,11 +311,13 @@
             },
             {
                 "name": "rendered vertices",
-                "type": "ModelVertexReference"
+                "type": "ModelVertexReference",
+                "developer_note": "vertex type is set to `environment uncompressed` or `environment compressed` depending on if it is compressed or not"
             },
             {
                 "name": "lightmap vertices",
-                "type": "ModelVertexReference"
+                "type": "ModelVertexReference",
+                "developer_note": "vertex type is set to `environment lightmap uncompressed` or `environment lightmap compressed` depending on if it is compressed or not"
             },
             {
                 "name": "uncompressed vertices",

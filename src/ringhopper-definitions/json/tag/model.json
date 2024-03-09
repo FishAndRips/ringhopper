@@ -400,11 +400,35 @@
         "size": 6
     },
     {
+        "name": "ModelVertexType",
+        "options": [
+            "environment uncompressed",
+            "environment compressed",
+            "environment lightmap uncompressed",
+            "environment lightmap compressed",
+            "model uncompressed",
+            "model compressed",
+            "dynamic unlit",
+            "dynamic lit",
+            "dynamic screen",
+            "debug",
+            "decal",
+            "detail object",
+            "environment uncompressed ff",
+            "environment lightmap uncompressed ff",
+            "model uncompressed ff",
+            "model processed",
+            "unlit zsprite",
+            "widget"
+        ],
+        "type": "enum"
+    },
+    {
         "name": "ModelVertexReference",
         "fields": [
             {
                 "name": "vertex type",
-                "type": "VertexType",
+                "type": "ModelVertexType",
                 "comment": "set this or die",
                 "cache_only": true
             },
@@ -542,7 +566,9 @@
             },
             {
                 "name": "vertices",
-                "type": "ModelVertexReference"
+                "type": "ModelVertexReference",
+                "cache_only": true,
+                "developer_note": "vertex type is set to `model uncompressed` or `model compressed` depending on if it is compressed or not"
             }
         ],
         "type": "struct",

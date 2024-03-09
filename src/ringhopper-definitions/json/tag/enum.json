@@ -156,29 +156,5 @@
             }
         ],
         "type": "enum"
-    },
-    {
-        "name": "VertexType",
-        "options": [
-            "environment uncompressed",
-            "environment compressed",
-            "environment lightmap uncompressed",
-            "environment lightmap compressed",
-            "model uncompressed",
-            "model compressed",
-            "dynamic unlit",
-            "dynamic lit",
-            "dynamic screen",
-            "debug",
-            "decal",
-            "detail object",
-            "environment uncompressed ff",
-            "environment lightmap uncompressed ff",
-            "model uncompressed ff",
-            "model processed",
-            "unlit zsprite",
-            "widget"
-        ],
-        "type": "enum"
     }
 ]
