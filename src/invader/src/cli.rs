@@ -339,7 +339,7 @@ impl CommandLineParser {
 impl CommandLineArgs {
     /// Get the Tags parameter.
     ///
-    /// Panics if Tags was not set.
+    /// Panics if Tags was not added.
     pub fn get_tags(&self) -> Vec<&Path> {
         self.standard_parameters
             .get(&StandardParameterType::Tags)
@@ -369,7 +369,7 @@ impl CommandLineArgs {
 
     /// Get the Data parameter.
     ///
-    /// Panics if Data was not set.
+    /// Panics if Data was not added.
     pub fn get_data(&self) -> &Path {
         self.standard_parameters
             .get(&StandardParameterType::Data)
@@ -382,7 +382,7 @@ impl CommandLineArgs {
 
     /// Get the Maps parameter.
     ///
-    /// Panics if Maps was not set.
+    /// Panics if Maps was not added.
     pub fn get_maps(&self) -> &Path {
         self.standard_parameters
             .get(&StandardParameterType::Maps)
@@ -395,7 +395,7 @@ impl CommandLineArgs {
 
     /// Get the Overwrite parameter.
     ///
-    /// Panics if Overwrite was not set.
+    /// Panics if Overwrite was not added.
     pub fn get_overwrite(&self) -> bool {
         self.standard_parameters
             .get(&StandardParameterType::Overwrite)
@@ -406,7 +406,7 @@ impl CommandLineArgs {
 
     /// Get the custom parameters.
     ///
-    /// Panics if not set.
+    /// Panics if not added.
     pub fn get_custom(&self, what: &'static str) -> Option<&[CommandLineValue]> {
         self.custom_parameters.get(what).expect("custom parameter not added on init but expected").values.as_ref().map(Vec::as_slice)
     }

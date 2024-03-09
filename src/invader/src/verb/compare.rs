@@ -1,11 +1,12 @@
 use std::collections::{HashMap, VecDeque};
 use std::env::Args;
-use std::io::{BufWriter, StdoutLock, Write};
+use std::io::{BufWriter, Cursor, StdoutLock, Write};
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 use cli::{CommandLineParser, CommandLineValue, CommandLineValueType, Parameter};
 use ringhopper::error::Error;
 use ringhopper::map::GearboxCacheFile;
+use ringhopper::primitives::byteorder::WriteBytesExt;
 use ringhopper::primitives::primitive::TagPath;
 use ringhopper::primitives::tag::ParseStrictness;
 use ringhopper::tag::compare::{compare_tags, TagComparisonDifference};
@@ -23,7 +24,8 @@ enum Show {
 #[derive(Clone)]
 struct UserData {
     tags: Arc<dyn TagTree + Send + Sync>,
-    differences: Arc<Mutex<HashMap<TagPath, Vec<TagComparisonDifference>>>>
+    differences: Arc<Mutex<HashMap<TagPath, Vec<TagComparisonDifference>>>>,
+    should_strip: [bool; 2]
 }
 
 pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
@@ -62,6 +64,7 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
             false,
             false
         ))
+        .add_custom_parameter(Parameter::single("raw", 'r', "Do not strip cache-only fields from cache file tags when comparing.", "", None))
         .set_required_extra_parameters(2)
         .parse(args)?;
 
@@ -73,14 +76,18 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
     };
 
     let verbose = parser.get_custom("verbose").is_some();
+    let raw = parser.get_custom("raw").is_some();
 
     let mut source: VecDeque<Arc<dyn TagTree + Send + Sync>> = VecDeque::new();
+    let mut should_strip = Cursor::new([0u8; 2]);
     for i in parser.get_extra() {
         let path: &Path = i.as_ref();
         if !path.exists() {
             return Err(format!("Source `{i}` does not exist"))
         }
         else if path.is_file() && path.extension() == Some("map".as_ref()) {
+            should_strip.write_u8(if raw { 0 } else { 1 }).unwrap();
+
             // TODO: Refactor loading maps. Also make it so that bitmaps.map, sounds.map, and loc.map are decided automatically
 
             let bitmaps_path = path.parent().unwrap().join("bitmaps.map");
@@ -96,6 +103,7 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
             source.push_back(Arc::new(map))
         }
         else if path.is_dir() {
+            should_strip.write_u8(0).unwrap();
             let dir = match VirtualTagsDirectory::new(&[path], None) {
                 Ok(n) => n,
                 Err(e) => return Err(format!("Error with tags directory {}: {e}", path.display()))
@@ -107,28 +115,37 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
         }
     }
 
+    let should_strip = should_strip.into_inner();
+    let should_strip = [should_strip[0] != 0, should_strip[1] != 0];
+
     let primary = source.pop_front().unwrap();
     let secondary = source.pop_front().unwrap();
     let tag = parser.get_custom("filter").unwrap()[0].string().to_owned();
 
     let user_data = UserData {
         tags: secondary,
-        differences: Arc::new(Mutex::new(HashMap::new()))
+        differences: Arc::new(Mutex::new(HashMap::new())),
+        should_strip
     };
 
     do_with_threads(primary, parser, &tag, None, user_data.clone(), DisplayMode::Silent, |context, path, user_data| {
         let secondary = user_data.tags.open_tag_copy(path);
-        let secondary = match secondary {
+
+        let mut secondary = match secondary {
             Ok(n) => n,
             Err(Error::CorruptedTag(_, _)) => secondary?,
             _ => return Ok(ProcessSuccessType::Skipped("not in directory"))
         };
 
-        let primary = context.tags_directory.open_tag_copy(path)?;
+        let mut primary = context.tags_directory.open_tag_copy(path)?;
 
         // Strip any cache-only fields
-        let secondary = ringhopper::definitions::read_any_tag_from_file_buffer(&secondary.to_tag_file()?, ParseStrictness::Relaxed)?;
-        let primary = ringhopper::definitions::read_any_tag_from_file_buffer(&primary.to_tag_file()?, ParseStrictness::Relaxed)?;
+        if user_data.should_strip[0] {
+            primary = ringhopper::definitions::read_any_tag_from_file_buffer(&primary.to_tag_file()?, ParseStrictness::Relaxed)?;
+        }
+        if user_data.should_strip[1] {
+            secondary = ringhopper::definitions::read_any_tag_from_file_buffer(&secondary.to_tag_file()?, ParseStrictness::Relaxed)?;
+        }
 
         let differences = compare_tags(primary.as_ref(), secondary.as_ref());
         user_data.differences.lock().unwrap().insert(path.to_owned(), differences);

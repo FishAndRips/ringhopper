@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::ops::Range;
 use definitions::{Bitmap, CacheFileHeader, CacheFileHeaderPCDemo, CacheFileTag, CacheFileTagDataHeaderPC, Model, read_any_tag_from_map, Scenario, ScenarioStructureBSPCompiledHeader, ScenarioType, Sound, SoundPitchRange};
@@ -11,7 +12,7 @@ use primitives::parse::{SimpleTagData, TagData};
 use ringhopper_engines::{ALL_SUPPORTED_ENGINES, Engine};
 use crate::map::resource::ResourceMap;
 use crate::tag::object::downcast_base_object_mut;
-use crate::tag::tree::{TagFilter, TagTree, TagTreeItem};
+use crate::tag::tree::{TagFilter, TagTree, TagTreeItem, TagTreeItemType};
 
 mod extract;
 
@@ -565,18 +566,26 @@ impl<M: MapTagTree> TagTree for M {
     }
 
     fn files_in_path(&self, _path: &str) -> Option<Vec<TagTreeItem>> {
-        unimplemented!("files_in_path not implemented for TagTree")
+        todo!("files_in_path not yet implemented for MapTagTree")
     }
 
     fn write_tag(&mut self, _path: &TagPath, _tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<bool> {
-        unimplemented!("write_tag not implemented for TagTree")
+        unimplemented!("write_tag not implemented for MapTagTree")
+    }
+
+    fn is_read_only(&self) -> bool {
+        true
     }
 
     fn contains(&self, path: &TagPath) -> bool {
         self.get_tag(path).is_some()
     }
 
-    fn get_all_tags_with_filter(&self, filter: Option<&TagFilter>) -> Vec<TagPath> where Self: Sized {
+    fn root(&self) -> TagTreeItem {
+        TagTreeItem::new(TagTreeItemType::Directory, Cow::default(), None, self)
+    }
+
+    fn get_all_tags_with_filter(&self, filter: Option<&TagFilter>) -> Vec<TagPath> {
         let all_tags = self.get_all_tags();
         if let Some(n) = filter {
             all_tags.into_iter().filter(|t| n.passes(t)).collect()

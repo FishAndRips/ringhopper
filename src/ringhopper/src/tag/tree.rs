@@ -31,21 +31,20 @@ pub trait TagTree {
 
     /// Write the tag into the tag tree.
     ///
-    /// Returns `true` if the tag was actually saved.
+    /// Returns `true` if the tag was actually saved. Errors on failure or if the tag tree is read-only.
     fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<bool>;
+
+    /// Check if the tag tree is read-only.
+    fn is_read_only(&self) -> bool;
 
     /// Check if the tag is present in the tree.
     fn contains(&self, path: &TagPath) -> bool;
 
     /// Get the root tag tree item.
-    fn root(&self) -> TagTreeItem where Self: Sized {
-        TagTreeItem::new(TagTreeItemType::Directory, Cow::default(), None, self)
-    }
+    fn root(&self) -> TagTreeItem;
 
     /// Get all tags in the tree.
-    fn get_all_tags_with_filter(&self, filter: Option<&TagFilter>) -> Vec<TagPath> where Self: Sized {
-        iterate_through_all_tags(self, filter).collect()
-    }
+    fn get_all_tags_with_filter(&self, filter: Option<&TagFilter>) -> Vec<TagPath>;
 }
 
 /// Tag filter
@@ -429,6 +428,15 @@ impl<T: TagTree> TagTree for CachingTagTree<T> {
     fn contains(&self, path: &TagPath) -> bool {
         self.inner.contains(path)
     }
+    fn root(&self) -> TagTreeItem {
+        self.inner.root()
+    }
+    fn is_read_only(&self) -> bool {
+        self.strategy == CachingTagTreeWriteStrategy::Manual || self.inner.is_read_only()
+    }
+    fn get_all_tags_with_filter(&self, filter: Option<&TagFilter>) -> Vec<TagPath> {
+        self.inner.get_all_tags_with_filter(filter)
+    }
 }
 
 #[derive(Clone)]
@@ -591,8 +599,20 @@ impl TagTree for VirtualTagsDirectory {
         self.write_tag_to_directory(path, tag, self.path_for_tag(path).map(|(index, _)| index).unwrap_or(0))
     }
 
+    fn is_read_only(&self) -> bool {
+        false
+    }
+
     fn contains(&self, path: &TagPath) -> bool {
         self.path_for_tag(&path).is_some()
+    }
+
+    fn root(&self) -> TagTreeItem {
+        TagTreeItem::new(TagTreeItemType::Directory, Cow::default(), None, self)
+    }
+
+    fn get_all_tags_with_filter(&self, filter: Option<&TagFilter>) -> Vec<TagPath> {
+        iterate_through_all_tags(self, filter).collect()
     }
 }
 
@@ -624,8 +644,16 @@ impl<T: TagTree + Send> TagTree for AtomicTagTree<T> {
         self.inner.lock().unwrap().write_tag(path, tag)
     }
 
+    fn is_read_only(&self) -> bool {
+        self.inner.lock().unwrap().is_read_only()
+    }
+
     fn contains(&self, path: &TagPath) -> bool {
         self.inner.lock().unwrap().contains(path)
+    }
+
+    fn root(&self) -> TagTreeItem {
+        unimplemented!("root not implemented for AtomicTagTree")
     }
 
     fn get_all_tags_with_filter(&self, filter: Option<&TagFilter>) -> Vec<TagPath> {
@@ -647,14 +675,18 @@ impl<T: TagTree> TagTree for Arc<T> {
     }
 
     fn write_tag(&mut self, _path: &TagPath, _tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<bool> {
-        unimplemented!("write_tag is not implemented in Arc<TagTree>")
+        unimplemented!("Arc<T: TagTree> is immutable")
+    }
+
+    fn is_read_only(&self) -> bool {
+        true
     }
 
     fn contains(&self, path: &TagPath) -> bool {
         self.as_ref().contains(path)
     }
 
-    fn root(&self) -> TagTreeItem where Self: Sized {
+    fn root(&self) -> TagTreeItem {
         self.as_ref().root()
     }
 
@@ -705,8 +737,20 @@ impl TagTree for Box<dyn TagTree + Send + Sync> {
         self.as_mut().write_tag(path, tag)
     }
 
+    fn is_read_only(&self) -> bool {
+        self.as_ref().is_read_only()
+    }
+
     fn contains(&self, path: &TagPath) -> bool {
         self.as_ref().contains(path)
+    }
+
+    fn root(&self) -> TagTreeItem {
+        self.as_ref().root()
+    }
+
+    fn get_all_tags_with_filter(&self, filter: Option<&TagFilter>) -> Vec<TagPath> {
+        self.as_ref().get_all_tags_with_filter(filter)
     }
 }
 
@@ -724,11 +768,23 @@ impl TagTree for Arc<dyn TagTree + Send + Sync> {
     }
 
     fn write_tag(&mut self, _path: &TagPath, _tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<bool> {
-        unimplemented!("write_tag: Arc is non-mutable")
+        unimplemented!("Arc<dyn TagTree + Send + Sync> is immutable")
+    }
+
+    fn is_read_only(&self) -> bool {
+        true
     }
 
     fn contains(&self, path: &TagPath) -> bool {
         self.as_ref().contains(path)
+    }
+
+    fn root(&self) -> TagTreeItem {
+        self.as_ref().root()
+    }
+
+    fn get_all_tags_with_filter(&self, filter: Option<&TagFilter>) -> Vec<TagPath> {
+        self.as_ref().get_all_tags_with_filter(filter)
     }
 }
 
