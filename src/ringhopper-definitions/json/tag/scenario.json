@@ -17,7 +17,10 @@
             "oddball",
             "king of the hill",
             "race",
-            "terminator",
+            {
+                "name": "terminator",
+                "deprecated": true
+            },
             {
                 "name": "stub",
                 "exclude": true
@@ -42,7 +45,6 @@
             "all except ctf",
             "all except race and ctf"
         ],
-        "comment": "terminator is unused but valid - add a 'deprecated' type later",
         "type": "enum"
     },
     {
@@ -3328,11 +3330,13 @@
                 "name": "skies",
                 "type": "Reflexive",
                 "struct": "ScenarioSky",
+                "comment": "Skies are referenced directly by the BSP tag.",
                 "limit": 8
             },
             {
                 "name": "type",
-                "type": "ScenarioType"
+                "type": "ScenarioType",
+                "comment": "Determines the scenario type, which determines how a map should be compiled and loaded.\n\n* For multiplayer maps, everything is put into a map.\n* For singleplayer maps, part of the globals tag is removed, and some of the tags are modified if `do not apply bungie campaign tag patches` is not set.\n* For user interface maps, most of the globals tag is removed.\n\nFor Xbox maps, this also determines the maximum cache file size."
             },
             {
                 "name": "flags",
@@ -3343,6 +3347,7 @@
                 "type": "Reflexive",
                 "struct": "ScenarioChildScenario",
                 "non_cached": true,
+                "comment": "When this scenario is built into a cache file, all scripts, AI reflexives, and object spawns referenced by the child scenarios are merged into this scenario, after which this reflexive is cleared.\n\nThis is generally used for having one main scenario, with other parts of the scenario being worked on separately in child scenarios.",
                 "limit": 16
             },
             {

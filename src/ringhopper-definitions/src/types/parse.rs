@@ -571,6 +571,9 @@ impl LoadFromSerdeJSON for Flags {
         let get_flag = |flag: &str| {
             object.get(flag).map(|f| f.as_bool().unwrap_or_else(|| panic!("expected {flag} to be a boolean"))).unwrap_or_default()
         };
+        let get_str = |flag: &str| {
+            object.get(flag).map(|f| f.as_str().unwrap_or_else(|| panic!("expected {flag} to be a string")).to_owned())
+        };
         Flags {
             non_cached: get_flag("non_cached"),
             cache_only: get_flag("cache_only"),
@@ -579,7 +582,10 @@ impl LoadFromSerdeJSON for Flags {
             exclude: get_flag("exclude"),
             little_endian_in_tags: get_flag("little_endian"),
             supported_engines: SupportedEngines::load_from_json(object),
-            shifted_by_one: get_flag("shifted_by_one")
+            shifted_by_one: get_flag("shifted_by_one"),
+            non_null: get_flag("non_null"),
+            comment: get_str("comment"),
+            description: get_str("description")
         }
     }
 }

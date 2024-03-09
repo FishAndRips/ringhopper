@@ -255,8 +255,17 @@ pub struct Flags {
     /// The value is subtracted by 1 when put into a cache file (and incremented by 1 if extracted).
     pub shifted_by_one: bool,
 
+    /// The value must be set.
+    pub non_null: bool,
+
     /// Supported engines for the field
-    pub supported_engines: SupportedEngines
+    pub supported_engines: SupportedEngines,
+
+    /// Any comment, if present
+    pub comment: Option<String>,
+
+    /// Any description, if present
+    pub description: Option<String>
 }
 
 impl Flags {
@@ -268,6 +277,7 @@ impl Flags {
         self.exclude |= other.exclude;
         self.little_endian_in_tags |= other.little_endian_in_tags;
         self.shifted_by_one |= other.shifted_by_one;
+        self.non_null |= other.non_null;
     }
 }
 

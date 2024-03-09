@@ -209,7 +209,7 @@ impl ToTokenStream for Struct {
         let mut main_group_struct = false;
         for g in &definitions.groups {
             if &g.1.struct_name == struct_name {
-                writeln!(fields, "#[doc=\"metadata (not part of the tag)\"] pub hash: u64,").unwrap();
+                writeln!(fields, "#[doc=\"CRC64 of the tag file if the tag was opened from the filesystem, or 0 otherwise.\n\n## Metadata\n\nThis field is not part of the tag and is only used internally within Ringhopper 🐧\"] pub hash: u64,").unwrap();
                 writeln!(default_code, "hash: Default::default(),").unwrap();
                 main_group_struct = true;
                 break;
@@ -276,6 +276,30 @@ impl ToTokenStream for Struct {
             match &field.field_type {
                 StructFieldType::Object(o) => {
                     if !field.flags.exclude {
+                        let mut doc = String::new();
+                        if let Some(n) = &field.flags.comment {
+                            writeln!(&mut doc, "{n}\n\n").unwrap();
+                        }
+                        if let ObjectType::TagReference(t) = &o {
+                            writeln!(&mut doc, "## Allowed groups").unwrap();
+                            for g in &t.allowed_groups {
+                                writeln!(&mut doc, "* [{g}](TagGroup::{reference}) ([struct info]({struct_ref}))", reference=camel_case(&g), struct_ref=camel_case(&g)).unwrap();
+                            }
+                            writeln!(&mut doc, "\n\n").unwrap();
+                        }
+                        if field.flags.non_null {
+                            writeln!(&mut doc, "## Non-null\n\nThis field **must** be set for the tag to be valid.\n\n").unwrap();
+                        }
+                        if field.flags.non_cached {
+                            writeln!(&mut doc, "## Non-cached\n\nThis field is **only** present in tag files, not cache files.\n\n").unwrap();
+                        }
+                        if field.flags.cache_only {
+                            writeln!(&mut doc, "## Cache only\n\nThis field is **only** present in cache files, not tag files.\n\n").unwrap();
+                        }
+                        if !doc.is_empty() {
+                            doc = doc.replace("\\", "\\\\").replace("\"", "\\\"");
+                            writeln!(&mut fields, "#[doc=\"{doc}\"]").unwrap();
+                        }
                         writeln!(&mut fields, "pub {field_name}: {field_type},").unwrap();
                         if let ObjectType::TagReference(reference) = &o {
                             writeln!(&mut default_code, "{field_name}: TagReference::Null(TagGroup::{}),", camel_case(&reference.allowed_groups[0])).unwrap();
