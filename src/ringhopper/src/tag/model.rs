@@ -57,9 +57,9 @@ macro_rules! fix_runtime_markers {
     ($model:expr) => {{
         let mut changes_made = false;
 
-        for marker in &$model.runtime_markers.items {
+        for marker in &$model.runtime_markers {
             changes_made = true;
-            for instance in &marker.instances.items {
+            for instance in &marker.instances {
                 let node = instance.node_index as u16;
                 let region = instance.region_index as usize;
                 let permutation = instance.permutation_index as usize;
@@ -98,8 +98,8 @@ macro_rules! fix_vertices {
     ($model:expr, $fixer:tt) => {{
         let mut fixed = false;
 
-        for g in &mut $model.geometries.items {
-            for p in &mut g.parts.items {
+        for g in &mut $model.geometries {
+            for p in &mut g.parts {
                 fixed |= $fixer(p.get_model_part_mut())
             }
         }
@@ -181,8 +181,8 @@ impl ModelFunctions for Model {
 
     fn check_indices(&self) -> RinghopperResult<()> {
         check_base_model(self)?;
-        for geometry in &self.geometries.items {
-            for part in &geometry.parts.items {
+        for geometry in &self.geometries {
+            for part in &geometry.parts {
                 check_indices_for_part(self, &part)?;
                 if part.flags.zoner {
                     return Err(Error::InvalidTagData("corrupted model: zoner is set on a tag that does not support local nodes".to_string()))
@@ -242,7 +242,7 @@ impl ModelFunctions for GBXModel {
                     let mut part = p.model_geometry_part;
                     part.flags.zoner = false;
 
-                    for v in &mut part.uncompressed_vertices.items {
+                    for v in &mut part.uncompressed_vertices {
                         v.node0_index = v.node0_index.map(|m| indices[m as usize] as u16);
                         v.node1_index = v.node1_index.map(|m| indices[m as usize] as u16);
                     }
@@ -291,8 +291,8 @@ impl ModelFunctions for GBXModel {
 
     fn check_indices(&self) -> RinghopperResult<()> {
         check_base_model(self)?;
-        for geometry in &self.geometries.items {
-            for part in &geometry.parts.items {
+        for geometry in &self.geometries {
+            for part in &geometry.parts {
                 check_indices_for_gbxpart(self, &part)?;
                 if !self.flags.parts_have_local_nodes && part.model_geometry_part.flags.zoner {
                     return Err(Error::InvalidTagData("corrupted model: parts have local nodes is not set, but zoner is set".to_string()))
@@ -373,14 +373,14 @@ fn check_base_model<M: ModelFunctions>(model: &M) -> RinghopperResult<()> {
     }
 
     for region in model.regions() {
-        for permutation in &region.permutations.items {
+        for permutation in &region.permutations {
             bad_geometry_index(permutation.high)?;
             bad_geometry_index(permutation.low)?;
             bad_geometry_index(permutation.super_high)?;
             bad_geometry_index(permutation.super_low)?;
             bad_geometry_index(permutation.medium)?;
 
-            for m in &permutation.markers.items {
+            for m in &permutation.markers {
                 bad_node_index(m.node_index)?;
             }
         }
@@ -519,7 +519,7 @@ fn restore_missing_compressed_vertices(part: &mut ModelGeometryPart) -> bool {
     }
 
     part.compressed_vertices.items.reserve_exact(part.uncompressed_vertices.items.len());
-    for vert in &part.uncompressed_vertices.items {
+    for vert in &part.uncompressed_vertices {
         part.compressed_vertices.items.push(compress_model_vertex(&vert));
     }
 
@@ -532,7 +532,7 @@ fn restore_missing_uncompressed_vertices(part: &mut ModelGeometryPart) -> bool {
     }
 
     part.uncompressed_vertices.items.reserve_exact(part.compressed_vertices.items.len());
-    for vert in &part.compressed_vertices.items {
+    for vert in &part.compressed_vertices {
         part.uncompressed_vertices.items.push(decompress_model_vertex(&vert));
     }
 

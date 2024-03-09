@@ -90,7 +90,7 @@ pub fn decompile_scripts(scenario: &mut Scenario, scenario_name: &str) -> Ringho
 
     let mut tokens = Vec::new();
 
-    for i in &scenario.globals.items {
+    for i in &scenario.globals {
         tokens.push(Cow::Borrowed("("));
         tokens.push(Cow::Borrowed("global"));
         tokens.push(Cow::Borrowed(i._type.to_str()));
@@ -99,7 +99,7 @@ pub fn decompile_scripts(scenario: &mut Scenario, scenario_name: &str) -> Ringho
         tokens.push(Cow::Borrowed(")"));
     }
 
-    for i in &scenario.scripts.items {
+    for i in &scenario.scripts {
         tokens.push(Cow::Borrowed("("));
         tokens.push(Cow::Borrowed("script"));
         tokens.push(Cow::Borrowed(i.script_type.to_str()));
@@ -112,7 +112,7 @@ pub fn decompile_scripts(scenario: &mut Scenario, scenario_name: &str) -> Ringho
         if !i.parameters.items.is_empty() {
             tokens.push(Cow::Borrowed("("));
             tokens.push(Cow::Borrowed(i.name.as_str()));
-            for p in &i.parameters.items {
+            for p in &i.parameters {
                 tokens.push(Cow::Borrowed("("));
                 tokens.push(Cow::Borrowed(p.return_type.to_str()));
                 tokens.push(sanitize(Cow::Borrowed(p.name.as_str())));
@@ -404,12 +404,12 @@ fn check_scripts_are_ok(scenario: &Scenario, extracted_nodes: &Vec<ScenarioScrip
 
     let mut todo = Vec::with_capacity(64);
 
-    for i in &scenario.scripts.items {
+    for i in &scenario.scripts {
         check_bad_scripts(i.root_expression_index, extracted_nodes, &mut todo)
             .map_err(|e| Error::InvalidTagData(format!("Script {} has errors: {e:?}", i.name)))?;
     }
 
-    for i in &scenario.globals.items {
+    for i in &scenario.globals {
         check_bad_scripts(i.initialization_expression_index, extracted_nodes, &mut todo)
             .map_err(|e| Error::InvalidTagData(format!("Global {} has errors: {e:?}", i.name)))?;
     }

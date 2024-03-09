@@ -71,7 +71,7 @@ pub fn fix_projectile_tag(projectile: &mut Projectile) {
     projectile.initial_velocity /= TICK_RATE_RECIPROCOL;
     projectile.final_velocity /= TICK_RATE_RECIPROCOL;
 
-    for i in &mut projectile.material_response.items {
+    for i in &mut projectile.material_response {
         i.potential_and.upper /= TICK_RATE_RECIPROCOL;
         i.potential_and.lower /= TICK_RATE_RECIPROCOL;
     }
@@ -86,8 +86,8 @@ pub fn fix_light_tag(light: &mut Light) {
 
 macro_rules! extract_uncompressed_model_vertices {
     ($model:expr, $map:expr) => {{
-        for geo in &mut $model.geometries.items {
-            for part in &mut geo.parts.items {
+        for geo in &mut $model.geometries {
+            for part in &mut geo.parts {
                 let part = part.get_model_part_mut();
 
                 let vertex_count = part.vertex_count as usize;
@@ -169,7 +169,7 @@ pub fn fix_scenario_tag(scenario: &mut Scenario, scenario_name: &str) -> Ringhop
     flip_scenario_script_endianness::<LittleEndian, BigEndian>(scenario)?;
     decompile_scripts(scenario, scenario_name)?;
 
-    for i in &mut scenario.cutscene_titles.items {
+    for i in &mut scenario.cutscene_titles {
         i.up_time -= i.fade_in_time;
         i.fade_in_time *= TICK_RATE_RECIPROCOL;
         i.fade_out_time *= TICK_RATE_RECIPROCOL;
@@ -182,7 +182,7 @@ pub fn fix_scenario_tag(scenario: &mut Scenario, scenario_name: &str) -> Ringhop
 }
 
 pub fn fix_object_tag(object: &mut Object) -> RinghopperResult<()> {
-    for cc in &mut object.change_colors.items {
+    for cc in &mut object.change_colors {
         match cc.permutations.len() {
             0 => (),
             1 => cc.permutations.items[0].weight = 1.0,
@@ -191,7 +191,7 @@ pub fn fix_object_tag(object: &mut Object) -> RinghopperResult<()> {
             permutation_count => {
                 // Check that the weights are valid
                 let mut last_weight = 0.0;
-                for i in &cc.permutations.items {
+                for i in &cc.permutations {
                     if i.weight < last_weight || i.weight > 1.0 {
                         return Err(Error::InvalidTagData("change colors has invalid weights".to_owned()))
                     }
@@ -214,7 +214,7 @@ pub fn fix_object_tag(object: &mut Object) -> RinghopperResult<()> {
 }
 
 pub fn fix_model_animations_tag(model_animations: &mut ModelAnimations) -> RinghopperResult<()> {
-    for i in &mut model_animations.animations.items {
+    for i in &mut model_animations.animations {
         fix_model_animations_animation(i)?;
     }
     Ok(())
@@ -243,11 +243,11 @@ fn fix_model_animations_animation(animation: &mut ModelAnimationsAnimation) -> R
 fn fix_bitmap_tag<M: Map>(tag: &mut Bitmap, map: &M, xbox_map: bool) -> RinghopperResult<()> {
     // Fix bitmap indices for sprites; for some horrible reason, these are zeroed out when put in maps
     if tag._type == BitmapType::Sprites {
-        for sequence in &mut tag.bitmap_group_sequence.items {
+        for sequence in &mut tag.bitmap_group_sequence {
             sequence.bitmap_count = if sequence.sprites.items.len() == 1 { 1 } else { 0 };
 
             let mut lowest_index = None;
-            for sprite in &mut sequence.sprites.items {
+            for sprite in &mut sequence.sprites {
                 let this_index = if let Some(n) = sprite.bitmap_index { n } else { continue };
                 match lowest_index {
                     Some(n) if n < this_index => (),
@@ -272,7 +272,7 @@ fn fix_bitmap_tag<M: Map>(tag: &mut Bitmap, map: &M, xbox_map: bool) -> Ringhopp
         None => return Ok(())
     };
     let mut processed_data: Vec<u8> = Vec::with_capacity(new_data);
-    for i in &mut tag.bitmap_data.items {
+    for i in &mut tag.bitmap_data {
         let offset = i.pixel_data_offset as usize;
         let length = i.pixel_data_size as usize;
         let domain = if i.flags.external { DomainType::ResourceMapFile(ResourceMapType::Bitmaps) } else { DomainType::MapData };

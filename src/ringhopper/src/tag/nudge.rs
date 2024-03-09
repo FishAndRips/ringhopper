@@ -41,14 +41,14 @@ fn get_nudgeable_function(tag_group: TagGroup) -> Option<fn(&mut dyn PrimaryTagS
 
 fn nudge_object(object: &mut Object) -> bool {
     let mut result = false;
-    for cc in &mut object.change_colors.items {
+    for cc in &mut object.change_colors {
         if cc.permutations.items.is_empty() {
             continue
         }
 
         let mut value = None;
         let mut all_same = true;
-        for p in &mut cc.permutations.items {
+        for p in &mut cc.permutations {
             nudge(&mut p.weight, &mut result);
             match value {
                 Some(n) => if n != p.weight { all_same = false; }
@@ -58,7 +58,7 @@ fn nudge_object(object: &mut Object) -> bool {
 
         if all_same && value != Some(1.0) {
             result = true;
-            for p in &mut cc.permutations.items {
+            for p in &mut cc.permutations {
                 p.weight = 1.0;
             }
         }
@@ -100,7 +100,7 @@ fn nudge_projectile(a: &mut Projectile) -> bool {
     nudge(&mut a.initial_velocity, &mut result);
     nudge(&mut a.final_velocity, &mut result);
 
-    for i in &mut a.material_response.items {
+    for i in &mut a.material_response {
         nudge(&mut i.potential_and.lower, &mut result);
         nudge(&mut i.potential_and.upper, &mut result);
     }
@@ -108,7 +108,7 @@ fn nudge_projectile(a: &mut Projectile) -> bool {
 }
 fn nudge_scenario(a: &mut Scenario) -> bool {
     let mut result = false;
-    for i in &mut a.cutscene_titles.items {
+    for i in &mut a.cutscene_titles {
         nudge(&mut i.fade_in_time, &mut result);
         nudge(&mut i.fade_out_time, &mut result);
         nudge(&mut i.up_time, &mut result);

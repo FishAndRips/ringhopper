@@ -1,4 +1,3 @@
-use std::io::Write;
 use definitions::{ResourceMapHeader, ResourceMapResource};
 use primitives::byteorder::LittleEndian;
 use primitives::error::{Error, OverflowCheck, RinghopperResult};

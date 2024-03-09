@@ -429,6 +429,25 @@ pub struct Reflexive<T: TagData + Sized> {
     pub items: Vec<T>
 }
 
+impl<'a, T: TagData + Sized> IntoIterator for &'a Reflexive<T> {
+    type Item = &'a T;
+    type IntoIter = std::slice::Iter<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.items.as_slice().into_iter()
+    }
+}
+
+impl<'a, T: TagData + Sized> IntoIterator for &'a mut Reflexive<T> {
+    type Item = &'a mut T;
+    type IntoIter = std::slice::IterMut<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.items.as_mut_slice().into_iter()
+    }
+}
+
+
 impl<T: TagData + Sized> Reflexive<T> {
     pub fn new(items: Vec<T>) -> Self {
         Self { items }
@@ -482,7 +501,7 @@ impl<T: TagData + Sized> TagData for Reflexive<T> {
         let new_len = write_offset.add_overflow_checked(total_bytes_to_write)?;
         data.resize(new_len, 0);
 
-        for i in &self.items {
+        for i in self {
             let struct_end = write_offset + item_size;
             i.write_to_tag_file(data, write_offset, struct_end)?;
             write_offset = struct_end;
