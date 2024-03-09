@@ -287,6 +287,9 @@ impl ToTokenStream for Struct {
                             }
                             writeln!(&mut doc, "\n\n").unwrap();
                         }
+                        if let Some(n) = &field.flags.developer_note {
+                            writeln!(&mut doc, "## Developer note\n\n{n}").unwrap();
+                        }
                         if field.flags.non_null {
                             writeln!(&mut doc, "## Non-null\n\nThis field **must** be set for the tag to be valid.\n\n").unwrap();
                         }

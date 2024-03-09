@@ -264,6 +264,9 @@ pub struct Flags {
     /// Any comment, if present
     pub comment: Option<String>,
 
+    /// Any developer note, if present
+    pub developer_note: Option<String>,
+
     /// Any description, if present
     pub description: Option<String>
 }

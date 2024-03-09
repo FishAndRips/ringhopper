@@ -585,6 +585,7 @@ impl LoadFromSerdeJSON for Flags {
             shifted_by_one: get_flag("shifted_by_one"),
             non_null: get_flag("non_null"),
             comment: get_str("comment"),
+            developer_note: get_str("developer_note"),
             description: get_str("description")
         }
     }
