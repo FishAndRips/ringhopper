@@ -149,6 +149,7 @@ macro_rules! extract_uncompressed_model_vertices {
 
 macro_rules! fix_uncompressed_model {
     ($model:expr, $map:expr) => {{
+        $model.flags.blend_shared_normals = false;
         $model.flip_lod_cutoffs();
         $model.fix_runtime_markers()?;
         extract_uncompressed_model_vertices!($model, $map);
