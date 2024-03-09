@@ -7,7 +7,7 @@ use crate::primitives::byteorder::{BigEndian, LittleEndian};
 use crate::primitives::dynamic::DynamicTagDataArray;
 use crate::primitives::error::{Error, OverflowCheck, RinghopperResult};
 use crate::primitives::map::{DomainType, Map, ResourceMapType};
-use crate::primitives::parse::{TagData, SimpleTagData};
+use crate::primitives::parse::{SimpleTagData};
 use crate::primitives::primitive::{Angle, Bounds, Index, TagPath};
 use crate::tag::model::ModelFunctions;
 use crate::tag::model_animations::{flip_endianness_for_model_animations_animation, FrameDataIterator};
@@ -102,46 +102,33 @@ macro_rules! extract_uncompressed_model_vertices {
                     return Err(Error::InvalidTagData(format!("Model data is invalid: triangle count is too high (0x{triangle_count:X} > 0x{max_triangles:X})")))
                 }
 
-                let index_count = triangle_count + 2;
+                // Load all vertices
                 part.uncompressed_vertices.items.reserve_exact(vertex_count);
+                part.uncompressed_vertices.items.extend(ModelVertexUncompressed::read_chunks_from_map_to_iterator(
+                    $map,
+                    vertex_count,
+                    part.vertices.vertex_pointer.into(),
+                    &DomainType::ModelVertexData
+                )?.into_infallible());
 
-                let vertex_size = ModelVertexUncompressed::size();
-                let vertex_offset = part.vertices.vertex_pointer.into();
-                let vertex_end = vertex_offset + (vertex_size * vertex_count);
-                for v in (vertex_offset..vertex_end).step_by(vertex_size) {
-                    let vertex = ModelVertexUncompressed::read_from_map($map, v, &DomainType::ModelVertexData)?;
-                    part.uncompressed_vertices.items.push(vertex);
-                }
-
-                let mut indices: Vec<Index> = Vec::with_capacity(index_count + 2);
-                let triangle_size = Index::simple_size();
-                let triangle_offset = part.triangle_pointer.into();
-                let triangle_end = triangle_offset + (index_count * triangle_size);
-                for t in (triangle_offset..triangle_end).step_by(triangle_size) {
-                    let index = Index::read_from_map($map, t, &DomainType::ModelTriangleData)?;
-                    indices.push(index);
-                }
-
-                // Pad out the triangles
-                indices.push(None);
-                indices.push(None);
-
+                // Now all indices
+                let index_count = triangle_count + 2;
+                let mut indices = Index::read_chunks_from_map_to_iterator(
+                    $map,
+                    index_count,
+                    part.triangle_pointer.into(),
+                    &DomainType::ModelTriangleData
+                )?.into_infallible();
                 let iterator = (0..indices.len())
                     .step_by(3)
-                    .map(|index| ModelTriangleStripData {
+                    .map(|_| ModelTriangleStripData {
                         indices: [
-                            // Fine because we loop on indices.len()
-                            unsafe { *indices.get_unchecked(index) },
-                            *indices.get(index + 1).unwrap_or(&None),
-                            *indices.get(index + 2).unwrap_or(&None)
+                            indices.next().expect("should be a triangle index here..."),
+                            indices.next().unwrap_or(None),
+                            indices.next().unwrap_or(None),
                         ]
                     });
-
                 part.triangle_data.items.extend(iterator);
-
-                while part.triangle_data.items.last() == Some(&ModelTriangleStripData::default()) {
-                    part.triangle_data.items.pop();
-                }
             }
         }
         $model.fix_compressed_vertices();

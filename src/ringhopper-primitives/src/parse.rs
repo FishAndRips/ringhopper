@@ -9,7 +9,6 @@ use crate::dynamic::{DynamicTagData, DynamicTagDataType, SimplePrimitiveType};
 
 use crate::error::RinghopperResult;
 use crate::map::{DomainType, Map};
-use crate::primitive::Address;
 
 /// Maximum length for an array.
 ///
@@ -106,17 +105,17 @@ pub trait SimpleTagData: Sized {
         }
     }
 
-    fn read_chunks_from_map_to_iterator<'a, M: Map>(map: &'a M, count: usize, address: Address, domain_type: &DomainType) -> RinghopperResult<RawStructIterator<'a, Self, LittleEndian>> {
+    fn read_chunks_from_map_to_iterator<'a, M: Map>(map: &'a M, count: usize, address: usize, domain_type: &DomainType) -> RinghopperResult<RawStructIterator<'a, Self, LittleEndian>> {
         let chunk_size = Self::simple_size();
         let size = count.mul_overflow_checked(chunk_size)?;
 
-        map.get_data_at_address(address.into(), domain_type, size)
+        map.get_data_at_address(address, domain_type, size)
             .map(|data| RawStructIterator {
-                chunks: data.chunks(size),
+                chunks: data.chunks(chunk_size),
                 _phantom_a: Default::default(),
                 _phantom_b: Default::default(),
             })
-            .ok_or_else(|| Error::MapDataOutOfBounds(format!("can't read {count} {chunk_size}-sized chunk(s) from {address} in {domain_type:?}")))
+            .ok_or_else(|| Error::MapDataOutOfBounds(format!("can't read {count} {chunk_size}-sized chunk(s) from 0x{address:08X} in {domain_type:?}")))
     }
 }
 
