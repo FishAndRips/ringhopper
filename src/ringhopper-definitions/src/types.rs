@@ -344,6 +344,7 @@ pub enum ObjectType {
     Address,
     Vector2D,
     Vector3D,
+    CompressedVector2D,
     CompressedVector3D,
     CompressedFloat,
     Vector2DInt,
@@ -375,6 +376,7 @@ impl ObjectType {
             | Self::ColorARGBInt
             | Self::ID
             | Self::TagID
+            | Self::CompressedVector2D
             | Self::CompressedVector3D => 0x4,
             Self::U16 | Self::I16 | Self::Index | Self::CompressedFloat => 0x2,
             Self::U8 | Self::I8 => 0x1,
@@ -405,7 +407,7 @@ impl ObjectType {
             Self::Data | Self::FileData => 1,
             Self::TagID | Self::ID => 1,
             Self::TagGroup => 1,
-            Self::F32 | Self::Angle | Self::U32 | Self::Address | Self::I32 | Self::ColorARGBInt | Self::CompressedVector3D | Self::CompressedFloat => 1,
+            Self::F32 | Self::Angle | Self::U32 | Self::Address | Self::I32 | Self::ColorARGBInt | Self::CompressedVector2D | Self::CompressedVector3D | Self::CompressedFloat => 1,
             Self::U16 | Self::I16 | Self::Index => 1,
             Self::U8 | Self::I8 => 1,
             Self::Rectangle => 4,
@@ -435,6 +437,7 @@ impl ObjectType {
             | Self::Address
             | Self::ScenarioScriptNodeValue
             | Self::TagGroup
+            | Self::CompressedVector2D
             | Self::CompressedVector3D
             | Self::CompressedFloat => None,
 

@@ -400,6 +400,45 @@
         "size": 6
     },
     {
+        "name": "ModelVertexReference",
+        "fields": [
+            {
+                "name": "vertex type",
+                "type": "VertexType",
+                "comment": "set this or die",
+                "cache_only": true
+            },
+            {
+                "type": "pad",
+                "size": 2
+            },
+            {
+                "name": "vertex count",
+                "type": "uint32"
+            },
+            {
+                "name": "offset",
+                "type": "uint32",
+                "developer_note": "Always set to 0. Also always set to 0 on load.",
+                "exclude": true
+            },
+            {
+                "name": "unknown pointer",
+                "type": "Address",
+                "developer_note": "Appears to be a pointer that gets set on map load but never actually read.",
+                "cache_only": true
+            },
+            {
+                "name": "vertex pointer",
+                "type": "Address",
+                "cache_only": true,
+                "developer_note": "On Xbox, this is an indirect pointer to the vertices. On PC, this is set at runtime to a pointer to something that is read when rendering, and for gbxmodel tags, this is also the offset to the vertices."
+            }
+        ],
+        "type": "struct",
+        "size": 20
+    },
+    {
         "name": "ModelGeometryPart",
         "fields": [
             {
@@ -502,35 +541,8 @@
                 "drop_on_extract_hidden": true
             },
             {
-                "name": "vertex type",
-                "type": "VertexType",
-                "cache_only": true
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "name": "vertex count",
-                "cache_only": true,
-                "type": "uint32"
-            },
-            {
-                "type": "pad",
-                "size": 4
-            },
-            {
-                "name": "unknown pointer",
-                "type": "Address",
-                "developer_note": "Appears to be a pointer that gets set on map load but never actually read.",
-                "cache_only": true
-            },
-            {
-                "name": "vertex pointer",
-                "type": "Address",
-                "comment": "On Xbox: pointer to the entry in the second parts list which points to the triangle indices. On PC: offset to first vertex relative to the map's vertex data, but then is overwritten on map load by a pointer that is read when rendering.",
-                "drop_on_extract_hidden": true,
-                "cache_only": true
+                "name": "vertices",
+                "type": "ModelVertexReference"
             }
         ],
         "type": "struct",

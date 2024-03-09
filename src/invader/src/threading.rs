@@ -21,12 +21,30 @@ impl<T: TagTree + Send + Clone> Clone for ThreadingContext<T> {
     }
 }
 
-pub type ProcessFunction<T, U> = fn(&mut ThreadingContext<T>, &TagPath, &mut U) -> RinghopperResult<bool>;
+pub type ProcessFunction<T, U> = fn(&mut ThreadingContext<T>, &TagPath, &mut U) -> RinghopperResult<ProcessSuccessType>;
+
+pub enum ProcessSuccessType {
+    /// Used if successful; printed unless silent
+    Success,
+
+    /// Used if successful; printed unless silent
+    Skipped(&'static str),
+
+    /// Used if incompatible with the tool (e.g. nudging a tag that cannot be nudged); does not usually get printed
+    Ignored
+}
+
+impl ProcessSuccessType {
+    /// Wrap a result for VirtualTagsDirectory write tag result
+    pub fn wrap_write_result(result: RinghopperResult<bool>) -> RinghopperResult<ProcessSuccessType> {
+        result.map(|r| if r { ProcessSuccessType::Success } else { ProcessSuccessType::Skipped("file on disk matches tag") })
+    }
+}
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum DisplayMode {
-    /// Show all tags successfully processed
-    ShowProcessed,
+    /// Show all tags successfully processed or skipped
+    ShowAll,
 
     /// Only show errors
     Silent
@@ -41,12 +59,15 @@ pub fn do_with_threads<T: TagTree + Send + 'static + Clone, U: Clone + Send + 's
     display_mode: DisplayMode,
     function: ProcessFunction<T, U>,
 ) -> Result<(), String> {
+    let start = std::time::Instant::now();
+
     let mut context = ThreadingContext {
         tags_directory,
         args,
     };
 
     let success = Arc::new(AtomicU64::new(0));
+    let ignored = Arc::new(AtomicU64::new(0));
     let total = Arc::new(AtomicU64::new(0));
     let failure = Arc::new(AtomicU64::new(0));
 
@@ -55,7 +76,7 @@ pub fn do_with_threads<T: TagTree + Send + 'static + Clone, U: Clone + Send + 's
             Some(group) => TagPath::new(user_filter, group),
             None => TagPath::from_path(user_filter)
         }.map_err(|_| format!("Invalid tag path `{user_filter}`"))?;
-        process_tags(&mut context, &success, &failure, &total, &tag_path, &mut user_data, display_mode, function);
+        process_tags(&mut context, &success, &failure, &ignored, &total, &tag_path, &mut user_data, display_mode, function);
     }
     else {
         let filter = TagFilter::new(user_filter, group);
@@ -64,7 +85,7 @@ pub fn do_with_threads<T: TagTree + Send + 'static + Clone, U: Clone + Send + 's
         match thread_count {
             1 => {
                 for path in tags {
-                    process_tags(&mut context, &success, &failure, &total, &path, &mut user_data, display_mode, function);
+                    process_tags(&mut context, &success, &failure, &ignored, &total, &path, &mut user_data, display_mode, function);
                 }
             },
             n => {
@@ -76,6 +97,7 @@ pub fn do_with_threads<T: TagTree + Send + 'static + Clone, U: Clone + Send + 's
                     let success = success.clone();
                     let total = total.clone();
                     let failure = failure.clone();
+                    let ignored = ignored.clone();
                     let mut user_data = user_data.clone();
                     threads.push(std::thread::spawn(move || {
                         loop {
@@ -83,7 +105,7 @@ pub fn do_with_threads<T: TagTree + Send + 'static + Clone, U: Clone + Send + 's
                                 Some(n) => n,
                                 None => break
                             };
-                            process_tags(&mut context, &success, &failure, &total, &next, &mut user_data, display_mode, function);
+                            process_tags(&mut context, &success, &failure, &ignored, &total, &next, &mut user_data, display_mode, function);
                         }
                     }))
                 }
@@ -94,23 +116,28 @@ pub fn do_with_threads<T: TagTree + Send + 'static + Clone, U: Clone + Send + 's
         }
     }
 
-    let total = Arc::into_inner(total).unwrap().into_inner();
+    let ignored = Arc::into_inner(ignored).unwrap().into_inner();
+    let total = Arc::into_inner(total).unwrap().into_inner() - ignored;
     if total == 0 {
-        return Err(format!("No tags matched `{user_filter}`"))
+        return Err(format!("No viable tags matched `{user_filter}`"))
     }
 
     let failure = Arc::into_inner(failure).unwrap().into_inner();
     let success = Arc::into_inner(success).unwrap().into_inner();
 
-    if total > 1 && display_mode == DisplayMode::ShowProcessed {
-        print!("Processed {success} / {total} tags");
+    let milliseconds_taken = (std::time::Instant::now() - start).as_millis();
+
+    if display_mode == DisplayMode::Silent {
+        if failure > 0 {
+            println!("Failed to parse {failure} tag{s}", s = if failure == 1 { "" } else { "s" });
+        }
+    }
+    else if total > 1 {
+        print!("Processed {success} / {total} tags in {milliseconds_taken} ms");
         if failure > 0 {
             print!(", with {failure} error{s}", s = if failure == 1 { "" } else { "s" });
         }
         println!();
-    }
-    else if display_mode == DisplayMode::Silent && failure > 0 {
-        println!("Failed to parse {failure} tag{s}", s = if failure == 1 { "" } else { "s" });
     }
 
     Ok(())
@@ -120,6 +147,7 @@ fn process_tags<T: TagTree + Send + Clone, U: Clone + Send + 'static>(
     context: &mut ThreadingContext<T>,
     success: &Arc<AtomicU64>,
     failure: &Arc<AtomicU64>,
+    ignored: &Arc<AtomicU64>,
     total: &Arc<AtomicU64>,
     path: &TagPath,
     user_data: &mut U,
@@ -128,13 +156,18 @@ fn process_tags<T: TagTree + Send + Clone, U: Clone + Send + 'static>(
 ) {
     total.fetch_add(1, Ordering::Relaxed);
     match function(context, &path, user_data) {
-        Ok(true) => {
+        Ok(ProcessSuccessType::Success) => {
             success.fetch_add(1, Ordering::Relaxed);
-            if display_mode == DisplayMode::ShowProcessed {
+            if display_mode == DisplayMode::ShowAll {
                 writeln!(stdout().lock(), "Processed {path}").unwrap()
             }
         },
-        Ok(false) => (),
+        Ok(ProcessSuccessType::Skipped(reason)) => if display_mode == DisplayMode::ShowAll {
+            writeln!(stdout().lock(), "Skipped {path}: {reason}").unwrap()
+        },
+        Ok(ProcessSuccessType::Ignored) => {
+            ignored.fetch_add(1, Ordering::Relaxed);
+        }
         Err(e) => {
             failure.fetch_add(1, Ordering::Relaxed);
             writeln!(stderr().lock(), "Failed to process {path}: {e}").unwrap()

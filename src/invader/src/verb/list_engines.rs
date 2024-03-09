@@ -3,7 +3,7 @@ use std::env::Args;
 extern crate ringhopper_engines;
 
 
-pub fn list_engines(args: Args, description: &'static str) -> Result<(), String> {
+pub fn list_engines(_args: Args, _description: &'static str) -> Result<(), String> {
     println!("Available engine targets:");
     for i in ringhopper_engines::ALL_SUPPORTED_ENGINES {
         if !i.build_target {

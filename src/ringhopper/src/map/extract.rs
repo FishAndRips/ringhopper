@@ -1,5 +1,5 @@
 use std::convert::TryInto;
-use definitions::{BitmapType, ModelTriangleStripData};
+use definitions::{BitmapType, ModelTriangleStripData, ScenarioStructureBSP};
 use crate::tag::model::ModelPartGet;
 use crate::constants::{TICK_RATE, TICK_RATE_RECIPROCOL};
 use crate::definitions::{ActorVariant, Bitmap, BitmapDataFormat, ContinuousDamageEffect, DamageEffect, GBXModel, Light, Model, ModelAnimations, ModelAnimationsAnimation, ModelVertexUncompressed, Object, PointPhysics, Projectile, Scenario, ScenarioType, Sound, SoundFormat, Weapon};
@@ -13,6 +13,7 @@ use crate::tag::model::ModelFunctions;
 use crate::tag::model_animations::{flip_endianness_for_model_animations_animation, FrameDataIterator};
 use crate::tag::nudge::nudge_tag;
 use crate::tag::scenario::{decompile_scripts, flip_scenario_script_endianness};
+use crate::tag::scenario_structure_bsp::recompress_scenario_structure_bsp_vertices;
 
 pub fn fix_weapon_tag(tag: &mut Weapon, tag_path: &TagPath, scenario_tag: &Scenario) {
     if scenario_tag._type == ScenarioType::Singleplayer && !scenario_tag.flags.do_not_apply_bungie_campaign_tag_patches {
@@ -90,7 +91,7 @@ macro_rules! extract_uncompressed_model_vertices {
             for part in &mut geo.parts {
                 let part = part.get_model_part_mut();
 
-                let vertex_count = part.vertex_count as usize;
+                let vertex_count = part.vertices.vertex_count as usize;
                 let triangle_count = part.triangle_count as usize;
 
                 if vertex_count > 0xFFFF {
@@ -105,7 +106,7 @@ macro_rules! extract_uncompressed_model_vertices {
                 part.uncompressed_vertices.items.reserve_exact(vertex_count);
 
                 let vertex_size = ModelVertexUncompressed::size();
-                let vertex_offset = part.vertex_pointer.into();
+                let vertex_offset = part.vertices.vertex_pointer.into();
                 let vertex_end = vertex_offset + (vertex_size * vertex_count);
                 for v in (vertex_offset..vertex_end).step_by(vertex_size) {
                     let vertex = ModelVertexUncompressed::read_from_map($map, v, &DomainType::ModelVertexData)?;
@@ -181,6 +182,9 @@ pub fn fix_scenario_tag(scenario: &mut Scenario, scenario_name: &str) -> Ringhop
     Ok(())
 }
 
+pub fn fix_scenario_structure_bsp_tag(bsp: &mut ScenarioStructureBSP) -> RinghopperResult<()> {
+    recompress_scenario_structure_bsp_vertices(bsp).map(|_| ())
+}
 pub fn fix_object_tag(object: &mut Object) -> RinghopperResult<()> {
     for cc in &mut object.change_colors {
         match cc.permutations.len() {

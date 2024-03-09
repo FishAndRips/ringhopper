@@ -1,4 +1,7 @@
 use std::any::Any;
+use std::iter::FusedIterator;
+use std::marker::PhantomData;
+use std::slice::Chunks;
 use crate::error::{Error, OverflowCheck};
 
 use byteorder::*;
@@ -6,6 +9,7 @@ use crate::dynamic::{DynamicTagData, DynamicTagDataType, SimplePrimitiveType};
 
 use crate::error::RinghopperResult;
 use crate::map::{DomainType, Map};
+use crate::primitive::Address;
 
 /// Maximum length for an array.
 ///
@@ -66,7 +70,157 @@ pub trait SimpleTagData: Sized {
     ///
     /// In all other error cases, it will panic.
     fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()>;
+
+    /// Iterate on bytes for an array of structs.
+    ///
+    /// Returns an error if `data` is not divisible by `simple_size`.
+    fn read_chunks_to_iterator<B: ByteOrder>(data: &[u8]) -> RinghopperResult<RawStructIterator<Self, B>> {
+        let chunk_size = Self::simple_size();
+        if chunk_size == 0 || data.len() % chunk_size != 0 {
+            return Err(Error::TagParseFailure(format!("cannot read_all_to_iterator; data cannot be evenly divided into {chunk_size} byte chunks")))
+        }
+
+        Ok(RawStructIterator {
+            chunks: data.chunks(Self::simple_size()),
+            _phantom_a: Default::default(),
+            _phantom_b: Default::default(),
+        })
+    }
+
+    /// Write the struct into bytes.
+    ///
+    /// If `simple_size()` exceeds [`SIMPLE_TAG_DATA_BYTES_LOCAL_LEN`] bytes, this will be heap-allocated. Otherwise, this will be allocated locally.
+    ///
+    /// This can be useful to avoid allocating a buffer manually, especially on the heap if the struct is small.
+    fn as_bytes<B: ByteOrder>(&self) -> RinghopperResult<SimpleTagDataBytes> {
+        let size = Self::simple_size();
+        if size > SIMPLE_TAG_DATA_BYTES_LOCAL_LEN {
+            let mut heap = vec![0u8; size];
+            self.write::<B>(&mut heap, 0, size)?;
+            Ok(SimpleTagDataBytes::Heap(heap))
+        }
+        else {
+            let mut data = [0u8; SIMPLE_TAG_DATA_BYTES_LOCAL_LEN];
+            self.write::<B>(&mut data, 0, SIMPLE_TAG_DATA_BYTES_LOCAL_LEN)?;
+            Ok(SimpleTagDataBytes::Local { buffer: data, size })
+        }
+    }
+
+    fn read_chunks_from_map_to_iterator<'a, M: Map>(map: &'a M, count: usize, address: Address, domain_type: &DomainType) -> RinghopperResult<RawStructIterator<'a, Self, LittleEndian>> {
+        let chunk_size = Self::simple_size();
+        let size = count.mul_overflow_checked(chunk_size)?;
+
+        map.get_data_at_address(address.into(), domain_type, size)
+            .map(|data| RawStructIterator {
+                chunks: data.chunks(size),
+                _phantom_a: Default::default(),
+                _phantom_b: Default::default(),
+            })
+            .ok_or_else(|| Error::MapDataOutOfBounds(format!("can't read {count} {chunk_size}-sized chunk(s) from {address} in {domain_type:?}")))
+    }
 }
+
+pub const SIMPLE_TAG_DATA_BYTES_LOCAL_LEN: usize = 32;
+
+#[derive(Clone)]
+pub enum SimpleTagDataBytes {
+    /// Not allocated on the heap.
+    Local { buffer: [u8; SIMPLE_TAG_DATA_BYTES_LOCAL_LEN], size: usize },
+
+    /// Allocated on the heap.
+    Heap(Vec<u8>)
+}
+
+impl SimpleTagDataBytes {
+    /// Get a reference to the bytes.
+    pub fn bytes(&self) -> &[u8] {
+        match &self {
+            Self::Local { buffer: data, size } => &data[..*size],
+            Self::Heap(v) => v.as_slice()
+        }
+    }
+
+    /// Convert the bytes into a `Vec<u8>`.
+    pub fn to_vec(self) -> Vec<u8> {
+        match self {
+            Self::Local { buffer: data, size } => data[..size].to_vec(),
+            Self::Heap(v) => v
+        }
+    }
+}
+
+/// Reader for SimpleTagData types.
+///
+/// If an error occurs when calling `next()`, an error will be returned, but the cursor will still be advanced.
+pub struct RawStructIterator<'a, T: SimpleTagData, B: ByteOrder> {
+    chunks: Chunks<'a, u8>,
+    _phantom_a: PhantomData<T>,
+    _phantom_b: PhantomData<B>
+}
+
+impl<'a, T: SimpleTagData, B: ByteOrder> RawStructIterator<'a, T, B> {
+    fn read(c: &[u8]) -> RinghopperResult<T> {
+        T::read::<B>(c, 0, c.len())
+    }
+
+    /// Consume the iterator, converting it into a [`RawStructIteratorInfallible`].
+    pub fn into_infallible(self) -> RawStructIteratorInfallible<'a, T, B> {
+        RawStructIteratorInfallible {
+            chunks: self.chunks,
+            _phantom_a: self._phantom_a,
+            _phantom_b: self._phantom_b
+        }
+    }
+}
+
+impl<'a, T: SimpleTagData, B: ByteOrder> From<RawStructIterator<'a, T, B>> for RawStructIteratorInfallible<'a, T, B> {
+    fn from(value: RawStructIterator<'a, T, B>) -> Self {
+        value.into_infallible()
+    }
+}
+
+/// Reader for SimpleTagData types.
+///
+/// If an error occurs when calling `next()`, a panic will occur.
+pub struct RawStructIteratorInfallible<'a, T: SimpleTagData, B: ByteOrder> {
+    chunks: Chunks<'a, u8>,
+    _phantom_a: PhantomData<T>,
+    _phantom_b: PhantomData<B>
+}
+
+impl<'a, T: SimpleTagData, B: ByteOrder> RawStructIteratorInfallible<'a, T, B> {
+    fn read(c: &[u8]) -> T {
+        T::read::<B>(c, 0, c.len()).unwrap()
+    }
+}
+
+macro_rules! define_raw_struct_iterator {
+    ($type:tt, $item:ty) => {
+        impl<'a, T: SimpleTagData, B: ByteOrder> Iterator for $type<'a, T, B> {
+            type Item = $item;
+
+            fn next(&mut self) -> Option<Self::Item> {
+                self.chunks.next().map(Self::read)
+            }
+
+            fn size_hint(&self) -> (usize, Option<usize>) {
+                self.chunks.size_hint()
+            }
+        }
+
+        impl<'a, T: SimpleTagData, B: ByteOrder> DoubleEndedIterator for $type<'a, T, B> {
+            fn next_back(&mut self) -> Option<Self::Item> {
+                self.chunks.next_back().map(Self::read)
+            }
+        }
+
+        impl<'a, T: SimpleTagData, B: ByteOrder> ExactSizeIterator for $type<'a, T, B> {}
+        impl<'a, T: SimpleTagData, B: ByteOrder> FusedIterator for $type<'a, T, B> {}
+    };
+}
+
+define_raw_struct_iterator!(RawStructIterator, RinghopperResult<T>);
+define_raw_struct_iterator!(RawStructIteratorInfallible, T);
 
 /// Automatically implements DynamicTagData for simple primitives.
 pub trait SimplePrimitive: SimpleTagData {

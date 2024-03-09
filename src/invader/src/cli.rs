@@ -1,3 +1,5 @@
+#![allow(dead_code)] // TODO: fix this
+
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use ringhopper::tag::tree::VirtualTagsDirectory;

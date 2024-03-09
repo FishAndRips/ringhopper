@@ -459,7 +459,45 @@ impl VirtualTagsDirectory {
         Ok(Self { directories, strictness: ParseStrictness::Strict, cow_output })
     }
 
-    fn path_for_tag(&self, path: &TagPath) -> Option<PathBuf> {
+    /// Write the tag to the desired tags directory.
+    ///
+    /// Note that if there is a cow, `directory` will be ignored and the cow will be used instead.
+    pub fn write_tag_to_directory(&self, path: &TagPath, tag: &dyn PrimaryTagStructDyn, directory: usize) -> RinghopperResult<bool> {
+        let tag_file = tag.to_tag_file()?;
+        let hash = Self::hash_file(tag_file.as_slice());
+
+        let path_for_tag = match self.path_for_tag(path).map(|(_, path)| path) {
+            Some(n) => {
+                let original_hash = std::fs::read(&n)
+                    .map(|f| Self::hash_file(f.as_slice()))
+                    .map_err(|e| Error::FailedToReadFile(n.clone(), e))?;
+
+                if original_hash == hash {
+                    return Ok(false)
+                }
+
+                n
+            },
+            None => match &self.cow_output {
+                Some(_) => PathBuf::new(), // will be overwritten in file_to_write_to
+                None => self.directories[directory].join(path.to_native_path())
+            }
+        };
+
+        let file_to_write_to = match &self.cow_output {
+            Some(n) => n.join(path.to_native_path()),
+            None => path_for_tag
+        };
+
+        let parent = file_to_write_to.parent().unwrap();
+        std::fs::create_dir_all(&parent).map_err(|e| Error::FailedToWriteFile(parent.to_path_buf(), e))?;
+        std::fs::write(&file_to_write_to, tag_file).map_err(|e| Error::FailedToWriteFile(file_to_write_to, e))?;
+
+        Ok(true)
+    }
+
+    /// Get the directory index and path the tag is located in.
+    pub fn path_for_tag(&self, path: &TagPath) -> Option<(usize, PathBuf)> {
         let native_path = path.to_native_path();
         for index in 0..self.directories.len() {
             let directory = &self.directories[index];
@@ -467,17 +505,21 @@ impl VirtualTagsDirectory {
             if !path_to_test.exists() {
                 continue
             }
-            return Some(path_to_test);
+            return Some((index, path_to_test));
         }
         None
+    }
+
+    fn hash_file(file: &[u8]) -> u64 {
+        crc64(u64::MAX, file)
     }
 }
 
 impl TagTree for VirtualTagsDirectory {
     fn open_tag_copy(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
-        let file_path = self.path_for_tag(path).ok_or_else(|| Error::TagNotFound(path.clone()))?;
+        let file_path = self.path_for_tag(path).ok_or_else(|| Error::TagNotFound(path.clone()))?.1;
         let file = std::fs::read(&file_path).map_err(|e| Error::FailedToReadFile(file_path, e))?;
-        let hash = crc64::crc64(u64::MAX, file.as_slice());
+        let hash = Self::hash_file(file.as_slice());
         let mut tag = ringhopper_structs::read_any_tag_from_file_buffer(&file, self.strictness)
             .map_err(|e| match e {
                 Error::TagParseFailure(_) => Error::CorruptedTag(path.clone(), vec![e]),
@@ -544,33 +586,9 @@ impl TagTree for VirtualTagsDirectory {
 
         Some(result)
     }
+
     fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<bool> {
-        let tag_file = tag.to_tag_file()?;
-        let hash = crc64(u64::MAX, tag_file.as_slice());
-
-        // Open the original tag to get the hash if this is a new tag
-        let old_hash = match tag.hash() {
-            0 => match self.path_for_tag(path) {
-                Some(n) if n.exists() => self.open_tag_copy(path)?.hash(),
-                _ => 0
-            },
-            n => n
-        };
-
-        if hash == old_hash {
-            return Ok(false)
-        }
-
-        let file_to_write_to = match &self.cow_output {
-            Some(n) => n.join(path.to_native_path()),
-            None => self.path_for_tag(path).unwrap_or_else(|| self.directories[0].join(path.to_native_path()))
-        };
-
-        let parent = file_to_write_to.parent().unwrap();
-        std::fs::create_dir_all(&parent).map_err(|e| Error::FailedToWriteFile(parent.to_path_buf(), e))?;
-        std::fs::write(&file_to_write_to, tag_file).map_err(|e| Error::FailedToWriteFile(file_to_write_to, e))?;
-
-        Ok(true)
+        self.write_tag_to_directory(path, tag, self.path_for_tag(path).map(|(index, _)| index).unwrap_or(0))
     }
 
     fn contains(&self, path: &TagPath) -> bool {
@@ -628,7 +646,7 @@ impl<T: TagTree> TagTree for Arc<T> {
         self.as_ref().files_in_path(path)
     }
 
-    fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<bool> {
+    fn write_tag(&mut self, _path: &TagPath, _tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<bool> {
         unimplemented!("write_tag is not implemented in Arc<TagTree>")
     }
 

@@ -8,7 +8,7 @@ use ringhopper::error::Error;
 use ringhopper::primitives::primitive::TagPath;
 use ringhopper::tag::compare::{compare_tags, TagComparisonDifference};
 use ringhopper::tag::tree::{TagTree, VirtualTagsDirectory};
-use threading::{DisplayMode, do_with_threads};
+use threading::{DisplayMode, do_with_threads, ProcessSuccessType};
 
 #[derive(PartialEq)]
 enum Show {
@@ -106,14 +106,14 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
         let secondary = match secondary {
             Ok(n) => n,
             Err(Error::CorruptedTag(_, _)) => secondary?,
-            _ => return Ok(false)
+            _ => return Ok(ProcessSuccessType::Skipped("not in directory"))
         };
 
         let primary = context.tags_directory.open_tag_copy(path)?;
         let differences = compare_tags(primary.as_ref(), secondary.as_ref());
         user_data.differences.lock().unwrap().insert(path.to_owned(), differences);
 
-        Ok(true)
+        Ok(ProcessSuccessType::Success)
     })?;
 
     display_result(display_mode, verbose, user_data);

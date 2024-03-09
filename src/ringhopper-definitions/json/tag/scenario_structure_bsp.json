@@ -203,7 +203,7 @@
             },
             {
                 "name": "texture coords",
-                "type": "Vector2DInt"
+                "type": "CompressedVector2D"
             }
         ],
         "type": "struct",
@@ -310,61 +310,12 @@
                 "size": 2
             },
             {
-                "name": "rendered vertices type",
-                "type": "VertexType",
-                "cache_only": true
+                "name": "rendered vertices",
+                "type": "ModelVertexReference"
             },
             {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "name": "rendered vertices count",
-                "type": "uint32"
-            },
-            {
-                "name": "rendered vertices offset",
-                "type": "uint32",
-                "cache_only": true
-            },
-            {
-                "type": "pad",
-                "size": 4,
-                "comment": "on PC, this gets changed to a pointer to something when the BSP is loaded in-game"
-            },
-            {
-                "name": "rendered vertices index pointer",
-                "type": "Address",
-                "cache_only": true,
-                "comment": "(Xbox only) an indirect pointer to the rendered vertices"
-            },
-            {
-                "name": "lightmap vertices type",
-                "type": "VertexType",
-                "cache_only": true
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "name": "lightmap vertices count",
-                "type": "uint32"
-            },
-            {
-                "name": "lightmap vertices offset",
-                "type": "uint32",
-                "cache_only": true
-            },
-            {
-                "type": "pad",
-                "size": 4
-            },
-            {
-                "name": "lightmap vertices index pointer",
-                "type": "Address",
-                "cache_only": true,
-                "comment": "(Xbox only) an indirect pointer to the lightmap vertices"
+                "name": "lightmap vertices",
+                "type": "ModelVertexReference"
             },
             {
                 "name": "uncompressed vertices",

@@ -18,7 +18,7 @@ pub trait PrimaryTagStruct: DynamicTagData + TagData {
     /// Get the version of the tag struct's tag file.
     fn version() -> u16 where Self: Sized;
 
-    /// Get the hash of the file.
+    /// Get the original CRC64 hash of the tag file.
     ///
     /// If the output hash matches this, hint to not save this on a real filesystem.
     fn hash(&self) -> u64;

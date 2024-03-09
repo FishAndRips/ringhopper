@@ -20,13 +20,13 @@ macro_rules! make_tag_collection_fn {
                 .parse(args)?;
 
             let tag = parser.get_extra()[0].clone();
-            do_with_threads(parser.get_virtual_tags_directory(), parser, &tag, Some(TagGroup::$tag_struct), (), DisplayMode::ShowProcessed, |context, path, _| {
+            do_with_threads(parser.get_virtual_tags_directory(), parser, &tag, Some(TagGroup::$tag_struct), (), DisplayMode::ShowAll, |context, path, _| {
                 let mut full_data_path = context.args.get_data().join(path.to_native_path());
                 full_data_path.set_extension("txt");
                 let text_file = read_file(full_data_path)?;
                 let tag = $tag_struct::from_text_data(text_file.as_slice())
                     .map_err(|e| Error::Other(e.to_string()))?;
-                context.tags_directory.write_tag(path, &tag)
+                ProcessSuccessType::wrap_write_result(context.tags_directory.write_tag(path, &tag))
             })
         }
     };

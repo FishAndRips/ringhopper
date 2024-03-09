@@ -139,6 +139,7 @@ pub enum SimplePrimitiveType {
     Vector2DInt,
     Rectangle,
     CompressedVector3D,
+    CompressedVector2D,
     CompressedFloat,
 
     ColorRGBFloat,

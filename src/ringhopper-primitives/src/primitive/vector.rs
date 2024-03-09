@@ -664,6 +664,57 @@ impl SimplePrimitive for CompressedVector3D {
     }
 }
 
+/// Denotes a 2D vector compressed into a 32-bit integer.
+#[derive(Clone, Copy, Default, PartialEq)]
+#[repr(transparent)]
+pub struct CompressedVector2D {
+    pub data: u32
+}
+
+impl From<Vector2D> for CompressedVector2D {
+    fn from(value: Vector2D) -> Self {
+        Self { data: compress_vector2d(&value) }
+    }
+}
+
+impl From<CompressedVector2D> for Vector2D {
+    fn from(value: CompressedVector2D) -> Self {
+        decompress_vector2d(value.data)
+    }
+}
+
+impl Debug for CompressedVector2D {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("compressed<0x{:08X} = {:?}>", self.data, Vector2D::from(*self)))
+    }
+}
+
+impl Display for CompressedVector2D {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("compressed<0x{:08X} = {}>", self.data, Vector2D::from(*self)))
+    }
+}
+
+impl SimpleTagData for CompressedVector2D {
+    fn simple_size() -> usize {
+        u32::simple_size()
+    }
+
+    fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
+        u32::read::<B>(data, at, struct_end).map(|data| Self { data })
+    }
+
+    fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
+        self.data.write::<B>(data, at, struct_end)
+    }
+}
+
+impl SimplePrimitive for CompressedVector2D {
+    fn primitive_type() -> SimplePrimitiveType {
+        SimplePrimitiveType::CompressedVector2D
+    }
+}
+
 fn compress_vector3d(vector: &Vector3D) -> u32 {
     let x = compress_float::<11>(vector.x);
     let y = compress_float::<11>(vector.y) << 11;
@@ -678,6 +729,20 @@ fn decompress_vector3d(vector: u32) -> Vector3D {
     let z = decompress_float::<10>(vector >> 22);
 
     Vector3D { x, y, z }
+}
+
+fn compress_vector2d(vector: &Vector2D) -> u32 {
+    let x = compress_float::<16>(vector.x);
+    let y = compress_float::<16>(vector.y) << 16;
+
+    x | y
+}
+
+fn decompress_vector2d(vector: u32) -> Vector2D {
+    let x = decompress_float::<16>(vector);
+    let y = decompress_float::<16>(vector >> 16);
+
+    Vector2D { x, y }
 }
 
 fn decompress_float<const BITS: usize>(float: u32) -> f32 {

@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::ops::Range;
 use definitions::{Bitmap, CacheFileHeader, CacheFileHeaderPCDemo, CacheFileTag, CacheFileTagDataHeaderPC, Model, read_any_tag_from_map, Scenario, ScenarioStructureBSPCompiledHeader, ScenarioType, Sound, SoundPitchRange};
 use primitives::byteorder::LittleEndian;
-use primitives::dynamic::DynamicTagData;
 use crate::map::extract::*;
 use primitives::error::{Error, OverflowCheck, RinghopperResult};
 use primitives::map::{DomainType, Map, ResourceMapType, Tag};
@@ -484,6 +483,7 @@ fn extract_tag_from_map<M: Map>(
         TagGroup::PointPhysics => fix_point_physics_tag(tag.as_any_mut().downcast_mut().unwrap()),
         TagGroup::Projectile => fix_projectile_tag(tag.as_any_mut().downcast_mut().unwrap()),
         TagGroup::Scenario => fix_scenario_tag(tag.as_any_mut().downcast_mut().unwrap(), path.base_name())?,
+        TagGroup::ScenarioStructureBSP => fix_scenario_structure_bsp_tag(tag.as_any_mut().downcast_mut().unwrap())?,
         TagGroup::Sound => fix_sound_tag(tag.as_any_mut().downcast_mut().unwrap())?,
         TagGroup::Weapon => fix_weapon_tag(tag.as_any_mut().downcast_mut().unwrap(), path, &scenario_tag),
         _ => ()
