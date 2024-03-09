@@ -112,7 +112,7 @@ macro_rules! extract_uncompressed_model_vertices {
                 )?.into_infallible());
 
                 // Now all indices
-                let index_count = triangle_count + 2;
+                let index_count = if triangle_count > 0 { triangle_count + 2 } else { 0 };
                 let mut indices = Index::read_chunks_from_map_to_iterator(
                     $map,
                     index_count,
