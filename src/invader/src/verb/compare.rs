@@ -5,10 +5,13 @@ use std::path::Path;
 use std::sync::{Arc, Mutex};
 use cli::{CommandLineParser, CommandLineValue, CommandLineValueType, Parameter};
 use ringhopper::error::Error;
+use ringhopper::map::GearboxCacheFile;
 use ringhopper::primitives::primitive::TagPath;
+use ringhopper::primitives::tag::ParseStrictness;
 use ringhopper::tag::compare::{compare_tags, TagComparisonDifference};
 use ringhopper::tag::tree::{TagTree, VirtualTagsDirectory};
 use threading::{DisplayMode, do_with_threads, ProcessSuccessType};
+use util::read_file;
 
 #[derive(PartialEq)]
 enum Show {
@@ -78,7 +81,19 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
             return Err(format!("Source `{i}` does not exist"))
         }
         else if path.is_file() && path.extension() == Some("map".as_ref()) {
-            return Err(format!("Source `{i}` refers to a cache file (which is unsupported right now)"))
+            // TODO: Refactor loading maps. Also make it so that bitmaps.map, sounds.map, and loc.map are decided automatically
+
+            let bitmaps_path = path.parent().unwrap().join("bitmaps.map");
+            let sounds_path = path.parent().unwrap().join("sounds.map");
+            let loc_path = path.parent().unwrap().join("loc.map");
+
+            let map_data = read_file(path).map_err(|f| format!("Could not open {path:?}: {f}"))?;
+            let bitmaps = read_file(bitmaps_path).unwrap_or(Vec::new());
+            let sounds = read_file(sounds_path).unwrap_or(Vec::new());
+            let loc = read_file(loc_path).unwrap_or(Vec::new());
+
+            let map = GearboxCacheFile::new(map_data, bitmaps, sounds, loc).unwrap();
+            source.push_back(Arc::new(map))
         }
         else if path.is_dir() {
             let dir = match VirtualTagsDirectory::new(&[path], None) {
@@ -110,6 +125,11 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
         };
 
         let primary = context.tags_directory.open_tag_copy(path)?;
+
+        // Strip any cache-only fields
+        let secondary = ringhopper::definitions::read_any_tag_from_file_buffer(&secondary.to_tag_file()?, ParseStrictness::Relaxed)?;
+        let primary = ringhopper::definitions::read_any_tag_from_file_buffer(&primary.to_tag_file()?, ParseStrictness::Relaxed)?;
+
         let differences = compare_tags(primary.as_ref(), secondary.as_ref());
         user_data.differences.lock().unwrap().insert(path.to_owned(), differences);
 

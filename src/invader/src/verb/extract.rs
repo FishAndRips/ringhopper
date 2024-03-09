@@ -17,6 +17,8 @@ pub fn extract(args: Args, description: &'static str) -> Result<(), String> {
 
     let map_path = Path::new(&parser.get_extra()[0]);
 
+    // TODO: Refactor loading maps. Also make it so that bitmaps.map, sounds.map, and loc.map are decided automatically
+
     let bitmaps_path = map_path.parent().unwrap().join("bitmaps.map");
     let sounds_path = map_path.parent().unwrap().join("sounds.map");
     let loc_path = map_path.parent().unwrap().join("loc.map");
