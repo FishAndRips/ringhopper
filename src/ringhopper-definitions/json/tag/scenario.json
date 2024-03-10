@@ -592,25 +592,25 @@
         "fields": [
             {
                 "name": "cortana hack",
-                "description": "use this to get 99 lives on super mario bros 2 the lost levels"
+                "comment": "use this to get 99 lives on super mario bros 2 the lost levels"
             },
             {
                 "name": "use demo ui",
-                "description": "changes what tags are used to build the cache file",
+                "comment": "changes what tags are used to build the cache file",
                 "supported_engines": [
                     "xbox-demo"
                 ]
             },
             {
                 "name": "enable color correction",
-                "description": "makes the game look worse by running it through an ntsc->srgb filter",
+                "comment": "makes the game look worse by running it through an ntsc->srgb filter",
                 "supported_engines": [
                     "mcc-cea"
                 ]
             },
             {
                 "name": "do not apply bungie campaign tag patches",
-                "description": "disable patches made to various tags such as the pistol when building for singleplayer"
+                "comment": "disable patches made to various tags such as the pistol when building for singleplayer"
             }
         ],
         "width": 16
