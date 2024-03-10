@@ -113,9 +113,14 @@
                 "name": "must be deterministic pc",
                 "cache_only": true
             },
-            "disabled in anniversary by blood setting"
+            {
+                "name": "disabled in anniversary by blood setting",
+                "supported_engines": [
+                    "mcc-cea"
+                ]
+            }
         ],
-        "comment": "\"must be deterministic xbox\" was originally \"must be deterministic\", but apparently Gearbox renamed it to \"required for gameplay cannot optimize out\" and bumped the real \"must be deterministic\" flag up, thus special handling is needed for Xbox maps",
+        "developer_note": "\"must be deterministic xbox\" was originally \"must be deterministic\", but apparently Gearbox renamed it to \"required for gameplay cannot optimize out\" and bumped the real \"must be deterministic\" flag up, thus special handling is needed for Xbox maps",
         "width": 32
     },
     {
@@ -158,7 +163,7 @@
             {
                 "name": "type identifier",
                 "type": "TagGroup",
-                "description": "Must be the same or a supergroup of type. Can be damage_effect, decal, light, object, particle_system, or sound",
+                "comment": "Must be the same or a supergroup of type. Can be damage_effect, decal, light, object, particle_system, or sound",
                 "cache_only": true
             },
             {

@@ -211,7 +211,7 @@
             "v16u16",
             {
                 "name": "unused",
-                "cache_only": true
+                "exclude": true
             },
             {
                 "name": "make it actually work",
