@@ -58,7 +58,7 @@
                 "name": "cea flags",
                 "type": "CEAFlags",
                 "engines": [
-                    "mcc"
+                    "mcc-cea"
                 ]
             },
             {

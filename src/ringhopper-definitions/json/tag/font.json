@@ -15,7 +15,12 @@
     {
         "name": "FontFlags",
         "fields": [
-            "disable mcc font override"
+            {
+                "name": "disable mcc font override",
+                "supported_engines": [
+                    "mcc-cea"
+                ]
+            }
         ],
         "type": "bitfield",
         "width": 32
