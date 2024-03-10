@@ -129,12 +129,10 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
     };
 
     do_with_threads(primary, parser, &tag, None, user_data.clone(), DisplayMode::Silent, |context, path, user_data| {
-        let secondary = user_data.tags.open_tag_copy(path);
-
-        let mut secondary = match secondary {
+        let mut secondary = match user_data.tags.open_tag_copy(path) {
             Ok(n) => n,
-            Err(Error::CorruptedTag(_, _)) => secondary?,
-            _ => return Ok(ProcessSuccessType::Skipped("not in directory"))
+            Err(Error::TagNotFound(_)) => return Ok(ProcessSuccessType::Skipped("not in directory")),
+            n => n?
         };
 
         let mut primary = context.tags_directory.open_tag_copy(path)?;
