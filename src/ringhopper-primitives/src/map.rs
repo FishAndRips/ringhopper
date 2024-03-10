@@ -57,7 +57,7 @@ pub trait Map {
     fn get_name(&self) -> &str;
 
     /// Get the engine for the map.
-    fn get_engine(&self) -> &Engine;
+    fn get_engine(&self) -> &'static Engine;
 
     /// Extract the tag.
     fn extract_tag(

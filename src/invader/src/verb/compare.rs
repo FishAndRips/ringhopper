@@ -5,7 +5,7 @@ use std::path::Path;
 use std::sync::{Arc, Mutex};
 use cli::{CommandLineParser, CommandLineValue, CommandLineValueType, Parameter};
 use ringhopper::error::Error;
-use ringhopper::map::GearboxCacheFile;
+use ringhopper::map::gearbox::GearboxCacheFile;
 use ringhopper::primitives::byteorder::WriteBytesExt;
 use ringhopper::primitives::primitive::TagPath;
 use ringhopper::primitives::tag::ParseStrictness;
@@ -44,7 +44,7 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
         ))
         .add_custom_parameter(Parameter::new(
             "show",
-            'S',
+            's',
             "Set whether to display `matched`, `mismatched`, or `all`. Default: `all`",
             "<param>",
             Some(CommandLineValueType::String),
@@ -98,9 +98,8 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
             let bitmaps = read_file(bitmaps_path).unwrap_or(Vec::new());
             let sounds = read_file(sounds_path).unwrap_or(Vec::new());
             let loc = read_file(loc_path).unwrap_or(Vec::new());
-
             let map = GearboxCacheFile::new(map_data, bitmaps, sounds, loc).unwrap();
-            source.push_back(Arc::new(map))
+            source.push_back(Arc::new(map));
         }
         else if path.is_dir() {
             should_strip.write_u8(0).unwrap();
