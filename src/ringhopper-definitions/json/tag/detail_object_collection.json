@@ -11,8 +11,13 @@
         "name": "DetailObjectCollectionTypeFlags",
         "type": "bitfield",
         "fields": [
-            "unused a",
-            "unused b",
+            {
+                "name": "unused",
+                "exclude": true
+            },            {
+                "name": "unused1",
+                "exclude": true
+            },
             "interpolate color in hsv",
             "more colors"
         ],
