@@ -1,9 +1,9 @@
 use std::collections::VecDeque;
-use std::io::{stderr, stdout, Write};
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicU64, Ordering};
 use cli::CommandLineArgs;
 use ringhopper::error::RinghopperResult;
+use ringhopper::logger::Logger;
 use ringhopper::primitives::primitive::{TagGroup, TagPath};
 use ringhopper::tag::tree::{TagFilter, TagTree};
 
@@ -21,7 +21,7 @@ impl<T: TagTree + Send + Clone> Clone for ThreadingContext<T> {
     }
 }
 
-pub type ProcessFunction<T, U> = fn(&mut ThreadingContext<T>, &TagPath, &mut U) -> RinghopperResult<ProcessSuccessType>;
+pub type ProcessFunction<T, U> = fn(&mut ThreadingContext<T>, &TagPath, &mut U, logger: &Arc<dyn Logger>) -> RinghopperResult<ProcessSuccessType>;
 
 pub enum ProcessSuccessType {
     /// Used if successful; printed unless silent
@@ -57,6 +57,7 @@ pub fn do_with_threads<T: TagTree + Send + 'static + Clone, U: Clone + Send + 's
     group: Option<TagGroup>,
     mut user_data: U,
     display_mode: DisplayMode,
+    logger: Arc<dyn Logger>,
     function: ProcessFunction<T, U>,
 ) -> Result<(), String> {
     let start = std::time::Instant::now();
@@ -76,7 +77,7 @@ pub fn do_with_threads<T: TagTree + Send + 'static + Clone, U: Clone + Send + 's
             Some(group) => TagPath::new(user_filter, group),
             None => TagPath::from_path(user_filter)
         }.map_err(|_| format!("Invalid tag path `{user_filter}`"))?;
-        process_tags(&mut context, &success, &failure, &ignored, &total, &tag_path, &mut user_data, display_mode, function);
+        process_tags(&mut context, &success, &failure, &ignored, &total, &tag_path, &mut user_data, display_mode, &logger, function);
     }
     else {
         let filter = TagFilter::new(user_filter, group);
@@ -85,7 +86,7 @@ pub fn do_with_threads<T: TagTree + Send + 'static + Clone, U: Clone + Send + 's
         match thread_count {
             1 => {
                 for path in tags {
-                    process_tags(&mut context, &success, &failure, &ignored, &total, &path, &mut user_data, display_mode, function);
+                    process_tags(&mut context, &success, &failure, &ignored, &total, &path, &mut user_data, display_mode, &logger, function);
                 }
             },
             n => {
@@ -99,13 +100,14 @@ pub fn do_with_threads<T: TagTree + Send + 'static + Clone, U: Clone + Send + 's
                     let failure = failure.clone();
                     let ignored = ignored.clone();
                     let mut user_data = user_data.clone();
+                    let logger = logger.clone();
                     threads.push(std::thread::spawn(move || {
                         loop {
                             let next = match tags.lock().unwrap().pop_front() {
                                 Some(n) => n,
                                 None => break
                             };
-                            process_tags(&mut context, &success, &failure, &ignored, &total, &next, &mut user_data, display_mode, function);
+                            process_tags(&mut context, &success, &failure, &ignored, &total, &next, &mut user_data, display_mode, &logger, function);
                         }
                     }))
                 }
@@ -129,15 +131,17 @@ pub fn do_with_threads<T: TagTree + Send + 'static + Clone, U: Clone + Send + 's
 
     if display_mode == DisplayMode::Silent {
         if failure > 0 {
-            println!("Failed to parse {failure} tag{s}", s = if failure == 1 { "" } else { "s" });
+            logger.error_fmt_ln(format_args!("Failed to parse {failure} tag{s}", s = if failure == 1 { "" } else { "s" }));
         }
     }
     else if total > 1 {
-        print!("Processed {success} / {total} tags in {milliseconds_taken} ms");
+        let processed_amt = format!("Saved {success} / {total} tags in {milliseconds_taken} ms");
         if failure > 0 {
-            print!(", with {failure} error{s}", s = if failure == 1 { "" } else { "s" });
+            logger.warning_fmt_ln(format_args!("{processed_amt}, with {failure} error{s}", s = if failure == 1 { "" } else { "s" }));
         }
-        println!();
+        else {
+            logger.success(&processed_amt);
+        }
     }
 
     Ok(())
@@ -152,25 +156,29 @@ fn process_tags<T: TagTree + Send + Clone, U: Clone + Send + 'static>(
     path: &TagPath,
     user_data: &mut U,
     display_mode: DisplayMode,
+    logger: &Arc<dyn Logger>,
     function: ProcessFunction<T, U>
 ) {
     total.fetch_add(1, Ordering::Relaxed);
-    match function(context, &path, user_data) {
+    match function(context, &path, user_data, logger) {
         Ok(ProcessSuccessType::Success) => {
             success.fetch_add(1, Ordering::Relaxed);
             if display_mode == DisplayMode::ShowAll {
-                writeln!(stdout().lock(), "Processed {path}").unwrap()
+                logger.success_fmt_ln(format_args!("Saved {path}"));
+                logger.flush();
             }
         },
         Ok(ProcessSuccessType::Skipped(reason)) => if display_mode == DisplayMode::ShowAll {
-            writeln!(stdout().lock(), "Skipped {path}: {reason}").unwrap()
+            logger.neutral_fmt_ln(format_args!("Skipped {path}: {reason}"));
+            logger.flush();
         },
         Ok(ProcessSuccessType::Ignored) => {
             ignored.fetch_add(1, Ordering::Relaxed);
         }
         Err(e) => {
             failure.fetch_add(1, Ordering::Relaxed);
-            writeln!(stderr().lock(), "Failed to process {path}: {e}").unwrap()
+            logger.error_fmt_ln(format_args!("Failed to process {path}: {e}"));
+            logger.flush();
         }
     }
 }

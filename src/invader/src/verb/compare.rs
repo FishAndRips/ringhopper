@@ -1,18 +1,19 @@
 use std::collections::{HashMap, VecDeque};
 use std::env::Args;
-use std::io::{BufWriter, Cursor, StdoutLock, Write};
+use std::io::Cursor;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 use cli::{CommandLineParser, CommandLineValue, CommandLineValueType, Parameter};
 use ringhopper::error::Error;
-use ringhopper::map::gearbox::GearboxCacheFile;
+use ringhopper::logger::Logger;
+use ringhopper::map::load_map_from_filesystem_as_tag_tree;
 use ringhopper::primitives::byteorder::WriteBytesExt;
 use ringhopper::primitives::primitive::TagPath;
 use ringhopper::primitives::tag::ParseStrictness;
 use ringhopper::tag::compare::{compare_tags, TagComparisonDifference};
 use ringhopper::tag::tree::{TagTree, VirtualTagsDirectory};
 use threading::{DisplayMode, do_with_threads, ProcessSuccessType};
-use util::read_file;
+use util::make_stdout_logger;
 
 #[derive(PartialEq)]
 enum Show {
@@ -87,19 +88,8 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
         }
         else if path.is_file() && path.extension() == Some("map".as_ref()) {
             should_strip.write_u8(if raw { 0 } else { 1 }).unwrap();
-
-            // TODO: Refactor loading maps. Also make it so that bitmaps.map, sounds.map, and loc.map are decided automatically
-
-            let bitmaps_path = path.parent().unwrap().join("bitmaps.map");
-            let sounds_path = path.parent().unwrap().join("sounds.map");
-            let loc_path = path.parent().unwrap().join("loc.map");
-
-            let map_data = read_file(path).map_err(|f| format!("Could not open {path:?}: {f}"))?;
-            let bitmaps = read_file(bitmaps_path).unwrap_or(Vec::new());
-            let sounds = read_file(sounds_path).unwrap_or(Vec::new());
-            let loc = read_file(loc_path).unwrap_or(Vec::new());
-            let map = GearboxCacheFile::new(map_data, bitmaps, sounds, loc).unwrap();
-            source.push_back(Arc::new(map));
+            let map = load_map_from_filesystem_as_tag_tree(path).map_err(|e| format!("Cannot load {path:?} as a cache file: {e:?}"))?;
+            source.push_back(map);
         }
         else if path.is_dir() {
             should_strip.write_u8(0).unwrap();
@@ -127,7 +117,9 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
         should_strip
     };
 
-    do_with_threads(primary, parser, &tag, None, user_data.clone(), DisplayMode::Silent, |context, path, user_data| {
+    let logger = make_stdout_logger();
+
+    do_with_threads(primary, parser, &tag, None, user_data.clone(), DisplayMode::Silent, logger.clone(), |context, path, user_data, _| {
         let mut secondary = match user_data.tags.open_tag_copy(path) {
             Ok(n) => n,
             Err(Error::TagNotFound(_)) => return Ok(ProcessSuccessType::Skipped("not in directory")),
@@ -150,39 +142,36 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
         Ok(ProcessSuccessType::Success)
     })?;
 
-    display_result(display_mode, verbose, user_data);
+    display_result(display_mode, verbose, user_data, &logger);
 
     Ok(())
 }
 
-fn display_result(display_mode: Show, verbose: bool, user_data: UserData) {
+fn display_result(display_mode: Show, verbose: bool, user_data: UserData, logger: &Arc<dyn Logger>) {
     let mut matched = 0usize;
     let all_differences = Arc::into_inner(user_data.differences).unwrap().into_inner().unwrap();
     let mut keys: Vec<TagPath> = all_differences.keys().map(|c| c.to_owned()).collect();
     keys.sort();
 
-    // Gets around slow terminals like the WSL (TODO: make this centralized to invader.exe itself, with color support)
-    let mut io = BufWriter::with_capacity(1024 * 64, std::io::stdout().lock());
-
     for k in &keys {
         let differences = &all_differences[k];
         if !differences.is_empty() {
             if display_mode == Show::All || display_mode == Show::Mismatched {
-                writeln!(io, "Mismatched: {k}").unwrap();
+                logger.warning_fmt_ln(format_args!("Mismatched: {k}"));
                 if verbose {
-                    display_diff(differences, &mut io);
+                    display_diff(differences, &logger);
                 }
             }
         }
         else {
             if display_mode == Show::All || display_mode == Show::Matched {
-                writeln!(io, "Matched: {k}").unwrap();
+                logger.success_fmt_ln(format_args!("Matched: {k}"));
             }
             matched += 1;
         }
     }
 
-    writeln!(io, "Matched {matched} / {} tag{s}", all_differences.len(), s = if all_differences.len() == 1 { "" } else { "s" }).unwrap();
+    logger.neutral_fmt_ln(format_args!("Matched {matched} / {} tag{s}", all_differences.len(), s = if all_differences.len() == 1 { "" } else { "s" }));
 }
 
 #[derive(Default)]
@@ -227,23 +216,23 @@ impl DifferenceMap {
     }
 }
 
-fn display_item(what: &DifferenceMap, depth: usize, io: &mut BufWriter<StdoutLock>) {
+fn display_item(what: &DifferenceMap, depth: usize, io: &Arc<dyn Logger>) {
     if depth > 0 {
         for _ in 0..depth {
-            write!(io, "    ").unwrap();
+            io.neutral("    ");
         }
-        write!(io, "{}", what.field).unwrap();
+        io.warning(&what.field);
         if let Some(n) = &what.difference {
-            write!(io, ": {}", n.difference).unwrap();
+            io.warning_fmt(format_args!(": {}", n.difference));
         }
-        writeln!(io).unwrap();
+        io.neutral_ln("");
     }
     for i in &what.children {
         display_item(i, depth + 1, io);
     }
 }
 
-fn display_diff(diff: &Vec<TagComparisonDifference>, io: &mut BufWriter<StdoutLock>) {
+fn display_diff(diff: &Vec<TagComparisonDifference>, io: &Arc<dyn Logger>) {
     let mut map = DifferenceMap::default();
     for i in diff {
         map.access_mut(&i.path).difference = Some(i.clone());

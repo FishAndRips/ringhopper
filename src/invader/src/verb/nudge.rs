@@ -3,6 +3,7 @@ use cli::CommandLineParser;
 use ringhopper::tag::nudge::{is_nudgeable, nudge_tag};
 use ringhopper::tag::tree::{TagTree};
 use threading::{DisplayMode, do_with_threads, ProcessSuccessType};
+use util::make_stdout_logger;
 
 pub fn nudge(args: Args, description: &'static str) -> Result<(), String> {
     let parser = CommandLineParser::new(description, "<tag> [args]")
@@ -13,7 +14,7 @@ pub fn nudge(args: Args, description: &'static str) -> Result<(), String> {
         .parse(args)?;
 
     let tag = parser.get_extra()[0].clone();
-    do_with_threads(parser.get_virtual_tags_directory(), parser, &tag, None, (), DisplayMode::ShowAll, |context, path, _| {
+    do_with_threads(parser.get_virtual_tags_directory(), parser, &tag, None, (), DisplayMode::ShowAll, make_stdout_logger(), |context, path, _, _| {
         if !is_nudgeable(path.group()) {
             return Ok(ProcessSuccessType::Ignored)
         }

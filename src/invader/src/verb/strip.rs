@@ -2,6 +2,7 @@ use std::env::Args;
 use cli::CommandLineParser;
 use ringhopper::tag::tree::{TagTree};
 use threading::{DisplayMode, do_with_threads, ProcessSuccessType};
+use util::make_stdout_logger;
 
 pub fn strip(args: Args, description: &'static str) -> Result<(), String> {
     let parser = CommandLineParser::new(description, "<tag> [args]")
@@ -12,7 +13,7 @@ pub fn strip(args: Args, description: &'static str) -> Result<(), String> {
         .parse(args)?;
 
     let tag = parser.get_extra()[0].clone();
-    do_with_threads(parser.get_virtual_tags_directory(), parser, &tag, None, (), DisplayMode::ShowAll, |context, path, _| {
+    do_with_threads(parser.get_virtual_tags_directory(), parser, &tag, None, (), DisplayMode::ShowAll, make_stdout_logger(), |context, path, _, _| {
         let tag = context.tags_directory.open_tag_copy(&path)?;
         ProcessSuccessType::wrap_write_result(context.tags_directory.write_tag(path, tag.as_ref()))
     })

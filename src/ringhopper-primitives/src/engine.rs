@@ -11,7 +11,13 @@ pub struct Engine {
     pub externally_indexed_tags: bool,
     pub max_cache_file_size: EngineCacheFileSize,
     pub base_memory_address: EngineBaseMemoryAddress,
-    pub required_tags: EngineRequiredTags
+    pub required_tags: EngineRequiredTags,
+    pub cache_parser: EngineCacheParser
+}
+
+pub enum EngineCacheParser {
+    PC,
+    Xbox
 }
 
 pub struct EngineRequiredTags {

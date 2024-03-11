@@ -246,6 +246,11 @@ impl ParsedDefinitions {
                 max_script_nodes: first_u64("max_script_nodes", true).unwrap() as u64,
                 max_tag_space: parse_hex_u64(get_chain("max_tag_space", true)).first().unwrap().1,
                 externally_indexed_tags: first_bool("externally_indexed_tags", false).unwrap_or(false),
+                cache_parser: match first_string("cache_parser", true).unwrap().as_str() {
+                    "pc" => CacheParser::PC,
+                    "xbox" => CacheParser::Xbox,
+                    parser => panic!("unknown cache_parser {parser}")
+                },
                 name: engine_name.to_owned(),
                 required_tags,
                 version: first_string("version", false)

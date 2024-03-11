@@ -1,6 +1,6 @@
 extern crate ringhopper_definitions;
 
-use ringhopper_definitions::{Engine, load_all_definitions};
+use ringhopper_definitions::{CacheParser, Engine, load_all_definitions};
 use std::fmt::Write;
 use proc_macro::TokenStream;
 
@@ -58,6 +58,10 @@ pub fn generate_ringhopper_engines(_: TokenStream) -> TokenStream {
                                     multiplayer=make_string_list(engine.required_tags.multiplayer.as_slice())
         );
         let cache_default = engine.cache_default;
+        let cache_parser = match engine.cache_parser {
+            CacheParser::PC => "PC",
+            CacheParser::Xbox => "Xbox"
+        };
 
         write!(&mut engine_code, "Engine {{
             name: \"{name}\",
@@ -72,6 +76,7 @@ pub fn generate_ringhopper_engines(_: TokenStream) -> TokenStream {
             max_cache_file_size: {max_cache_file_size},
             base_memory_address: {base_memory_address},
             externally_indexed_tags: {externally_indexed_tags},
+            cache_parser: EngineCacheParser::{cache_parser},
             required_tags: {required_tags},
         }},").unwrap();
     }

@@ -6,7 +6,7 @@ use ringhopper::error::Error;
 use ringhopper::primitives::primitive::TagGroup;
 use ringhopper::tag::tree::TagTree;
 use threading::{DisplayMode, do_with_threads, ProcessSuccessType};
-use util::read_file;
+use util::{make_stdout_logger, read_file};
 
 pub fn unicode_strings(args: Args, description: &'static str) -> Result<(), String> {
     let parser = CommandLineParser::new(description, "<tag> [args]")
@@ -18,7 +18,7 @@ pub fn unicode_strings(args: Args, description: &'static str) -> Result<(), Stri
         .parse(args)?;
 
     let tag = parser.get_extra()[0].clone();
-    do_with_threads(parser.get_virtual_tags_directory(), parser, &tag, Some(TagGroup::UnicodeStringList), (), DisplayMode::ShowAll, |context, path, _| {
+    do_with_threads(parser.get_virtual_tags_directory(), parser, &tag, Some(TagGroup::UnicodeStringList), (), DisplayMode::ShowAll, make_stdout_logger(), |context, path, _, _| {
         let mut full_data_path = context.args.get_data().join(path.to_native_path());
         full_data_path.set_extension("txt");
         let text_file = read_file(full_data_path)?;

@@ -1,4 +1,11 @@
+#[cfg(target_os = "windows")]
+extern crate windows;
+
+#[cfg(target_os = "linux")]
+extern crate libc;
+
 use std::process::ExitCode;
+use util::make_stdout_logger;
 
 mod cli;
 mod verb;
@@ -16,14 +23,14 @@ fn main() -> ExitCode {
             verb_name.make_ascii_lowercase();
             let found_verb = verb::get_verb(&verb_name);
             if found_verb.is_none() {
-                eprintln!("Error: No such verb `{verb_name}`!");
+                make_stdout_logger().error_fmt_ln(format_args!("Error: No such verb `{verb_name}`!"));
             }
             found_verb
         })
         .map(|v| match (v.function)(args, v.description) {
             Ok(_) => ExitCode::SUCCESS,
             Err(e) => {
-                eprintln!("Error executing {}: {e}", v.name);
+                make_stdout_logger().error_fmt_ln(format_args!("Error executing {}: {e}", v.name));
                 ExitCode::FAILURE
             }
         })

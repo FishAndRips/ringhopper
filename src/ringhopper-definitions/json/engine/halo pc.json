@@ -10,6 +10,7 @@
         "base_memory_address": "0x40440000",
         "script_compile_target": "gbx-retail",
         "max_script_nodes": 19001,
+        "cache_parser": "pc",
         "cache_default": true,
         "required_tags": {
             "all": [

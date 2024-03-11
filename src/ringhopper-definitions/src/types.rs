@@ -284,6 +284,12 @@ impl Flags {
     }
 }
 
+#[derive(Copy, Clone, PartialEq)]
+pub enum CacheParser {
+    Xbox,
+    PC
+}
+
 pub struct Engine {
     pub name: String,
     pub display_name: String,
@@ -295,6 +301,7 @@ pub struct Engine {
     pub cache_default: bool,
     pub max_script_nodes: u64,
     pub max_tag_space: u64,
+    pub cache_parser: CacheParser,
 
     /// Supports externally indexed tags (Halo Custom Edition).
     pub externally_indexed_tags: bool,
