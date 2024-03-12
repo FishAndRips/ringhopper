@@ -140,7 +140,7 @@ pub fn do_with_threads<T: TagTree + Send + 'static + Clone, U: Clone + Send + 's
             logger.warning_fmt_ln(format_args!("{processed_amt}, with {failure} error{s}", s = if failure == 1 { "" } else { "s" }));
         }
         else {
-            logger.success(&processed_amt);
+            logger.success_ln(&processed_amt);
         }
     }
 
