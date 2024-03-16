@@ -443,8 +443,8 @@
             {
                 "name": "offset",
                 "type": "uint32",
-                "developer_note": "Always set to 0. Also always set to 0 on load.",
-                "exclude": true
+                "developer_note": "On non-CEA maps, this is always set to 0. Also always set to 0 on load. On CEA, this is the offset to the vertices.",
+                "cache_only": true
             },
             {
                 "name": "unknown pointer",

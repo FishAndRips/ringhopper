@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use definitions::{CacheFileTag, CacheFileTagDataHeaderPC, Scenario, ScenarioType, Sound, SoundPitchRange};
+use definitions::{CacheFileTag, CacheFileTagDataHeaderPC, Scenario, ScenarioStructureBSPCompiledHeaderCEA, ScenarioType, Sound, SoundPitchRange};
 use primitives::byteorder::LittleEndian;
 use primitives::engine::Engine;
 use primitives::error::{Error, OverflowCheck, RinghopperResult};
@@ -19,6 +19,7 @@ pub struct GearboxCacheFile {
     vertex_data: SizeRange,
     triangle_data: SizeRange,
     bsp_data: Vec<BSPDomain>,
+    bsp_vertex_data: Vec<SizeRange>,
     base_memory_address: usize,
     tags: Vec<Option<Tag>>,
     ids: HashMap<TagPath, ID>,
@@ -46,6 +47,7 @@ impl GearboxCacheFile {
             tags: Default::default(),
             scenario_tag: ID::null(),
             merged_sound_resources: HashMap::new(),
+            bsp_vertex_data: Vec::new(),
             ids: Default::default(),
             bitmaps: if bitmaps.is_empty() { None } else { Some(ResourceMap::from_data(bitmaps)?) },
             sounds: if sounds.is_empty() { None } else { Some(ResourceMap::from_data(sounds)?) },
@@ -75,6 +77,11 @@ impl GearboxCacheFile {
         map.scenario_tag_data = scenario_tag_data;
         super::util::fixup_bsp_addresses(&mut map.tags, &map.bsp_data, &map.ids)?;
 
+        // If we have external vertex data, do it
+        if engine.external_bsps {
+            map.load_external_vertex_data()?;
+        }
+
         // Done one more time to make sure everything's good
         debug_assert!(map.data.get(map.tag_data.clone()).is_some());
         debug_assert!(map.data.get(map.vertex_data.clone()).is_some());
@@ -82,6 +89,25 @@ impl GearboxCacheFile {
         debug_assert!(map.bsp_data.iter().all(|f| map.data.get(f.range.clone()).is_some()));
 
         Ok(map)
+    }
+
+    fn load_external_vertex_data(&mut self) -> RinghopperResult<()> {
+        let bsp_count = self.bsp_data.len();
+        self.bsp_vertex_data.reserve(bsp_count);
+
+        for bsp_index in 0..bsp_count {
+            let bsp_data = ScenarioStructureBSPCompiledHeaderCEA::read_from_map(self, self.bsp_data[bsp_index].base_address, &DomainType::BSP(bsp_index))
+                .expect("should have the bsp here");
+
+            let start = bsp_data.lightmap_vertices as usize;
+            let end = start.add_overflow_checked(bsp_data.lightmap_vertex_size as usize)?;
+            let range = start..end;
+
+            self.data.get(range.clone()).ok_or_else(|| Error::MapParseFailure(format!("can't get external bsp data for {bsp_index}")))?;
+            self.bsp_vertex_data.push(range);
+        }
+
+        Ok(())
     }
 
     fn load_model_data(&mut self, tag_data_header: &CacheFileTagDataHeaderPC) -> RinghopperResult<()> {
@@ -242,7 +268,10 @@ impl Map for GearboxCacheFile {
                 ResourceMapType::Loc => Some((self.loc.as_ref()?.get_by_path(path)?.get_data(), 0))
             }
 
-            _ => None
+            DomainType::BSPVertices(b) => {
+                let bsp = self.bsp_vertex_data.get(*b)?;
+                unsafe { Some((self.data.get_unchecked(bsp.clone()), 0)) }
+            }
         }
     }
 

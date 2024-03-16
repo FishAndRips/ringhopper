@@ -354,6 +354,7 @@ pub enum ObjectType {
     TagGroup,
     Data,
     FileData,
+    BSPVertexData,
     F32,
     U8,
     U16,
@@ -391,7 +392,7 @@ impl ObjectType {
         match self {
             Self::Reflexive(_) => 0xC,
             Self::TagReference(_) => 0x10,
-            Self::Data | Self::FileData => 0x14,
+            Self::Data | Self::FileData | Self::BSPVertexData => 0x14,
             Self::F32
             | Self::Angle
             | Self::U32
@@ -428,7 +429,7 @@ impl ObjectType {
             Self::Reflexive(_) => 1,
             Self::TagReference(_) => 1,
             Self::NamedObject(_) => 1,
-            Self::Data | Self::FileData => 1,
+            Self::Data | Self::FileData | Self::BSPVertexData => 1,
             Self::TagID | Self::ID => 1,
             Self::TagGroup => 1,
             Self::F32 | Self::Angle | Self::U32 | Self::Address | Self::I32 | Self::ColorARGBInt | Self::CompressedVector2D | Self::CompressedVector3D | Self::CompressedFloat => 1,
@@ -456,6 +457,7 @@ impl ObjectType {
             Self::NamedObject(_)
             | Self::Data
             | Self::FileData
+            | Self::BSPVertexData
             | Self::TagID
             | Self::ID
             | Self::Address

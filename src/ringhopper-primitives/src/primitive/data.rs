@@ -281,6 +281,24 @@ pub struct FileData {
     pub bytes: Vec<u8>
 }
 
+/// Container of bytes for data that is used for storing BSP vertex data.
+///
+/// On non-CEA maps, this acts identically to a [`Data`], where on CEA maps, this can load BSP vertex data from other
+/// locations.
+///
+/// In Ringhopper, this type simply wraps a `Vec<u8>` object.
+///
+/// # Limitations
+///
+/// A limitation over [`Vec`] is that the number of elements cannot exceed [`u32::MAX`] (i.e. 2<sup>32</sup> − 1), as
+/// lengths are internally stored as 32-bit. As such, serialization in tag or cache format is not possible if this
+/// limit is exceeded.
+#[derive(Clone, Default, PartialEq, Debug)]
+#[repr(transparent)]
+pub struct BSPVertexData {
+    pub bytes: Vec<u8>
+}
+
 macro_rules! make_data_tag_data_fns {
     () => {
         fn size() -> usize {
@@ -360,6 +378,62 @@ impl TagData for Data {
     }
 }
 
+impl TagData for BSPVertexData {
+    make_data_tag_data_fns!();
+
+    fn read_from_map<M: Map>(_map: &M, _address: usize, _domain_type: &DomainType) -> RinghopperResult<Self> {
+        unimplemented!("read_from_map is unimplemented for BSP vertex data; use read_from_map_with_offset instead")
+    }
+}
+
+impl BSPVertexData {
+    pub fn read_from_map_with_offset<M: Map>(
+        map: &M,
+        address: usize,
+        domain_type: &DomainType,
+        rendered_count: usize, rendered_offset: usize,
+        lightmap_count: usize, lightmap_offset: usize
+    ) -> RinghopperResult<Self> {
+        let c_primitive = DataC::read_from_map(map, address, domain_type)?;
+
+        let p_address = c_primitive.address.into();
+        let p_length = c_primitive.size as usize;
+
+        let bsp = match domain_type {
+            &DomainType::BSP(bsp) => bsp,
+            d => unreachable!("domain_type not a BSP type but a {d:?}", d=d)
+        };
+
+        let rendered_size = rendered_count.mul_overflow_checked(56)?;
+        let lightmap_size = lightmap_count.mul_overflow_checked(20)?;
+        let total_size = rendered_size.add_overflow_checked(lightmap_size)?;
+        let mut data: Vec<u8> = Vec::with_capacity(total_size);
+
+        if !map.get_engine().external_bsps || p_address != 0 {
+            match map.get_data_at_address(p_address, domain_type, total_size) {
+                Some(n) => data.extend_from_slice(n),
+                None => return Err(Error::MapDataOutOfBounds(format!("can't read combined BSP vertex data 0x{address:08X}[0x{p_length}] bytes from {domain_type:?}")))
+            }
+        }
+        else {
+            let rendered_data = match map.get_data_at_address(rendered_offset, &DomainType::BSPVertices(bsp), rendered_size) {
+                Some(n) => n,
+                None => return Err(Error::MapDataOutOfBounds(format!("can't read render BSP vertex data 0x{rendered_offset:08X}[0x{rendered_size}] bytes from {domain_type:?}")))
+            };
+
+            let lightmap_data = match map.get_data_at_address(lightmap_offset, &DomainType::BSPVertices(bsp), lightmap_size) {
+                Some(n) => n,
+                None => return Err(Error::MapDataOutOfBounds(format!("can't read lightmap BSP vertex data 0x{lightmap_offset:08X}[0x{lightmap_size}] bytes from {domain_type:?}")))
+            };
+
+            data.extend_from_slice(rendered_data);
+            data.extend_from_slice(lightmap_data);
+        }
+
+        Ok(Self { bytes: data })
+    }
+}
+
 macro_rules! make_data_dynamic_tag_data {
     ($t:tt) => {
         impl $t {
@@ -410,6 +484,7 @@ macro_rules! make_data_dynamic_tag_data {
 
 make_data_dynamic_tag_data!(Data);
 make_data_dynamic_tag_data!(FileData);
+make_data_dynamic_tag_data!(BSPVertexData);
 
 /// Container for contiguously stored blocks.
 ///

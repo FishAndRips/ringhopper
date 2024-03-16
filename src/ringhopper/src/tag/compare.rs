@@ -1,7 +1,7 @@
 use std::fmt::Display;
 use crc64::crc64;
 use primitives::dynamic::{DynamicEnum, DynamicTagData, DynamicTagDataArray, DynamicTagDataType, SimplePrimitiveType};
-use primitives::primitive::{Address, Angle, ColorARGBFloat, ColorARGBInt, ColorARGBIntBytes, ColorRGBFloat, CompressedFloat, CompressedVector2D, CompressedVector3D, Data, Euler2D, Euler3D, FileData, ID, Index, Matrix3x3, Plane2D, Plane3D, Quaternion, Rectangle, ScenarioScriptNodeValue, String32, TagGroup, TagReference, Vector2D, Vector2DInt, Vector3D};
+use primitives::primitive::{Address, Angle, BSPVertexData, ColorARGBFloat, ColorARGBInt, ColorARGBIntBytes, ColorRGBFloat, CompressedFloat, CompressedVector2D, CompressedVector3D, Data, Euler2D, Euler3D, FileData, ID, Index, Matrix3x3, Plane2D, Plane3D, Quaternion, Rectangle, ScenarioScriptNodeValue, String32, TagGroup, TagReference, Vector2D, Vector2DInt, Vector3D};
 use primitives::tag::PrimaryTagStructDyn;
 
 #[derive(Clone)]
@@ -62,6 +62,12 @@ fn compare_tag_data<T: DynamicTagData + ?Sized>(first: &T, second: &T, path: &mu
         DynamicTagDataType::FileData => {
             let first = first.as_any().downcast_ref::<FileData>().unwrap();
             let second = second.as_any().downcast_ref::<FileData>().unwrap();
+            return compare_data(&first.bytes, &second.bytes, path, comparison, depth);
+        },
+
+        DynamicTagDataType::BSPVertexData => {
+            let first = first.as_any().downcast_ref::<BSPVertexData>().unwrap();
+            let second = second.as_any().downcast_ref::<BSPVertexData>().unwrap();
             return compare_data(&first.bytes, &second.bytes, path, comparison, depth);
         },
 

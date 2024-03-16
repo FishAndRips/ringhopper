@@ -149,8 +149,7 @@ fn is_simple_struct(structure: &Struct, parsed_definitions: &ParsedDefinitions) 
                 ObjectType::Reflexive(_) => return false,
                 ObjectType::TagReference(_) => return false,
                 ObjectType::TagGroup => (),
-                ObjectType::Data => return false,
-                ObjectType::FileData => return false,
+                ObjectType::Data | ObjectType::FileData | ObjectType::BSPVertexData => return false,
                 ObjectType::F32 => (),
                 ObjectType::U8 => (),
                 ObjectType::U16 => (),
@@ -234,6 +233,7 @@ impl ToTokenStream for Struct {
                     ObjectType::ColorARGBInt => "ColorARGBInt".to_owned(),
                     ObjectType::Data => "Data".to_owned(),
                     ObjectType::FileData => "FileData".to_owned(),
+                    ObjectType::BSPVertexData => "BSPVertexData".to_owned(),
                     ObjectType::Euler2D => "Euler2D".to_owned(),
                     ObjectType::Euler3D => "Euler3D".to_owned(),
                     ObjectType::F32 => "f32".to_owned(),
@@ -410,6 +410,9 @@ impl ToTokenStream for Struct {
 
                     let read_map_code = if self.flags.shifted_by_one {
                         "(u16::read_from_map(map, _pos, domain_type)?.wrapping_add(1)).try_into()?".to_owned()
+                    }
+                    else if field_type == "BSPVertexData" {
+                        format!("<{field_type}>::read_from_map_with_offset(map, _pos, domain_type, output.rendered_vertices.vertex_count as usize, output.rendered_vertices.offset as usize, output.lightmap_vertices.vertex_count as usize, output.lightmap_vertices.offset as usize)?")
                     }
                     else {
                         format!("<{field_type}>::read_from_map(map, _pos, domain_type)?")

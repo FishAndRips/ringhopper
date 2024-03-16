@@ -743,6 +743,7 @@ impl LoadFromSerdeJSON for ObjectType {
             "TagGroup" => Self::TagGroup,
             "Data" => Self::Data,
             "FileData" => Self::FileData,
+            "BSPVertexData" => Self::BSPVertexData,
             "float" => Self::F32,
             "uint8" => Self::U8,
             "uint16" => Self::U16,

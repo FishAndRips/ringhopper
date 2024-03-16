@@ -321,7 +321,7 @@
             },
             {
                 "name": "uncompressed vertices",
-                "type": "Data",
+                "type": "BSPVertexData",
                 "ignore_cached": true,
                 "limit": 4864000
             },
