@@ -118,21 +118,21 @@ impl Logger for StdoutLogger {
 
     fn success_fmt(&self, fmt: Arguments) {
         if !self.has_color() {
-            return self.neutral_fmt_ln(fmt)
+            return self.neutral_fmt(fmt)
         }
         self.write_fmt(fmt, "\x1B[32m", "\x1B[m")
     }
 
     fn warning_fmt(&self, fmt: Arguments) {
         if !self.has_color() {
-            return self.neutral_fmt_ln(fmt)
+            return self.neutral_fmt(fmt)
         }
         self.write_fmt(fmt, "\x1B[1;33m", "\x1B[m")
     }
 
     fn error_fmt(&self, fmt: Arguments) {
         if !self.has_color() {
-            return self.neutral_fmt_ln(fmt)
+            return self.neutral_fmt(fmt)
         }
         self.write_fmt(fmt, "\x1B[1;31m", "\x1B[m")
     }
