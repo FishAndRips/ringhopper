@@ -10,6 +10,7 @@
             "enforced": false
         },
         "cache_default": true,
+        "external_bsps": true,
         "cache_file_version": 13,
         "max_tag_space": "0x4000000",
         "max_cache_file_size": "0x7FFFFFFF",

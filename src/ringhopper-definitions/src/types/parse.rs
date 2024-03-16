@@ -245,7 +245,11 @@ impl ParsedDefinitions {
                 max_cache_file_size,
                 max_script_nodes: first_u64("max_script_nodes", true).unwrap() as u64,
                 max_tag_space: parse_hex_u64(get_chain("max_tag_space", true)).first().unwrap().1,
-                externally_indexed_tags: first_bool("externally_indexed_tags", false).unwrap_or(false),
+                resource_maps: get_chain("resource_maps", false).first().map(|(_, v)| EngineSupportedResourceMaps {
+                    externally_indexed_tags: v.get("externally_indexed_tags").expect("externally_indexed_tags not set").as_bool().unwrap(),
+                    loc: v.get("loc").expect("loc not set").as_bool().unwrap()
+                }),
+                external_bsps: first_bool("external_bsps", false).unwrap_or(false),
                 cache_parser: match first_string("cache_parser", true).unwrap().as_str() {
                     "pc" => CacheParser::PC,
                     "xbox" => CacheParser::Xbox,

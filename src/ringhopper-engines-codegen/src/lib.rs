@@ -36,7 +36,15 @@ pub fn generate_ringhopper_engines(_: TokenStream) -> TokenStream {
         let cache_file_version = engine.cache_file_version;
         let max_script_nodes = engine.max_script_nodes;
         let max_tag_space = engine.max_tag_space;
-        let externally_indexed_tags = engine.externally_indexed_tags;
+        let external_bsps = engine.external_bsps;
+        let resource_maps = if let Some(n) = &engine.resource_maps {
+            let externally_indexed_tags = n.externally_indexed_tags;
+            let loc = n.loc;
+            format!("Some(EngineSupportedResourceMaps {{ loc: {loc}, externally_indexed_tags: {externally_indexed_tags} }})")
+        }
+        else {
+            "None".to_owned()
+        };
         let max_cache_file_size = format!("EngineCacheFileSize {{
             user_interface: {user_interface},
             singleplayer: {singleplayer},
@@ -71,11 +79,12 @@ pub fn generate_ringhopper_engines(_: TokenStream) -> TokenStream {
             build_target: {build_target},
             cache_default: {cache_default},
             cache_file_version: {cache_file_version},
+            external_bsps: {external_bsps},
             max_script_nodes: {max_script_nodes},
             max_tag_space: {max_tag_space},
             max_cache_file_size: {max_cache_file_size},
             base_memory_address: {base_memory_address},
-            externally_indexed_tags: {externally_indexed_tags},
+            resource_maps: {resource_maps},
             cache_parser: EngineCacheParser::{cache_parser},
             required_tags: {required_tags},
         }},").unwrap();

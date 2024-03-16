@@ -121,6 +121,8 @@ impl TagTree for Arc<dyn MapTagTree + Send + Sync> {
     tag_tree_impl!();
 }
 
+const CACHE_FILE_HEADER_LEN: usize = 0x800;
+
 macro_rules! make_map_load_fn {
     ($name:tt, $principal_type:tt, $doc:tt) => {
         #[doc=$doc]
@@ -130,16 +132,19 @@ macro_rules! make_map_load_fn {
             };
 
             let mut file = File::open(&path).map_err(io)?;
-            let mut header_bytes = [0u8; 0x800];
-            file.read_exact(&mut header_bytes).map_err(io)?;
-            drop(file);
+            let mut map = vec![0u8; CACHE_FILE_HEADER_LEN];
+            file.read_exact(&mut map).map_err(io)?;
 
-            let header = ParsedCacheFileHeader::read_from_map_data(&header_bytes)?;
+            let header = ParsedCacheFileHeader::read_from_map_data(&map)?;
             let engine = header.match_engine().ok_or_else(|| Error::MapParseFailure(format!("Can't parse {} as a cache file due to an unknown engine", path.as_ref().to_string_lossy())))?;
+
+            file.read_to_end(&mut map).map_err(io)?;
+            drop(file);
 
             match engine.cache_parser {
                 EngineCacheParser::PC => {
-                    let map = std::fs::read(&path).map_err(io)?;
+                    let resource_data_needed = engine.resource_maps.unwrap();
+
                     let bitmaps;
                     let sounds;
                     let loc;
@@ -147,7 +152,7 @@ macro_rules! make_map_load_fn {
                     if let Some(parent) = path.as_ref().parent() {
                         bitmaps = std::fs::read(parent.join("bitmaps.map")).unwrap_or(Vec::new());
                         sounds = std::fs::read(parent.join("sounds.map")).unwrap_or(Vec::new());
-                        loc = std::fs::read(parent.join("loc.map")).unwrap_or(Vec::new());
+                        loc = if resource_data_needed.loc { std::fs::read(parent.join("loc.map")).unwrap_or(Vec::new()) } else { Vec::new() };
                     }
                     else {
                         bitmaps = Vec::new();
@@ -164,5 +169,5 @@ macro_rules! make_map_load_fn {
     };
 }
 
-make_map_load_fn!(load_map_from_filesystem, MapTagTree, "Load the map from the filesystem as a map tag tree.");
+make_map_load_fn!(load_map_from_filesystem, MapTagTree, "Load the map from the filesystem as a map.");
 make_map_load_fn!(load_map_from_filesystem_as_tag_tree, TagTree, "Load the map from the filesystem as a tag tree.");

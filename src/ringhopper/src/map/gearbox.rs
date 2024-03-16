@@ -119,7 +119,7 @@ impl GearboxCacheFile {
             if cached_tag.external != 0 {
                 let tag_path = &tag.tag_path;
 
-                if !engine.externally_indexed_tags {
+                if !engine.resource_maps.is_some_and(|r| r.externally_indexed_tags) {
                     return Err(Error::MapParseFailure(format!("`{tag_path}` marked as external when engine {} doesn't allow it", engine.name)))
                 }
 

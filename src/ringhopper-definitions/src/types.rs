@@ -299,15 +299,19 @@ pub struct Engine {
     pub build_target: bool,
     pub cache_file_version: u32,
     pub cache_default: bool,
+    pub external_bsps: bool,
     pub max_script_nodes: u64,
     pub max_tag_space: u64,
+    pub resource_maps: Option<EngineSupportedResourceMaps>,
     pub cache_parser: CacheParser,
-
-    /// Supports externally indexed tags (Halo Custom Edition).
-    pub externally_indexed_tags: bool,
     pub max_cache_file_size: EngineCacheFileSize,
     pub base_memory_address: BaseMemoryAddress,
     pub required_tags: EngineRequiredTags
+}
+
+pub struct EngineSupportedResourceMaps {
+    pub externally_indexed_tags: bool,
+    pub loc: bool
 }
 
 pub struct EngineCacheFileSize {

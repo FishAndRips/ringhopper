@@ -1,3 +1,4 @@
+#[derive(Copy, Clone)]
 pub struct Engine {
     pub name: &'static str,
     pub display_name: &'static str,
@@ -8,18 +9,27 @@ pub struct Engine {
     pub cache_file_version: u32,
     pub max_script_nodes: u64,
     pub max_tag_space: u64,
-    pub externally_indexed_tags: bool,
+    pub external_bsps: bool,
+    pub resource_maps: Option<EngineSupportedResourceMaps>,
     pub max_cache_file_size: EngineCacheFileSize,
     pub base_memory_address: EngineBaseMemoryAddress,
     pub required_tags: EngineRequiredTags,
     pub cache_parser: EngineCacheParser
 }
 
+#[derive(Copy, Clone)]
 pub enum EngineCacheParser {
     PC,
     Xbox
 }
 
+#[derive(Copy, Clone)]
+pub struct EngineSupportedResourceMaps {
+    pub externally_indexed_tags: bool,
+    pub loc: bool
+}
+
+#[derive(Copy, Clone)]
 pub struct EngineRequiredTags {
     pub all: &'static [&'static str],
     pub user_interface: &'static [&'static str],
@@ -27,18 +37,21 @@ pub struct EngineRequiredTags {
     pub multiplayer: &'static [&'static str],
 }
 
+#[derive(Copy, Clone)]
 pub struct EngineBuild {
     pub string: &'static str,
     pub fallback: &'static [&'static str],
     pub enforced: bool
 }
 
+#[derive(Copy, Clone)]
 pub struct EngineCacheFileSize {
     pub user_interface: u64,
     pub singleplayer: u64,
     pub multiplayer: u64
 }
 
+#[derive(Copy, Clone)]
 pub struct EngineBaseMemoryAddress {
     pub address: u64,
     pub inferred: bool
