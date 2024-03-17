@@ -14,9 +14,11 @@
         "base_memory_address": "0x803A6000",
         "script_compile_target": "xbox",
         "cache_parser": "xbox",
+        "bitmap_format": "xbox",
         "compression_type": "deflate",
         "max_script_nodes": 19001,
         "cache_default": true,
+        "compressed_models": true,
         "required_tags": {
             "all": [
                 "globals\\globals.globals",

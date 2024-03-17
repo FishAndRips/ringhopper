@@ -10,6 +10,8 @@ pub struct Engine {
     pub max_script_nodes: u64,
     pub max_tag_space: u64,
     pub external_bsps: bool,
+    pub compressed_models: bool,
+    pub bitmap_format: EngineBitmapFormat,
     pub resource_maps: Option<EngineSupportedResourceMaps>,
     pub compression_type: EngineCompressionType,
     pub max_cache_file_size: EngineCacheFileSize,
@@ -18,9 +20,19 @@ pub struct Engine {
     pub cache_parser: EngineCacheParser
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub enum EngineCacheParser {
     PC,
+    Xbox
+}
+
+/// Determines how to process bitmaps in cache files
+#[derive(Copy, Clone, PartialEq)]
+pub enum EngineBitmapFormat {
+    /// Bitmaps are stored the same way in cache files as they are in tags, excluding compressed color plate data
+    Tag,
+
+    /// Uses swizzling, discards compressed mipmaps less than 4 pixels length in one dimension, and stores cubemaps in a different format
     Xbox
 }
 

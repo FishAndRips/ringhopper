@@ -243,7 +243,7 @@ impl ParsedDefinitions {
                 display_name: first_string("display_name", true).unwrap(),
                 inherits: get_chain("inherits", false).first().map(|v| v.1.as_str().unwrap().to_owned()),
                 max_cache_file_size,
-                max_script_nodes: first_u64("max_script_nodes", true).unwrap() as u64,
+                max_script_nodes: first_u64("max_script_nodes", true).unwrap(),
                 max_tag_space: parse_hex_u64(get_chain("max_tag_space", true)).first().unwrap().1,
                 resource_maps: get_chain("resource_maps", false).first().map(|(_, v)| EngineSupportedResourceMaps {
                     externally_indexed_tags: v.get("externally_indexed_tags").expect("externally_indexed_tags not set").as_bool().unwrap(),
@@ -259,6 +259,12 @@ impl ParsedDefinitions {
                     "none" => EngineCompressionType::Uncompressed,
                     "deflate" => EngineCompressionType::Deflate,
                     compression_type => panic!("unknown compression_type {compression_type}", compression_type=compression_type)
+                },
+                compressed_models: first_bool("compressed_models", true).unwrap(),
+                bitmap_format: match first_string("bitmap_format", true).unwrap().as_str() {
+                    "tag" => EngineBitmapFormat::Tag,
+                    "xbox" => EngineBitmapFormat::Xbox,
+                    fmt => panic!("unknown bitmap_format {fmt}", fmt=fmt)
                 },
                 name: engine_name.to_owned(),
                 required_tags,

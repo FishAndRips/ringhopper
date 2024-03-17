@@ -1,8 +1,10 @@
 use std::convert::TryInto;
 use definitions::{BitmapType, ModelTriangleStripData, ScenarioStructureBSP};
+use primitives::engine::EngineBitmapFormat;
+use primitives::parse::TagData;
 use crate::tag::model::ModelPartGet;
 use crate::constants::{TICK_RATE, TICK_RATE_RECIPROCOL};
-use crate::definitions::{ActorVariant, Bitmap, BitmapDataFormat, ContinuousDamageEffect, DamageEffect, GBXModel, Light, Model, ModelAnimations, ModelAnimationsAnimation, ModelVertexUncompressed, Object, PointPhysics, Projectile, Scenario, ScenarioType, Sound, SoundFormat, Weapon};
+use crate::definitions::*;
 use crate::primitives::byteorder::{BigEndian, LittleEndian};
 use crate::primitives::dynamic::DynamicTagDataArray;
 use crate::primitives::error::{Error, OverflowCheck, RinghopperResult};
@@ -85,7 +87,7 @@ pub fn fix_light_tag(light: &mut Light) {
     nudge_tag(light);
 }
 
-macro_rules! extract_uncompressed_model_vertices {
+macro_rules! extract_vertices {
     ($model:expr, $map:expr) => {{
         for geo in &mut $model.geometries {
             for part in &mut geo.parts {
@@ -102,55 +104,81 @@ macro_rules! extract_uncompressed_model_vertices {
                     return Err(Error::InvalidTagData(format!("Model data is invalid: triangle count is too high (0x{triangle_count:X} > 0x{max_triangles:X})")))
                 }
 
-                // Load all vertices
-                part.uncompressed_vertices.items.reserve_exact(vertex_count);
-                part.uncompressed_vertices.items.extend(ModelVertexUncompressed::read_chunks_from_map_to_iterator(
-                    $map,
-                    vertex_count,
-                    part.vertices.vertex_pointer.into(),
-                    &DomainType::ModelVertexData
-                )?.into_infallible());
+                if $map.get_engine().compressed_models {
+                    // Load all vertices
+                    part.compressed_vertices.items.reserve_exact(vertex_count);
+                    let vertex_pointer = CacheFileModelDataPointer::read_from_map($map, part.vertices.vertex_pointer.into(), &DomainType::TagData)?;
+                    part.compressed_vertices.items.extend(ModelVertexCompressed::read_chunks_from_map_to_iterator(
+                        $map,
+                        vertex_count,
+                        vertex_pointer.data.into(),
+                        &DomainType::TagData
+                    )?.into_infallible());
 
-                // Now all indices
-                let index_count = if triangle_count > 0 { triangle_count + 2 } else { 0 };
-                let mut indices = Index::read_chunks_from_map_to_iterator(
-                    $map,
-                    index_count,
-                    part.triangle_pointer.into(),
-                    &DomainType::ModelTriangleData
-                )?.into_infallible();
-                let iterator = (0..indices.len())
-                    .step_by(3)
-                    .map(|_| ModelTriangleStripData {
-                        indices: [
-                            indices.next().expect("should be a triangle index here..."),
-                            indices.next().unwrap_or(None),
-                            indices.next().unwrap_or(None),
-                        ]
-                    });
-                part.triangle_data.items.extend(iterator);
+                    // Now all indices
+                    part.triangle_data.items = load_all_indices($map, triangle_count, part.triangle_pointer.into(), &DomainType::TagData)?;
+                }
+                else {
+                    // Load all vertices
+                    part.uncompressed_vertices.items.reserve_exact(vertex_count);
+                    part.uncompressed_vertices.items.extend(ModelVertexUncompressed::read_chunks_from_map_to_iterator(
+                        $map,
+                        vertex_count,
+                        part.vertices.vertex_pointer.into(),
+                        &DomainType::ModelVertexData
+                    )?.into_infallible());
+
+                    // Now all indices
+                    part.triangle_data.items = load_all_indices($map, triangle_count, part.triangle_pointer.into(), &DomainType::ModelTriangleData)?;
+                }
             }
         }
-        $model.fix_compressed_vertices();
+        if $map.get_engine().compressed_models {
+            $model.fix_uncompressed_vertices();
+        }
+        else {
+            $model.fix_compressed_vertices();
+        }
     }};
 }
 
-macro_rules! fix_uncompressed_model {
+fn load_all_indices<M: Map>(map: &M, triangle_count: usize, address: usize, domain: &DomainType) -> RinghopperResult<Vec<ModelTriangleStripData>> {
+    // Now all indices
+    let index_count = if triangle_count > 0 { triangle_count + 2 } else { 0 };
+    let mut indices = Index::read_chunks_from_map_to_iterator(
+        map,
+        index_count,
+        address,
+        domain
+    )?.into_infallible();
+    let iterator = (0..indices.len())
+        .step_by(3)
+        .map(|_| ModelTriangleStripData {
+            indices: [
+                indices.next().expect("should be a triangle index here..."),
+                indices.next().unwrap_or(None),
+                indices.next().unwrap_or(None),
+            ]
+        });
+    Ok(iterator.collect())
+}
+
+macro_rules! fix_model {
     ($model:expr, $map:expr) => {{
         $model.flags.blend_shared_normals = false;
         $model.flip_lod_cutoffs();
         $model.fix_runtime_markers()?;
-        extract_uncompressed_model_vertices!($model, $map);
+        extract_vertices!($model, $map);
         Ok(())
     }}
 }
 
-pub fn fix_model_tag_uncompressed<M: Map>(model: &mut Model, map: &M) -> RinghopperResult<()> {
-    fix_uncompressed_model!(model, map)
+pub fn fix_model_tag<M: Map>(model: &mut Model, map: &M) -> RinghopperResult<()> {
+    fix_model!(model, map)
 }
 
 pub fn fix_gbxmodel_tag<M: Map>(gbxmodel: &mut GBXModel, map: &M) -> RinghopperResult<()> {
-    fix_uncompressed_model!(gbxmodel, map)
+    fix_model!(gbxmodel, map)
 }
 
 pub fn fix_scenario_tag(scenario: &mut Scenario, scenario_name: &str) -> RinghopperResult<()> {
@@ -231,7 +259,7 @@ fn fix_model_animations_animation(animation: &mut ModelAnimationsAnimation) -> R
     flip_endianness_for_model_animations_animation::<LittleEndian, BigEndian>(animation)
 }
 
-fn fix_bitmap_tag<M: Map>(tag: &mut Bitmap, map: &M, xbox_map: bool) -> RinghopperResult<()> {
+pub fn fix_bitmap_tag<M: Map>(tag: &mut Bitmap, map: &M) -> RinghopperResult<()> {
     // Fix bitmap indices for sprites; for some horrible reason, these are zeroed out when put in maps
     if tag._type == BitmapType::Sprites {
         for sequence in &mut tag.bitmap_group_sequence {
@@ -278,20 +306,14 @@ fn fix_bitmap_tag<M: Map>(tag: &mut Bitmap, map: &M, xbox_map: bool) -> Ringhopp
             return Err(Error::InvalidTagData(format!("Bitmap is formatted as {:?}, but the compressed flag is wrong (should be {expected_compressed_flag}).", i.format)))
         }
 
-        if xbox_map {
-            todo!("handle xbox")
-        }
-        else {
-            processed_data.extend_from_slice(bitmap_data);
+        match map.get_engine().bitmap_format {
+            EngineBitmapFormat::Tag => processed_data.extend_from_slice(bitmap_data),
+            EngineBitmapFormat::Xbox => return Err(Error::Other("xbox format not implemented for bitmaps".to_owned()))
         }
     }
     tag.processed_pixel_data.bytes = processed_data;
 
     Ok(())
-}
-
-pub fn fix_bitmap_tag_normal<M: Map>(tag: &mut Bitmap, map: &M) -> RinghopperResult<()> {
-    fix_bitmap_tag(tag, map, false)
 }
 
 pub fn fix_sound_tag(tag: &mut Sound) -> RinghopperResult<()> {

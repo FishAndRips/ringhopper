@@ -231,6 +231,53 @@
         "size": 40
     },
     {
+        "name": "CacheFileTagDataHeaderXbox",
+        "type": "struct",
+        "fields": [
+            {
+                "name": "model vertices address",
+                "type": "Address",
+                "comment": "points to an array of model vertex data"
+            },
+            {
+                "name": "model part count",
+                "type": "uint32",
+                "comment": "same value as in the base struct"
+            },
+            {
+                "name": "model indices address",
+                "type": "Address",
+                "comment": "points to an array of model index data"
+            },
+            {
+                "name": "tags fourcc",
+                "type": "uint32",
+                "comment": "unread"
+            }
+        ],
+        "inherits": "CacheFileTagDataHeader",
+        "size": 36
+    },
+    {
+        "name": "CacheFileModelDataPointer",
+        "type": "struct",
+        "fields": [
+            {
+                "name": "unknown1",
+                "type": "uint32"
+            },
+            {
+                "name": "data",
+                "type": "Address"
+            },
+            {
+                "name": "unknown2",
+                "type": "uint32"
+            }
+        ],
+        "size": 12
+    },
+    {
         "name": "CacheFileTag",
         "type": "struct",
         "fields": [

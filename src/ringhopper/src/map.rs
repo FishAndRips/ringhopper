@@ -3,9 +3,10 @@ use std::io::Read;
 use std::ops::Range;
 use std::path::Path;
 use std::sync::Arc;
+
 use flate2::FlushDecompress;
 
-use definitions::{Bitmap, Model, read_any_tag_from_map, Scenario, ScenarioType};
+use definitions::{read_any_tag_from_map, Scenario, ScenarioType};
 use primitives::engine::{Engine, EngineCacheParser, EngineCompressionType};
 use primitives::error::{Error, RinghopperResult};
 use primitives::map::Map;
@@ -15,6 +16,7 @@ use primitives::tag::{ParseStrictness, PrimaryTagStructDyn};
 use crate::map::extract::*;
 use crate::map::gearbox::GearboxCacheFile;
 use crate::map::header::ParsedCacheFileHeader;
+use crate::map::xbox::XboxCacheFile;
 use crate::tag::object::downcast_base_object_mut;
 use crate::tag::tree::{TagFilter, TagTree, TagTreeItem};
 
@@ -23,6 +25,7 @@ pub mod resource;
 
 pub mod header;
 pub mod gearbox;
+pub mod xbox;
 mod util;
 
 type SizeRange = Range<usize>;
@@ -38,23 +41,20 @@ struct BSPDomain {
 fn extract_tag_from_map<M: Map>(
     map: &M,
     path: &TagPath,
-    scenario_tag: &Scenario,
-
-    bitmap_extraction_fn: fn(tag: &mut Bitmap, map: &M) -> RinghopperResult<()>,
-    model_extraction_fn: fn(tag: &mut Model, map: &M) -> RinghopperResult<()>,
+    scenario_tag: &Scenario
 ) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
     let group = path.group();
     let mut tag = read_any_tag_from_map(path, map)?;
 
     match group {
         TagGroup::ActorVariant => fix_actor_variant_tag(tag.as_any_mut().downcast_mut().unwrap()),
-        TagGroup::Bitmap => bitmap_extraction_fn(tag.as_any_mut().downcast_mut().unwrap(), map)?,
+        TagGroup::Bitmap => fix_bitmap_tag(tag.as_any_mut().downcast_mut().unwrap(), map)?,
         TagGroup::ContinuousDamageEffect => fix_continuous_damage_effect_tag(tag.as_any_mut().downcast_mut().unwrap()),
         TagGroup::DamageEffect => fix_damage_effect_tag(tag.as_any_mut().downcast_mut().unwrap(), path, &scenario_tag),
         TagGroup::GBXModel => fix_gbxmodel_tag(tag.as_any_mut().downcast_mut().unwrap(), map)?,
         TagGroup::Light => fix_light_tag(tag.as_any_mut().downcast_mut().unwrap()),
         TagGroup::ModelAnimations => fix_model_animations_tag(tag.as_any_mut().downcast_mut().unwrap())?,
-        TagGroup::Model => { model_extraction_fn(tag.as_any_mut().downcast_mut().unwrap(), map)?; },
+        TagGroup::Model => fix_model_tag(tag.as_any_mut().downcast_mut().unwrap(), map)?,
         TagGroup::PointPhysics => fix_point_physics_tag(tag.as_any_mut().downcast_mut().unwrap()),
         TagGroup::Projectile => fix_projectile_tag(tag.as_any_mut().downcast_mut().unwrap()),
         TagGroup::Scenario => fix_scenario_tag(tag.as_any_mut().downcast_mut().unwrap(), path.base_name())?,
@@ -165,9 +165,7 @@ macro_rules! make_map_load_fn {
 
                     Ok(Arc::new(GearboxCacheFile::new(map, bitmaps, sounds, loc, strictness)?))
                 },
-                EngineCacheParser::Xbox => {
-                    todo!("xbox maps")
-                }
+                EngineCacheParser::Xbox => Ok(Arc::new(XboxCacheFile::new(map, strictness)?))
             }
         }
 

@@ -11,8 +11,10 @@
         "script_compile_target": "gbx-retail",
         "max_script_nodes": 19001,
         "cache_parser": "pc",
+        "bitmap_format": "tag",
         "cache_default": true,
         "compression_type": "none",
+        "compressed_models": false,
         "resource_maps": {
             "externally_indexed_tags": false,
             "loc": false

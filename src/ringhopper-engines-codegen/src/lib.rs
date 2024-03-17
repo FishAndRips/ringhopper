@@ -1,6 +1,6 @@
 extern crate ringhopper_definitions;
 
-use ringhopper_definitions::{EngineCacheParser, Engine, load_all_definitions, EngineCompressionType};
+use ringhopper_definitions::{EngineCacheParser, Engine, load_all_definitions, EngineCompressionType, EngineBitmapFormat};
 use std::fmt::Write;
 use proc_macro::TokenStream;
 
@@ -74,6 +74,11 @@ pub fn generate_ringhopper_engines(_: TokenStream) -> TokenStream {
             EngineCacheParser::PC => "PC",
             EngineCacheParser::Xbox => "Xbox"
         };
+        let bitmap_format = match engine.bitmap_format {
+            EngineBitmapFormat::Xbox => "Xbox",
+            EngineBitmapFormat::Tag => "Tag",
+        };
+        let compressed_models = engine.compressed_models;
 
         write!(&mut engine_code, "Engine {{
             name: \"{name}\",
@@ -84,6 +89,8 @@ pub fn generate_ringhopper_engines(_: TokenStream) -> TokenStream {
             cache_default: {cache_default},
             cache_file_version: {cache_file_version},
             external_bsps: {external_bsps},
+            bitmap_format: EngineBitmapFormat::{bitmap_format},
+            compressed_models: {compressed_models},
             max_script_nodes: {max_script_nodes},
             max_tag_space: {max_tag_space},
             max_cache_file_size: {max_cache_file_size},

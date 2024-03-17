@@ -327,7 +327,7 @@
             },
             {
                 "name": "compressed vertices",
-                "type": "Data",
+                "type": "BSPVertexData",
                 "ignore_cached": true,
                 "limit": 2560000
             }

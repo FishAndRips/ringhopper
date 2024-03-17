@@ -391,9 +391,14 @@ impl BSPVertexData {
         map: &M,
         address: usize,
         domain_type: &DomainType,
+        compressed: bool,
         rendered_count: usize, rendered_offset: usize,
         lightmap_count: usize, lightmap_offset: usize
     ) -> RinghopperResult<Self> {
+        if map.get_engine().compressed_models != compressed {
+            return Ok(Default::default())
+        }
+
         let c_primitive = DataC::read_from_map(map, address, domain_type)?;
 
         let p_address = c_primitive.address.into();
@@ -404,8 +409,8 @@ impl BSPVertexData {
             d => unreachable!("domain_type not a BSP type but a {d:?}", d=d)
         };
 
-        let rendered_size = rendered_count.mul_overflow_checked(56)?;
-        let lightmap_size = lightmap_count.mul_overflow_checked(20)?;
+        let rendered_size = rendered_count.mul_overflow_checked(if compressed { 32 } else { 56 })?;
+        let lightmap_size = lightmap_count.mul_overflow_checked(if compressed { 8 } else { 20 })?;
         let total_size = rendered_size.add_overflow_checked(lightmap_size)?;
         let mut data: Vec<u8> = Vec::with_capacity(total_size);
 

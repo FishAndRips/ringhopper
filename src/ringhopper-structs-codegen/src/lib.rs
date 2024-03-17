@@ -412,7 +412,8 @@ impl ToTokenStream for Struct {
                         "(u16::read_from_map(map, _pos, domain_type)?.wrapping_add(1)).try_into()?".to_owned()
                     }
                     else if field_type == "BSPVertexData" {
-                        format!("<{field_type}>::read_from_map_with_offset(map, _pos, domain_type, output.rendered_vertices.vertex_count as usize, output.rendered_vertices.offset as usize, output.lightmap_vertices.vertex_count as usize, output.lightmap_vertices.offset as usize)?")
+                        let compressed = field_name.starts_with("compressed");
+                        format!("<{field_type}>::read_from_map_with_offset(map, _pos, domain_type, {compressed}, output.rendered_vertices.vertex_count as usize, output.rendered_vertices.offset as usize, output.lightmap_vertices.vertex_count as usize, output.lightmap_vertices.offset as usize)?")
                     }
                     else {
                         format!("<{field_type}>::read_from_map(map, _pos, domain_type)?")

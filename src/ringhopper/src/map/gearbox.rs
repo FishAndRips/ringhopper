@@ -9,7 +9,6 @@ use primitives::parse::{SimpleTagData, TagData};
 use primitives::primitive::{Address, ID, ReflexiveC, TagGroup, TagPath};
 use primitives::tag::{IGNORED_CRC32, ParseStrictness, PrimaryTagStructDyn};
 use crate::map::{BSPDomain, extract_tag_from_map, MapTagTree, SizeRange};
-use crate::map::extract::{fix_bitmap_tag_normal, fix_model_tag_uncompressed};
 use crate::map::resource::ResourceMap;
 
 pub struct GearboxCacheFile {
@@ -65,6 +64,7 @@ impl GearboxCacheFile {
         if engine.base_memory_address.inferred {
             map.base_memory_address = tag_address.sub_overflow_checked(CacheFileTagDataHeaderPC::simple_size())?;
         }
+        map.scenario_tag = tag_data_header.cache_file_tag_data_header.scenario_tag;
 
         let (mut tags, cached_tags, ids) = super::util::get_all_tags(&mut map, tag_address, tag_count)?;
         map.handle_external_tags(engine, tag_count, &mut tags, &cached_tags)?;
@@ -146,7 +146,6 @@ impl GearboxCacheFile {
         let vertex_end = model_data_start + model_triangle_offset;
         self.vertex_data = model_data_start..vertex_end;
         self.triangle_data = vertex_end..model_data_end;
-        self.scenario_tag = tag_data_header.cache_file_tag_data_header.scenario_tag;
 
         Ok(())
     }
@@ -252,7 +251,7 @@ impl Map for GearboxCacheFile {
     }
 
     fn extract_tag(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
-        extract_tag_from_map(self, path, &self.scenario_tag_data, fix_bitmap_tag_normal, fix_model_tag_uncompressed)
+        extract_tag_from_map(self, path, &self.scenario_tag_data)
     }
 
     fn get_domain(&self, domain: &DomainType) -> Option<(&[u8], usize)> {
