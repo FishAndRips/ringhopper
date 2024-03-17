@@ -1,12 +1,13 @@
 use std::collections::HashMap;
 use definitions::{CacheFileTag, CacheFileTagDataHeaderPC, Scenario, ScenarioStructureBSPCompiledHeaderCEA, ScenarioType, Sound, SoundPitchRange};
 use primitives::byteorder::LittleEndian;
+use primitives::crc32::CRC32;
 use primitives::engine::Engine;
 use primitives::error::{Error, OverflowCheck, RinghopperResult};
 use primitives::map::{DomainType, Map, ResourceMapType, Tag};
 use primitives::parse::{SimpleTagData, TagData};
 use primitives::primitive::{Address, ID, ReflexiveC, TagGroup, TagPath};
-use primitives::tag::PrimaryTagStructDyn;
+use primitives::tag::{IGNORED_CRC32, ParseStrictness, PrimaryTagStructDyn};
 use crate::map::{BSPDomain, extract_tag_from_map, MapTagTree, SizeRange};
 use crate::map::extract::{fix_bitmap_tag_normal, fix_model_tag_uncompressed};
 use crate::map::resource::ResourceMap;
@@ -32,7 +33,7 @@ pub struct GearboxCacheFile {
 }
 
 impl GearboxCacheFile {
-    pub fn new(data: Vec<u8>, bitmaps: Vec<u8>, sounds: Vec<u8>, loc: Vec<u8>) -> RinghopperResult<Self> {
+    pub fn new(data: Vec<u8>, bitmaps: Vec<u8>, sounds: Vec<u8>, loc: Vec<u8>, parse_strictness: ParseStrictness) -> RinghopperResult<Self> {
         let (header, engine, tag_data_range) = super::util::get_tag_data_details(&data)?;
 
         let mut map = Self {
@@ -87,6 +88,19 @@ impl GearboxCacheFile {
         debug_assert!(map.data.get(map.vertex_data.clone()).is_some());
         debug_assert!(map.data.get(map.triangle_data.clone()).is_some());
         debug_assert!(map.bsp_data.iter().all(|f| map.data.get(f.range.clone()).is_some()));
+
+        let header_crc = header.crc32;
+        if header_crc != IGNORED_CRC32 {
+            match parse_strictness {
+                ParseStrictness::Relaxed => (),
+                ParseStrictness::Strict => {
+                    let crc = map.calculate_crc32();
+                    if crc != header.crc32 {
+                        return Err(Error::MapParseFailure(format!("map is corrupted: CRC32 mismatch 0x{header_crc:08X} expected, got 0x{crc:08X} instead")))
+                    }
+                }
+            }
+        }
 
         Ok(map)
     }
@@ -289,6 +303,22 @@ impl Map for GearboxCacheFile {
 
     fn get_all_tags(&self) -> Vec<TagPath> {
         self.ids.keys().map(|key| key.to_owned()).collect()
+    }
+
+    fn calculate_crc32(&self) -> u32 {
+        let mut hasher = CRC32::new();
+
+        for bsp in 0..self.bsp_data.len() {
+            if self.engine.external_bsps {
+                hasher.update(self.get_domain(&DomainType::BSPVertices(bsp)).unwrap().0);
+            }
+            hasher.update(self.get_domain(&DomainType::BSP(bsp)).unwrap().0);
+        }
+        hasher.update(self.get_domain(&DomainType::ModelVertexData).unwrap().0);
+        hasher.update(self.get_domain(&DomainType::ModelTriangleData).unwrap().0);
+        hasher.update(self.get_domain(&DomainType::TagData).unwrap().0);
+
+        hasher.crc()
     }
 }
 impl MapTagTree for GearboxCacheFile {

@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Mutex;
@@ -5,7 +6,7 @@ use definitions::{Model, ModelAnimations, Weapon};
 use primitives::error::RinghopperResult;
 use primitives::primitive::{TagGroup, TagPath};
 use primitives::tag::PrimaryTagStructDyn;
-use crate::tag::tree::{CachingTagTree, CachingTagTreeWriteStrategy, TagTree, TagTreeItem, VirtualTagsDirectory};
+use crate::tag::tree::{CachingTagTree, CachingTagTreeWriteStrategy, TagFilter, TagTree, TagTreeItem, TagTreeItemType, VirtualTagsDirectory};
 
 
 #[derive(Default)]
@@ -36,8 +37,20 @@ impl TagTree for MockTagTree {
         Ok(true)
     }
 
+    fn is_read_only(&self) -> bool {
+        false
+    }
+
     fn contains(&self, path: &TagPath) -> bool {
         self.items.contains_key(&path.to_internal_path())
+    }
+
+    fn root(&self) -> TagTreeItem {
+        TagTreeItem::new(TagTreeItemType::Directory, Cow::Borrowed(""), None, self)
+    }
+
+    fn get_all_tags_with_filter(&self, _filter: Option<&TagFilter>) -> Vec<TagPath> {
+        unimplemented!()
     }
 }
 

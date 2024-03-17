@@ -88,7 +88,8 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
         }
         else if path.is_file() && path.extension() == Some("map".as_ref()) {
             should_strip.write_u8(if raw { 0 } else { 1 }).unwrap();
-            let map = load_map_from_filesystem_as_tag_tree(path).map_err(|e| format!("Cannot load {path:?} as a cache file: {e:?}"))?;
+            let map = load_map_from_filesystem_as_tag_tree(path, ParseStrictness::Strict)
+                .map_err(|e| format!("Cannot load {path:?} as a cache file: {e:?}"))?;
             source.push_back(map);
         }
         else if path.is_dir() {

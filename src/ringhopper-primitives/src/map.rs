@@ -162,4 +162,7 @@ pub trait Map {
             .to_str()
             .ok()
     }
+
+    /// Calculate the CRC32 of the map.
+    fn calculate_crc32(&self) -> u32;
 }

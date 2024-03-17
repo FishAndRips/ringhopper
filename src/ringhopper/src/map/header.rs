@@ -31,6 +31,15 @@ pub struct ParsedCacheFileHeader {
     /// The length of the tag data in bytes.
     pub tag_data_size: usize,
 
+    /// Final decompressed size of the map.
+    ///
+    /// NOTE: This size may be wrong on corrupted custom maps either due to bad tools (e.g. old tools like Arsenic) or
+    /// to bypass Halo PC's 128/384 MB limitation.
+    pub decompressed_size: usize,
+
+    /// Bytes at the end to ignore if the map is compressed.
+    pub compression_padding: usize,
+
     /// The type of scenario.
     ///
     /// Note that this may not necessarily correspond to the actual scenario type.
@@ -39,7 +48,7 @@ pub struct ParsedCacheFileHeader {
     /// The CRC32 of the cache file.
     ///
     /// Note that this may not necessarily be accurate.
-    pub crc32: u32
+    pub crc32: u32,
 }
 
 const HEAD_FOURCC: FourCC = 0x68656164;
@@ -121,28 +130,34 @@ pub fn get_map_details(map_data: &[u8]) -> RinghopperResult<(ParsedCacheFileHead
     }
 }
 
-macro_rules! parse_cache_file_header {
-    ($header:expr) => {
-        ParsedCacheFileHeader {
-            name: $header.name,
-            build: $header.build,
-            cache_version: $header.cache_version,
-            tag_data_offset: $header.tag_data_offset as usize,
-            tag_data_size: $header.tag_data_size as usize,
-            map_type: $header.map_type,
-            crc32: $header.crc32
-        }
-    };
-}
-
 impl From<CacheFileHeaderPCDemo> for ParsedCacheFileHeader {
     fn from(value: CacheFileHeaderPCDemo) -> Self {
-        parse_cache_file_header!(value)
+        Self {
+            name: value.name,
+            build: value.build,
+            cache_version: value.cache_version,
+            tag_data_offset: value.tag_data_offset as usize,
+            tag_data_size: value.tag_data_size as usize,
+            map_type: value.map_type,
+            crc32: value.crc32,
+            compression_padding: 0,
+            decompressed_size: value.decompressed_size as usize
+        }
     }
 }
 
 impl From<CacheFileHeader> for ParsedCacheFileHeader {
     fn from(value: CacheFileHeader) -> Self {
-        parse_cache_file_header!(value)
+        Self {
+            name: value.name,
+            build: value.build,
+            cache_version: value.cache_version,
+            tag_data_offset: value.tag_data_offset as usize,
+            tag_data_size: value.tag_data_size as usize,
+            map_type: value.map_type,
+            crc32: value.crc32,
+            compression_padding: value.compression_padding as usize,
+            decompressed_size: value.decompressed_size as usize
+        }
     }
 }

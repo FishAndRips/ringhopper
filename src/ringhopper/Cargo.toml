@@ -11,3 +11,4 @@ ringhopper-primitives = { path = "../ringhopper-primitives" }
 ringhopper-structs = { path = "../ringhopper-structs" }
 ringhopper-engines = { path = "../ringhopper-engines" }
 crc64 = "2.0.0"
+flate2 = { version = "1.0.28", features = ["zlib"], default-features = false }

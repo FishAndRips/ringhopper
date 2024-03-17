@@ -251,9 +251,14 @@ impl ParsedDefinitions {
                 }),
                 external_bsps: first_bool("external_bsps", false).unwrap_or(false),
                 cache_parser: match first_string("cache_parser", true).unwrap().as_str() {
-                    "pc" => CacheParser::PC,
-                    "xbox" => CacheParser::Xbox,
-                    parser => panic!("unknown cache_parser {parser}")
+                    "pc" => EngineCacheParser::PC,
+                    "xbox" => EngineCacheParser::Xbox,
+                    parser => panic!("unknown cache_parser {parser}", parser=parser)
+                },
+                compression_type: match first_string("compression_type", true).unwrap().as_str() {
+                    "none" => EngineCompressionType::Uncompressed,
+                    "deflate" => EngineCompressionType::Deflate,
+                    compression_type => panic!("unknown compression_type {compression_type}", compression_type=compression_type)
                 },
                 name: engine_name.to_owned(),
                 required_tags,

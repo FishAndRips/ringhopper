@@ -11,6 +11,7 @@ pub struct Engine {
     pub max_tag_space: u64,
     pub external_bsps: bool,
     pub resource_maps: Option<EngineSupportedResourceMaps>,
+    pub compression_type: EngineCompressionType,
     pub max_cache_file_size: EngineCacheFileSize,
     pub base_memory_address: EngineBaseMemoryAddress,
     pub required_tags: EngineRequiredTags,
@@ -27,6 +28,12 @@ pub enum EngineCacheParser {
 pub struct EngineSupportedResourceMaps {
     pub externally_indexed_tags: bool,
     pub loc: bool
+}
+
+#[derive(Copy, Clone, PartialEq)]
+pub enum EngineCompressionType {
+    Uncompressed,
+    Deflate
 }
 
 #[derive(Copy, Clone)]

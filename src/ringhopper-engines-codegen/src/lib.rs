@@ -1,6 +1,6 @@
 extern crate ringhopper_definitions;
 
-use ringhopper_definitions::{CacheParser, Engine, load_all_definitions};
+use ringhopper_definitions::{EngineCacheParser, Engine, load_all_definitions, EngineCompressionType};
 use std::fmt::Write;
 use proc_macro::TokenStream;
 
@@ -37,6 +37,10 @@ pub fn generate_ringhopper_engines(_: TokenStream) -> TokenStream {
         let max_script_nodes = engine.max_script_nodes;
         let max_tag_space = engine.max_tag_space;
         let external_bsps = engine.external_bsps;
+        let compression_type = match engine.compression_type {
+            EngineCompressionType::Uncompressed => "Uncompressed",
+            EngineCompressionType::Deflate => "Deflate"
+        };
         let resource_maps = if let Some(n) = &engine.resource_maps {
             let externally_indexed_tags = n.externally_indexed_tags;
             let loc = n.loc;
@@ -67,8 +71,8 @@ pub fn generate_ringhopper_engines(_: TokenStream) -> TokenStream {
         );
         let cache_default = engine.cache_default;
         let cache_parser = match engine.cache_parser {
-            CacheParser::PC => "PC",
-            CacheParser::Xbox => "Xbox"
+            EngineCacheParser::PC => "PC",
+            EngineCacheParser::Xbox => "Xbox"
         };
 
         write!(&mut engine_code, "Engine {{
@@ -86,6 +90,7 @@ pub fn generate_ringhopper_engines(_: TokenStream) -> TokenStream {
             base_memory_address: {base_memory_address},
             resource_maps: {resource_maps},
             cache_parser: EngineCacheParser::{cache_parser},
+            compression_type: EngineCompressionType::{compression_type},
             required_tags: {required_tags},
         }},").unwrap();
     }

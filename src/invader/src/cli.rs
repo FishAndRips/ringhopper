@@ -1,7 +1,9 @@
 #![allow(dead_code)] // TODO: fix this
 
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use ringhopper::primitives::tag::ParseStrictness;
 use ringhopper::tag::tree::VirtualTagsDirectory;
 
 pub struct CommandLineParser {
@@ -12,6 +14,7 @@ pub struct CommandLineParser {
     extra_parameters: Vec<String>,
     required_extra_parameters: usize,
     on_help: fn(&CommandLineParser) -> Result<(), String>,
+    strictness: ParseStrictness
 }
 
 #[derive(Clone)]
@@ -19,6 +22,7 @@ pub struct CommandLineArgs {
     standard_parameters: HashMap<StandardParameterType, Parameter>,
     custom_parameters: HashMap<&'static str, Parameter>,
     extra_parameters: Vec<String>,
+    strictness: ParseStrictness
 }
 
 macro_rules! all_args {
@@ -46,7 +50,8 @@ impl CommandLineParser {
             required_extra_parameters: 0,
             standard_parameters: HashMap::new(),
             custom_parameters: HashMap::new(),
-            extra_parameters: Vec::new()
+            extra_parameters: Vec::new(),
+            strictness: ParseStrictness::Strict
         }
     }
 
@@ -54,12 +59,26 @@ impl CommandLineParser {
         self.add_help_with_callback(|parser| {
             let mut arguments: Vec<&Parameter> = all_args!(parser).collect();
             arguments.sort_by(|a, b| {
-                let lowercase_a = a.short.to_ascii_lowercase();
-                let lowercase_b = b.short.to_ascii_lowercase();
-                if lowercase_a == lowercase_b {
-                    b.short.cmp(&a.short) // prefer lowercase
-                } else {
-                    lowercase_a.cmp(&lowercase_b)
+                if let Some(a_short) = a.short {
+                    if let Some(b_short) = b.short {
+                        let lowercase_a = a_short.to_ascii_lowercase();
+                        let lowercase_b = b_short.to_ascii_lowercase();
+                        return if lowercase_a == lowercase_b {
+                            b_short.cmp(&a_short) // prefer lowercase
+                        }
+                        else {
+                            lowercase_a.cmp(&lowercase_b)
+                        }
+                    }
+                    else {
+                        return Ordering::Less
+                    }
+                }
+                else if let Some(_) = b.short {
+                    return Ordering::Greater
+                }
+                else {
+                    return a.name.cmp(b.name)
                 }
             });
 
@@ -69,7 +88,17 @@ impl CommandLineParser {
             println!();
 
             for a in arguments {
-                println!("-{} --{} {}", a.short, a.name, a.usage);
+                match a.short {
+                    Some(c) => print!("-{c}, "),
+                    None => ()
+                };
+                print!("--{} ", a.name);
+                if !a.usage.is_empty() {
+                    print!("{} ", a.usage);
+                }
+                println!();
+                // TODO: move this on the same line as the other stuff
+                println!("  {}", a.description);
             }
             println!();
 
@@ -82,7 +111,7 @@ impl CommandLineParser {
         let p = Parameter {
             values: None,
             name: "help",
-            short: 'h',
+            short: Some('h'),
             description: "Show help for this verb.",
             default_values: None,
             value_type: None,
@@ -107,7 +136,7 @@ impl CommandLineParser {
         let p = Parameter {
             values: None,
             name: "tags",
-            short: 't',
+            short: Some('t'),
             description: match multiple {
                 true => "Add a tags directory. This can be used multiple times, in which case it is in order of precedence. Default: tags",
                 false => "Set a tags directory. Default: tags"
@@ -129,7 +158,7 @@ impl CommandLineParser {
         let p = Parameter {
             values: None,
             name: "overwrite",
-            short: 'o',
+            short: Some('o'),
             description: "Overwrite if the output file already exists.",
             default_values: None,
             value_type: None,
@@ -148,7 +177,7 @@ impl CommandLineParser {
         let p = Parameter {
             values: None,
             name: "cow",
-            short: 'c',
+            short: Some('c'),
             description: "Set a directory to output tags.",
             default_values: Some(vec![]),
             value_type: Some(CommandLineValueType::Path),
@@ -167,7 +196,7 @@ impl CommandLineParser {
         let p = Parameter {
             values: None,
             name: "data",
-            short: 'd',
+            short: Some('d'),
             description: "Set a data directory. Default: data",
             default_values: Some(vec![CommandLineValue::Path(Path::new("data").to_owned())]),
             value_type: Some(CommandLineValueType::Path),
@@ -186,7 +215,7 @@ impl CommandLineParser {
         let p = Parameter {
             values: None,
             name: "maps",
-            short: 'm',
+            short: Some('m'),
             description: "Set a maps directory. Default: maps",
             default_values: Some(vec![CommandLineValue::Path(Path::new("maps").to_owned())]),
             value_type: Some(CommandLineValueType::Path),
@@ -202,12 +231,20 @@ impl CommandLineParser {
     }
 
     pub fn add_custom_parameter(mut self, parameter: Parameter) -> Self {
-        assert!(parameter.name != "help" && parameter.short != 'h');
+        assert!(parameter.name != "help" && parameter.short != Some('h'));
         assert!(
             self.custom_parameters.iter().find(|(name, param)| *name == &parameter.name || param.short == parameter.short).is_none(),
             "{} conflicts with an existing parameter", parameter.name
         );
         self.custom_parameters.insert(parameter.name, parameter);
+        self
+    }
+
+    /// Set strictness for get_virtual_tags_directory
+    ///
+    /// ONLY SET IF YOU *WANT* TO LOAD INVALID TAGS
+    pub fn set_strictness(mut self, strictness: ParseStrictness) -> Self {
+        self.strictness = strictness;
         self
     }
 
@@ -274,13 +311,15 @@ impl CommandLineParser {
             } else if next_arg.starts_with("-") {
                 'char_iter: for short in (&next_arg[1..]).chars() {
                     for p in all_args_mut!(self) {
-                        if p.short == short {
-                            if p.short == 'h' {
-                                (self.on_help)(&self)?;
-                            } else {
-                                parse_argument(p)?;
+                        if let Some(param_short) = p.short {
+                            if param_short == short {
+                                if param_short == 'h' {
+                                    (self.on_help)(&self)?;
+                                } else {
+                                    parse_argument(p)?;
+                                }
+                                continue 'char_iter
                             }
-                            continue 'char_iter
                         }
                     }
                     return Err(format!("Argument parse error: Argument -{short} not recognized"))
@@ -331,7 +370,8 @@ impl CommandLineParser {
         Ok(CommandLineArgs {
             custom_parameters: self.custom_parameters,
             standard_parameters: self.standard_parameters,
-            extra_parameters: self.extra_parameters
+            extra_parameters: self.extra_parameters,
+            strictness: self.strictness
         })
     }
 }
@@ -364,7 +404,9 @@ impl CommandLineArgs {
                     .map(|v| v.path().to_path_buf())
             );
 
-        VirtualTagsDirectory::new(self.get_tags().as_slice(), cow).unwrap()
+        let mut dir = VirtualTagsDirectory::new(self.get_tags().as_slice(), cow).unwrap();
+        dir.set_strictness(self.strictness);
+        dir
     }
 
     /// Get the Data parameter.
@@ -420,7 +462,7 @@ impl CommandLineArgs {
 #[derive(Clone, Default)]
 pub struct Parameter {
     name: &'static str,
-    short: char,
+    short: Option<char>,
     usage: &'static str,
     description: &'static str,
     value_type: Option<CommandLineValueType>,
@@ -448,7 +490,7 @@ impl Parameter {
 
         Self {
             name,
-            short,
+            short: Some(short),
             description,
             value_type,
             values: None,
@@ -472,7 +514,7 @@ enum StandardParameterType {
     Maps,
     Help,
     CowTags,
-    Overwrite,
+    Overwrite
 }
 
 #[derive(Debug, Clone)]

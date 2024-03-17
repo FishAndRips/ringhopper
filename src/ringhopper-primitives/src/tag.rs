@@ -195,7 +195,7 @@ impl TagFileHeader {
 /// Determine how strict parsing should be.
 ///
 /// In all cases, out-of-bounds data cannot be parsed. However, allowing data with bad checksums to be parsed can be enabled, if desired.
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, PartialEq)]
 pub enum ParseStrictness {
     /// Require the CRC32 to match; should be used by default.
     #[default]

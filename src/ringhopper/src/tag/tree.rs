@@ -467,6 +467,11 @@ impl VirtualTagsDirectory {
         Ok(Self { directories, strictness: ParseStrictness::Strict, cow_output })
     }
 
+    /// Set the strictness for opening tags.
+    pub fn set_strictness(&mut self, strictness: ParseStrictness) -> () {
+        self.strictness = strictness
+    }
+
     /// Write the tag to the desired tags directory.
     ///
     /// Note that if there is a cow, `directory` will be ignored and the cow will be used instead.

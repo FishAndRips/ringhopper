@@ -5,6 +5,7 @@ use cli::{CommandLineParser, CommandLineValue, CommandLineValueType, Parameter};
 use ringhopper::definitions::ScenarioType;
 use ringhopper::map::load_map_from_filesystem;
 use ringhopper::primitives::primitive::TagGroup;
+use ringhopper::primitives::tag::ParseStrictness;
 use ringhopper::tag::tree::{TagTree, VirtualTagsDirectory};
 use threading::{DisplayMode, do_with_threads, ProcessSuccessType};
 use util::make_stdout_logger;
@@ -41,7 +42,7 @@ pub fn extract(args: Args, description: &'static str) -> Result<(), String> {
 
     let map_path = Path::new(&parser.get_extra()[0]);
 
-    let map = load_map_from_filesystem(map_path).map_err(|e| format!("Cannot load {map_path:?} as a cache file: {e:?}"))?;
+    let map = load_map_from_filesystem(map_path, ParseStrictness::Strict).map_err(|e| format!("Cannot load {map_path:?} as a cache file: {e:?}"))?;
     let tag = parser.get_custom("filter").unwrap()[0].string().to_owned();
 
     #[derive(Clone)]

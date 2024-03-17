@@ -12,6 +12,7 @@
         "max_script_nodes": 19001,
         "cache_parser": "pc",
         "cache_default": true,
+        "compression_type": "none",
         "resource_maps": {
             "externally_indexed_tags": false,
             "loc": false

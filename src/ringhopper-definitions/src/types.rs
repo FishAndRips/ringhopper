@@ -285,7 +285,7 @@ impl Flags {
 }
 
 #[derive(Copy, Clone, PartialEq)]
-pub enum CacheParser {
+pub enum EngineCacheParser {
     Xbox,
     PC
 }
@@ -303,10 +303,16 @@ pub struct Engine {
     pub max_script_nodes: u64,
     pub max_tag_space: u64,
     pub resource_maps: Option<EngineSupportedResourceMaps>,
-    pub cache_parser: CacheParser,
+    pub cache_parser: EngineCacheParser,
     pub max_cache_file_size: EngineCacheFileSize,
     pub base_memory_address: BaseMemoryAddress,
-    pub required_tags: EngineRequiredTags
+    pub required_tags: EngineRequiredTags,
+    pub compression_type: EngineCompressionType
+}
+
+pub enum EngineCompressionType {
+    Uncompressed,
+    Deflate
 }
 
 pub struct EngineSupportedResourceMaps {

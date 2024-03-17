@@ -3,13 +3,14 @@ use std::io::Read;
 use std::ops::Range;
 use std::path::Path;
 use std::sync::Arc;
+use flate2::FlushDecompress;
 
 use definitions::{Bitmap, Model, read_any_tag_from_map, Scenario, ScenarioType};
-use primitives::engine::EngineCacheParser;
+use primitives::engine::{Engine, EngineCacheParser, EngineCompressionType};
 use primitives::error::{Error, RinghopperResult};
 use primitives::map::Map;
 use primitives::primitive::{TagGroup, TagPath};
-use primitives::tag::PrimaryTagStructDyn;
+use primitives::tag::{ParseStrictness, PrimaryTagStructDyn};
 
 use crate::map::extract::*;
 use crate::map::gearbox::GearboxCacheFile;
@@ -126,7 +127,7 @@ const CACHE_FILE_HEADER_LEN: usize = 0x800;
 macro_rules! make_map_load_fn {
     ($name:tt, $principal_type:tt, $doc:tt) => {
         #[doc=$doc]
-        pub fn $name<P: AsRef<Path>>(path: P) -> RinghopperResult<Arc<dyn $principal_type + Send + Sync>> {
+        pub fn $name<P: AsRef<Path>>(path: P, strictness: ParseStrictness) -> RinghopperResult<Arc<dyn $principal_type + Send + Sync>> {
             let io = |e: std::io::Error| -> Error {
                 Error::FailedToReadFile(path.as_ref().to_path_buf(), e)
             };
@@ -140,6 +141,8 @@ macro_rules! make_map_load_fn {
 
             file.read_to_end(&mut map).map_err(io)?;
             drop(file);
+
+            let map = decompress_map_data(map, &header, engine)?;
 
             match engine.cache_parser {
                 EngineCacheParser::PC => {
@@ -160,9 +163,11 @@ macro_rules! make_map_load_fn {
                         loc = Vec::new();
                     }
 
-                    Ok(Arc::new(GearboxCacheFile::new(map, bitmaps, sounds, loc)?))
+                    Ok(Arc::new(GearboxCacheFile::new(map, bitmaps, sounds, loc, strictness)?))
                 },
-                EngineCacheParser::Xbox => todo!("xbox maps")
+                EngineCacheParser::Xbox => {
+                    todo!("xbox maps")
+                }
             }
         }
 
@@ -171,3 +176,33 @@ macro_rules! make_map_load_fn {
 
 make_map_load_fn!(load_map_from_filesystem, MapTagTree, "Load the map from the filesystem as a map.");
 make_map_load_fn!(load_map_from_filesystem_as_tag_tree, TagTree, "Load the map from the filesystem as a tag tree.");
+
+fn decompress_map_data(data: Vec<u8>, header: &ParsedCacheFileHeader, engine: &Engine) -> RinghopperResult<Vec<u8>> {
+    if engine.compression_type == EngineCompressionType::Uncompressed {
+        return Ok(data)
+    }
+
+    let compressed_start = CACHE_FILE_HEADER_LEN;
+    let compressed_end = data.len()
+        .checked_sub(header.compression_padding)
+        .ok_or_else(|| Error::MapParseFailure("decompression failed: bad padding size in header - larger than cache file".to_owned()))?;
+    if compressed_end < compressed_start {
+        return Err(Error::MapParseFailure("decompression failed: bad padding size in header - larger than uncompressed data".to_owned()))
+    }
+
+    let mut result = Vec::with_capacity(header.decompressed_size);
+    result.extend_from_slice(&data[..compressed_start]);
+    result.resize(header.decompressed_size, 0);
+
+    let compressed_data = &data[compressed_start..compressed_end];
+    match engine.compression_type {
+        EngineCompressionType::Uncompressed => unreachable!(),
+        EngineCompressionType::Deflate => {
+            let mut decompressor = flate2::Decompress::new(true);
+            decompressor
+                .decompress(compressed_data, &mut result[compressed_start..], FlushDecompress::Finish)
+                .map_err(|e| Error::MapParseFailure(format!("decompression failed: flate2 error: {e}")))?;
+            Ok(result)
+        }
+    }
+}
