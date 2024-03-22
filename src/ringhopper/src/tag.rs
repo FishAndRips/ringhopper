@@ -10,3 +10,4 @@ pub mod model_animations;
 pub mod scenario;
 pub mod object;
 pub mod scenario_structure_bsp;
+pub mod bitmap;
