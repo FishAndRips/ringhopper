@@ -303,7 +303,8 @@ pub struct Engine {
     pub max_script_nodes: u64,
     pub max_tag_space: u64,
     pub compressed_models: bool,
-    pub bitmap_format: EngineBitmapFormat,
+    pub data_alignment: u64,
+    pub bitmap_options: EngineBitmapOptions,
     pub resource_maps: Option<EngineSupportedResourceMaps>,
     pub cache_parser: EngineCacheParser,
     pub max_cache_file_size: EngineCacheFileSize,
@@ -315,11 +316,6 @@ pub struct Engine {
 pub enum EngineCompressionType {
     Uncompressed,
     Deflate
-}
-
-pub enum EngineBitmapFormat {
-    Tag,
-    Xbox
 }
 
 pub struct EngineSupportedResourceMaps {
@@ -358,6 +354,13 @@ pub struct TagReference {
 
 pub struct Reflexive {
     pub struct_name: String
+}
+
+pub struct EngineBitmapOptions {
+    pub swizzled: bool,
+    pub texture_dimension_must_modulo_block_size: bool,
+    pub cubemap_faces_stored_separately: bool,
+    pub alignment: u64
 }
 
 pub enum ObjectType {

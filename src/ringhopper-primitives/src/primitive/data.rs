@@ -1044,5 +1044,22 @@ impl SimplePrimitive for ScenarioScriptNodeValue {
     }
 }
 
+/// Calculate the amount of padding needed to pad to the next alignment.
+///
+/// # Examples
+///
+/// ```
+/// use ringhopper_primitives::primitive::calculate_padding_for_alignment;
+///
+/// assert_eq!(127, calculate_padding_for_alignment(1, 128));
+/// assert_eq!(64, calculate_padding_for_alignment(64, 128));
+/// assert_eq!(0, calculate_padding_for_alignment(128, 128));
+/// assert_eq!(0, calculate_padding_for_alignment(0, 128));
+/// ```
+pub fn calculate_padding_for_alignment(size: usize, alignment: usize) -> usize {
+    debug_assert!(alignment != 0);
+    (alignment - (size % alignment)) % alignment
+}
+
 #[cfg(test)]
 mod test;

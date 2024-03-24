@@ -261,11 +261,13 @@ impl ParsedDefinitions {
                     compression_type => panic!("unknown compression_type {compression_type}", compression_type=compression_type)
                 },
                 compressed_models: first_bool("compressed_models", true).unwrap(),
-                bitmap_format: match first_string("bitmap_format", true).unwrap().as_str() {
-                    "tag" => EngineBitmapFormat::Tag,
-                    "xbox" => EngineBitmapFormat::Xbox,
-                    fmt => panic!("unknown bitmap_format {fmt}", fmt=fmt)
-                },
+                bitmap_options: get_chain("bitmap_options", true)[0].1.as_object().map(|o| EngineBitmapOptions {
+                    swizzled: o.get("swizzled").unwrap().as_bool().unwrap(),
+                    texture_dimension_must_modulo_block_size: o.get("texture_dimension_must_modulo_block_size").unwrap().as_bool().unwrap(),
+                    cubemap_faces_stored_separately: o.get("cubemap_faces_stored_separately").unwrap().as_bool().unwrap(),
+                    alignment: o.get("alignment").unwrap().as_u64().unwrap(),
+                }).unwrap(),
+                data_alignment: first_u64("data_alignment", true).unwrap(),
                 name: engine_name.to_owned(),
                 required_tags,
                 version: first_string("version", false)

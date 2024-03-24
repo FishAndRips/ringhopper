@@ -1,22 +1,60 @@
 #[derive(Copy, Clone)]
 pub struct Engine {
+    /// Shorthand name of the engine.
     pub name: &'static str,
+
+    /// Long name of the engine.
     pub display_name: &'static str,
+
+    /// Version data of the engine.
     pub version: Option<&'static str>,
+
+    /// Build string of the engine.
     pub build: Option<EngineBuild>,
+
+    /// The engine can have maps built for it.
     pub build_target: bool,
+
+    /// Prefer this engine if the build/version are ambiguous.
     pub cache_default: bool,
+
+    /// Cache file version in header.
     pub cache_file_version: u32,
+
+    /// Maximum number of script nodes.
     pub max_script_nodes: u64,
+
+    /// Maximum tag space in bytes.
     pub max_tag_space: u64,
+
+    /// BSPs can be loaded external from the actual BSP tag.
     pub external_bsps: bool,
+
+    /// Model/BSP data uses lossy compression.
     pub compressed_models: bool,
-    pub bitmap_format: EngineBitmapFormat,
+
+    /// File offsets/sizes must be modulo this in bytes.
+    pub data_alignment: usize,
+
+    /// Additional settings for bitmaps.
+    pub bitmap_options: EngineBitmapOptions,
+
+    /// Resource map handling.
     pub resource_maps: Option<EngineSupportedResourceMaps>,
+
+    /// Compression format for all data past the header.
     pub compression_type: EngineCompressionType,
+
+    /// Maximum cache file size, per-scenario type.
     pub max_cache_file_size: EngineCacheFileSize,
+
+    /// Base memory address for tag data.
     pub base_memory_address: EngineBaseMemoryAddress,
+
+    /// All tags required to build the cache file besides the scenario tag.
     pub required_tags: EngineRequiredTags,
+
+    /// Cache parser type.
     pub cache_parser: EngineCacheParser
 }
 
@@ -26,14 +64,22 @@ pub enum EngineCacheParser {
     Xbox
 }
 
-/// Determines how to process bitmaps in cache files
+/// Determines how bitmaps are stored.
 #[derive(Copy, Clone, PartialEq)]
-pub enum EngineBitmapFormat {
-    /// Bitmaps are stored the same way in cache files as they are in tags, excluding compressed color plate data
-    Tag,
+pub struct EngineBitmapOptions {
+    /// Uncompressed textures must be stored swizzled if they are power-of-two.
+    pub swizzled: bool,
 
-    /// Uses swizzling, discards compressed mipmaps less than 4 pixels length in one dimension, and stores cubemaps in a different format
-    Xbox
+    /// Texture dimensions, including mipmaps, must be divisible by its block size.
+    pub texture_dimension_must_modulo_block_size: bool,
+
+    /// Rather than storing each face on each mipmap, store each face as a separate 2D texture, stored contiguously.
+    pub cubemap_faces_stored_separately: bool,
+
+    /// The required alignment for bitmap data.
+    ///
+    /// This does not override data alignment, but is used for padding within the bitmap data itself.
+    pub alignment: usize
 }
 
 #[derive(Copy, Clone)]

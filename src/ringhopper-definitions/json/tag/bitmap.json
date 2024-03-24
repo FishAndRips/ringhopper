@@ -5,7 +5,10 @@
             "2d texture",
             "3d texture",
             "cube map",
-            "white"
+            {
+                "name": "white",
+                "exclude": true
+            }
         ],
         "type": "enum"
     },
@@ -490,6 +493,7 @@
             },
             {
                 "name": "mipmap count",
+                "comment": "Number of texture levels, EXCLUDING the base map.",
                 "type": "uint16"
             },
             {

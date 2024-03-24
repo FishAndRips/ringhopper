@@ -1,6 +1,6 @@
 extern crate ringhopper_definitions;
 
-use ringhopper_definitions::{EngineCacheParser, Engine, load_all_definitions, EngineCompressionType, EngineBitmapFormat};
+use ringhopper_definitions::{EngineCacheParser, Engine, load_all_definitions, EngineCompressionType};
 use std::fmt::Write;
 use proc_macro::TokenStream;
 
@@ -74,11 +74,15 @@ pub fn generate_ringhopper_engines(_: TokenStream) -> TokenStream {
             EngineCacheParser::PC => "PC",
             EngineCacheParser::Xbox => "Xbox"
         };
-        let bitmap_format = match engine.bitmap_format {
-            EngineBitmapFormat::Xbox => "Xbox",
-            EngineBitmapFormat::Tag => "Tag",
-        };
+        let data_alignment = engine.data_alignment;
         let compressed_models = engine.compressed_models;
+
+        let bitmap_options = format!("EngineBitmapOptions {{
+            swizzled: {},
+            texture_dimension_must_modulo_block_size: {},
+            cubemap_faces_stored_separately: {},
+            alignment: {}
+        }}", engine.bitmap_options.swizzled, engine.bitmap_options.texture_dimension_must_modulo_block_size, engine.bitmap_options.cubemap_faces_stored_separately, engine.bitmap_options.alignment);
 
         write!(&mut engine_code, "Engine {{
             name: \"{name}\",
@@ -89,12 +93,13 @@ pub fn generate_ringhopper_engines(_: TokenStream) -> TokenStream {
             cache_default: {cache_default},
             cache_file_version: {cache_file_version},
             external_bsps: {external_bsps},
-            bitmap_format: EngineBitmapFormat::{bitmap_format},
+            bitmap_options: {bitmap_options},
             compressed_models: {compressed_models},
             max_script_nodes: {max_script_nodes},
             max_tag_space: {max_tag_space},
             max_cache_file_size: {max_cache_file_size},
             base_memory_address: {base_memory_address},
+            data_alignment: {data_alignment},
             resource_maps: {resource_maps},
             cache_parser: EngineCacheParser::{cache_parser},
             compression_type: EngineCompressionType::{compression_type},

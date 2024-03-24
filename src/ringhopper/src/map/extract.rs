@@ -1,7 +1,8 @@
-use std::convert::TryInto;
+use std::borrow::Cow;
+use std::num::NonZeroUsize;
 use definitions::{BitmapType, ModelTriangleStripData, ScenarioStructureBSP};
-use primitives::engine::EngineBitmapFormat;
 use primitives::parse::TagData;
+use primitives::primitive::calculate_padding_for_alignment;
 use crate::tag::model::ModelPartGet;
 use crate::constants::{TICK_RATE, TICK_RATE_RECIPROCOL};
 use crate::definitions::*;
@@ -11,6 +12,7 @@ use crate::primitives::error::{Error, OverflowCheck, RinghopperResult};
 use crate::primitives::map::{DomainType, Map, ResourceMapType};
 use crate::primitives::parse::{SimpleTagData};
 use crate::primitives::primitive::{Angle, Bounds, Index, TagPath};
+use crate::tag::bitmap::{bytes_per_block, COMPRESSED_BITMAP_DATA_FORMATS, MipmapFaceIterator, MipmapTextureIterator, MipmapType, pixels_per_block_length};
 use crate::tag::model::ModelFunctions;
 use crate::tag::model_animations::{flip_endianness_for_model_animations_animation, FrameDataIterator};
 use crate::tag::nudge::nudge_tag;
@@ -291,7 +293,57 @@ pub fn fix_bitmap_tag<M: Map>(tag: &mut Bitmap, map: &M) -> RinghopperResult<()>
         None => return Ok(())
     };
     let mut processed_data: Vec<u8> = Vec::with_capacity(new_data);
+
+    let engine = map.get_engine();
+    let engine_name = engine.display_name;
+    let must_modulo_block_size = engine.bitmap_options.texture_dimension_must_modulo_block_size;
+
     for i in &mut tag.bitmap_data {
+        let is_compressed_format = COMPRESSED_BITMAP_DATA_FORMATS.contains(&i.format);
+
+        // All of these are non-zero.
+        let block_size = pixels_per_block_length(i.format);
+        let bytes_per_block = bytes_per_block(i.format);
+
+        // Do some basic checks here.
+        if i.flags.compressed != is_compressed_format {
+            return Err(Error::InvalidTagData(format!("Compressed flag is {} when it should be {is_compressed_format}.", i.flags.compressed)));
+        }
+        if i.flags.swizzled {
+            if !engine.bitmap_options.swizzled {
+                return Err(Error::InvalidTagData(format!("Bitmap is marked as swizzled, but this is not allowed for {engine_name} maps.")));
+            }
+            if i.flags.compressed {
+                return Err(Error::InvalidTagData("Bitmap is marked as swizzled and compressed which is not allowed.".to_string()));
+            }
+        }
+
+        let width = i.width as usize;
+        let height = i.height as usize;
+        let depth = i.depth as usize;
+        let mipmap_count = i.mipmap_count as usize;
+
+        if width == 0 || height == 0 || depth == 0 {
+            return Err(Error::InvalidTagData(format!("Bitmap is {width}x{height}x{depth} which has 0 on one dimension.")));
+        }
+
+        let width = unsafe { NonZeroUsize::new_unchecked(width) };
+        let height = unsafe { NonZeroUsize::new_unchecked(height) };
+        let depth = unsafe { NonZeroUsize::new_unchecked(depth) };
+
+        let mipmap_format = MipmapType::get_mipmap_type(&i)?;
+
+        let alignment = engine.bitmap_options.alignment;
+        if depth.get() != 1 && i._type != BitmapDataType::_3dTexture {
+            return Err(Error::InvalidTagData(format!("Bitmap is has a depth of {depth}, but it is not a 3D texture.")));
+        }
+        if !depth.is_power_of_two() {
+            return Err(Error::InvalidTagData(format!("Bitmap is has a depth of {depth} which is non-power-of-two.")));
+        }
+        if must_modulo_block_size && (width.get() % block_size != 0 || height.get() % block_size != 0) {
+            return Err(Error::InvalidTagData(format!("Bitmap is {width}x{height} which is not divisible by {block_size}, which is required for {engine_name}.")));
+        }
+
         let offset = i.pixel_data_offset as usize;
         let length = i.pixel_data_size as usize;
         let domain = if i.flags.external { DomainType::ResourceMapFile(ResourceMapType::Bitmaps) } else { DomainType::MapData };
@@ -299,17 +351,81 @@ pub fn fix_bitmap_tag<M: Map>(tag: &mut Bitmap, map: &M) -> RinghopperResult<()>
         let bitmap_data = map.get_data_at_address(offset, &domain, length)
             .ok_or_else(|| Error::MapDataOutOfBounds(format!("Unable to extract bitmap data at offset 0x{offset:08X} from {domain:?}")))?;
 
-        i.pixel_data_offset = processed_data.len().try_into().map_err(|_| Error::SizeLimitExceeded)?;
-
-        let expected_compressed_flag = matches!(i.format, BitmapDataFormat::DXT1 | BitmapDataFormat::DXT3 | BitmapDataFormat::DXT5 | BitmapDataFormat::BC7);
-        if i.flags.compressed ^ expected_compressed_flag {
-            return Err(Error::InvalidTagData(format!("Bitmap is formatted as {:?}, but the compressed flag is wrong (should be {expected_compressed_flag}).", i.format)))
+        if length % alignment != 0 {
+            return Err(Error::InvalidTagData(format!("Bitmap is {length} bytes, which is not divisible by {alignment} which is required for {engine_name}.")));
         }
 
-        match map.get_engine().bitmap_format {
-            EngineBitmapFormat::Tag => processed_data.extend_from_slice(bitmap_data),
-            EngineBitmapFormat::Xbox => return Err(Error::Other("xbox format not implemented for bitmaps".to_owned()))
+        // Actual mipmap count stored
+        let physical_mipmap_count = if must_modulo_block_size {
+            MipmapTextureIterator::new(width, height, mipmap_format, block_size, Some(mipmap_count))
+                .take_while(|f| f.width % block_size.get() == 0 && f.height % block_size.get() == 0)
+                .count() - 1
         }
+        else {
+            mipmap_count
+        };
+
+        // Handle cubemaps
+        let mut cow;
+        if engine.bitmap_options.cubemap_faces_stored_separately && i._type == BitmapDataType::CubeMap {
+            let bitmap_length = MipmapFaceIterator::new(width, height, MipmapType::TwoDimensional, block_size, Some(physical_mipmap_count))
+                .map(|m| m.block_count * bytes_per_block.get())
+                .reduce(|i, j| i + j)
+                .unwrap();
+
+            let bitmap_length_padded = bitmap_length + calculate_padding_for_alignment(bitmap_length, alignment);
+            let input_bitmap_length = bitmap_length_padded * 6;
+            if length != input_bitmap_length {
+                return Err(Error::InvalidTagData(format!("Bitmap is {length} bytes, expected it to be {input_bitmap_length} ({bitmap_length_padded}*6) bytes...")));
+            }
+
+            let mut all = Vec::with_capacity(bitmap_length * 6);
+
+            for i in [0, 2, 1, 3, 4, 5] {
+                let range = i*bitmap_length .. (i + 1)*bitmap_length;
+                all.extend_from_slice(&bitmap_data[range]);
+            }
+
+            cow = Cow::Owned(all);
+        }
+        else {
+            let actual_data = MipmapTextureIterator::new(width, height, mipmap_format, block_size, Some(physical_mipmap_count))
+                .map(|m| m.block_count * bytes_per_block.get())
+                .reduce(|i, j| i + j)
+                .unwrap();
+
+            let padding = calculate_padding_for_alignment(actual_data, alignment);
+            let expected_length = actual_data + padding;
+
+            // Mipmaps where a length is not divisible by block size are not included here.
+            //
+            // For Xbox maps, there appears to be garbage/null bytes after `expected_length`, thus it cannot be trusted.
+            if must_modulo_block_size {
+                if bitmap_data.len() < expected_length {
+                    return Err(Error::InvalidTagData(format!("Bitmap is {length} bytes, expected it to be at most {expected_length} ({actual_data} + {padding}) bytes...")));
+                }
+            }
+            else {
+                if bitmap_data.len() != expected_length {
+                    return Err(Error::InvalidTagData(format!("Bitmap is {length} bytes, expected it to be at exactly {expected_length} ({actual_data} + {padding}) bytes...")));
+                }
+            }
+
+            cow = Cow::Borrowed(&bitmap_data[..actual_data])
+        }
+
+        // TODODILE
+        if physical_mipmap_count != mipmap_count {
+            return Err(Error::Other("regenerating missing mipmaps for compressed textures not yet supported".to_string()));
+        }
+
+        // TODODILE
+        if i.flags.swizzled {
+            return Err(Error::Other("deswizzling not yet supported".to_string()))
+        }
+
+        i.pixel_data_offset = processed_data.len() as u32;
+        processed_data.extend_from_slice(&cow);
     }
     tag.processed_pixel_data.bytes = processed_data;
 

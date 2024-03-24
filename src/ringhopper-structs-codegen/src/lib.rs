@@ -844,7 +844,7 @@ fn camel_case(string: &str) -> String {
         result.push(c);
     }
 
-    let prefixes = &["Gbxm", "Ui", "Bsp", "Hud", "Dxt", "Pcm", "Bc7", "Adpcm"];
+    let prefixes = &["Gbxm", "Ui", "Bsp", "Hud", "Dxt", "Pcm", "Bc7", "Adpcm", "A1r5g5b5", "R5g6b5", "A4r4g4b4", "A8y8", "Ay8", "A8r8g8b8", "X8r8g8b8"];
 
     for p in prefixes {
         if result.contains(p) {

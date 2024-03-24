@@ -15,6 +15,13 @@
         "script_compile_target": "xbox",
         "cache_parser": "xbox",
         "bitmap_format": "xbox",
+        "bitmap_options": {
+            "swizzled": true,
+            "texture_dimension_must_modulo_block_size": true,
+            "cubemap_faces_stored_separately": true,
+            "alignment": 128
+        },
+        "data_alignment": 512,
         "compression_type": "deflate",
         "max_script_nodes": 19001,
         "cache_default": true,
