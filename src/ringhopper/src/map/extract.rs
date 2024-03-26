@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use std::num::NonZeroUsize;
 use definitions::{BitmapType, ModelTriangleStripData, ScenarioStructureBSP};
 use primitives::parse::TagData;
-use primitives::primitive::calculate_padding_for_alignment;
+use primitives::primitive::{calculate_padding_for_alignment, ColorARGBInt};
 use crate::tag::model::ModelPartGet;
 use crate::constants::{TICK_RATE, TICK_RATE_RECIPROCOL};
 use crate::definitions::*;
@@ -12,7 +12,7 @@ use crate::primitives::error::{Error, OverflowCheck, RinghopperResult};
 use crate::primitives::map::{DomainType, Map, ResourceMapType};
 use crate::primitives::parse::{SimpleTagData};
 use crate::primitives::primitive::{Angle, Bounds, Index, TagPath};
-use crate::tag::bitmap::{bytes_per_block, COMPRESSED_BITMAP_DATA_FORMATS, MipmapFaceIterator, MipmapTextureIterator, MipmapType, pixels_per_block_length};
+use crate::tag::bitmap::{bytes_per_block, COMPRESSED_BITMAP_DATA_FORMATS, MipmapFaceIterator, MipmapMetadata, MipmapTextureIterator, MipmapType, pixels_per_block_length, Swizzlable, swizzle};
 use crate::tag::model::ModelFunctions;
 use crate::tag::model_animations::{flip_endianness_for_model_animations_animation, FrameDataIterator};
 use crate::tag::nudge::nudge_tag;
@@ -321,7 +321,6 @@ pub fn fix_bitmap_tag<M: Map>(tag: &mut Bitmap, map: &M) -> RinghopperResult<()>
         let width = i.width as usize;
         let height = i.height as usize;
         let depth = i.depth as usize;
-        let mipmap_count = i.mipmap_count as usize;
 
         if width == 0 || height == 0 || depth == 0 {
             return Err(Error::InvalidTagData(format!("Bitmap is {width}x{height}x{depth} which has 0 on one dimension.")));
@@ -355,14 +354,17 @@ pub fn fix_bitmap_tag<M: Map>(tag: &mut Bitmap, map: &M) -> RinghopperResult<()>
             return Err(Error::InvalidTagData(format!("Bitmap is {length} bytes, which is not divisible by {alignment} which is required for {engine_name}.")));
         }
 
-        // Actual mipmap count stored
+        // Get and fix actual mipmap count stored
+        let reported_mipmap_count = i.mipmap_count as usize;
         let physical_mipmap_count = if must_modulo_block_size {
-            MipmapTextureIterator::new(width, height, mipmap_format, block_size, Some(mipmap_count))
+            let actual_mipmap_count = MipmapTextureIterator::new(width, height, mipmap_format, block_size, Some(reported_mipmap_count))
                 .take_while(|f| f.width % block_size.get() == 0 && f.height % block_size.get() == 0)
-                .count() - 1
+                .count() - 1;
+            i.mipmap_count = actual_mipmap_count as u16;
+            actual_mipmap_count
         }
         else {
-            mipmap_count
+            reported_mipmap_count
         };
 
         // Handle cubemaps
@@ -414,14 +416,54 @@ pub fn fix_bitmap_tag<M: Map>(tag: &mut Bitmap, map: &M) -> RinghopperResult<()>
             cow = Cow::Borrowed(&bitmap_data[..actual_data])
         }
 
-        // TODODILE
-        if physical_mipmap_count != mipmap_count {
-            return Err(Error::Other("regenerating missing mipmaps for compressed textures not yet supported".to_string()));
-        }
-
-        // TODODILE
         if i.flags.swizzled {
-            return Err(Error::Other("deswizzling not yet supported".to_string()))
+            let mut data = Vec::with_capacity(cow.len());
+
+            let mut do_thing_to_mipmap_metadata = |i: MipmapMetadata| -> RinghopperResult<()> {
+                let start = i.block_offset * bytes_per_block.get();
+                let size = i.block_count.mul_overflow_checked(bytes_per_block.get())?;
+                let end = start.add_overflow_checked(size)?;
+
+                let input = &cow[start..end];
+
+                fn handle_things_from_here<T: SimpleTagData + Swizzlable>(metadata: MipmapMetadata, input: &[u8], output: &mut Vec<u8>) -> RinghopperResult<()> {
+                    let mut data: Vec<T> = Vec::with_capacity(metadata.block_count);
+                    data.extend(T::read_chunks_to_iterator::<LittleEndian>(input).unwrap().into_infallible());
+
+                    let mut deswizzled: Vec<T> = vec![Default::default(); metadata.block_count];
+                    swizzle(&data, &mut deswizzled, metadata.width, metadata.height, metadata.depth, true)?;
+
+                    for i in deswizzled {
+                        output.extend_from_slice(i.as_bytes::<LittleEndian>().unwrap().bytes());
+                    }
+
+                    Ok(())
+                }
+
+                match bytes_per_block.get() {
+                    1 => handle_things_from_here::<u8>(i, input, &mut data)?,
+                    2 => handle_things_from_here::<u16>(i, input, &mut data)?,
+                    4 => handle_things_from_here::<ColorARGBInt>(i, input, &mut data)?,
+                    n => unreachable!("cannot deswizzle {n} len", n=n)
+                }
+
+                Ok(())
+            };
+
+            if matches!(mipmap_format, MipmapType::Cubemap) {
+                for i in MipmapFaceIterator::new(width, height, mipmap_format, block_size, Some(reported_mipmap_count)) {
+                    do_thing_to_mipmap_metadata(i)?;
+                }
+            }
+            else {
+                for i in MipmapTextureIterator::new(width, height, mipmap_format, block_size, Some(reported_mipmap_count)) {
+                    do_thing_to_mipmap_metadata(i)?;
+                }
+            }
+
+            debug_assert_eq!(cow.len(), data.len());
+
+            cow = Cow::Owned(data);
         }
 
         i.pixel_data_offset = processed_data.len() as u32;

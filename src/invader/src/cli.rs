@@ -192,6 +192,25 @@ impl CommandLineParser {
         self
     }
 
+    pub fn add_jobs(mut self) -> Self {
+        let p = Parameter {
+            values: None,
+            name: "jobs",
+            short: Some('j'),
+            description: "Set number of threads for this task.",
+            default_values: None,
+            value_type: Some(CommandLineValueType::UInteger),
+            required: false,
+            value_count: 1,
+            usage: "<jobs>",
+            multiple: false,
+        };
+
+        assert!(self.standard_parameters.get(&StandardParameterType::Jobs).is_none());
+        self.standard_parameters.insert(StandardParameterType::Jobs, p);
+        self
+    }
+
     pub fn add_data(mut self) -> Self {
         let p = Parameter {
             values: None,
@@ -446,6 +465,21 @@ impl CommandLineArgs {
             .is_some()
     }
 
+    /// Get the Jobs parameter.
+    ///
+    /// Panics if Jobs was not added.
+    pub fn get_jobs(&self) -> usize {
+        self.standard_parameters
+            .get(&StandardParameterType::Jobs)
+            .expect("jobs not added as standard parameter")
+            .values
+            .as_ref()
+            .map(|v| (v[0].uinteger() as usize).max(1)) // if 0 was passed, set to 1
+            .unwrap_or_else(|| {
+                std::thread::available_parallelism().map(|t| t.get().max(1)).unwrap_or(1)
+            })
+    }
+
     /// Get the custom parameters.
     ///
     /// Panics if not added.
@@ -514,7 +548,8 @@ enum StandardParameterType {
     Maps,
     Help,
     CowTags,
-    Overwrite
+    Overwrite,
+    Jobs,
 }
 
 #[derive(Debug, Clone)]

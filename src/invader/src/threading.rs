@@ -82,8 +82,7 @@ pub fn do_with_threads<T: TagTree + Send + 'static + Clone, U: Clone + Send + 's
     else {
         let filter = TagFilter::new(user_filter, group);
         let tags: VecDeque<TagPath> = context.tags_directory.get_all_tags_with_filter(Some(&filter)).into();
-        let thread_count = std::thread::available_parallelism().map(|t| t.get().max(1)).unwrap_or(1);
-        match thread_count {
+        match context.args.get_jobs() {
             1 => {
                 for path in tags {
                     process_tags(&mut context, &success, &failure, &ignored, &total, &path, &mut user_data, display_mode, &logger, function);

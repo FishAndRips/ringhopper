@@ -65,6 +65,7 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
             false,
             false
         ))
+        .add_jobs()
         .add_custom_parameter(Parameter::single("raw", 'r', "Do not strip cache-only fields from cache file tags when comparing.", "", None))
         .set_required_extra_parameters(2)
         .parse(args)?;

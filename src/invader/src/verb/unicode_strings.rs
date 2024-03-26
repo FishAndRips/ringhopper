@@ -14,6 +14,7 @@ pub fn unicode_strings(args: Args, description: &'static str) -> Result<(), Stri
         .add_data()
         .add_help()
         .add_cow_tags()
+        .add_jobs()
         .set_required_extra_parameters(1)
         .parse(args)?;
 

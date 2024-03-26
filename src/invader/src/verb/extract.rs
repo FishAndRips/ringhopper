@@ -26,6 +26,7 @@ pub fn extract(args: Args, description: &'static str) -> Result<(), String> {
             false,
             false
         ))
+        .add_jobs()
         .add_custom_parameter(Parameter::new(
             "non-mp-globals",
             'n',

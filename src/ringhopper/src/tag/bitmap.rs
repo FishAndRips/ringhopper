@@ -1,5 +1,7 @@
 #[cfg(test)]
 mod test;
+mod swizzle;
+pub use swizzle::*;
 
 use std::iter::FusedIterator;
 use std::num::NonZeroUsize;

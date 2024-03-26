@@ -16,6 +16,7 @@ macro_rules! make_tag_collection_fn {
                 .add_tags(false)
                 .add_data()
                 .add_help()
+                .add_jobs()
                 .add_cow_tags()
                 .set_required_extra_parameters(1)
                 .parse(args)?;

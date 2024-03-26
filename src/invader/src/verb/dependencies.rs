@@ -14,6 +14,7 @@ pub fn dependencies(args: Args, description: &'static str) -> Result<(), String>
             "",
             None
         ))
+        .add_jobs()
         .add_custom_parameter(Parameter::single(
             "reverse",
             'R',
