@@ -39,6 +39,22 @@
         "size": 12
     },
     {
+        "name": "FontMoreFlags",
+        "fields": [
+            {
+                "name": "extended charset",
+                "developer_note": "appears to change how unicode_string_list tags are decoded on the jp/tw builds",
+                "cache_only": true,
+                "supported_engines": [
+                    "xbox-jp",
+                    "xbox-tw"
+                ]
+            }
+        ],
+        "type": "bitfield",
+        "width": 16
+    },
+    {
         "name": "FontCharacter",
         "fields": [
             {
@@ -108,13 +124,28 @@
                 "cache_only": true
             },
             {
+                "name": "more flags",
+                "type": "FontMoreFlags"
+            },
+            {
+                "name": "character offset",
+                "type": "uint16",
+                "cache_only": true,
+                "developer_note": "= characters reflexive count + 161",
+                "supported_engines": [
+                    "xbox-jp",
+                    "xbox-tw"
+                ]
+            },
+            {
                 "type": "pad",
-                "size": 36
+                "size": 32
             },
             {
                 "name": "character tables",
                 "type": "Reflexive",
                 "struct": "FontCharacterTables",
+                "developer_note": "character tables are decoded with the upper 8 bits of the character as the index to this reflexive, and the lower 8 bits as the index to this table's inner reflexive",
                 "cache_only": true,
                 "limit": 256
             },

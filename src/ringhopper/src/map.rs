@@ -60,6 +60,7 @@ fn extract_tag_from_map<M: Map>(
         TagGroup::Scenario => fix_scenario_tag(tag.as_any_mut().downcast_mut().unwrap(), path.base_name())?,
         TagGroup::ScenarioStructureBSP => fix_scenario_structure_bsp_tag(tag.as_any_mut().downcast_mut().unwrap())?,
         TagGroup::Sound => fix_sound_tag(tag.as_any_mut().downcast_mut().unwrap())?,
+        TagGroup::UnicodeStringList => fix_unicode_string_list_tag(tag.as_any_mut().downcast_mut().unwrap(), map)?,
         TagGroup::Weapon => fix_weapon_tag(tag.as_any_mut().downcast_mut().unwrap(), path, &scenario_tag),
         _ => ()
     };
