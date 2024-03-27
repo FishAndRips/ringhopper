@@ -12,7 +12,7 @@ pub fn read_file<P: AsRef<Path>>(path: P) -> RinghopperResult<Vec<u8>> {
 
 #[derive(Copy, Clone)]
 #[allow(dead_code)]
-struct TTYMetadata {
+pub struct TTYMetadata {
     /// Number of columns.
     pub width: usize,
 
@@ -23,7 +23,18 @@ struct TTYMetadata {
     pub color: bool
 }
 
-fn get_tty_metadata() -> Option<TTYMetadata> {
+impl Default for TTYMetadata {
+    fn default() -> Self {
+        Self {
+            width: 80,
+            height: 24,
+            color: false
+        }
+    }
+}
+
+/// Get the metadata for the current shell.
+pub fn get_tty_metadata() -> Option<TTYMetadata> {
     if cfg!(target_os = "linux") {
         #[cfg(target_os = "linux")]
         {

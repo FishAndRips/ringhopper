@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use ringhopper::primitives::tag::ParseStrictness;
 use ringhopper::tag::tree::VirtualTagsDirectory;
+use util::get_tty_metadata;
 
 pub struct CommandLineParser {
     description: &'static str,
@@ -87,21 +88,81 @@ impl CommandLineParser {
             println!("{}", parser.description);
             println!();
 
-            for a in arguments {
-                match a.short {
-                    Some(c) => print!("-{c}, "),
-                    None => ()
-                };
-                print!("--{} ", a.name);
-                if !a.usage.is_empty() {
-                    print!("{} ", a.usage);
-                }
-                println!();
-                // TODO: move this on the same line as the other stuff
-                println!("  {}", a.description);
-            }
-            println!();
 
+            let arg_info_width = 29;
+            let min_arg_desc_width = 30;
+            let tty_width = get_tty_metadata().map(|t| t.width);
+            let min_width_for_good_tty = arg_info_width + min_arg_desc_width;
+
+            match tty_width {
+                // By default, we want to print args and description on the same line.
+                Some(available_width) if available_width >= min_width_for_good_tty => {
+                    for a in arguments {
+                        let usage = {
+                            let shorthand = match a.short {
+                                Some(c) => format!("-{c}, "),
+                                None => String::new()
+                            };
+
+                            let name = a.name;
+                            let usage = if a.usage.is_empty() { String::new() } else { format!(" {}", a.usage) };
+
+                            format!("{shorthand}--{name}{usage}")
+                        };
+
+                        let mut current_pos = usage.len();
+                        debug_assert!(current_pos < arg_info_width);
+                        print!("{usage}");
+
+                        for word in a.description.split(" ") {
+                            let word_len = word.len() + 1; // + 1 for the whitespace
+
+                            // if this would overflow the current line, make a new one
+                            if current_pos + word_len > available_width {
+                                println!();
+                                current_pos = 0;
+                            }
+
+                            // pad out the left side if we need to
+                            if current_pos < arg_info_width {
+                                for _ in current_pos..arg_info_width {
+                                    print!(" ");
+                                }
+                                current_pos = arg_info_width;
+                            }
+
+                            // include a space at the start so we can spread words apart
+                            // by putting it at the start, this allows for an exact fitting of the words per-line
+                            // and also guarantees 1 character of padding between description and argument usage
+                            print!(" {word}");
+                            current_pos += word_len;
+                        }
+
+                        println!();
+                    }
+                },
+
+                // The fallback is putting description below arguments.
+                // This is if the terminal is too small, or we cannot determine terminal width.
+                //
+                // It is better than displaying a bunch of jumbled up text at least...
+                _ => {
+                    for a in arguments {
+                        match a.short {
+                            Some(c) => print!("-{c}, "),
+                            None => ()
+                        };
+                        print!("--{} ", a.name);
+                        if !a.usage.is_empty() {
+                            print!("{} ", a.usage);
+                        }
+                        println!();
+                        println!("  {}", a.description);
+                    }
+                },
+            }
+
+            println!();
             std::process::exit(0);
         })
     }
