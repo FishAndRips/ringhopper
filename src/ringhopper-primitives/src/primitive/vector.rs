@@ -16,7 +16,7 @@ pub trait Vector: Sized {
     /// Normalize the vector into a unit vector.
     fn normalize(&self) -> Self {
         let value = self.normalize_into(1.0);
-        debug_assert!(self.is_unit_vector());
+        debug_assert!(value.is_unit_vector());
         value
     }
 
