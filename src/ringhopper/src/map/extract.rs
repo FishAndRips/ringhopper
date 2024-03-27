@@ -18,7 +18,6 @@ use crate::tag::model_animations::{flip_endianness_for_model_animations_animatio
 use crate::tag::nudge::nudge_tag;
 use crate::tag::scenario::{decompile_scripts, flip_scenario_script_endianness};
 use crate::tag::scenario_structure_bsp::recompress_scenario_structure_bsp_vertices;
-use crate::tag::tree::TagTree;
 
 pub fn fix_weapon_tag(tag: &mut Weapon, tag_path: &TagPath, scenario_tag: &Scenario) {
     if scenario_tag._type == ScenarioType::Singleplayer && !scenario_tag.flags.do_not_apply_bungie_campaign_tag_patches {
@@ -267,8 +266,8 @@ pub fn fix_unicode_string_list_tag<M: Map>(_tag: &mut UnicodeStringList, map: &M
     for i in map.get_all_tags().iter().filter(|c| c.group() == TagGroup::Font) {
         let tag = map.extract_tag(&i)?;
         let tag: &Font = &tag.as_any().downcast_ref().unwrap();
-        if tag.more_flags.extended_charset {
-            return Err(Error::Other("extended_charset unicode string list tags are unsupported".to_string()))
+        if tag.encoding_type == FontEncodingType::Extended {
+            return Err(Error::Other("Extended unicode_string_list tags are unsupported".to_string()))
         }
     }
 

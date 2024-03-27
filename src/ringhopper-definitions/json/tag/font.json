@@ -39,20 +39,17 @@
         "size": 12
     },
     {
-        "name": "FontMoreFlags",
-        "fields": [
+        "name": "FontEncodingType",
+        "options": [
             {
-                "name": "extended charset",
-                "developer_note": "appears to change how unicode_string_list tags are decoded on the jp/tw builds",
-                "cache_only": true,
-                "supported_engines": [
-                    "xbox-jp",
-                    "xbox-tw"
-                ]
+                "name": "ucs-2"
+            },
+            {
+                "name": "extended",
+                "developer_note": "appears to change how unicode_string_list tags are decoded on the jp/tw builds"
             }
         ],
-        "type": "bitfield",
-        "width": 16
+        "type": "enum"
     },
     {
         "name": "FontCharacter",
@@ -124,8 +121,14 @@
                 "cache_only": true
             },
             {
-                "name": "more flags",
-                "type": "FontMoreFlags"
+                "name": "encoding type",
+                "type": "FontEncodingType",
+                "developer_note": "unsure if tool.exe put it in the map like this",
+                "cache_only": true,
+                "supported_engines": [
+                    "xbox-jp",
+                    "xbox-tw"
+                ]
             },
             {
                 "name": "character offset",
