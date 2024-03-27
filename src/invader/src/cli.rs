@@ -89,7 +89,7 @@ impl CommandLineParser {
             println!();
 
 
-            let arg_info_width = 29;
+            let arg_info_width = 40;
             let min_arg_desc_width = 30;
             let tty_width = get_tty_metadata().map(|t| t.width);
             let min_width_for_good_tty = arg_info_width + min_arg_desc_width;
@@ -107,7 +107,7 @@ impl CommandLineParser {
                             let name = a.name;
                             let usage = if a.usage.is_empty() { String::new() } else { format!(" {}", a.usage) };
 
-                            format!("{shorthand}--{name}{usage}")
+                            format!("  {shorthand}--{name}{usage}")
                         };
 
                         let mut current_pos = usage.len();
