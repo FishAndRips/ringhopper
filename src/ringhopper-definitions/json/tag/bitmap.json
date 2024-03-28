@@ -209,7 +209,10 @@
             "power of two dimensions",
             "compressed",
             "palettized",
-            "swizzled",
+            {
+                "name": "swizzled",
+                "cache_only": true
+            },
             "linear",
             "v16u16",
             {

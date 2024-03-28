@@ -396,9 +396,13 @@ pub fn fix_bitmap_tag<M: Map>(tag: &mut Bitmap, map: &M) -> RinghopperResult<()>
 
             let mut all = Vec::with_capacity(bitmap_length * 6);
 
-            for i in [0, 2, 1, 3, 4, 5] {
-                let range = i*bitmap_length .. (i + 1)*bitmap_length;
-                all.extend_from_slice(&bitmap_data[range]);
+            for mipmap in MipmapFaceIterator::new(width, height, MipmapType::TwoDimensional, block_size, Some(physical_mipmap_count)) {
+                for i in [0, 2, 1, 3, 4, 5] {
+                    let start = i*bitmap_length_padded + mipmap.block_offset * bytes_per_block.get();
+                    let end = start + mipmap.block_count * bytes_per_block.get();
+                    let range = start .. end;
+                    all.extend_from_slice(&bitmap_data[range]);
+                }
             }
 
             cow = Cow::Owned(all);
