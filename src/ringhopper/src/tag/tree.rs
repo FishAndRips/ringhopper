@@ -479,16 +479,17 @@ impl VirtualTagsDirectory {
         let tag_file = tag.to_tag_file()?;
         let hash = Self::hash_file(tag_file.as_slice());
 
+        let hash_external_file = |f: &Path| -> RinghopperResult<u64> {
+            std::fs::read(f)
+                .map(|f| Self::hash_file(f.as_slice()))
+                .map_err(|e| Error::FailedToReadFile(f.to_path_buf(), e))
+        };
+
         let path_for_tag = match self.path_for_tag(path).map(|(_, path)| path) {
             Some(n) => {
-                let original_hash = std::fs::read(&n)
-                    .map(|f| Self::hash_file(f.as_slice()))
-                    .map_err(|e| Error::FailedToReadFile(n.clone(), e))?;
-
-                if original_hash == hash {
+                if hash_external_file(&n)? == hash {
                     return Ok(false)
                 }
-
                 n
             },
             None => match &self.cow_output {
@@ -498,7 +499,13 @@ impl VirtualTagsDirectory {
         };
 
         let file_to_write_to = match &self.cow_output {
-            Some(n) => n.join(path.to_native_path()),
+            Some(n) => {
+                let path = n.join(path.to_native_path());
+                if path.exists() && hash_external_file(&path)? == hash {
+                    return Ok(false) // file in cow matches
+                }
+                path
+            },
             None => path_for_tag
         };
 
