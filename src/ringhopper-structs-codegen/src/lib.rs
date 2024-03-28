@@ -3,7 +3,7 @@ extern crate ringhopper_definitions;
 use std::fmt::Write;
 use std::borrow::Cow;
 
-use ringhopper_definitions::{load_all_definitions, SizeableObject, Struct, NamedObject, Enum, Bitfield, StructFieldType, ObjectType, ParsedDefinitions, FieldCount, TagGroup};
+use ringhopper_definitions::{load_all_definitions, SizeableObject, Struct, NamedObject, Enum, Bitfield, StructFieldType, ObjectType, ParsedDefinitions, FieldCount, TagGroup, StaticValue};
 
 use proc_macro::TokenStream;
 use std::collections::HashSet;
@@ -187,6 +187,31 @@ fn is_simple_struct(structure: &Struct, parsed_definitions: &ParsedDefinitions) 
     }
 
     true
+}
+
+fn recursive_look_for_defaults_for_struct(struct_name: &str, definitions: &ParsedDefinitions) -> bool {
+    let s = if let NamedObject::Struct(s) = &definitions.objects[struct_name] {
+        s
+    }
+    else {
+        return false; // bitfields/enums maybe
+    };
+    for i in &s.fields {
+        if i.default_value.is_some() {
+            return true
+        }
+        match &i.field_type {
+            StructFieldType::Object(o) => match o {
+                ObjectType::NamedObject(n)
+                | ObjectType::Reflexive(n) => if recursive_look_for_defaults_for_struct(n, definitions) {
+                    return true
+                },
+                _ => ()
+            },
+            _ => ()
+        }
+    }
+    false
 }
 
 impl ToTokenStream for Struct {
@@ -427,6 +452,75 @@ impl ToTokenStream for Struct {
             read_map_in = "BAD".to_owned();
         }
 
+        // Defaulting code
+        let zero_defaulting_code = if recursive_look_for_defaults_for_struct(struct_name, definitions) {
+            let mut all_defaulting_code = String::new();
+            let mut all_undefaulting_code = String::new();
+
+            for i in 0..field_count {
+                let field = &self.fields[i];
+                let field_name = &fields_with_names[i];
+                if let Some(n) = &field.default_value {
+                    let merge_vector = |vector: &[StaticValue]| -> String {
+                        if vector.len() == 1 {
+                            return if let StructFieldType::Object(ObjectType::Angle) = field.field_type {
+                                format!("Angle::from({})", &n[0])
+                            }
+                            else {
+                                n[0].to_string()
+                            }
+                        }
+
+                        let mut q = "[".to_string();
+                        for i in vector {
+                            write!(&mut q, "{i},").unwrap()
+                        }
+                        write!(&mut q, "].into()").unwrap();
+                        q
+                    };
+
+                    let default_value = match field.count {
+                        FieldCount::One | FieldCount::Array(_) => merge_vector(n.as_slice()),
+                        FieldCount::Bounds => {
+                            let (from, to) = n.split_at(n.len() / 2);
+                            format!("(Bounds {{ lower: {from}, upper: {to} }})", from=merge_vector(from), to=merge_vector(to))
+                        }
+                    };
+
+                    writeln!(&mut all_defaulting_code, "if self.{field_name} == Default::default() {{
+                        self.{field_name} = {default_value};
+                    }}").unwrap();
+                    writeln!(&mut all_undefaulting_code, "if self.{field_name} == {default_value} {{
+                        self.{field_name} = Default::default();
+                    }}").unwrap();
+                }
+                else {
+                    match &field.field_type {
+                        StructFieldType::Object(ObjectType::NamedObject(o))
+                        | StructFieldType::Object(ObjectType::Reflexive(o)) => {
+                            if recursive_look_for_defaults_for_struct(o, definitions) {
+                                writeln!(&mut all_defaulting_code, "self.{field_name}.set_defaults();").unwrap();
+                                writeln!(&mut all_undefaulting_code, "self.{field_name}.unset_defaults();").unwrap();
+                            }
+                        },
+                        _ => ()
+                    }
+                }
+            }
+
+            format!("impl TagDataDefaults for {struct_name} {{
+                fn set_defaults(&mut self) {{
+                    {all_defaulting_code}
+                }}
+                fn unset_defaults(&mut self) {{
+                    {all_undefaulting_code}
+                }}
+            }}")
+        }
+        else {
+            format!("impl TagDataDefaults for {struct_name} {{}}")
+        };
+
         let tag_data_functions = if simple_struct {
             format!("impl SimpleTagData for {struct_name} {{
                 fn simple_size() -> usize {{
@@ -482,6 +576,8 @@ impl ToTokenStream for Struct {
                 }}
             }}
         }}
+
+        {zero_defaulting_code}
 
         impl DynamicTagData for {struct_name} {{
             fn get_field(&self, field: &str) -> Option<&dyn DynamicTagData> {{
@@ -619,6 +715,8 @@ impl ToTokenStream for Enum {
             }}
         }}
 
+        impl TagDataDefaults for {struct_name} {{}}
+
         impl DynamicEnumImpl for {struct_name} {{
             fn from_str(value: &str) -> Option<Self> {{
                 match value {{
@@ -712,6 +810,8 @@ impl ToTokenStream for Bitfield {
                 output
             }}
         }}
+
+        impl TagDataDefaults for {struct_name} {{}}
 
         impl DynamicTagData for {struct_name} {{
             fn get_field(&self, field: &str) -> Option<&dyn DynamicTagData> {{
@@ -844,7 +944,7 @@ fn camel_case(string: &str) -> String {
         result.push(c);
     }
 
-    let prefixes = &["Gbxm", "Ui", "Bsp", "Hud", "Dxt", "Pcm", "Bc7", "Adpcm", "A1r5g5b5", "R5g6b5", "A4r4g4b4", "A8y8", "Ay8", "A8r8g8b8", "X8r8g8b8"];
+    let prefixes = &["Gbxm", "Ui", "Bsp", "Hud", "Dxt", "Pcm", "Bc7", "Adpcm", "A1r5g5b5", "R5g6b5", "A4r4g4b4", "A8y8", "Ay8", "A8r8g8b8", "X8r8g8b8", "Ucs", "Ai"];
 
     for p in prefixes {
         if result.contains(p) {

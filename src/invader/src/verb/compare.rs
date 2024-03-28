@@ -26,7 +26,8 @@ enum Show {
 struct UserData {
     tags: Arc<dyn TagTree + Send + Sync>,
     differences: Arc<Mutex<HashMap<TagPath, Vec<TagComparisonDifference>>>>,
-    should_strip: [bool; 2]
+    should_strip: [bool; 2],
+    raw: bool
 }
 
 pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
@@ -116,7 +117,8 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
     let user_data = UserData {
         tags: secondary,
         differences: Arc::new(Mutex::new(HashMap::new())),
-        should_strip
+        should_strip,
+        raw
     };
 
     let logger = make_stdout_logger();
@@ -136,6 +138,12 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
         }
         if user_data.should_strip[1] {
             secondary = ringhopper::definitions::read_any_tag_from_file_buffer(&secondary.to_tag_file()?, ParseStrictness::Relaxed)?;
+        }
+
+        // Unset defaults if raw was not requested
+        if !user_data.raw {
+            primary.unset_defaults();
+            secondary.unset_defaults();
         }
 
         let differences = compare_tags(primary.as_ref(), secondary.as_ref());

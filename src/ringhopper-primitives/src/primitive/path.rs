@@ -496,6 +496,8 @@ impl TagData for TagReference {
     }
 }
 
+impl TagDataDefaults for TagReference {}
+
 impl DynamicTagData for TagReference {
     fn get_field(&self, _field: &str) -> Option<&dyn DynamicTagData> {
         None
@@ -561,6 +563,8 @@ impl SimpleTagData for TagReferenceC {
         Ok(())
     }
 }
+
+impl TagDataDefaults for TagReferenceC {}
 
 #[cfg(test)]
 mod test;

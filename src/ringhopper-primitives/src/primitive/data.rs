@@ -243,6 +243,8 @@ impl<T: Copy + Default> SimpleTagData for Padding<T> {
     }
 }
 
+impl<T: Sized + Default> TagDataDefaults for Padding<T> {}
+
 impl<T: Copy + Default> Debug for Padding<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "({} bytes padding)", Self::simple_size())
@@ -449,6 +451,8 @@ macro_rules! make_data_dynamic_tag_data {
             }
         }
 
+        impl TagDataDefaults for $t {}
+
         impl FromIterator<u8> for $t {
             fn from_iter<I: IntoIterator<Item=u8>>(iter: I) -> Self {
                 let mut bytes = Vec::new();
@@ -610,6 +614,19 @@ impl<T: TagData + Sized> TagData for Reflexive<T> {
         }
 
         Ok(result)
+    }
+}
+
+impl<T: TagData + Sized> TagDataDefaults for Reflexive<T> {
+    fn set_defaults(&mut self) {
+        for i in &mut self.items {
+            i.set_defaults()
+        }
+    }
+    fn unset_defaults(&mut self) {
+        for i in &mut self.items {
+            i.unset_defaults()
+        }
     }
 }
 
@@ -875,6 +892,8 @@ impl<T: TagData + Sized> SimpleTagData for ReflexiveC<T> {
     }
 }
 
+impl<T: TagData + Sized> TagDataDefaults for ReflexiveC<T> {}
+
 impl<T: TagData + Sized> ReflexiveC<T> {
     /// Convenience function for initializing a `ReflexiveC` instance with `count` and `address`.
     ///
@@ -948,6 +967,7 @@ impl SimpleTagData for DataC {
         Ok(())
     }
 }
+impl TagDataDefaults for DataC {}
 
 #[derive(Copy, Clone, Default, PartialEq)]
 #[repr(transparent)]

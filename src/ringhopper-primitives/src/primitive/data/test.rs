@@ -85,6 +85,7 @@ impl TagData for Vector3DHolder {
         unimplemented!()
     }
 }
+impl TagDataDefaults for Vector3DHolder {}
 
 #[test]
 fn reflexive_rw() {

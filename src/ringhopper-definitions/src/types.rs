@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt::{Display, Formatter};
 use serde_json::Value;
 
 #[derive(Default)]
@@ -139,7 +140,7 @@ impl SizeableObject for StructFieldType {
     }
 }
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum FieldCount {
     /// A single field
     One,
@@ -174,11 +175,23 @@ pub struct DefaultBehavior {
     pub default_on_cache: bool
 }
 
+#[derive(Debug)]
 pub enum StaticValue {
     F32(f32),
     Uint(u64),
     Int(i64),
     String(String)
+}
+
+impl Display for StaticValue {
+    fn fmt(&self, fmt: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            StaticValue::String(s) => fmt.write_fmt(format_args!("\"{s}\"")),
+            StaticValue::Uint(i) => fmt.write_fmt(format_args!("{i}")),
+            StaticValue::Int(i) => fmt.write_fmt(format_args!("{i}")),
+            StaticValue::F32(f) => fmt.write_fmt(format_args!("{f:0.032}"))
+        }
+    }
 }
 
 pub struct Bitfield {

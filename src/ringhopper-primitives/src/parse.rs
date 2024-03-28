@@ -18,7 +18,7 @@ pub const MAX_ARRAY_LENGTH: usize = u32::MAX as usize;
 /// Tag data parsing/writing methods.
 ///
 /// This is used for parsing data that can be processed later as well as serializing data into formats that can be read later.
-pub trait TagData {
+pub trait TagData: TagDataDefaults {
     /// Get the size of the tag data.
     fn size() -> usize where Self: Sized;
 
@@ -45,8 +45,14 @@ pub trait TagData {
     fn read_from_map<M: Map>(map: &M, address: usize, domain_type: &DomainType) -> RinghopperResult<Self> where Self: Sized;
 }
 
+/// Functionality for defaulting zeroed values.
+pub trait TagDataDefaults {
+    fn set_defaults(&mut self) {}
+    fn unset_defaults(&mut self) {}
+}
+
 /// Automatically implements types for [`TagData`] for simple types.
-pub trait SimpleTagData: Sized {
+pub trait SimpleTagData: TagDataDefaults + Sized {
     /// Get the raw size of the data in bytes.
     fn simple_size() -> usize;
 
@@ -227,7 +233,7 @@ pub trait SimplePrimitive: SimpleTagData {
     fn primitive_type() -> SimplePrimitiveType;
 }
 
-impl<T: SimpleTagData + Sized> TagData for T {
+impl<T: SimpleTagData + TagDataDefaults + Sized> TagData for T {
     fn size() -> usize {
         T::simple_size()
     }
@@ -254,6 +260,8 @@ impl<T: SimpleTagData + Sized> TagData for T {
         T::read::<LittleEndian>(data, 0, data.len())
     }
 }
+
+impl <T: SimplePrimitive> TagDataDefaults for T {}
 
 impl <T: SimplePrimitive + SimpleTagData + Sized + 'static> DynamicTagData for T {
     fn get_field(&self, _field: &str) -> Option<&dyn DynamicTagData> {

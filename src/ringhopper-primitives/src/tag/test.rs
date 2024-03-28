@@ -45,6 +45,9 @@ impl TagData for UnicodeStringList {
     }
 }
 
+impl TagDataDefaults for String {}
+impl TagDataDefaults for UnicodeStringList {}
+
 impl DynamicTagData for UnicodeStringList {
     fn get_field(&self, _field: &str) -> Option<&dyn DynamicTagData> {
         todo!()

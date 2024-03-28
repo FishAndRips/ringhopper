@@ -206,6 +206,12 @@ pub struct ColorRGBFloat {
     pub blue: f32
 }
 
+impl From<[f32; 3]> for ColorRGBFloat {
+    fn from(value: [f32; 3]) -> Self {
+        Self { red: value[0], green: value[1], blue: value[2] }
+    }
+}
+
 impl Color for ColorRGBFloat {
     fn rgb_float(&self) -> ColorRGBFloat {
         *self

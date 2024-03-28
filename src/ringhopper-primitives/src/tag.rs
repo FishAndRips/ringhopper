@@ -164,6 +164,8 @@ impl SimpleTagData for TagFileHeader {
     }
 }
 
+impl TagDataDefaults for TagFileHeader {}
+
 impl TagFileHeader {
     /// Return `Ok(())` if the header is valid.
     ///

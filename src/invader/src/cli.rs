@@ -239,7 +239,7 @@ impl CommandLineParser {
             values: None,
             name: "cow",
             short: Some('c'),
-            description: "Set a directory to output tags.",
+            description: "Set a copy-on-write directory for outputting tags.",
             default_values: Some(vec![]),
             value_type: Some(CommandLineValueType::Path),
             required: false,

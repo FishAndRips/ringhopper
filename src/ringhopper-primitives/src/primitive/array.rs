@@ -83,6 +83,17 @@ impl<T: TagData + Default> Default for Bounds<T> {
     }
 }
 
+impl<T: TagData> TagDataDefaults for Bounds<T> {
+    fn set_defaults(&mut self) {
+        self.lower.set_defaults();
+        self.upper.set_defaults();
+    }
+    fn unset_defaults(&mut self) {
+        self.lower.unset_defaults();
+        self.upper.unset_defaults();
+    }
+}
+
 fn make_array<T: TagData + Sized, const U: usize, F: FnMut() -> RinghopperResult<T>>(mut next: F) -> RinghopperResult<[T; U]> {
     let mut error: Option<Error> = None;
 
@@ -145,6 +156,19 @@ impl<T: DynamicTagData + SimpleTagData + Sized, const U: usize> DynamicTagData f
 
     fn as_array_mut(&mut self) -> Option<&mut dyn DynamicTagDataArray> {
         Some(self as &mut dyn DynamicTagDataArray)
+    }
+}
+
+impl<T: DynamicTagData + SimpleTagData + Sized, const U: usize> TagDataDefaults for [T; U] {
+    fn set_defaults(&mut self) {
+        for i in self {
+            i.set_defaults()
+        }
+    }
+    fn unset_defaults(&mut self) {
+        for i in self {
+            i.unset_defaults()
+        }
     }
 }
 

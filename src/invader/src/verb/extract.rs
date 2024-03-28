@@ -66,7 +66,8 @@ pub fn extract(args: Args, description: &'static str) -> Result<(), String> {
         if !user_data.allow_globals && path.group() == TagGroup::Globals {
             return Ok(ProcessSuccessType::Skipped("refusing to extract a non-multiplayer globals tag without --non-mp-globals"))
         }
-        let tag = context.tags_directory.open_tag_copy(path)?;
+        let mut tag = context.tags_directory.open_tag_copy(path)?;
+        tag.unset_defaults(); // always unset defaults when doing tag extraction
         let tag = tag.as_ref();
         user_data.output_tags_dir.write_tag_to_directory(path, tag, 0).map(|r|
             if r {
