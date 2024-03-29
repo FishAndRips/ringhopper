@@ -263,10 +263,34 @@ impl Color for ColorRGBFloat {
 generate_tag_data_simple_primitive_code!(ColorRGBFloat, f32, red, green, blue);
 
 /// Refers to a color composed of 8-bit integer color with alpha stored in integer form.
-#[derive(Clone, Copy, Default, Debug, PartialEq)]
+#[derive(Clone, Copy, Default, Debug, PartialEq, Eq, Hash)]
 #[repr(transparent)]
 pub struct ColorARGBInt {
     pub color: u32
+}
+
+impl ColorARGBInt {
+    /// Convert 8-bit monochrome with full opacity and explicity luminosity to full color.
+    pub fn from_y8(y8: u8) -> ColorARGBInt {
+        ColorARGBIntBytes {
+            alpha: 255,
+            red: y8,
+            green: y8,
+            blue: y8
+        }.into()
+    }
+
+    /// Convert 16-bit monochrome with split opacity and luminosity to color.
+    pub fn from_a8y8(a8y8: u16) -> ColorARGBInt {
+        let alpha = (a8y8 >> 8) as u8;
+        let luminosity = (a8y8 & 0xFF) as u8;
+        ColorARGBIntBytes {
+            alpha,
+            red: luminosity,
+            green: luminosity,
+            blue: luminosity
+        }.into()
+    }
 }
 
 impl Color for ColorARGBInt {
@@ -321,7 +345,6 @@ impl Display for ColorARGBIntBytes {
         f.write_fmt(format_args!("{{ alpha = {}, red = {}, green = {}, blue = {} }}", self.alpha, self.red, self.green, self.blue ))
     }
 }
-
 
 /// Refers to a color composed of 8-bit integer color with alpha.
 #[derive(Clone, Copy, Default, Debug, PartialEq)]

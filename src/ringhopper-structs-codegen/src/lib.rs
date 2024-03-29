@@ -464,10 +464,10 @@ impl ToTokenStream for Struct {
                     let merge_vector = |vector: &[StaticValue]| -> String {
                         if vector.len() == 1 {
                             return if let StructFieldType::Object(ObjectType::Angle) = field.field_type {
-                                format!("Angle::from({})", &n[0])
+                                format!("Angle::from({})", &vector[0])
                             }
                             else {
-                                n[0].to_string()
+                                vector[0].to_string()
                             }
                         }
 

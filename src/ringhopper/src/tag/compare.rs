@@ -184,7 +184,7 @@ fn compare_data(first: &[u8], second: &[u8], path: &mut String, comparison: &mut
         comparison.push(TagComparisonDifference {
             depth,
             path: path[1..].to_owned(),
-            difference: format!("data is different (CRC64: {first:08X} {op} {second:08X})")
+            difference: format!("data is different (CRC64: {first:016X} {op} {second:016X})")
         });
         return;
     }

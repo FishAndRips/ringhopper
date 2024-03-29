@@ -134,7 +134,8 @@ pub fn do_with_threads<T: TagTree + Send + 'static + Clone, U: Clone + Send + 's
         }
     }
     else if total > 1 {
-        let processed_amt = format!("Saved {success} / {total} tags in {milliseconds_taken} ms");
+        // TODO: figure out a better way to output this text
+        let processed_amt = format!("Processed {success} / {total} tags in {milliseconds_taken} ms");
         if failure > 0 {
             logger.warning_fmt_ln(format_args!("{processed_amt}, with {failure} error{s}", s = if failure == 1 { "" } else { "s" }));
         }
@@ -163,7 +164,8 @@ fn process_tags<T: TagTree + Send + Clone, U: Clone + Send + 'static>(
         Ok(ProcessSuccessType::Success) => {
             success.fetch_add(1, Ordering::Relaxed);
             if display_mode == DisplayMode::ShowAll {
-                logger.success_fmt_ln(format_args!("Saved {path}"));
+                // TODO: figure out a better way to output this text
+                logger.success_fmt_ln(format_args!("Processed {path}"));
                 logger.flush();
             }
         },

@@ -12,3 +12,6 @@ ringhopper-structs = { path = "../ringhopper-structs" }
 ringhopper-engines = { path = "../ringhopper-engines" }
 crc64 = "2.0.0"
 flate2 = { version = "1.0.28", features = ["zlib"], default-features = false }
+tiff = "0.9.1"
+jxl-oxide = "0.8.0"
+png = "0.17.13"
