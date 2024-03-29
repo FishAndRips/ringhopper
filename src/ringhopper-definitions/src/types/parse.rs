@@ -537,9 +537,10 @@ pub(crate) fn get_all_definitions() -> Vec<Map<String, Value>> {
     jsons.insert("engine/halo xbox ntsc us.json", include_bytes!("../../json/engine/halo xbox ntsc us.json"));
     jsons.insert("engine/halo xbox pal.json", include_bytes!("../../json/engine/halo xbox pal.json"));
     jsons.insert("engine/halo xbox.json", include_bytes!("../../json/engine/halo xbox.json"));
+    jsons.insert("engine/halo xbox beta.json", include_bytes!("../../json/engine/halo xbox beta.json"));
 
     jsons.into_iter()
-            .map(|(file,v)| (file, serde_json::from_slice::<Value>(v).unwrap_or_else(|e| panic!("failed to parse {file}: {e}"))))
+            .map(|(file,v)| (file, from_slice::<Value>(v).unwrap_or_else(|e| panic!("failed to parse {file}: {e}"))))
             .map(|(file, v)| (file, v.as_array().map(|a| a.to_owned()).unwrap_or_else(|| panic!("failed to convert {file} to an array"))))
             .map(|(file, v)| {
                 v.iter()

@@ -66,7 +66,7 @@ impl GearboxCacheFile {
         }
         map.scenario_tag = tag_data_header.cache_file_tag_data_header.scenario_tag;
 
-        let (mut tags, cached_tags, ids) = super::util::get_all_tags(&mut map, tag_address, tag_count)?;
+        let (mut tags, cached_tags, ids) = super::util::get_all_tags(&mut map, tag_address, tag_count, CacheFileTagDataHeaderPC::simple_size())?;
         map.handle_external_tags(engine, tag_count, &mut tags, &cached_tags)?;
         map.load_model_data(&tag_data_header)?;
         map.ids = ids;

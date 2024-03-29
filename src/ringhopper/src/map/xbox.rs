@@ -52,7 +52,7 @@ impl XboxCacheFile {
         }
         map.scenario_tag = tag_data_header.cache_file_tag_data_header.scenario_tag;
 
-        let (tags, _cached_tags, ids) = super::util::get_all_tags(&mut map, tag_address, tag_count)?;
+        let (tags, _cached_tags, ids) = super::util::get_all_tags(&mut map, tag_address, tag_count, CacheFileTagDataHeaderXbox::simple_size())?;
         map.ids = ids;
         map.tags = tags;
 

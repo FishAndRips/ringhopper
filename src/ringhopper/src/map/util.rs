@@ -78,7 +78,7 @@ pub fn get_tag_data_details(data: &[u8]) -> RinghopperResult<(ParsedCacheFileHea
 }
 
 /// Get all tag info, returning the parsed tags, cached tags, and a map of tag paths to IDs.
-pub fn get_all_tags<M: Map>(map: &M, tag_address: usize, tag_count: usize) -> RinghopperResult<(Vec<Option<Tag>>, Vec<CacheFileTag>, HashMap<TagPath, ID>)> {
+pub fn get_all_tags<M: Map>(map: &M, tag_address: usize, tag_count: usize, tag_header_size: usize) -> RinghopperResult<(Vec<Option<Tag>>, Vec<CacheFileTag>, HashMap<TagPath, ID>)> {
     if tag_count > u16::MAX as usize {
         return Err(
             Error::MapParseFailure(format!("maximum tag count exceeded (map claims to have {tag_count} tags"))
@@ -88,7 +88,27 @@ pub fn get_all_tags<M: Map>(map: &M, tag_address: usize, tag_count: usize) -> Ri
     let mut tags = Vec::with_capacity(tag_count);
     let mut cached_tags = Vec::with_capacity(tag_count);
     let mut ids: HashMap<TagPath, ID> = HashMap::with_capacity(tag_count);
+
     for i in CacheFileTag::read_chunks_from_map_to_iterator(map, tag_count, tag_address, &DomainType::TagData)? {
+        // Did we fail to get a tag due to an invalid fourcc? It's probably protected, or our definitions don't match this map.
+        if i.as_ref().is_err_and(|e| matches!(e, Error::InvalidFourCC)) {
+            let engine = map.get_engine();
+
+            // Is it inferred? If so, it probably shouldn't be, or the map is broken.
+            if engine.base_memory_address.inferred {
+                return Err(Error::MapParseFailure(format!("unable to read the tag array; the cache file may be corrupted/protected, or the tag array is not directly after the header (base memory address is inferred for engine `{}`)", engine.display_name)));
+            }
+
+            // What would it be if we inferred it? Is it different? Maybe our engine definitions fail to cover this engine.
+            let inferred_address = tag_address.checked_sub(tag_header_size);
+            if inferred_address.is_some_and(|inferred| inferred as u64 != engine.base_memory_address.address) {
+                return Err(Error::MapParseFailure(format!("unable to read the tag array; the cache file may be corrupted/protected (and the tag array is not immediately after the header), or the base memory address is incorrect (base memory address for engine `{}` is 0x{:08X}, but if inferred, it would be 0x{:08X})", engine.display_name, engine.base_memory_address.address, inferred_address.unwrap())))
+            }
+
+            // If not, the map is DEFINITELY broken.
+            return Err(Error::MapParseFailure("unable to read the tag array; the cache file is likely corrupted/protected".to_string()));
+        }
+
         cached_tags.push(i?);
     }
 
