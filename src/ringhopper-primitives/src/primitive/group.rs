@@ -242,6 +242,60 @@ impl TagGroup {
         }
         None
     }
+
+    /// Get the group this tag group supergroups, if there is one.
+    ///
+    /// Returns `None` if no such tag group exists.
+    pub const fn subgroup(self) -> Option<TagGroup> {
+        match self {
+            TagGroup::Unit
+            | TagGroup::Item
+            | TagGroup::Device => Some(TagGroup::Object),
+
+            TagGroup::Biped
+            | TagGroup::Vehicle => Some(TagGroup::Unit),
+
+            TagGroup::Weapon
+            | TagGroup::Garbage
+            | TagGroup::Equipment => Some(TagGroup::Item),
+
+            TagGroup::DeviceMachine
+            | TagGroup::DeviceControl
+            | TagGroup::DeviceLightFixture => Some(TagGroup::Device),
+
+            TagGroup::Projectile
+            | TagGroup::Scenery
+            | TagGroup::Placeholder
+            | TagGroup::SoundScenery => Some(TagGroup::Object),
+
+            TagGroup::ShaderModel
+            | TagGroup::ShaderEnvironment
+            | TagGroup::ShaderTransparentChicago
+            | TagGroup::ShaderTransparentChicagoExtended
+            | TagGroup::ShaderTransparentGeneric
+            | TagGroup::ShaderTransparentGlass
+            | TagGroup::ShaderTransparentMeter
+            | TagGroup::ShaderTransparentPlasma
+            | TagGroup::ShaderTransparentWater => Some(TagGroup::Shader),
+
+            _ => None
+        }
+    }
+
+    /// Get all subgroups for this tag.
+    ///
+    /// Any unset tag group will be [`TagGroup::_Unset`].
+    pub const fn full_subgroup_tree(self) -> [TagGroup; 3] {
+        let primary = self;
+        let (secondary, tertiary) = match primary.subgroup() {
+            Some(secondary) => (secondary, match secondary.subgroup() {
+                Some(tertiary) => tertiary,
+                None => TagGroup::_Unset
+            }),
+            None => (TagGroup::_Unset, TagGroup::_Unset)
+        };
+        [primary, secondary, tertiary]
+    }
 }
 
 impl Display for TagGroup {
