@@ -3,7 +3,7 @@
         "name": "xbox-1749",
         "type": "engine",
         "display_name": "Halo: Combat Evolved (Xbox beta build 1749)",
-        "version": "halobeta xbox 01.08.15.1749 built at: Aug 15 2001 19:36:58",
+        "version": "halobeta xbox 01.08.15.1749 Aug 15 2001 19:36:58",
         "build_target": false,
         "base_memory_address": "0x803AF000",
         "build": {
@@ -16,7 +16,7 @@
         "name": "xbox-2247",
         "type": "engine",
         "display_name": "Halo: Combat Evolved (Xbox beta build 2247)",
-        "version": "halobeta xbox 01.09.25.2247 built at: Sep 25 2001 12:27:39",
+        "version": "halobeta xbox 01.09.25.2247 Sep 25 2001 12:27:39",
         "build_target": false,
         "build": {
             "version": "01.09.25.2247",

@@ -12,7 +12,7 @@ pub fn archive_tag(args: Args, description: &'static str) -> Result<(), String> 
         .add_tags(false)
         .add_help()
         .add_overwrite()
-        .add_custom_parameter(Parameter::new("level", 'l', "Zstandard compression level. Must be between 0 and 22. Default: 3", "<lvl>", Some(CommandLineValueType::Integer), 1, Some(vec![CommandLineValue::Integer(3)]), false, false))
+        .add_custom_parameter(Parameter::new("level", 'l', "Zstandard compression level. Must be between 0 and 22. Default: 6", "<lvl>", Some(CommandLineValueType::Integer), 1, Some(vec![CommandLineValue::Integer(6)]), false, false))
         .set_required_extra_parameters(1)
         .parse(args)?;
 
