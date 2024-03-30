@@ -1,4 +1,4 @@
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct Engine {
     /// Shorthand name of the engine.
     pub name: &'static str,
@@ -61,14 +61,14 @@ pub struct Engine {
     pub cache_parser: EngineCacheParser
 }
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum EngineCacheParser {
     PC,
     Xbox
 }
 
 /// Determines how bitmaps are stored.
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub struct EngineBitmapOptions {
     /// Uncompressed textures must be stored swizzled if they are power-of-two.
     pub swizzled: bool,
@@ -85,19 +85,19 @@ pub struct EngineBitmapOptions {
     pub alignment: usize
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct EngineSupportedResourceMaps {
     pub externally_indexed_tags: bool,
     pub loc: bool
 }
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum EngineCompressionType {
     Uncompressed,
     Deflate
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct EngineRequiredTags {
     pub all: &'static [&'static str],
     pub user_interface: &'static [&'static str],
@@ -105,21 +105,21 @@ pub struct EngineRequiredTags {
     pub multiplayer: &'static [&'static str],
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct EngineBuild {
     pub string: &'static str,
     pub fallback: &'static [&'static str],
     pub enforced: bool
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct EngineCacheFileSize {
     pub user_interface: u64,
     pub singleplayer: u64,
     pub multiplayer: u64
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct EngineBaseMemoryAddress {
     pub address: u64,
     pub inferred: bool

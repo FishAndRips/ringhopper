@@ -11,7 +11,7 @@ use crate::crc32::CRC32;
 use std::any::Any;
 
 /// Used for defining information for saving structs into tag files.
-pub trait PrimaryTagStruct: DynamicTagData + TagData {
+pub trait PrimaryTagStruct: DynamicTagData + TagData + Send {
     /// Get the tag group of the tag struct.
     fn group() -> TagGroup where Self: Sized;
 
@@ -71,7 +71,7 @@ impl dyn PrimaryTagStructDyn {
     }
 }
 
-impl<T: PrimaryTagStruct + Sized + Clone + Any> PrimaryTagStructDyn for T {
+impl<T: PrimaryTagStruct + Sized + Send + Clone + Any> PrimaryTagStructDyn for T {
     fn as_dynamic(&self) -> &dyn DynamicTagData {
         self
     }

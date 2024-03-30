@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
-use definitions::get_all_referenceable_tag_groups_for_group;
+use definitions::{get_all_referenceable_tag_groups_for_group, Scenario, ScenarioType};
 use primitives::dynamic::DynamicTagData;
+use primitives::engine::Engine;
 use primitives::error::RinghopperResult;
 use primitives::primitive::{TagPath, TagReference};
 use crate::tag::tree::{iterate_through_all_tags, TagTree};
@@ -68,6 +69,33 @@ pub fn get_reverse_dependencies_for_tag<T: TagTree>(tag: &TagPath, tag_tree: &T)
     }
 
     Ok(result)
+}
+
+pub fn recursively_get_dependencies_for_map<T: TagTree>(scenario: &TagPath, tag_tree: &T, engine: &Engine) -> RinghopperResult<HashSet<TagPath>> {
+    let mut all_dependencies = HashSet::new();
+
+    let mutex = tag_tree.open_tag_shared(scenario)?;
+    let lock = mutex.lock().unwrap();
+    let scenario_tag: &Scenario = lock.as_any().downcast_ref().unwrap();
+
+    let other: &'static [&'static str] = match scenario_tag._type {
+        ScenarioType::Singleplayer => engine.required_tags.singleplayer,
+        ScenarioType::Multiplayer => engine.required_tags.multiplayer,
+        ScenarioType::UserInterface => engine.required_tags.user_interface,
+    };
+
+    // prevent deadlocking for caching tag trees
+    drop(lock);
+
+    all_dependencies.extend(recursively_get_dependencies_for_tag(scenario, tag_tree)?);
+
+    for i in [engine.required_tags.all, other].into_iter().flatten() {
+        let tag = TagPath::from_path(i).unwrap();
+        all_dependencies.extend(recursively_get_dependencies_for_tag(&tag, tag_tree)?);
+        all_dependencies.insert(tag);
+    }
+
+    Ok(all_dependencies)
 }
 
 #[cfg(test)]

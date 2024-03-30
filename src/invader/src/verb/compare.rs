@@ -59,7 +59,7 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
             "filter",
             'f',
             "Filter tags to be compared. By default, all tags are compared.",
-            "<param>",
+            "<tag*>",
             Some(CommandLineValueType::String),
             1,
             Some(vec![CommandLineValue::String("*".to_owned())]),

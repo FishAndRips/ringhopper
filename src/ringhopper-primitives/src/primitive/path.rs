@@ -156,6 +156,27 @@ impl TagPath {
         self.to_internal_path().replace(HALO_PATH_SEPARATOR, std::path::MAIN_SEPARATOR_STR)
     }
 
+    /// Return zip path (i.e. forward slashes).
+    ///
+    /// This is useful for creating filesystem paths for zip files as well as *nix systems.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ringhopper_primitives::primitive::TagPath;
+    /// use std::path::Path;
+    /// use std::ffi::OsStr;
+    ///
+    /// let path = TagPath::from_path("weapons\\myweapon\\myweapon.weapon")
+    ///                       .unwrap();
+    /// let zip_path = path.to_zip_path();
+    ///
+    /// assert_eq!("weapons/myweapon/myweapon.weapon", zip_path);
+    /// ```
+    pub fn to_zip_path(&self) -> String {
+        self.to_internal_path().replace(HALO_PATH_SEPARATOR, "/")
+    }
+
     /// Construct a tag reference from a path.
     ///
     /// This will accept both Halo (i.e. `\`) and native paths as input.

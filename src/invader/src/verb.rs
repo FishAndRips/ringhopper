@@ -18,6 +18,8 @@ mod extract;
 mod list_engines;
 mod undefault;
 mod plate;
+mod archive_map;
+mod archive_tag;
 
 pub struct Verb {
     pub name: &'static str,
@@ -34,6 +36,8 @@ impl Verb {
 }
 
 pub const ALL_VERBS: &'static [Verb] = &[
+    Verb::new("archive-map", "Create a .zip of a map's tag structure", archive_map::archive_map),
+    Verb::new("archive-tag", "Create a .zip of a tag and its dependencies", archive_tag::archive_tag),
     Verb::new("compare", "Compare tags between two tag sources", compare::compare),
     Verb::new("convert", "Convert tags to another tag group", convert::convert),
     Verb::new("dependencies", "View dependencies of tags", dependencies::dependencies),

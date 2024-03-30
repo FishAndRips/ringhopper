@@ -3,8 +3,10 @@
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use ringhopper::primitives::engine::Engine;
 use ringhopper::primitives::tag::ParseStrictness;
 use ringhopper::tag::tree::VirtualTagsDirectory;
+use ringhopper_engines::ALL_SUPPORTED_ENGINES;
 use util::get_tty_metadata;
 
 pub struct CommandLineParser {
@@ -291,6 +293,25 @@ impl CommandLineParser {
         self
     }
 
+    pub fn add_engine(mut self) -> Self {
+        let p = Parameter {
+            values: None,
+            name: "engine",
+            short: Some('e'),
+            description: "Set an engine. This parameter is required.",
+            default_values: None,
+            value_type: Some(CommandLineValueType::Engine),
+            required: true,
+            value_count: 1,
+            usage: "<engine>",
+            multiple: false,
+        };
+
+        assert!(self.standard_parameters.get(&StandardParameterType::Engine).is_none());
+        self.standard_parameters.insert(StandardParameterType::Engine, p);
+        self
+    }
+
     pub fn add_maps(mut self) -> Self {
         let p = Parameter {
             values: None,
@@ -360,6 +381,9 @@ impl CommandLineParser {
                         CommandLineValueType::UShort => CommandLineValue::UShort(next_argument.parse().map_err(|e| format!("Argument parse error: Cannot convert {next_argument} into ushort: {e}"))?),
                         CommandLineValueType::Integer => CommandLineValue::Integer(next_argument.parse().map_err(|e| format!("Argument parse error: Cannot convert {next_argument} into int: {e}"))?),
                         CommandLineValueType::UInteger => CommandLineValue::UInteger(next_argument.parse().map_err(|e| format!("Argument parse error: Cannot convert {next_argument} into uint: {e}"))?),
+                        CommandLineValueType::Engine => CommandLineValue::Engine(
+                            &ALL_SUPPORTED_ENGINES[ALL_SUPPORTED_ENGINES.binary_search_by(|engine| engine.name.cmp(&next_argument)).unwrap()]
+                        )
                     };
                     values.push(parsed_argument);
                 }
@@ -489,6 +513,19 @@ impl CommandLineArgs {
         dir
     }
 
+    /// Get the Engine parameter.
+    ///
+    /// Panics if Engine was not added.
+    pub fn get_engine(&self) -> &'static Engine {
+        self.standard_parameters
+            .get(&StandardParameterType::Engine)
+            .expect("engine not added as standard parameter")
+            .values
+            .as_ref()
+            .expect("engine should be present even if it's a default")[0]
+            .engine()
+    }
+
     /// Get the Data parameter.
     ///
     /// Panics if Data was not added.
@@ -611,12 +648,14 @@ enum StandardParameterType {
     CowTags,
     Overwrite,
     Jobs,
+    Engine,
 }
 
 #[derive(Debug, Clone)]
 pub enum CommandLineValue {
     Path(PathBuf),
     String(String),
+    Engine(&'static Engine),
     Integer(i32),
     UInteger(u32),
     Short(i16),
@@ -687,6 +726,15 @@ impl CommandLineValue {
             unreachable!()
         }
     }
+
+    pub fn engine(&self) -> &'static Engine {
+        if let CommandLineValue::Engine(e) = self {
+            *e
+        }
+        else {
+            unreachable!()
+        }
+    }
 }
 
 #[derive(PartialEq, Copy, Clone)]
@@ -697,7 +745,8 @@ pub enum CommandLineValueType {
     UInteger,
     Short,
     UShort,
-    Float
+    Float,
+    Engine,
 }
 
 #[cfg(test)]
