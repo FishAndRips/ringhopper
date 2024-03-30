@@ -239,6 +239,7 @@ impl ParsedDefinitions {
                 build,
                 cache_default: engine.get("cache_default").unwrap_or(&Value::Bool(false)).as_bool().unwrap(),
                 build_target: first_bool("build_target", true).unwrap(),
+                fallback: engine.get("fallback").unwrap_or(&Value::Bool(false)).as_bool().unwrap(),
                 cache_file_version: first_u64("cache_file_version", true).unwrap().try_into().unwrap_or_else(|_| panic!("where's the cache file version???")),
                 display_name: first_string("display_name", true).unwrap(),
                 inherits: get_chain("inherits", false).first().map(|v| v.1.as_str().unwrap().to_owned()),

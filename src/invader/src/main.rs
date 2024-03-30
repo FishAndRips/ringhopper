@@ -13,6 +13,7 @@ mod util;
 mod threading;
 
 extern crate ringhopper;
+extern crate ringhopper_engines;
 
 fn main() -> ExitCode {
     let mut args= std::env::args();

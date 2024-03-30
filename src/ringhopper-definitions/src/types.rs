@@ -310,7 +310,10 @@ pub struct Engine {
     pub build: Option<Build>,
     pub inherits: Option<String>,
     pub build_target: bool,
+    /// NOTE: This property is set explicitly per engine.
+    pub fallback: bool,
     pub cache_file_version: u32,
+    /// NOTE: This property is set explicitly per engine.
     pub cache_default: bool,
     pub external_bsps: bool,
     pub max_script_nodes: u64,

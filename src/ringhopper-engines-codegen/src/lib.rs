@@ -76,6 +76,7 @@ pub fn generate_ringhopper_engines(_: TokenStream) -> TokenStream {
         };
         let data_alignment = engine.data_alignment;
         let compressed_models = engine.compressed_models;
+        let fallback = engine.fallback;
 
         let bitmap_options = format!("EngineBitmapOptions {{
             swizzled: {},
@@ -91,6 +92,7 @@ pub fn generate_ringhopper_engines(_: TokenStream) -> TokenStream {
             build: {build},
             build_target: {build_target},
             cache_default: {cache_default},
+            fallback: {fallback},
             cache_file_version: {cache_file_version},
             external_bsps: {external_bsps},
             bitmap_options: {bitmap_options},

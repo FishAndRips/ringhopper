@@ -1,15 +1,38 @@
 use std::env::Args;
-
-extern crate ringhopper_engines;
-
+use ringhopper::primitives::engine::Engine;
+use ringhopper_engines::ALL_SUPPORTED_ENGINES;
 
 pub fn list_engines(_args: Args, _description: &'static str) -> Result<(), String> {
-    println!("Available engine targets:");
-    for i in ringhopper_engines::ALL_SUPPORTED_ENGINES {
-        if !i.build_target {
+    let mut buildable_engines = Vec::with_capacity(ALL_SUPPORTED_ENGINES.len());
+    let mut read_only_engines = Vec::with_capacity(ALL_SUPPORTED_ENGINES.len());
+
+    for i in ALL_SUPPORTED_ENGINES {
+        if i.fallback {
             continue
         }
-        println!("    {shorthand:20} {full_name}", shorthand=i.name, full_name=i.display_name)
+
+        if i.build_target {
+            buildable_engines.push(i)
+        }
+        else {
+            read_only_engines.push(i)
+        }
     }
+
+    let print_engine = |engine: &Engine| {
+        println!("    {shorthand:20} {full_name}", shorthand= engine.name, full_name= engine.display_name)
+    };
+
+    println!("Read-only engines:");
+    for i in read_only_engines {
+        print_engine(i);
+    }
+    println!();
+    println!("Targetable engines:");
+    for i in buildable_engines {
+        print_engine(i);
+    }
+
+
     Ok(())
 }
