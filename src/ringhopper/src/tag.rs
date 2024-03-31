@@ -12,3 +12,4 @@ pub mod object;
 pub mod scenario_structure_bsp;
 pub mod bitmap;
 pub mod archive;
+pub mod recover;

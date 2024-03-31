@@ -1,12 +1,18 @@
 #[cfg(test)]
 mod test;
 mod swizzle;
+
 pub use swizzle::*;
 
 use std::iter::FusedIterator;
 use std::num::NonZeroUsize;
-use definitions::{BitmapData, BitmapDataFormat, BitmapDataType};
-use primitives::error::{Error, RinghopperResult};
+use flate2::FlushDecompress;
+use definitions::{Bitmap, BitmapData, BitmapDataFormat, BitmapDataType};
+use primitives::byteorder::{BigEndian, LittleEndian};
+use primitives::error::{Error, OverflowCheck, RinghopperResult};
+use primitives::parse::SimpleTagData;
+use primitives::primitive::ColorARGBInt;
+use crate::data::bitmap::Image;
 
 /// Get the number of pixels per block length for the given bitmap format.
 ///
@@ -287,3 +293,47 @@ pub const COMPRESSED_BITMAP_DATA_FORMATS: &'static [BitmapDataFormat] = &[
     BitmapDataFormat::DXT5,
     BitmapDataFormat::BC7
 ];
+
+/// Extract the color plate of the bitmap tag into an [`Image`] instace.
+///
+/// Returns `None` if the bitmap tag does not have a valid color plate.
+pub fn extract_compressed_color_plate_data(bitmap: &Bitmap) -> RinghopperResult<Option<Image>> {
+    let color_plate = &bitmap.color_plate;
+    let bytes = color_plate.compressed_data.bytes.as_slice();
+    let width = color_plate.width as usize;
+    let height = color_plate.height as usize;
+
+    if bytes.len() < u32::simple_size() || width == 0 || height == 0 {
+        return Ok(None)
+    }
+
+    let (len_bytes, compressed_bytes) = bytes.split_at(u32::simple_size());
+
+    let uncompressed_size = u32::read::<BigEndian>(len_bytes, 0, len_bytes.len()).unwrap() as usize;
+    let pixel_count = height.mul_overflow_checked(width)?;
+    let expected_uncompressed_size = pixel_count.mul_overflow_checked(ColorARGBInt::simple_size())?;
+    if uncompressed_size != expected_uncompressed_size {
+        return Err(Error::InvalidTagData(format!("compressed color plate data size is wrong (expected 0x{expected_uncompressed_size:08X}, got 0x{uncompressed_size:08X} instead)")))
+    }
+
+    let mut compressed_data = vec![0u8; expected_uncompressed_size];
+    let mut decompressor = flate2::Decompress::new(true);
+
+    decompressor
+        .decompress(&compressed_bytes, &mut compressed_data, FlushDecompress::Finish)
+        .map_err(|e| Error::InvalidTagData(format!("zlib error: {e:?}")))?;
+
+    let read_bytes = decompressor.total_out();
+    if read_bytes as usize != compressed_data.len() {
+        return Err(Error::InvalidTagData(format!("decompressed size is wrong (expected 0x{expected_uncompressed_size:08X}, got 0x{read_bytes:08X} instead)")))
+    }
+
+    let result = ColorARGBInt::read_chunks_to_iterator::<LittleEndian>(&compressed_data)
+        .unwrap()
+        .into_infallible();
+
+    let mut data = Vec::with_capacity(pixel_count);
+    data.extend(result);
+
+    Ok(Some(Image { width, height, data }))
+}

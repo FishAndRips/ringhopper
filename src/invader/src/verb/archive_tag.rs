@@ -27,14 +27,14 @@ pub fn archive_tag(args: Args, description: &'static str) -> Result<(), String> 
 
     let zip_path = PathBuf::from(format!("{}.zip", path.base_name()));
     if !overwrite && zip_path.exists() {
-        logger.warning_fmt(format_args!("{zip_path:?} already exists; skipping"));
+        logger.warning_fmt_ln(format_args!("{zip_path:?} already exists; skipping"));
         return Ok(())
     }
 
     let tag = archive_tag_to_zip(&path, &cache, level).map_err(|e| format!("{e:?}"))?;
     std::fs::write(&zip_path, tag).map_err(|e| format!("{e:?}"))?;
 
-    logger.success_fmt(format_args!("Wrote {zip_path:?}"));
+    logger.success_fmt_ln(format_args!("Wrote {zip_path:?}"));
 
     Ok(())
 }
