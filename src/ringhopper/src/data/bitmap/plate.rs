@@ -206,6 +206,8 @@ pub fn make_color_plate_from_loose(data_dir: &Path) -> RinghopperResult<Image> {
         heights.push(current_height);
     }
 
+    height -= 1;
+
     let mut background = ColorARGBInt::from(ColorARGBIntBytes { alpha: 255, red: 0, green: 0, blue: 255 });
     let mut sequence_divider = ColorARGBInt::from(ColorARGBIntBytes { alpha: 255, red: 255, green: 0, blue: 255 });
 
@@ -265,7 +267,6 @@ pub fn make_color_plate_from_loose(data_dir: &Path) -> RinghopperResult<Image> {
     if let Some(p) = padding {
         full_color_plate.data[2] = p;
     }
-    full_color_plate.data[width..2*width].fill(sequence_divider);
 
     // Now bake each image
     let mut y = 3;
