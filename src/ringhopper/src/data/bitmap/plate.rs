@@ -176,15 +176,15 @@ pub fn make_color_plate_from_loose(data_dir: &Path) -> RinghopperResult<Image> {
     }
 
     // Calculate dimensions
-    let mut width = 4usize;
-    let mut height = 2usize;
+    let mut width = 4; // include at least 4x1 for the color key
+    let mut height = 1;
     let mut heights = Vec::with_capacity(sequences.len());
 
     let mut all_pixels = HashSet::new();
 
     for s in &sequences {
-        let mut current_width = 0usize;
-        let mut current_height = 0usize;
+        let mut current_width = 0;
+        let mut current_height = 0;
 
         for i in s {
             current_width = current_width.add_overflow_checked(i.width)?.add_overflow_checked(2)?; // 2 pixels for padding on left and right side of each image
@@ -205,8 +205,6 @@ pub fn make_color_plate_from_loose(data_dir: &Path) -> RinghopperResult<Image> {
         height = height.add_overflow_checked(current_height)?;
         heights.push(current_height);
     }
-
-    height -= 1;
 
     let mut background = ColorARGBInt::from(ColorARGBIntBytes { alpha: 255, red: 0, green: 0, blue: 255 });
     let mut sequence_divider = ColorARGBInt::from(ColorARGBIntBytes { alpha: 255, red: 255, green: 0, blue: 255 });
