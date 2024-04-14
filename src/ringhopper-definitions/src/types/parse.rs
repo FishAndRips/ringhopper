@@ -49,6 +49,11 @@ fn get_all_child_groups(parent: &String, groups: &HashMap<String, TagGroup>) -> 
         return groups.keys().map(|f| f.to_owned()).collect()
     }
 
+    // Not an actual supergroup, but functionally is one
+    if parent == "model" {
+        return vec!["gbxmodel".to_owned()];
+    }
+
     let mut result = Vec::new();
     for (group_name, group) in groups {
         if group.supergroup.as_ref() == Some(parent) {

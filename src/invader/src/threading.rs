@@ -3,9 +3,10 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicU64, Ordering};
 use cli::CommandLineArgs;
 use ringhopper::error::RinghopperResult;
-use ringhopper::logger::Logger;
 use ringhopper::primitives::primitive::{TagGroup, TagPath};
 use ringhopper::tag::tree::{TagFilter, TagTree};
+
+use crate::util::StdoutLogger;
 
 pub struct ThreadingContext<T: TagTree + Send + Clone> {
     pub args: CommandLineArgs,
@@ -21,7 +22,7 @@ impl<T: TagTree + Send + Clone> Clone for ThreadingContext<T> {
     }
 }
 
-pub type ProcessFunction<T, U> = fn(&mut ThreadingContext<T>, &TagPath, &mut U, logger: &Arc<dyn Logger>) -> RinghopperResult<ProcessSuccessType>;
+pub type ProcessFunction<T, U> = fn(&mut ThreadingContext<T>, &TagPath, &mut U, logger: &Arc<StdoutLogger>) -> RinghopperResult<ProcessSuccessType>;
 
 pub enum ProcessSuccessType {
     /// Used if successful; printed unless silent
@@ -57,7 +58,7 @@ pub fn do_with_threads<T: TagTree + Send + 'static + Clone, U: Clone + Send + 's
     group: Option<TagGroup>,
     mut user_data: U,
     display_mode: DisplayMode,
-    logger: Arc<dyn Logger>,
+    logger: Arc<StdoutLogger>,
     function: ProcessFunction<T, U>,
 ) -> Result<(), String> {
     let start = std::time::Instant::now();
@@ -156,7 +157,7 @@ fn process_tags<T: TagTree + Send + Clone, U: Clone + Send + 'static>(
     path: &TagPath,
     user_data: &mut U,
     display_mode: DisplayMode,
-    logger: &Arc<dyn Logger>,
+    logger: &Arc<StdoutLogger>,
     function: ProcessFunction<T, U>
 ) {
     total.fetch_add(1, Ordering::Relaxed);

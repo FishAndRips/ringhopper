@@ -308,7 +308,7 @@ pub fn fix_bitmap_tag<M: Map>(tag: &mut Bitmap, map: &M) -> RinghopperResult<()>
     let mut processed_data: Vec<u8> = Vec::with_capacity(new_data);
 
     let engine = map.get_engine();
-    let engine_name = engine.display_name;
+    let engine_name = engine.name;
     let must_modulo_block_size = engine.bitmap_options.texture_dimension_must_modulo_block_size;
 
     for i in &mut tag.bitmap_data {
@@ -324,7 +324,7 @@ pub fn fix_bitmap_tag<M: Map>(tag: &mut Bitmap, map: &M) -> RinghopperResult<()>
         }
         if i.flags.swizzled {
             if !engine.bitmap_options.swizzled {
-                return Err(Error::InvalidTagData(format!("Bitmap is marked as swizzled, but this is not allowed for {engine_name} maps.")));
+                return Err(Error::InvalidTagData(format!("Bitmap is marked as swizzled, but this is not allowed for `{engine_name}` maps.")));
             }
             if i.flags.compressed {
                 return Err(Error::InvalidTagData("Bitmap is marked as swizzled and compressed which is not allowed.".to_string()));

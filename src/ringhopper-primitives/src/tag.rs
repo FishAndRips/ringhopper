@@ -9,6 +9,7 @@ use crate::error::*;
 use crate::crc32::CRC32;
 
 use std::any::Any;
+use std::collections::HashSet;
 
 /// Used for defining information for saving structs into tag files.
 pub trait PrimaryTagStruct: DynamicTagData + TagData + Send {
@@ -18,17 +19,26 @@ pub trait PrimaryTagStruct: DynamicTagData + TagData + Send {
     /// Get the version of the tag struct's tag file.
     fn version() -> u16 where Self: Sized;
 
-    /// Get the original CRC64 hash of the tag file.
-    ///
-    /// If the output hash matches this, hint to not save this on a real filesystem.
-    fn hash(&self) -> u64;
+    /// Get the metadata for the tag.
+    fn metadata(&self) -> &PrimaryTagStructMetadata;
 
-    /// Set the hash of the file.
+    /// Get a mutable reference to the metadata for the tag.
+    fn metadata_mut(&mut self) -> &mut PrimaryTagStructMetadata;
+}
+
+/// Metadata for tag data.
+#[derive(Default, Clone, Debug, PartialEq)]
+pub struct PrimaryTagStructMetadata {
+    /// Can be used to check if the tag has been modified.
+    pub hash: Option<u64>,
+
+    /// Set to true if the tag has been verified to be valid as a hint to not re-verify.
     ///
-    /// This just sets the `hash` field on the struct. It does not spoof the actual hash.
-    ///
-    /// If the output hash matches this, hint to not save this on a real filesystem.
-    fn set_hash(&mut self, hash: u64);
+    /// This must be cleared if the tag is modified.
+    pub verified: bool,
+
+    /// Tags that depend on this tag for verification.
+    pub verification_dependants: HashSet<TagPath>
 }
 
 /// Methods automatically implemented for all [`PrimaryTagStruct`] types that implement [`Any`].

@@ -545,7 +545,7 @@ impl TagTree for VirtualTagsDirectory {
                 Error::TagParseFailure(_) => Error::CorruptedTag(path.clone(), vec![e]),
                 e => e
             })?;
-        tag.set_hash(hash);
+        tag.metadata_mut().hash = Some(hash);
         Ok(tag)
     }
     fn files_in_path(&self, path: &str) -> Option<Vec<TagTreeItem>> {

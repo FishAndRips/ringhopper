@@ -1,9 +1,10 @@
+#![allow(dead_code)]
+
 use std::fmt::Arguments;
 use std::io::{BufWriter, Stdout, stdout, Write};
 use std::path::Path;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, MutexGuard};
 use ringhopper::error::{Error, RinghopperResult};
-use ringhopper::logger::Logger;
 
 pub fn read_file<P: AsRef<Path>>(path: P) -> RinghopperResult<Vec<u8>> {
     let path = path.as_ref();
@@ -93,14 +94,168 @@ pub fn get_tty_metadata() -> Option<TTYMetadata> {
     unreachable!();
 }
 
-pub fn make_stdout_logger() -> Arc<dyn Logger> {
+pub fn make_stdout_logger() -> Arc<StdoutLogger> {
     Arc::new(StdoutLogger {
         logger: Mutex::new(BufWriter::with_capacity(8 * 1024, stdout())),
         metadata: get_tty_metadata()
     })
 }
 
-struct StdoutLogger {
+macro_rules! make_logger_impl {
+    () => {
+        /// Flush any buffered output now.
+        pub fn flush(&self) {
+            self.logger.lock().unwrap().flush().unwrap()
+        }
+
+        /// Print formatted neutral text.
+        ///
+        /// This is typically displayed as the terminal's default colors (such as white or black).
+        pub fn neutral_fmt(&self, fmt: Arguments) {
+            self.write_fmt(fmt, "", "");
+        }
+
+        /// Print formatted success text.
+        ///
+        /// This is typically displayed as green.
+        pub fn success_fmt(&self, fmt: Arguments) {
+            if !self.has_color() {
+                return self.neutral_fmt(fmt)
+            }
+            self.write_fmt(fmt, "\x1B[32m", "\x1B[m")
+        }
+
+        /// Print formatted minor/pedantic warning text.
+        ///
+        /// This is typically displayed as purple.
+        pub fn minor_warning_fmt(&self, fmt: Arguments) {
+            if !self.has_color() {
+                return self.neutral_fmt(fmt)
+            }
+            self.write_fmt(fmt, "\x1B[1;35m", "\x1B[m")
+        }
+
+        /// Print formatted warning text.
+        ///
+        /// This is typically displayed as yellow or orange.
+        pub fn warning_fmt(&self, fmt: Arguments) {
+            if !self.has_color() {
+                return self.neutral_fmt(fmt)
+            }
+            self.write_fmt(fmt, "\x1B[1;33m", "\x1B[m")
+        }
+
+        /// Print formatted error text.
+        ///
+        /// This is typically displayed as red.
+        pub fn error_fmt(&self, fmt: Arguments) {
+            if !self.has_color() {
+                return self.neutral_fmt(fmt)
+            }
+            self.write_fmt(fmt, "\x1B[1;31m", "\x1B[m")
+        }
+
+        /// Print formatted neutral text on a line.
+        ///
+        /// This is typically displayed as the terminal's default colors (such as white or black).
+        pub fn neutral_fmt_ln(&self, fmt: std::fmt::Arguments) {
+            self.neutral_fmt(format_args!("{fmt}\n"));
+        }
+
+        /// Print formatted success text on a line.
+        ///
+        /// This is typically displayed as green.
+        pub fn success_fmt_ln(&self, fmt: std::fmt::Arguments) {
+            self.success_fmt(format_args!("{fmt}\n"));
+        }
+
+        /// Print formatted minor/pedantic warning text on a line.
+        ///
+        /// This is typically displayed as purple.
+        pub fn minor_warning_fmt_ln(&self, fmt: std::fmt::Arguments) {
+            self.minor_warning_fmt(format_args!("{fmt}\n"));
+        }
+
+        /// Print formatted warning text on a line.
+        ///
+        /// This is typically displayed as yellow or orange.
+        pub fn warning_fmt_ln(&self, fmt: std::fmt::Arguments) {
+            self.warning_fmt(format_args!("{fmt}\n"));
+        }
+
+        /// Print formatted error text on a line.
+        ///
+        /// This is typically displayed as red.
+        pub fn error_fmt_ln(&self, fmt: std::fmt::Arguments) {
+            self.error_fmt(format_args!("{fmt}\n"));
+        }
+
+        /// Print unformatted neutral text.
+        ///
+        /// This is typically displayed as the terminal's default colors (such as white or black).
+        pub fn neutral(&self, str: &str) {
+            self.neutral_fmt(format_args!("{str}"))
+        }
+
+        /// Print unformatted success text.
+        ///
+        /// This is typically displayed as green.
+        pub fn success(&self, str: &str) {
+            self.success_fmt(format_args!("{str}"))
+        }
+
+        /// Print unformatted minor/pedantic warning text.
+        ///
+        /// This is typically displayed as purple.
+        pub fn minor_warning(&self, str: &str) {
+            self.minor_warning_fmt(format_args!("{str}"))
+        }
+
+        /// Print unformatted warning text.
+        ///
+        /// This is typically displayed as yellow or orange.
+        pub fn warning(&self, str: &str) {
+            self.warning_fmt(format_args!("{str}"))
+        }
+
+        /// Print unformatted error text.
+        ///
+        /// This is typically displayed as red.
+        pub fn error(&self, str: &str) {
+            self.error_fmt(format_args!("{str}"))
+        }
+
+        /// Print unformatted neutral text on a line.
+        ///
+        /// This is typically displayed as the terminal's default colors (such as white or black).
+        pub fn neutral_ln(&self, str: &str) {
+            self.neutral_fmt_ln(format_args!("{str}"))
+        }
+
+        /// Print unformatted success text on a line.
+        ///
+        /// This is typically displayed as green.
+        pub fn success_ln(&self, str: &str) {
+            self.success_fmt_ln(format_args!("{str}"))
+        }
+
+        /// Print unformatted warning text on a line.
+        ///
+        /// This is typically displayed as yellow or orange.
+        pub fn warning_ln(&self, str: &str) {
+            self.warning_fmt_ln(format_args!("{str}"))
+        }
+
+        /// Print unformatted error text on a line.
+        ///
+        /// This is typically displayed as red.
+        pub fn error_ln(&self, str: &str) {
+            self.error_fmt_ln(format_args!("{str}"))
+        }
+    };
+}
+
+pub struct StdoutLogger {
     logger: Mutex<BufWriter<Stdout>>,
     metadata: Option<TTYMetadata>
 }
@@ -116,35 +271,40 @@ impl StdoutLogger {
         logger.write_fmt(fmt).unwrap();
         logger.write(postfix.as_bytes()).unwrap();
     }
+
+    /// Lock the logger.
+    ///
+    /// Use this to guarantee multiple logs are contained together in the console.
+    pub fn lock(&self) -> LockedStdoutLogger {
+        LockedStdoutLogger {
+            logger: Mutex::new(self.logger.lock().unwrap()),
+            metadata: self.metadata.clone()
+        }
+    }
 }
 
-impl Logger for StdoutLogger {
-    fn flush(&self) {
-        self.logger.lock().unwrap().flush().unwrap()
+pub struct LockedStdoutLogger<'a> {
+    logger: Mutex<MutexGuard<'a, BufWriter<Stdout>>>,
+    metadata: Option<TTYMetadata>
+}
+
+impl<'a> LockedStdoutLogger<'a> {
+    fn has_color(&self) -> bool {
+        self.metadata.is_some_and(|m| m.color)
     }
 
-    fn neutral_fmt(&self, fmt: Arguments) {
-        self.write_fmt(fmt, "", "");
+    fn write_fmt(&self, fmt: Arguments, prefix: &str, postfix: &str) {
+        let mut logger = self.logger.lock().unwrap();
+        logger.write(prefix.as_bytes()).unwrap();
+        logger.write_fmt(fmt).unwrap();
+        logger.write(postfix.as_bytes()).unwrap();
     }
+}
 
-    fn success_fmt(&self, fmt: Arguments) {
-        if !self.has_color() {
-            return self.neutral_fmt(fmt)
-        }
-        self.write_fmt(fmt, "\x1B[32m", "\x1B[m")
-    }
+impl StdoutLogger {
+    make_logger_impl!();
+}
 
-    fn warning_fmt(&self, fmt: Arguments) {
-        if !self.has_color() {
-            return self.neutral_fmt(fmt)
-        }
-        self.write_fmt(fmt, "\x1B[1;33m", "\x1B[m")
-    }
-
-    fn error_fmt(&self, fmt: Arguments) {
-        if !self.has_color() {
-            return self.neutral_fmt(fmt)
-        }
-        self.write_fmt(fmt, "\x1B[1;31m", "\x1B[m")
-    }
+impl<'a> LockedStdoutLogger<'a> {
+    make_logger_impl!();
 }

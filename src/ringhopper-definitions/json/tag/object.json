@@ -470,13 +470,13 @@
             },
             {
                 "name": "hud text message index",
-                "type": "int16",
-                "minimum": 0
+                "type": "uint16",
+                "todo": "use a non-null index type here"
             },
             {
                 "name": "forced shader permutation index",
-                "type": "int16",
-                "minimum": 0
+                "type": "uint16",
+                "todo": "use a non-null index type here"
             },
             {
                 "name": "attachments",

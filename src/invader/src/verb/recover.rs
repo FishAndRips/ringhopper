@@ -4,17 +4,17 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use cli::CommandLineParser;
 use ringhopper::error::{Error, RinghopperResult};
-use ringhopper::logger::Logger;
 use ringhopper::primitives::primitive::TagPath;
 use ringhopper::tag::recover::get_recover_function;
 use ringhopper::tag::tree::{TagTree, VirtualTagsDirectory};
 use threading::{DisplayMode, do_with_threads, ProcessSuccessType, ThreadingContext};
 use util::make_stdout_logger;
+use crate::util::StdoutLogger;
 
 struct UserData {
     overwrite: bool,
     data: PathBuf,
-    logger: Arc<dyn Logger>,
+    logger: Arc<StdoutLogger>,
 
     success: AtomicUsize,
     total: AtomicUsize,

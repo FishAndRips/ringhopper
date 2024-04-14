@@ -21,6 +21,7 @@ mod plate;
 mod archive_map;
 mod archive_tag;
 mod recover;
+mod verify;
 
 pub struct Verb {
     pub name: &'static str,
@@ -52,6 +53,7 @@ pub const ALL_VERBS: &'static [Verb] = &[
     Verb::new("ui-widget-collection", "Generate ui_widget_collection tags from data", tag_collection::ui_widget_collection),
     Verb::new("undefault", "Strip default values from tags", undefault::undefault),
     Verb::new("unicode-strings", "Generate unicode_string_list tags from data", unicode_strings::unicode_strings),
+    Verb::new("verify", "Verify that a tag does not contain errors", verify::verify),
     Verb::new("version", "View the version/license of Invader", version::version)
 ];
 

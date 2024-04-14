@@ -1,7 +1,7 @@
 use std::any::Any;
 use crate::error::{Error, RinghopperResult};
 use crate::parse::TagData;
-use crate::primitive::parse_range;
+use crate::primitive::{parse_range, TagGroup};
 
 /// Trait for dynamically accessing tag data.
 pub trait DynamicTagData: TagData + 'static {
@@ -26,6 +26,18 @@ pub trait DynamicTagData: TagData + 'static {
 
     /// Get the type of data this object is.
     fn data_type(&self) -> DynamicTagDataType;
+
+    /// Get the name of the field.
+    #[allow(unused_variables)]
+    fn name_of_field_from_ptr(&self, field: *const dyn DynamicTagData) -> &'static str {
+        panic!("not a tag data block")
+    }
+
+    /// Get all allowed groups for the tag reference of a given field name.
+    #[allow(unused_variables)]
+    fn allowed_groups_for_tag_reference_field(&self, field: &str) -> Option<&'static [TagGroup]> {
+        None
+    }
 
     /// Get the `DynamicTagData` object as a mutable `DynamicReflexive` reference.
     ///

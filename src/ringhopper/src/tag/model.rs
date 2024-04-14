@@ -141,7 +141,7 @@ impl ModelFunctions for Model {
 
     fn convert_to_gbxmodel(self) -> GBXModel {
         GBXModel {
-            hash: 0,
+            metadata: Default::default(),
             detail_node_count: self.detail_node_count,
             node_list_checksum: self.node_list_checksum,
             flags: GBXModelFlags {
@@ -266,7 +266,7 @@ impl ModelFunctions for GBXModel {
         }).collect();
 
         Model {
-            hash: 0,
+            metadata: Default::default(),
             flags: ModelFlags {
                 blend_shared_normals: self.flags.blend_shared_normals
             },

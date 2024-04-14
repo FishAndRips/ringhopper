@@ -96,13 +96,13 @@ pub fn get_all_tags<M: Map>(map: &M, tag_address: usize, tag_count: usize, tag_h
 
             // Is it inferred? If so, it probably shouldn't be, or the map is broken.
             if engine.base_memory_address.inferred {
-                return Err(Error::MapParseFailure(format!("unable to read the tag array; the cache file may be corrupted/protected, or the tag array is not directly after the header (base memory address is inferred for engine `{}`)", engine.display_name)));
+                return Err(Error::MapParseFailure(format!("unable to read the tag array; the cache file may be corrupted/protected, or the tag array is not directly after the header (base memory address is inferred for engine `{}`)", engine.name)));
             }
 
             // What would it be if we inferred it? Is it different? Maybe our engine definitions fail to cover this engine.
             let inferred_address = tag_address.checked_sub(tag_header_size);
             if inferred_address.is_some_and(|inferred| inferred as u64 != engine.base_memory_address.address) {
-                return Err(Error::MapParseFailure(format!("unable to read the tag array; the cache file may be corrupted/protected (and the tag array is not immediately after the header), or the base memory address is incorrect (base memory address for engine `{}` is 0x{:08X}, but if inferred, it would be 0x{:08X})", engine.display_name, engine.base_memory_address.address, inferred_address.unwrap())))
+                return Err(Error::MapParseFailure(format!("unable to read the tag array; the cache file may be corrupted/protected (and the tag array is not immediately after the header), or the base memory address is incorrect (base memory address for engine `{}` is 0x{:08X}, but if inferred, it would be 0x{:08X})", engine.name, engine.base_memory_address.address, inferred_address.unwrap())))
             }
 
             // If not, the map is DEFINITELY broken.

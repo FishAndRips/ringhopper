@@ -4,7 +4,7 @@ use super::*;
 
 #[derive(Default)]
 struct UnicodeStringList {
-    pub hash: u64,
+    pub metadata: PrimaryTagStructMetadata,
     pub strings: Reflexive<String>
 }
 
@@ -34,7 +34,7 @@ impl TagData for UnicodeStringList {
         Reflexive::<String>::size()
     }
     fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> {
-        Ok(Self { hash: 0, strings: Reflexive::<String>::read_from_tag_file(data, at, struct_end, extra_data_cursor)? })
+        Ok(Self { metadata: Default::default(), strings: Reflexive::<String>::read_from_tag_file(data, at, struct_end, extra_data_cursor)? })
     }
     fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {
         self.strings.write_to_tag_file(data, at, struct_end)
@@ -83,12 +83,12 @@ impl PrimaryTagStruct for UnicodeStringList {
         1
     }
 
-    fn hash(&self) -> u64 {
-        self.hash
+    fn metadata(&self) -> &PrimaryTagStructMetadata {
+        &self.metadata
     }
 
-    fn set_hash(&mut self, hash: u64) {
-        self.hash = hash
+    fn metadata_mut(&mut self) -> &mut PrimaryTagStructMetadata {
+        &mut self.metadata
     }
 }
 

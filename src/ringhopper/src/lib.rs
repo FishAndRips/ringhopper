@@ -8,5 +8,4 @@ extern crate crc64;
 pub mod tag;
 pub mod map;
 pub mod constants;
-pub mod logger;
 pub mod data;

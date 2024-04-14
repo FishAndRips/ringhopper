@@ -382,7 +382,7 @@ impl CommandLineParser {
                         CommandLineValueType::Integer => CommandLineValue::Integer(next_argument.parse().map_err(|e| format!("Argument parse error: Cannot convert {next_argument} into int: {e}"))?),
                         CommandLineValueType::UInteger => CommandLineValue::UInteger(next_argument.parse().map_err(|e| format!("Argument parse error: Cannot convert {next_argument} into uint: {e}"))?),
                         CommandLineValueType::Engine => CommandLineValue::Engine(
-                            &ALL_SUPPORTED_ENGINES[ALL_SUPPORTED_ENGINES.binary_search_by(|engine| engine.name.cmp(&next_argument)).unwrap()]
+                            &ALL_SUPPORTED_ENGINES[ALL_SUPPORTED_ENGINES.binary_search_by(|engine| engine.name.cmp(&next_argument)).map_err(|_| format!("Argument parse error: {next_argument} is not a valid engine."))?]
                         )
                     };
                     values.push(parsed_argument);

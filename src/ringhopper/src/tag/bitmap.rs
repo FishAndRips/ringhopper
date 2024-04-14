@@ -78,7 +78,7 @@ pub struct MipmapMetadata {
 
     /// Current face index.
     ///
-    /// For cubemaps, this is 0-5, for 3D textures this is 0-<depth>, and for 2D textures, this is always 0.
+    /// For cubemaps, this is 0-5, for 3D textures this is 0-depth, and for 2D textures, this is always 0.
     pub face_index: usize,
 
     /// Width in pixels.

@@ -1,7 +1,7 @@
 use std::env::Args;
 use cli::{CommandLineParser, Parameter};
 use ringhopper::primitives::primitive::TagPath;
-use ringhopper::tag::dependency::{get_reverse_dependencies_for_tag, get_tag_dependencies_for_block, recursively_get_dependencies_for_tag};
+use ringhopper::tag::dependency::*;
 use ringhopper::tag::tree::TagTree;
 
 pub fn dependencies(args: Args, description: &'static str) -> Result<(), String> {

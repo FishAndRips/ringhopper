@@ -5,7 +5,6 @@ use std::path::Path;
 use std::sync::{Arc, Mutex};
 use cli::{CommandLineParser, CommandLineValue, CommandLineValueType, Parameter};
 use ringhopper::error::Error;
-use ringhopper::logger::Logger;
 use ringhopper::map::load_map_from_filesystem_as_tag_tree;
 use ringhopper::primitives::byteorder::WriteBytesExt;
 use ringhopper::primitives::primitive::TagPath;
@@ -14,6 +13,8 @@ use ringhopper::tag::compare::{compare_tags, TagComparisonDifference};
 use ringhopper::tag::tree::{TagTree, VirtualTagsDirectory};
 use threading::{DisplayMode, do_with_threads, ProcessSuccessType};
 use util::make_stdout_logger;
+
+use crate::util::StdoutLogger;
 
 #[derive(PartialEq)]
 enum Show {
@@ -157,7 +158,7 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
     Ok(())
 }
 
-fn display_result(display_mode: Show, verbose: bool, user_data: UserData, logger: &Arc<dyn Logger>) {
+fn display_result(display_mode: Show, verbose: bool, user_data: UserData, logger: &Arc<StdoutLogger>) {
     let mut matched = 0usize;
     let all_differences = Arc::into_inner(user_data.differences).unwrap().into_inner().unwrap();
     let mut keys: Vec<TagPath> = all_differences.keys().map(|c| c.to_owned()).collect();
@@ -226,7 +227,7 @@ impl DifferenceMap {
     }
 }
 
-fn display_item(what: &DifferenceMap, depth: usize, io: &Arc<dyn Logger>) {
+fn display_item(what: &DifferenceMap, depth: usize, io: &Arc<StdoutLogger>) {
     if depth > 0 {
         for _ in 0..depth {
             io.neutral("    ");
@@ -242,7 +243,7 @@ fn display_item(what: &DifferenceMap, depth: usize, io: &Arc<dyn Logger>) {
     }
 }
 
-fn display_diff(diff: &Vec<TagComparisonDifference>, io: &Arc<dyn Logger>) {
+fn display_diff(diff: &Vec<TagComparisonDifference>, io: &Arc<StdoutLogger>) {
     let mut map = DifferenceMap::default();
     for i in diff {
         map.access_mut(&i.path).difference = Some(i.clone());

@@ -20,6 +20,8 @@ pub fn generate_ringhopper_structs(_: TokenStream) -> TokenStream {
     let mut read_any_tag_lines = String::new();
     let mut read_any_map_lines = String::new();
     let mut referenceable_tag_groups_hint = String::new();
+    let mut supported_groups_for_engines = String::new();
+
     for (group_name, group) in &definitions.groups {
         let struct_name = &group.struct_name;
         let group_name_fixed = camel_case(&group_name);
@@ -32,6 +34,16 @@ pub fn generate_ringhopper_structs(_: TokenStream) -> TokenStream {
         for g in groups {
             list += &g;
             list += ",";
+        }
+
+        if let Some(e) = &group.supported_engines.supported_engines {
+            let mut engines = String::new();
+            for engine in resolve_all_engines_for_parents(&e, &definitions) {
+                engines += "\"";
+                engines += engine;
+                engines += "\",";
+            }
+            writeln!(&mut supported_groups_for_engines, "TagGroup::{group_name_fixed} => (&[{engines}]).contains(&engine.name),").unwrap();
         }
 
         writeln!(referenceable_tag_groups_hint, "TagGroup::{group_name_fixed} => &[{list}],").unwrap();
@@ -76,6 +88,14 @@ pub fn generate_ringhopper_structs(_: TokenStream) -> TokenStream {
         match what {{
             {referenceable_tag_groups_hint}
             _ => &[],
+        }}
+    }}
+
+    /// Return `true` if the tag group is supported on the target engine.
+    pub fn group_supported_on_engine(group: TagGroup, engine: &Engine) -> bool {{
+        match group {{
+            {supported_groups_for_engines}
+            _ => true
         }}
     }}
     ").parse::<TokenStream>());
@@ -223,6 +243,7 @@ impl ToTokenStream for Struct {
         let mut fields_with_sizes: Vec<usize> = Vec::new();
         let mut fields_read_from_tags: Vec<bool> = Vec::new();
         let mut fields_read_from_caches: Vec<bool> = Vec::new();
+        let mut reverse_field_matcher = String::new();
 
         let fields_with_names = self.fields.iter().map(|s| safe_str(&s.name, SafetyLevel::RustCompilation)).collect::<Vec<Cow<str>>>();
         let fields_with_matchers = self.fields.iter().map(|s| safe_str(&s.name, SafetyLevel::Matcher)).collect::<Vec<Cow<str>>>();
@@ -233,8 +254,8 @@ impl ToTokenStream for Struct {
         let mut main_group_struct = false;
         for g in &definitions.groups {
             if &g.1.struct_name == struct_name {
-                writeln!(fields, "#[doc=\"CRC64 of the tag file if the tag was opened from the filesystem, or 0 otherwise.\n\n## Metadata\n\nThis field is not part of the tag and is only used internally within Ringhopper 🐧\"] pub hash: u64,").unwrap();
-                writeln!(default_code, "hash: Default::default(),").unwrap();
+                writeln!(fields, "#[doc=\"This field is not part of the tag and is only used internally within Ringhopper 🐧\"] pub metadata: PrimaryTagStructMetadata,").unwrap();
+                writeln!(default_code, "metadata: Default::default(),").unwrap();
                 main_group_struct = true;
                 break;
             }
@@ -301,6 +322,8 @@ impl ToTokenStream for Struct {
             match &field.field_type {
                 StructFieldType::Object(o) => {
                     if !field.flags.exclude {
+                        writeln!(&mut reverse_field_matcher, "if field == &self.{field_name} as *const dyn DynamicTagData {{ return \"{field_name}\" }}").unwrap();
+
                         let mut doc = String::new();
                         if let Some(n) = &field.flags.comment {
                             writeln!(&mut doc, "{n}\n\n").unwrap();
@@ -363,6 +386,25 @@ impl ToTokenStream for Struct {
         let mut field_list = String::new();
         let mut getter = String::new();
         let mut getter_mut = String::new();
+
+        let mut tag_reference_matcher = String::new();
+        if !simple_struct {
+            for i in 0..field_count {
+                let field = &self.fields[i];
+                if field.flags.exclude {
+                    continue;
+                }
+                if let StructFieldType::Object(ObjectType::TagReference(reference)) = &field.field_type {
+                    let mut list = String::new();
+                    for g in &reference.allowed_groups {
+                        list += &format!("TagGroup::{},", camel_case(g));
+                    }
+
+                    let field_name = &fields_with_matchers[i];
+                    writeln!(&mut tag_reference_matcher, "\"{field_name}\" => Some(&[{list}]),").unwrap();
+                }
+            }
+        }
 
         // Tag I/O
         for i in 0..field_count {
@@ -594,6 +636,18 @@ impl ToTokenStream for Struct {
                 }}
             }}
 
+            fn name_of_field_from_ptr(&self, field: *const dyn DynamicTagData) -> &'static str {{
+                {reverse_field_matcher}
+                panic!(\"field does not point to anything in this block\");
+            }}
+
+            fn allowed_groups_for_tag_reference_field(&self, field: &str) -> Option<&'static [TagGroup]> {{
+                match field {{
+                    {tag_reference_matcher}
+                    _ => None
+                }}
+            }}
+
             fn fields(&self) -> &'static [&'static str] {{
                 &[{field_list}]
             }}
@@ -678,6 +732,12 @@ impl ToTokenStream for Enum {
 
             fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {{
                 (*self as u16).write::<B>(data, at, struct_end)
+            }}
+        }}
+
+        impl Display for {struct_name} {{
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {{
+                f.write_str(self.to_str())
             }}
         }}
 
@@ -910,11 +970,11 @@ impl ToTokenStream for TagGroup {
             fn version() -> u16 {{
                 {version}
             }}
-            fn hash(&self) -> u64 {{
-                self.hash
+            fn metadata(&self) -> &PrimaryTagStructMetadata {{
+                &self.metadata
             }}
-            fn set_hash(&mut self, new_hash: u64) {{
-                self.hash = new_hash
+            fn metadata_mut(&mut self) -> &mut PrimaryTagStructMetadata {{
+                &mut self.metadata
             }}
         }}").parse().unwrap()
     }
@@ -944,7 +1004,7 @@ fn camel_case(string: &str) -> String {
         result.push(c);
     }
 
-    let prefixes = &["Gbxm", "Ui", "Bsp", "Hud", "Dxt", "Pcm", "Bc7", "Adpcm", "A1r5g5b5", "R5g6b5", "A4r4g4b4", "A8y8", "Ay8", "A8r8g8b8", "X8r8g8b8", "Ucs", "Ai"];
+    let prefixes = &["Gbxm", "Ui", "Bsp", "Hud", "Dxt", "Pcm", "Bc7", "Adpcm", "A1r5g5b5", "R5g6b5", "A4r4g4b4", "A8y8", "Ay8", "A8r8g8b8", "X8r8g8b8", "Ucs"];
 
     for p in prefixes {
         if result.contains(p) {
@@ -959,6 +1019,34 @@ fn camel_case(string: &str) -> String {
 enum SafetyLevel {
     Matcher,
     RustCompilation
+}
+
+fn resolve_all_engines_for_parents<'a>(parents: &'a [String], definitions: &'a ParsedDefinitions) -> HashSet<&'a str> {
+    let mut result = HashSet::new();
+
+    for i in parents {
+        result.insert(i.as_str());
+    }
+
+    loop {
+        let mut added_something = false;
+        for &i in &result.clone() {
+            for (engine_name, engine) in &definitions.engines {
+                let engine_name = engine_name.as_str();
+                if engine.inherits.as_ref().is_some_and(|inherits| inherits == i) {
+                    if !result.contains(engine_name) {
+                        result.insert(engine_name);
+                        added_something = true;
+                    }
+                }
+            }
+        }
+        if !added_something {
+            break;
+        }
+    }
+
+    result
 }
 
 fn safe_str(string: &str, safety_level: SafetyLevel) -> Cow<str> {
