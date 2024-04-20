@@ -18,7 +18,7 @@ impl ResourceMap {
         let data_slice = data.as_slice();
 
         let header = ResourceMapHeader::read::<LittleEndian>(data_slice, 0, data_slice.len())
-            .map_err(|e| Error::MapParseFailure(format!("Resource map parse failure: can't read resource map header: {e:?}")))?;
+            .map_err(|e| Error::MapParseFailure(format!("Resource map parse failure: can't read resource map header: {e}")))?;
 
         let path_data_offset = header.path_data_offset as usize;
         let path_data = data_slice.get(path_data_offset..)
@@ -31,7 +31,7 @@ impl ResourceMap {
 
         for i in 0..array_len {
             let data = ResourceMapResource::read::<LittleEndian>(data_slice, current_offset, data_slice.len())
-                .map_err(|e| Error::MapParseFailure(format!("Resource map parse failure: array index {i}: {e:?}")))?;
+                .map_err(|e| Error::MapParseFailure(format!("Resource map parse failure: array index {i}: {e}")))?;
             current_offset = current_offset.add_overflow_checked(resource_len)?;
 
             let path_range = (|| -> RinghopperResult<SizeRange> {
@@ -53,7 +53,7 @@ impl ResourceMap {
                 debug_assert_eq!(data_slice.get(path_range.clone()).expect("path get"), string.as_bytes());
 
                 Ok(path_range)
-            })().map_err(|e| Error::MapParseFailure(format!("Resource map parse failure: array index {i}: can't get path offset: {e:?}")))?;
+            })().map_err(|e| Error::MapParseFailure(format!("Resource map parse failure: array index {i}: can't get path offset: {e}")))?;
 
             let data_range = (|| -> RinghopperResult<SizeRange> {
                 let data_offset_start = data.data_offset as usize;
@@ -65,7 +65,7 @@ impl ResourceMap {
                     || Error::MapParseFailure(format!("0x{data_offset_start:08X}[0x{data_size:08X}] out-of-bounds"))
                 )?;
                 Ok(range)
-            })().map_err(|e| Error::MapParseFailure(format!("Resource map parse failure: array index {i}: can't get data offset: {e:?}")))?;
+            })().map_err(|e| Error::MapParseFailure(format!("Resource map parse failure: array index {i}: can't get data offset: {e}")))?;
 
             resources.push(ResourceItem {
                 data: data_range,

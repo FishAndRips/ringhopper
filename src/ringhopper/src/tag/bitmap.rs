@@ -321,7 +321,7 @@ pub fn extract_compressed_color_plate_data(bitmap: &Bitmap) -> RinghopperResult<
 
     decompressor
         .decompress(&compressed_bytes, &mut compressed_data, FlushDecompress::Finish)
-        .map_err(|e| Error::InvalidTagData(format!("zlib error: {e:?}")))?;
+        .map_err(|e| Error::InvalidTagData(format!("zlib error: {e}")))?;
 
     let read_bytes = decompressor.total_out();
     if read_bytes as usize != compressed_data.len() {

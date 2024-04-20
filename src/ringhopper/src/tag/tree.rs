@@ -541,10 +541,7 @@ impl TagTree for VirtualTagsDirectory {
         let file = std::fs::read(&file_path).map_err(|e| Error::FailedToReadFile(file_path, e))?;
         let hash = Self::hash_file(file.as_slice());
         let mut tag = ringhopper_structs::read_any_tag_from_file_buffer(&file, self.strictness)
-            .map_err(|e| match e {
-                Error::TagParseFailure(_) => Error::CorruptedTag(path.clone(), vec![e]),
-                e => e
-            })?;
+            .map_err(|e| Error::FailedToReadTag(path.clone(), vec![e]))?;
         tag.metadata_mut().hash = Some(hash);
         Ok(tag)
     }

@@ -30,7 +30,7 @@ impl ZstandardCompressionLevel {
 pub fn archive_tag_set_to_zip<T: TagTree, I: IntoIterator<Item = TagPath>>(tag_set: I, tag_tree: &T, zstandard_compression_level: ZstandardCompressionLevel) -> RinghopperResult<Vec<u8>> {
     macro_rules! wrap_zip_result {
         ($res: expr) => {
-            ($res).map_err(|e| Error::Other(format!("zip error: {e:?}")))
+            ($res).map_err(|e| Error::Other(format!("zip error: {e}")))
         };
     }
 
@@ -53,8 +53,7 @@ pub fn archive_tag_set_to_zip<T: TagTree, I: IntoIterator<Item = TagPath>>(tag_s
 }
 
 pub fn archive_map_to_zip<T: TagTree>(scenario: &TagPath, tag_tree: &T, engine: &Engine, zstandard_compression_level: ZstandardCompressionLevel) -> RinghopperResult<Vec<u8>> {
-    let mut all_dependencies = recursively_get_dependencies_for_map(scenario, tag_tree, engine)?;
-    all_dependencies.insert(scenario.to_owned());
+    let all_dependencies = recursively_get_dependencies_for_map(scenario, tag_tree, engine)?;
     archive_tag_set_to_zip(all_dependencies, tag_tree, zstandard_compression_level)
 }
 

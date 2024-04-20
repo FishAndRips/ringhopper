@@ -18,7 +18,7 @@ pub enum Error {
     InvalidTagFile,
     TagParseFailure(String),
     MapParseFailure(String),
-    CorruptedTag(TagPath, Vec<Error>),
+    FailedToReadTag(TagPath, Vec<Error>),
     TagHeaderGroupTypeMismatch,
     TagHeaderGroupVersionMismatch,
     TagGroupUnimplemented,
@@ -47,14 +47,27 @@ impl Error {
             Error::InvalidTagFile => Cow::Borrowed("tag file is invalid (bad header)"),
             Error::TagParseFailure(reason) => Cow::Owned(format!("failed to parse the tag (tag is likely corrupt): {reason}")),
             Error::MapParseFailure(reason) => Cow::Owned(format!("failed to parse the map: {reason}")),
-            Error::CorruptedTag(tag, error) => Cow::Owned(format!("tag `{tag}` is unreadable and/or corrupt: {error:?}")),
+            Error::FailedToReadTag(tag, error) => {
+                match error.len() {
+                    0 => Cow::Owned(format!("tag `{tag}` could not be read")),
+                    1 => Cow::Owned(format!("tag `{tag}` could not be read: {}", error[0])),
+                    _ => {
+                        let mut error_msg = error[0].as_str().to_string();
+                        for i in error.iter().skip(1) {
+                            error_msg += "\", \"";
+                            error_msg += &i.as_str()
+                        }
+                        Cow::Owned(format!("tag `{tag}` could not be read: [\"{error_msg}\"]"))
+                    }
+                }
+            },
             Error::TagHeaderGroupTypeMismatch => Cow::Borrowed("failed to parse the tag due to it being the wrong group"),
             Error::TagHeaderGroupVersionMismatch => Cow::Borrowed("failed to parse the tag due to it being the wrong group version"),
             Error::TagGroupUnimplemented => Cow::Borrowed("tag group is unimplemented"),
             Error::ChecksumMismatch => Cow::Borrowed("refused to parse the data (CRC32 mismatch)"),
             Error::SizeLimitExceeded => Cow::Borrowed("usize limit exceeded"),
             Error::ArrayLimitExceeded => Cow::Borrowed("array limit of 0xFFFFFFFF (4294967295) exceeded"),
-            Error::IndexLimitExceeded => Cow::Borrowed("index limit of 0xFFFF (65535) reached/exceeded"),
+            Error::IndexLimitExceeded => Cow::Borrowed("index limit of 0xFFFE (65534) exceeded"),
             Error::String32SizeLimitExceeded => Cow::Borrowed("string data is longer than 31 characters"),
             Error::TagNotFound(tag) => Cow::Owned(format!("tag `{tag}` not found")),
             Error::FailedToReadFile(file, err) => Cow::Owned(format!("failed to read file `{}`: {err}", file.display())),

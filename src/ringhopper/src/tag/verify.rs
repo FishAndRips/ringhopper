@@ -11,6 +11,7 @@ mod globals;
 mod hud_interface;
 mod model;
 mod dependencies;
+mod unicode_string_list;
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -27,7 +28,7 @@ use self::globals::*;
 use self::model::*;
 use self::hud_interface::*;
 use self::dependencies::*;
-
+use self::unicode_string_list::*;
 use super::dependency::recursively_get_dependencies_for_map;
 
 #[derive(Clone, Default)]
@@ -79,8 +80,6 @@ impl<'a, 'b, T: TagTree> VerifyContext<'a, 'b, T> {
             return Err(Error::InvalidTagData(format!("{globals_path} is missing an interface bitmaps reflexive")))
         }
 
-        hud_globals_ref.lock().unwrap().metadata_mut().verification_dependants.insert(globals_path);
-
         drop(globals_tag_lock);
 
         let mut context = VerifyContext {
@@ -92,7 +91,8 @@ impl<'a, 'b, T: TagTree> VerifyContext<'a, 'b, T> {
             results: HashMap::new()
         };
 
-        let all_dependencies = recursively_get_dependencies_for_map(scenario, tag_tree, engine)?;
+        let all_dependencies = recursively_get_dependencies_for_map(scenario, tag_tree, engine)
+            .map_err(|e| Error::Other(format!("Failed to query dependencies: {e}")))?;
         context.scenario_type = context.scenario.lock().unwrap().as_any().downcast_ref::<Scenario>().unwrap()._type;
 
         for path in all_dependencies {
@@ -100,7 +100,10 @@ impl<'a, 'b, T: TagTree> VerifyContext<'a, 'b, T> {
                 continue
             }
 
-            let tag = tag_tree.open_tag_shared(&path)?;
+            let tag = tag_tree
+                .open_tag_shared(&path)
+                .map_err(|e| Error::Other(format!("Could not open {path}: {e}")))?;
+
             context.verify_tag(&path, tag.lock().unwrap().as_mut());
         }
 
@@ -109,7 +112,7 @@ impl<'a, 'b, T: TagTree> VerifyContext<'a, 'b, T> {
 
     fn verify_tag(&mut self, path: &TagPath, tag: &mut dyn PrimaryTagStructDyn) -> bool {
         // Do we need to re-verify?
-        if self.results.contains_key(path) || tag.metadata().verified {
+        if self.results.contains_key(path) {
             return true
         }
 
@@ -135,17 +138,11 @@ impl<'a, 'b, T: TagTree> VerifyContext<'a, 'b, T> {
             TagGroup::Globals => verify_globals(tag, path, self, &mut result),
             TagGroup::Model => verify_model(tag, path, self, &mut result),
             TagGroup::GBXModel => verify_gbxmodel(tag, path, self, &mut result),
+            TagGroup::UnicodeStringList => verify_unicode_string_list(tag, path, self, &mut result),
             _ => ()
         }
 
         let is_ok = result.is_ok();
-        if is_ok {
-            match group {
-                TagGroup::Globals => (),
-                obj if is_object(obj) => (),
-                _ => tag.metadata_mut().verified = true
-            }
-        }
         self.results.insert(path.to_owned(), result);
 
         is_ok
@@ -179,7 +176,7 @@ impl<'a, 'b, T: TagTree> VerifyContext<'a, 'b, T> {
         match self.tag_tree.open_tag_shared(tag_path) {
             Ok(n) => Some(n),
             Err(e) => {
-                result.errors.push(format!("Unable to open {tag_path}: {e:?}"));
+                result.errors.push(format!("Unable to open {tag_path}: {e}"));
                 None
             }
         }

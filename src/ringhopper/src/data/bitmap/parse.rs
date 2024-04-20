@@ -51,7 +51,7 @@ impl Image {
 
         macro_rules! wrap_jxl_error {
             ($result:expr) => {
-                ($result).map_err(|e| Error::Other(format!("jxl-oxide read error: {e:?}")))
+                ($result).map_err(|e| Error::Other(format!("jxl-oxide read error: {e}")))
             }
         }
 
@@ -104,7 +104,7 @@ impl Image {
 
         macro_rules! wrap_tiff_error {
             ($result:expr) => {
-                ($result).map_err(|e| Error::Other(format!("tiff read error: {e:?}")))
+                ($result).map_err(|e| Error::Other(format!("tiff read error: {e}")))
             }
         }
 
@@ -163,7 +163,7 @@ impl Image {
 
         macro_rules! wrap_png_error {
             ($result:expr) => {
-                ($result).map_err(|e| Error::Other(format!("png read error: {e:?}")))
+                ($result).map_err(|e| Error::Other(format!("png read error: {e}")))
             }
         }
 

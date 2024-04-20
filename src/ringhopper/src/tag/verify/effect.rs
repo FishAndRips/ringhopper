@@ -12,15 +12,15 @@ pub fn verify_effect<T: TagTree>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath,
                 TagReference::Set(_) => (),
 
                 // Null damage_effect references crash the game
-                TagReference::Null(TagGroup::DamageEffect) => result.errors.push(format!("Part #{p} of event #{e} contains a null damage_effect reference. This is invalid.")),
+                TagReference::Null(TagGroup::DamageEffect) => result.errors.push(format!("Part #{p} of event #{e} contains a null damage_effect reference. This is invalid, and thus you should remove this or set something.")),
 
                 // This will just do nothing
-                TagReference::Null(g) => result.pedantic_warnings.push(format!("Part #{p} of event #{e} contains a null {g} reference and is thus unused."))
+                TagReference::Null(g) => result.pedantic_warnings.push(format!("Part #{p} of event #{e} contains a null {g} reference, which is a no-op. You can safely remove this."))
             }
         }
         for (p, particle) in (0..event.particles.items.len()).zip(event.particles.items.iter()) {
             if particle.particle_type.is_null() {
-                result.pedantic_warnings.push(format!("Particle #{p} of event #{e} contains a null particle reference and is thus unused."));
+                result.pedantic_warnings.push(format!("Particle #{p} of event #{e} contains a null particle reference, which is a no-op. You can safely remove this."));
             }
         }
     }

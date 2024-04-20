@@ -54,7 +54,7 @@ pub fn recover(args: Args, description: &'static str) -> Result<(), String> {
             Ok(ProcessSuccessType::Success) => { user_data.success.fetch_add(1, Ordering::Relaxed); }
             Ok(ProcessSuccessType::Skipped(_)) => (),
             Ok(ProcessSuccessType::Ignored) => return result,
-            Err(e) => { user_data.logger.error_fmt_ln(format_args!("Failed to recover {path}: {e:?}")); user_data.error.fetch_add(1, Ordering::Relaxed); }
+            Err(e) => { user_data.logger.error_fmt_ln(format_args!("Failed to recover {path}: {e}")); user_data.error.fetch_add(1, Ordering::Relaxed); }
         }
 
         user_data.total.fetch_add(1, Ordering::Relaxed);

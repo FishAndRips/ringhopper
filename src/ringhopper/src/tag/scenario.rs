@@ -406,12 +406,12 @@ fn check_scripts_are_ok(scenario: &Scenario, extracted_nodes: &Vec<ScenarioScrip
 
     for i in &scenario.scripts {
         check_bad_scripts(i.root_expression_index, extracted_nodes, &mut todo)
-            .map_err(|e| Error::InvalidTagData(format!("Script {} has errors: {e:?}", i.name)))?;
+            .map_err(|e| Error::InvalidTagData(format!("Script {} has errors: {e}", i.name)))?;
     }
 
     for i in &scenario.globals {
         check_bad_scripts(i.initialization_expression_index, extracted_nodes, &mut todo)
-            .map_err(|e| Error::InvalidTagData(format!("Global {} has errors: {e:?}", i.name)))?;
+            .map_err(|e| Error::InvalidTagData(format!("Global {} has errors: {e}", i.name)))?;
     }
 
     Ok(())

@@ -43,7 +43,7 @@ pub fn extract(args: Args, description: &'static str) -> Result<(), String> {
 
     let map_path = Path::new(&parser.get_extra()[0]);
 
-    let map = load_map_from_filesystem(map_path, ParseStrictness::Strict).map_err(|e| format!("Cannot load {map_path:?} as a cache file: {e:?}"))?;
+    let map = load_map_from_filesystem(map_path, ParseStrictness::Strict).map_err(|e| format!("Cannot load {map_path:?} as a cache file: {e}"))?;
     let tag = parser.get_custom("filter").unwrap()[0].string().to_owned();
 
     #[derive(Clone)]

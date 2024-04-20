@@ -10,7 +10,7 @@ macro_rules! write_verify_model_fn {
             let model: &$group = tag.as_any().downcast_ref().unwrap();
 
             if let Err(e) = model.check_indices() {
-                result.errors.push(format!("Error occurred while checking vertex indices: {e:?}"));
+                result.errors.push(format!("Error occurred while checking vertex indices: {e}"));
             }
 
             if !model.runtime_markers.items.is_empty() {

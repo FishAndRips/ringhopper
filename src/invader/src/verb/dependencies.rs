@@ -1,8 +1,10 @@
 use std::env::Args;
 use cli::{CommandLineParser, Parameter};
-use ringhopper::primitives::primitive::TagPath;
+use ringhopper::primitives::primitive::{TagGroup, TagPath};
 use ringhopper::tag::dependency::*;
 use ringhopper::tag::tree::TagTree;
+
+use crate::util::make_stdout_logger;
 
 pub fn dependencies(args: Args, description: &'static str) -> Result<(), String> {
     let parser = CommandLineParser::new(description, "<tag> [args]")
@@ -14,7 +16,6 @@ pub fn dependencies(args: Args, description: &'static str) -> Result<(), String>
             "",
             None
         ))
-        .add_jobs()
         .add_custom_parameter(Parameter::single(
             "reverse",
             'R',
@@ -48,14 +49,38 @@ pub fn dependencies(args: Args, description: &'static str) -> Result<(), String>
         }
     };
 
-    let mut vec = Vec::with_capacity(result.len());
-    for r in result {
-        vec.push(r);
-    }
-    vec.sort();
+    let mut dependencies_sorted = Vec::with_capacity(result.len());
+    dependencies_sorted.extend(result);
+    dependencies_sorted.sort();
 
-    for i in vec {
-        println!("{i}")
+    let logger = make_stdout_logger();
+    for i in dependencies_sorted {
+        logger.neutral_fmt_ln(format_args!("{i}"))
+    }
+
+    Ok(())
+}
+
+
+pub fn list_scenario_tags(args: Args, description: &'static str) -> Result<(), String> {
+    let parser = CommandLineParser::new(description, "<tag> <args>")
+        .add_tags(true)
+        .add_engine()
+        .add_help()
+        .set_required_extra_parameters(1)
+        .parse(args)?;
+
+    let tags = parser.get_virtual_tags_directory();
+    let tag_path = str_unwrap!(TagPath::new(&parser.get_extra()[0], TagGroup::Scenario), "Invalid tag path: {error}");
+    let dependencies = str_unwrap!(recursively_get_dependencies_for_map(&tag_path, &tags, parser.get_engine()), "Failed to get reverse dependencies: {error}");
+
+    let mut dependencies_sorted: Vec<TagPath> = Vec::with_capacity(dependencies.len());
+    dependencies_sorted.extend(dependencies);
+    dependencies_sorted.sort();
+
+    let logger = make_stdout_logger();
+    for i in dependencies_sorted {
+        logger.neutral_fmt_ln(format_args!("{i}"))
     }
 
     Ok(())

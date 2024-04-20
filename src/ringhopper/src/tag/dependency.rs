@@ -39,6 +39,11 @@ pub fn recursively_get_dependencies_for_tag<T: TagTree>(tag: &TagPath, tag_tree:
     let mut pending: Vec<TagPath> = Vec::from([tag.to_owned()]);
 
     while let Some(p) = pending.pop() {
+        // Do not open tags that cannot possibly contain dependencies
+        if get_all_referenceable_tag_groups_for_group(p.group()).is_empty() {
+            continue
+        }
+
         let dependencies = get_tag_dependencies_for_block(tag_tree.open_tag_shared(&p)?.lock().unwrap().as_ref());
         for i in &dependencies {
             if result.contains_key(i) || pending.contains(i) {
@@ -73,6 +78,8 @@ pub fn get_reverse_dependencies_for_tag<T: TagTree>(tag: &TagPath, tag_tree: &T)
 
 pub fn recursively_get_dependencies_for_map<T: TagTree>(scenario: &TagPath, tag_tree: &T, engine: &Engine) -> RinghopperResult<HashSet<TagPath>> {
     let mut all_dependencies = HashSet::new();
+
+    all_dependencies.insert(scenario.to_owned());
 
     let mutex = tag_tree.open_tag_shared(scenario)?;
     let lock = mutex.lock().unwrap();

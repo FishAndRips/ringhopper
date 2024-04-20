@@ -18,8 +18,7 @@ mod extract;
 mod list_engines;
 mod undefault;
 mod plate;
-mod archive_map;
-mod archive_tag;
+mod archive;
 mod recover;
 mod verify;
 
@@ -38,13 +37,14 @@ impl Verb {
 }
 
 pub const ALL_VERBS: &'static [Verb] = &[
-    Verb::new("archive-map", "Create a .zip of a map's tag structure", archive_map::archive_map),
-    Verb::new("archive-tag", "Create a .zip of a tag and its dependencies", archive_tag::archive_tag),
+    Verb::new("archive-scenario", "Create a .zip of a map's tag structure", archive::archive_scenario),
+    Verb::new("archive-tag", "Create a .zip of a tag and its dependencies", archive::archive_tag),
     Verb::new("compare", "Compare tags between two tag sources", compare::compare),
     Verb::new("convert", "Convert tags to another tag group", convert::convert),
     Verb::new("dependencies", "View dependencies of tags", dependencies::dependencies),
     Verb::new("extract", "Extract tags from a map", extract::extract),
     Verb::new("list-engines", "List all available engine targets", list_engines::list_engines),
+    Verb::new("list-scenario-tags", "View all tags needed to build a scenario into a map", dependencies::list_scenario_tags),
     Verb::new("nudge", "Fix floating point precision errors from tag extraction", nudge::nudge),
     Verb::new("plate", "Generate color plates for bitmaps", plate::plate),
     Verb::new("recover", "Recover data from tags", recover::recover),

@@ -43,10 +43,10 @@
                 "ui\\ui_tags_loaded_mainmenu_scenario_type.tag_collection"
             ],
             "singleplayer": [
-                "ui\\ui_tags_loaded_multiplayer_scenario_type.tag_collection"
+                "ui\\ui_tags_loaded_solo_scenario_type.tag_collection"
             ],
             "multiplayer": [
-                "ui\\ui_tags_loaded_solo_scenario_type.tag_collection"
+                "ui\\ui_tags_loaded_multiplayer_scenario_type.tag_collection"
             ]
         }
     }

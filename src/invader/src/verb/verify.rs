@@ -18,7 +18,6 @@ pub fn verify(args: Args, description: &'static str) -> Result<(), String> {
     let parser = CommandLineParser::new(description, "<scenario*> [args]")
         .add_tags(false)
         .add_help()
-        .add_cow_tags()
         .add_engine()
         .add_jobs()
         .set_required_extra_parameters(1)
@@ -58,18 +57,18 @@ pub fn verify(args: Args, description: &'static str) -> Result<(), String> {
         // First pass: warnings
         for (path, vr) in &everything {
             for i in &vr.pedantic_warnings {
-                locked.minor_warning_fmt_ln(format_args!("- {path} warning (minor): {i}"))
+                locked.minor_warning_fmt_ln(format_args!("WARNING (minor) {path}: {i}"))
             }
 
             for i in &vr.warnings {
-                locked.warning_fmt_ln(format_args!("- {path} warning: {i}"))
+                locked.warning_fmt_ln(format_args!("WARNING {path}: {i}"))
             }
         }
 
         // Second pass: errors
         for (path, vr) in &everything {
             for i in &vr.errors {
-                locked.error_fmt_ln(format_args!("- {path} error: {i}"))
+                locked.error_fmt_ln(format_args!("ERROR {path}: {i}"))
             }
         }
 

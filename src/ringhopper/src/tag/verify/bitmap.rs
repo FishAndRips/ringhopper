@@ -1,6 +1,4 @@
-use primitives::primitive::TagPath;
 use ringhopper_structs::{Bitmap, BitmapType};
-use crate::primitives::tag::PrimaryTagStruct;
 use crate::primitives::dynamic::DynamicEnumImpl;
 
 pub enum SequenceType {
@@ -11,7 +9,6 @@ pub enum SequenceType {
 
 pub fn verify_bitmap_sequence_index(
     bitmap: &mut Bitmap,
-    referencer: &TagPath,
     sequence_index: Option<u16>,
     minimum: usize,
     sequence_type: SequenceType
@@ -24,12 +21,6 @@ pub fn verify_bitmap_sequence_index(
         SequenceType::Bitmap => if bitmap._type != BitmapType::_2dTextures {
             return Err(format!("expected 2D textures, but bitmap is actually a {}", bitmap._type.to_str()))
         }
-    }
-
-    // The referencing tag depends on this; add if it's not already added
-    let dep = &mut bitmap.metadata_mut().verification_dependants;
-    if !dep.contains(referencer) {
-        dep.insert(referencer.to_owned());
     }
 
     let s = match sequence_index {
