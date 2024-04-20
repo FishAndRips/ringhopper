@@ -466,16 +466,19 @@
             {
                 "name": "width",
                 "type": "uint16",
+                "minimum": 1,
                 "unit": "pixels"
             },
             {
                 "name": "height",
                 "type": "uint16",
+                "minimum": 1,
                 "unit": "pixels"
             },
             {
                 "name": "depth",
                 "type": "uint16",
+                "minimum": 1,
                 "unit": "pixels"
             },
             {

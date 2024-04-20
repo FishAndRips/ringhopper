@@ -10,7 +10,7 @@ use crate::primitives::byteorder::{BigEndian, LittleEndian};
 use crate::primitives::dynamic::DynamicTagDataArray;
 use crate::primitives::error::{Error, OverflowCheck, RinghopperResult};
 use crate::primitives::map::{DomainType, Map, ResourceMapType};
-use crate::primitives::parse::{SimpleTagData};
+use crate::primitives::parse::SimpleTagData;
 use crate::primitives::primitive::{Angle, Bounds, Index, TagPath};
 use crate::tag::bitmap::{bytes_per_block, COMPRESSED_BITMAP_DATA_FORMATS, MipmapFaceIterator, MipmapMetadata, MipmapTextureIterator, MipmapType, pixels_per_block_length, Swizzlable, swizzle};
 use crate::tag::model::ModelFunctions;
@@ -339,6 +339,7 @@ pub fn fix_bitmap_tag<M: Map>(tag: &mut Bitmap, map: &M) -> RinghopperResult<()>
             return Err(Error::InvalidTagData(format!("Bitmap is {width}x{height}x{depth} which has 0 on one dimension.")));
         }
 
+        // This was validated above
         let width = unsafe { NonZeroUsize::new_unchecked(width) };
         let height = unsafe { NonZeroUsize::new_unchecked(height) };
         let depth = unsafe { NonZeroUsize::new_unchecked(depth) };

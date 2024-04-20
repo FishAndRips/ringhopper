@@ -22,6 +22,7 @@ use ringhopper_engines::Engine;
 use ringhopper_structs::{Globals, Scenario, ScenarioType};
 use crate::tag::object::is_object;
 use crate::tag::tree::TagTree;
+use self::bitmap::verify_bitmap;
 use self::object::*;
 use self::effect::*;
 use self::globals::*;
@@ -139,6 +140,7 @@ impl<'a, 'b, T: TagTree> VerifyContext<'a, 'b, T> {
             TagGroup::Model => verify_model(tag, path, self, &mut result),
             TagGroup::GBXModel => verify_gbxmodel(tag, path, self, &mut result),
             TagGroup::UnicodeStringList => verify_unicode_string_list(tag, path, self, &mut result),
+            TagGroup::Bitmap => verify_bitmap(tag, path, self, &mut result),
             _ => ()
         }
 

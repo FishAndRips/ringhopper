@@ -112,10 +112,10 @@ pub struct MipmapMetadata {
 }
 
 impl MipmapMetadata {
-    fn fixup_real_dims(&mut self, block_size: NonZeroUsize) {
-        let block_size = block_size.get();
-        self.block_width = (self.width + (block_size - 1)) / block_size;
-        self.block_height = (self.height + (block_size - 1)) / block_size;
+    fn fixup_real_dims(&mut self, block_length: NonZeroUsize) {
+        let block_length = block_length.get();
+        self.block_width = (self.width + (block_length - 1)) / block_length;
+        self.block_height = (self.height + (block_length - 1)) / block_length;
         self.block_count = self.block_width * self.block_height;
     }
 }
@@ -140,7 +140,7 @@ impl MipmapType {
             BitmapDataType::_2dTexture => Ok(MipmapType::TwoDimensional),
             BitmapDataType::_3dTexture => NonZeroUsize::new(data.depth as usize)
                 .map(|z| MipmapType::ThreeDimensional(z))
-                .ok_or_else(|| Error::InvalidTagData("BitmapData has depth of 0.".to_string())),
+                .ok_or_else(|| Error::InvalidTagData("depth is 0".to_string())),
         }
     }
 }
@@ -162,10 +162,17 @@ impl MipmapTextureIterator {
         width: NonZeroUsize,
         height: NonZeroUsize,
         bitmap_type: MipmapType,
-        block_size: NonZeroUsize,
+        block_length: NonZeroUsize,
         mipmap_count: Option<usize>
     ) -> Self {
-        Self { inner: MipmapFaceIterator::new(width, height, bitmap_type, block_size, mipmap_count) }
+        Self { inner: MipmapFaceIterator::new(width, height, bitmap_type, block_length, mipmap_count) }
+    }
+
+    /// Initialize a new iterator from a `BitmapData` instance.
+    ///
+    /// Returns `Err` if the bitmap data is malformed.
+    pub fn new_from_bitmap_data(data: &BitmapData) -> RinghopperResult<Self> {
+        MipmapFaceIterator::new_from_bitmap_data(data).map(|inner| Self { inner })
     }
 }
 
@@ -178,18 +185,19 @@ impl MipmapTextureIterator {
 #[derive(Copy, Clone)]
 pub struct MipmapFaceIterator {
     next: Option<MipmapMetadata>,
-    block_size: NonZeroUsize,
+    block_length: NonZeroUsize,
     bitmap_type: MipmapType,
     mipmap_count: Option<usize>,
     face_count: usize
 }
 
 impl MipmapFaceIterator {
+    /// Initialize a new iterator.
     pub fn new(
         width: NonZeroUsize,
         height: NonZeroUsize,
         bitmap_type: MipmapType,
-        block_size: NonZeroUsize,
+        block_length: NonZeroUsize,
         mipmap_count: Option<usize>,
     ) -> Self {
         let mut face = MipmapMetadata {
@@ -212,17 +220,31 @@ impl MipmapFaceIterator {
             block_count: 0
         };
 
-        face.fixup_real_dims(block_size);
+        face.fixup_real_dims(block_length);
 
         let mut result = Self {
             next: Some(face),
-            block_size,
+            block_length,
             bitmap_type,
             mipmap_count,
             face_count: 0
         };
         result.fixup_face_count();
         result
+    }
+
+    /// Initialize a new iterator from a `BitmapData` instance.
+    ///
+    /// Returns `Err` if the bitmap data is malformed.
+    pub fn new_from_bitmap_data(data: &BitmapData) -> RinghopperResult<Self> {
+        let width = NonZeroUsize::new(data.width as usize)
+            .ok_or_else(|| Error::InvalidTagData("width is 0".to_owned()))?;
+        let height = NonZeroUsize::new(data.height as usize)
+            .ok_or_else(|| Error::InvalidTagData("height is 0".to_owned()))?;
+        let bitmap_type = MipmapType::get_mipmap_type(data)?;
+        let block_length = pixels_per_block_length(data.format);
+        let mipmap_count = Some(data.mipmap_count as usize);
+        Ok(Self::new(width, height, bitmap_type, block_length, mipmap_count))
     }
 
     fn fixup_face_count(&mut self) {
@@ -258,7 +280,7 @@ impl Iterator for MipmapFaceIterator {
         next.width = (next.width / 2).max(1);
         next.height = (next.height / 2).max(1);
         next.depth = (next.depth / 2).max(1);
-        next.fixup_real_dims(self.block_size);
+        next.fixup_real_dims(self.block_length);
         self.fixup_face_count();
 
         current
