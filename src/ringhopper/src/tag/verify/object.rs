@@ -11,7 +11,7 @@ use super::VerifyContext;
 
 const IGNORED_MODEL_NODE_LIST_CHECKSUM: i32 = 0;
 
-pub fn verify_object<T: TagTree>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, context: &mut VerifyContext<T>, result: &mut VerifyResult) {
+pub fn verify_object<T: TagTree + Send + Sync + 'static>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, context: &VerifyContext<T>, result: &mut VerifyResult) {
     let object = downcast_base_object(tag).unwrap();
 
     let model = context.open_tag_reference_maybe(&object.model, result, None);
@@ -69,16 +69,14 @@ pub fn verify_object<T: TagTree>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath,
     }
 }
 
-pub fn verify_weapon<T: TagTree>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, context: &mut VerifyContext<T>, result: &mut VerifyResult) {
+pub fn verify_weapon<T: TagTree + Send + Sync + 'static>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, context: &VerifyContext<T>, result: &mut VerifyResult) {
     let weapon: &Weapon = tag.as_any().downcast_ref().unwrap();
 
     let zoom_levels = weapon.zoom_levels as usize;
     if zoom_levels > 0 {
         if let Some(r) = context.open_tag_reference_maybe(&weapon.hud_interface, result, None) {
-            let mut lock = r.lock().unwrap();
-            context.verify_tag(weapon.hud_interface.path().unwrap(), lock.as_mut());
-
-            let weapon_hud_interface: &WeaponHUDInterface = lock.as_any().downcast_ref().unwrap();
+            let hud = r.lock().unwrap();
+            let weapon_hud_interface: &WeaponHUDInterface = hud.as_any().downcast_ref().unwrap();
             for (crosshair_index, crosshair) in (0..weapon_hud_interface.crosshairs.len()).zip(&weapon_hud_interface.crosshairs) {
                 if crosshair.crosshair_type != WeaponHUDInterfaceCrosshairType::ZoomOverlay {
                     continue

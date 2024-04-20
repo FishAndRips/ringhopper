@@ -4,7 +4,7 @@ use ringhopper_structs::{Globals, ScenarioType};
 use crate::tag::tree::TagTree;
 use super::{VerifyContext, VerifyResult};
 
-pub fn verify_globals<T: TagTree>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, context: &mut VerifyContext<T>, result: &mut VerifyResult) {
+pub fn verify_globals<T: TagTree + Send + Sync>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, context: &VerifyContext<T>, result: &mut VerifyResult) {
     let globals: &Globals = tag.as_any().downcast_ref().unwrap();
 
     let scenario_type = context.scenario_type;

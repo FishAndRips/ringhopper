@@ -10,7 +10,7 @@ pub enum SequenceType {
     Bitmap
 }
 
-pub fn verify_bitmap<T: TagTree>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, _context: &mut VerifyContext<T>, result: &mut VerifyResult) {
+pub fn verify_bitmap<T: TagTree + Send + Sync>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, _context: &VerifyContext<T>, result: &mut VerifyResult) {
     let bitmap = tag.as_any().downcast_ref::<Bitmap>().unwrap();
 
     // Verify that each bitmap data doesn't overflow the bitmap data

@@ -1,3 +1,4 @@
+use std::num::NonZeroUsize;
 use std::{env::Args, sync::Arc};
 use cli::CommandLineParser;
 use ringhopper::tag::verify::VerifyContext;
@@ -35,10 +36,11 @@ pub fn verify(args: Args, description: &'static str) -> Result<(), String> {
     };
 
     let logger = data.logger.clone();
-    let tree = Arc::new(CachingTagTree::new(parser.get_virtual_tags_directory(), CachingTagTreeWriteStrategy::Instant));
+    let tree = Arc::new(CachingTagTree::new(parser.get_virtual_tags_directory(), CachingTagTreeWriteStrategy::Manual));
 
     do_with_threads(tree, parser, &tag, Some(TagGroup::Scenario), data, DisplayMode::Silent, logger, |context, scenario_path, user_data, _| {
-        let everything = VerifyContext::verify(scenario_path, &context.tags_directory, user_data.engine)?;
+        let threads = unsafe { NonZeroUsize::new_unchecked(2) }; // TODO: add subjobs later?
+        let everything = VerifyContext::verify(scenario_path, context.tags_directory.clone(), user_data.engine, threads)?;
 
         let locked = user_data.logger.lock();
 

@@ -3,7 +3,7 @@ use ringhopper_structs::UnicodeStringList;
 use crate::tag::tree::TagTree;
 use super::{VerifyContext, VerifyResult};
 
-pub fn verify_unicode_string_list<T: TagTree>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, _context: &mut VerifyContext<T>, result: &mut VerifyResult) {
+pub fn verify_unicode_string_list<T: TagTree + Send + Sync>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, _context: &VerifyContext<T>, result: &mut VerifyResult) {
     let list: &UnicodeStringList = tag.as_any().downcast_ref().unwrap();
     const CR: Option<u16> = Some('\r' as u16);
     const LF: u16 = '\n' as u16;

@@ -6,7 +6,7 @@ use super::{VerifyContext, VerifyResult};
 
 macro_rules! write_verify_model_fn {
     ($name:tt, $group:tt) => {
-        pub fn $name<T: TagTree>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, _context: &mut VerifyContext<T>, result: &mut VerifyResult) {
+        pub fn $name<T: TagTree + Send + Sync>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, _context: &VerifyContext<T>, result: &mut VerifyResult) {
             let model: &$group = tag.as_any().downcast_ref().unwrap();
 
             if let Err(e) = model.check_indices() {
