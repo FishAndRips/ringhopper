@@ -30,7 +30,7 @@ pub fn list_engines(mut args: Args, _description: &'static str) -> Result<(), St
     }
 
     let print_engine = |engine: &Engine| {
-        println!("    {shorthand:20} {full_name}", shorthand = engine.name, full_name = engine.display_name)
+        println!("    {shorthand:16} {full_name}", shorthand = engine.name, full_name = engine.display_name)
     };
 
     println!("Engine targets:");
@@ -70,11 +70,11 @@ fn print_info_for_engine(engine: &Engine) {
     println!("Vertex type:         {}", if engine.compressed_models { "compressed" } else { "uncompressed" });
     println!("Max script nodes:    {}", engine.max_script_nodes);
     println!("Texture sizes:       {}", if engine.bitmap_options.texture_dimension_must_modulo_block_size { "must modulo block size" } else { "any" });
-    println!();
     println!("Cache compression:   {}", match engine.compression_type {
         EngineCompressionType::Uncompressed => "no",
         EngineCompressionType::Deflate => "yes (deflate)"
     });
+    println!();
     println!("Maximum cache file sizes:");
     println!(" - singleplayer:     0x{:08X} ({} MiB)", engine.max_cache_file_size.singleplayer, bytes_to_mib(engine.max_cache_file_size.singleplayer));
     println!(" - multiplayer:      0x{:08X} ({} MiB)", engine.max_cache_file_size.multiplayer, bytes_to_mib(engine.max_cache_file_size.multiplayer));

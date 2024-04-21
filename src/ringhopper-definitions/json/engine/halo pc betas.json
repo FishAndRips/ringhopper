@@ -1,0 +1,31 @@
+[
+    {
+        "name": "pc-0268",
+        "type": "engine",
+        "display_name": "Halo: Combat Evolved (PC beta build 0268)",
+        "version": "halo pc 01.05.22.0268 May 23 2003 01:45:13",
+        "max_tag_space": "0x1E00000",
+        "build_target": false,
+        "external_models": false,
+        "base_memory_address": "0x02EC0000",
+        "build": {
+            "version": "01.05.22.0268",
+            "enforced": true
+        },
+        "cache_file_version": 6,
+        "inherits": "pc"
+    },
+    {
+        "name": "pc-0452",
+        "type": "engine",
+        "display_name": "Halo: Combat Evolved (PC beta build 0452)",
+        "version": "halo pc 01.07.30.0452 Aug  6 2003 11:11:14",
+        "max_tag_space": "0x1600000",
+        "build_target": false,
+        "build": {
+            "version": "01.07.30.0452",
+            "enforced": true
+        },
+        "inherits": "pc"
+    }
+]

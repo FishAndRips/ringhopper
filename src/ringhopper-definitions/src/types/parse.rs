@@ -538,14 +538,14 @@ pub(crate) fn get_all_definitions() -> Vec<Map<String, Value>> {
     jsons.insert("engine/halo pc demo.json", include_bytes!("../../json/engine/halo pc demo.json"));
     jsons.insert("engine/halo pc retail.json", include_bytes!("../../json/engine/halo pc retail.json"));
     jsons.insert("engine/halo pc.json", include_bytes!("../../json/engine/halo pc.json"));
-    jsons.insert("engine/halo pc beta.json", include_bytes!("../../json/engine/halo pc beta.json"));
+    jsons.insert("engine/halo pc betas.json", include_bytes!("../../json/engine/halo pc betas.json"));
     jsons.insert("engine/halo xbox ntsc demo.json", include_bytes!("../../json/engine/halo xbox ntsc demo.json"));
     jsons.insert("engine/halo xbox ntsc jp.json", include_bytes!("../../json/engine/halo xbox ntsc jp.json"));
     jsons.insert("engine/halo xbox ntsc tw.json", include_bytes!("../../json/engine/halo xbox ntsc tw.json"));
     jsons.insert("engine/halo xbox ntsc us.json", include_bytes!("../../json/engine/halo xbox ntsc us.json"));
     jsons.insert("engine/halo xbox pal.json", include_bytes!("../../json/engine/halo xbox pal.json"));
     jsons.insert("engine/halo xbox.json", include_bytes!("../../json/engine/halo xbox.json"));
-    jsons.insert("engine/halo xbox beta.json", include_bytes!("../../json/engine/halo xbox beta.json"));
+    jsons.insert("engine/halo xbox betas.json", include_bytes!("../../json/engine/halo xbox betas.json"));
 
     jsons.into_iter()
             .map(|(file,v)| (file, from_slice::<Value>(v).unwrap_or_else(|e| panic!("failed to parse {file}: {e}"))))

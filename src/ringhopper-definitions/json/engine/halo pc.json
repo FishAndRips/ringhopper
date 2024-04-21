@@ -6,7 +6,7 @@
         "build_target": false,
         "fallback": true,
         "cache_file_version": 7,
-        "max_tag_space": "0x1800000",
+        "max_tag_space": "0x1700000",
         "max_cache_file_size": "0x18000000",
         "base_memory_address": "0x40440000",
         "script_compile_target": "gbx-retail",
