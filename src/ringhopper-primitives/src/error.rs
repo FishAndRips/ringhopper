@@ -28,6 +28,8 @@ pub enum Error {
     SizeLimitExceeded,
     String32SizeLimitExceeded,
     TagNotFound(TagPath),
+    /// First one is the tag with the dependency, and the second one is the tag being depended
+    BrokenDependency(TagPath, TagPath),
     FailedToReadFile(PathBuf, std::io::Error),
     FailedToWriteFile(PathBuf, std::io::Error),
     InvalidTagsDirectory,
@@ -70,6 +72,7 @@ impl Error {
             Error::IndexLimitExceeded => Cow::Borrowed("index limit of 0xFFFE (65534) exceeded"),
             Error::String32SizeLimitExceeded => Cow::Borrowed("string data is longer than 31 characters"),
             Error::TagNotFound(tag) => Cow::Owned(format!("tag `{tag}` not found")),
+            Error::BrokenDependency(tag, dependent) => Cow::Owned(format!("tag `{tag}` has a broken dependency: `{dependent}` was not found")),
             Error::FailedToReadFile(file, err) => Cow::Owned(format!("failed to read file `{}`: {err}", file.display())),
             Error::FailedToWriteFile(file, err) => Cow::Owned(format!("failed to write file `{}`: {err}", file.display())),
             Error::MapDataOutOfBounds(explanation) => Cow::Owned(format!("map data out of bounds: {explanation}")),

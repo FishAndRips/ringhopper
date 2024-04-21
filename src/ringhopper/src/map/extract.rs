@@ -106,19 +106,38 @@ macro_rules! extract_vertices {
                     return Err(Error::InvalidTagData(format!("Model data is invalid: triangle count is too high (0x{triangle_count:X} > 0x{max_triangles:X})")))
                 }
 
-                if $map.get_engine().compressed_models {
+                let engine = $map.get_engine();
+                let compressed_models = engine.compressed_models;
+                let external_models = engine.external_models;
+
+                // Xbox maps use indirect pointers here
+                let pointer = if compressed_models && external_models {
+                    let vertex_pointer = CacheFileModelDataPointer::read_from_map($map, part.vertices.vertex_pointer.into(), &DomainType::TagData)?;
+                    vertex_pointer.data.into()
+                }
+                else {
+                    part.vertices.vertex_pointer.into()
+                };
+
+                let (domain_from_vertices, domain_from_indices) = if external_models {
+                    (DomainType::ModelVertexData, DomainType::ModelTriangleData)
+                }
+                else {
+                    (DomainType::TagData, DomainType::TagData)
+                };
+
+                if compressed_models {
                     // Load all vertices
                     part.compressed_vertices.items.reserve_exact(vertex_count);
-                    let vertex_pointer = CacheFileModelDataPointer::read_from_map($map, part.vertices.vertex_pointer.into(), &DomainType::TagData)?;
                     part.compressed_vertices.items.extend(ModelVertexCompressed::read_chunks_from_map_to_iterator(
                         $map,
                         vertex_count,
-                        vertex_pointer.data.into(),
-                        &DomainType::TagData
+                        pointer,
+                        &domain_from_vertices
                     )?.into_infallible());
 
                     // Now all indices
-                    part.triangle_data.items = load_all_indices($map, triangle_count, part.triangle_pointer.into(), &DomainType::TagData)?;
+                    part.triangle_data.items = load_all_indices($map, triangle_count, part.triangle_pointer.into(), &domain_from_indices)?;
                 }
                 else {
                     // Load all vertices
@@ -126,12 +145,12 @@ macro_rules! extract_vertices {
                     part.uncompressed_vertices.items.extend(ModelVertexUncompressed::read_chunks_from_map_to_iterator(
                         $map,
                         vertex_count,
-                        part.vertices.vertex_pointer.into(),
-                        &DomainType::ModelVertexData
+                        pointer,
+                        &domain_from_vertices
                     )?.into_infallible());
 
                     // Now all indices
-                    part.triangle_data.items = load_all_indices($map, triangle_count, part.triangle_pointer.into(), &DomainType::ModelTriangleData)?;
+                    part.triangle_data.items = load_all_indices($map, triangle_count, part.triangle_pointer.into(), &domain_from_indices)?;
                 }
             }
         }

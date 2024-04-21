@@ -316,6 +316,7 @@ pub struct Engine {
     /// NOTE: This property is set explicitly per engine.
     pub cache_default: bool,
     pub external_bsps: bool,
+    pub external_models: bool,
     pub max_script_nodes: u64,
     pub max_tag_space: u64,
     pub compressed_models: bool,

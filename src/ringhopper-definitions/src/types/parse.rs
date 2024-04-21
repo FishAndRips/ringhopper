@@ -255,6 +255,7 @@ impl ParsedDefinitions {
                     externally_indexed_tags: v.get("externally_indexed_tags").expect("externally_indexed_tags not set").as_bool().unwrap(),
                     loc: v.get("loc").expect("loc not set").as_bool().unwrap()
                 }),
+                external_models: first_bool("external_models", false).unwrap_or(false),
                 external_bsps: first_bool("external_bsps", false).unwrap_or(false),
                 cache_parser: match first_string("cache_parser", true).unwrap().as_str() {
                     "pc" => EngineCacheParser::PC,
@@ -537,6 +538,7 @@ pub(crate) fn get_all_definitions() -> Vec<Map<String, Value>> {
     jsons.insert("engine/halo pc demo.json", include_bytes!("../../json/engine/halo pc demo.json"));
     jsons.insert("engine/halo pc retail.json", include_bytes!("../../json/engine/halo pc retail.json"));
     jsons.insert("engine/halo pc.json", include_bytes!("../../json/engine/halo pc.json"));
+    jsons.insert("engine/halo pc beta.json", include_bytes!("../../json/engine/halo pc beta.json"));
     jsons.insert("engine/halo xbox ntsc demo.json", include_bytes!("../../json/engine/halo xbox ntsc demo.json"));
     jsons.insert("engine/halo xbox ntsc jp.json", include_bytes!("../../json/engine/halo xbox ntsc jp.json"));
     jsons.insert("engine/halo xbox ntsc tw.json", include_bytes!("../../json/engine/halo xbox ntsc tw.json"));

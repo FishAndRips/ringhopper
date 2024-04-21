@@ -42,7 +42,7 @@ pub fn verify_bitmap<T: TagTree + Send + Sync>(tag: &dyn PrimaryTagStructDyn, _p
 }
 
 pub fn verify_bitmap_sequence_index(
-    bitmap: &mut Bitmap,
+    bitmap: &Bitmap,
     sequence_index: Option<u16>,
     minimum: usize,
     sequence_type: SequenceType
@@ -50,10 +50,10 @@ pub fn verify_bitmap_sequence_index(
     match sequence_type {
         SequenceType::Any => (),
         SequenceType::Sprite => if bitmap._type != BitmapType::Sprites {
-            return Err(format!("expected sprites, but bitmap is actually a {}", bitmap._type.to_str()))
+            return Err(format!("expected sprites, but bitmap is actually {}", bitmap._type.to_str()))
         },
         SequenceType::Bitmap => if bitmap._type != BitmapType::_2dTextures {
-            return Err(format!("expected 2D textures, but bitmap is actually a {}", bitmap._type.to_str()))
+            return Err(format!("expected 2D textures, but bitmap is actually {}", bitmap._type.to_str()))
         }
     }
 

@@ -376,14 +376,18 @@ impl CommandLineParser {
                     let parsed_argument = match p.value_type.expect("value type not set for something that takes arguments") {
                         CommandLineValueType::Path => CommandLineValue::Path(next_argument.into()),
                         CommandLineValueType::String => CommandLineValue::String(next_argument),
-                        CommandLineValueType::Float => CommandLineValue::Float(next_argument.parse().map_err(|e| format!("Argument parse error: Cannot convert {next_argument} into float: {e}"))?),
-                        CommandLineValueType::Short => CommandLineValue::Short(next_argument.parse().map_err(|e| format!("Argument parse error: Cannot convert {next_argument} into short: {e}"))?),
-                        CommandLineValueType::UShort => CommandLineValue::UShort(next_argument.parse().map_err(|e| format!("Argument parse error: Cannot convert {next_argument} into ushort: {e}"))?),
-                        CommandLineValueType::Integer => CommandLineValue::Integer(next_argument.parse().map_err(|e| format!("Argument parse error: Cannot convert {next_argument} into int: {e}"))?),
-                        CommandLineValueType::UInteger => CommandLineValue::UInteger(next_argument.parse().map_err(|e| format!("Argument parse error: Cannot convert {next_argument} into uint: {e}"))?),
-                        CommandLineValueType::Engine => CommandLineValue::Engine(
-                            &ALL_SUPPORTED_ENGINES[ALL_SUPPORTED_ENGINES.binary_search_by(|engine| engine.name.cmp(&next_argument)).map_err(|_| format!("Argument parse error: {next_argument} is not a valid engine."))?]
-                        )
+                        CommandLineValueType::Float => CommandLineValue::Float(next_argument.parse().map_err(|e| format!("Argument parse error: Cannot convert `{next_argument}` into float: {e}"))?),
+                        CommandLineValueType::Short => CommandLineValue::Short(next_argument.parse().map_err(|e| format!("Argument parse error: Cannot convert `{next_argument}` into short: {e}"))?),
+                        CommandLineValueType::UShort => CommandLineValue::UShort(next_argument.parse().map_err(|e| format!("Argument parse error: Cannot convert `{next_argument}` into ushort: {e}"))?),
+                        CommandLineValueType::Integer => CommandLineValue::Integer(next_argument.parse().map_err(|e| format!("Argument parse error: Cannot convert `{next_argument}` into int: {e}"))?),
+                        CommandLineValueType::UInteger => CommandLineValue::UInteger(next_argument.parse().map_err(|e| format!("Argument parse error: Cannot convert `{next_argument}` into uint: {e}"))?),
+                        CommandLineValueType::Engine => CommandLineValue::Engine({
+                            let engine = &ALL_SUPPORTED_ENGINES[ALL_SUPPORTED_ENGINES.binary_search_by(|engine| engine.name.cmp(&next_argument)).map_err(|_| format!("Argument parse error: `{next_argument}` is not a valid engine. Use the list-engines verb for valid engines."))?];
+                            if !engine.build_target {
+                                return Err(format!("Argument parse error: `{}` is not an engine target and cannot be used with this argument. Use the list-engines verb for valid engines.", engine.name))
+                            }
+                            engine
+                        })
                     };
                     values.push(parsed_argument);
                 }

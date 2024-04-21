@@ -33,6 +33,9 @@ pub struct Engine {
     /// BSPs can be loaded external from the actual BSP tag.
     pub external_bsps: bool,
 
+    /// Models can be loaded external from tag data.
+    pub external_models: bool,
+
     /// Model/BSP data uses lossy compression.
     pub compressed_models: bool,
 

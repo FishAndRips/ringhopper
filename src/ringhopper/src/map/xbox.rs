@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use definitions::{CacheFileTagDataHeaderXbox, Scenario, ScenarioType};
+use definitions::{CacheFileTagDataHeaderInternalModels, Scenario, ScenarioType};
 use primitives::crc32::CRC32;
 use primitives::engine::Engine;
 use primitives::error::{OverflowCheck, RinghopperResult};
@@ -44,15 +44,17 @@ impl XboxCacheFile {
         map.tag_data = tag_data_range;
         map.name = header.name.to_string();
 
-        let tag_data_header = CacheFileTagDataHeaderXbox::read_from_map(&map, map.base_memory_address, &DomainType::TagData)?;
+        debug_assert!(!engine.external_models, "external models not supported on Xbox maps (if you triggered this, you broke an engine, or you need to add the support yourself)");
+
+        let tag_data_header = CacheFileTagDataHeaderInternalModels::read_from_map(&map, map.base_memory_address, &DomainType::TagData)?;
         let tag_address: usize = tag_data_header.cache_file_tag_data_header.tag_array_address.into();
         let tag_count = tag_data_header.cache_file_tag_data_header.tag_count as usize;
         if engine.base_memory_address.inferred {
-            map.base_memory_address = tag_address.sub_overflow_checked(CacheFileTagDataHeaderXbox::simple_size())?;
+            map.base_memory_address = tag_address.sub_overflow_checked(CacheFileTagDataHeaderInternalModels::simple_size())?;
         }
         map.scenario_tag = tag_data_header.cache_file_tag_data_header.scenario_tag;
 
-        let (tags, _cached_tags, ids) = super::util::get_all_tags(&mut map, tag_address, tag_count, CacheFileTagDataHeaderXbox::simple_size())?;
+        let (tags, _cached_tags, ids) = super::util::get_all_tags(&mut map, tag_address, tag_count, CacheFileTagDataHeaderInternalModels::simple_size())?;
         map.ids = ids;
         map.tags = tags;
 

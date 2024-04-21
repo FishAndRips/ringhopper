@@ -25,11 +25,6 @@ pub fn verify(args: Args, description: &'static str) -> Result<(), String> {
         .parse(args)?;
 
     let tag = parser.get_extra()[0].clone();
-
-    if !parser.get_engine().build_target {
-        return Err(format!("Engine `{}` is not a valid build target", parser.get_engine().name))
-    }
-
     let data = UserData {
         engine: parser.get_engine(),
         logger: make_stdout_logger()

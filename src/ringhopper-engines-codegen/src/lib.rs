@@ -37,6 +37,7 @@ pub fn generate_ringhopper_engines(_: TokenStream) -> TokenStream {
         let max_script_nodes = engine.max_script_nodes;
         let max_tag_space = engine.max_tag_space;
         let external_bsps = engine.external_bsps;
+        let external_models = engine.external_models;
         let compression_type = match engine.compression_type {
             EngineCompressionType::Uncompressed => "Uncompressed",
             EngineCompressionType::Deflate => "Deflate"
@@ -101,6 +102,7 @@ pub fn generate_ringhopper_engines(_: TokenStream) -> TokenStream {
             max_tag_space: {max_tag_space},
             max_cache_file_size: {max_cache_file_size},
             base_memory_address: {base_memory_address},
+            external_models: {external_models},
             data_alignment: {data_alignment},
             resource_maps: {resource_maps},
             cache_parser: EngineCacheParser::{cache_parser},

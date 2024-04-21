@@ -199,7 +199,7 @@
         "size": 20
     },
     {
-        "name": "CacheFileTagDataHeaderPC",
+        "name": "CacheFileTagDataHeaderExternalModels",
         "type": "struct",
         "fields": [
             {
@@ -231,7 +231,7 @@
         "size": 40
     },
     {
-        "name": "CacheFileTagDataHeaderXbox",
+        "name": "CacheFileTagDataHeaderInternalModels",
         "type": "struct",
         "fields": [
             {

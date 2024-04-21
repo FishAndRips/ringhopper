@@ -13,7 +13,7 @@
         "external_bsps": true,
         "cache_file_version": 13,
         "max_tag_space": "0x4000000",
-        "max_cache_file_size": "0x7FFFFFFF",
+        "max_cache_file_size": "0x80000000",
         "base_memory_address": {
             "value": "0x50000000",
             "inferred": true

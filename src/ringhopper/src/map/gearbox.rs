@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use definitions::{CacheFileTag, CacheFileTagDataHeaderPC, Scenario, ScenarioStructureBSPCompiledHeaderCEA, ScenarioType, Sound, SoundPitchRange};
+use definitions::{CacheFileTag, CacheFileTagDataHeaderExternalModels, Scenario, ScenarioStructureBSPCompiledHeaderCEA, ScenarioType, Sound, SoundPitchRange};
 use primitives::byteorder::LittleEndian;
 use primitives::crc32::CRC32;
 use primitives::engine::Engine;
@@ -8,6 +8,7 @@ use primitives::map::{DomainType, Map, ResourceMapType, Tag};
 use primitives::parse::{SimpleTagData, TagData};
 use primitives::primitive::{Address, ID, ReflexiveC, TagGroup, TagPath};
 use primitives::tag::{IGNORED_CRC32, ParseStrictness, PrimaryTagStructDyn};
+use ringhopper_structs::{CacheFileTagDataHeader, CacheFileTagDataHeaderInternalModels};
 use crate::map::{BSPDomain, extract_tag_from_map, MapTagTree, SizeRange};
 use crate::map::resource::ResourceMap;
 
@@ -58,17 +59,27 @@ impl GearboxCacheFile {
         map.tag_data = tag_data_range;
         map.name = header.name.to_string();
 
-        let tag_data_header = CacheFileTagDataHeaderPC::read_from_map(&map, map.base_memory_address, &DomainType::TagData)?;
-        let tag_address: usize = tag_data_header.cache_file_tag_data_header.tag_array_address.into();
-        let tag_count = tag_data_header.cache_file_tag_data_header.tag_count as usize;
+        let tag_data_header = CacheFileTagDataHeader::read_from_map(&map, map.base_memory_address, &DomainType::TagData)?;
+        let tag_address: usize = tag_data_header.tag_array_address.into();
+        let tag_count = tag_data_header.tag_count as usize;
         if engine.base_memory_address.inferred {
-            map.base_memory_address = tag_address.sub_overflow_checked(CacheFileTagDataHeaderPC::simple_size())?;
+            let header_size = if engine.external_models {
+                CacheFileTagDataHeaderExternalModels::simple_size()
+            }
+            else {
+                CacheFileTagDataHeaderInternalModels::simple_size()
+            };
+            map.base_memory_address = tag_address.sub_overflow_checked(header_size)?;
         }
-        map.scenario_tag = tag_data_header.cache_file_tag_data_header.scenario_tag;
+        map.scenario_tag = tag_data_header.scenario_tag;
 
-        let (mut tags, cached_tags, ids) = super::util::get_all_tags(&mut map, tag_address, tag_count, CacheFileTagDataHeaderPC::simple_size())?;
+        let (mut tags, cached_tags, ids) = super::util::get_all_tags(&mut map, tag_address, tag_count, CacheFileTagDataHeaderExternalModels::simple_size())?;
         map.handle_external_tags(engine, tag_count, &mut tags, &cached_tags)?;
-        map.load_model_data(&tag_data_header)?;
+
+        if engine.external_models {
+            map.load_model_data()?;
+        }
+
         map.ids = ids;
         map.tags = tags;
 
@@ -85,9 +96,12 @@ impl GearboxCacheFile {
 
         // Done one more time to make sure everything's good
         debug_assert!(map.data.get(map.tag_data.clone()).is_some());
-        debug_assert!(map.data.get(map.vertex_data.clone()).is_some());
-        debug_assert!(map.data.get(map.triangle_data.clone()).is_some());
         debug_assert!(map.bsp_data.iter().all(|f| map.data.get(f.range.clone()).is_some()));
+
+        if engine.external_models {
+            debug_assert!(map.data.get(map.vertex_data.clone()).is_some());
+            debug_assert!(map.data.get(map.triangle_data.clone()).is_some());
+        }
 
         let header_crc = header.crc32;
         if header_crc != IGNORED_CRC32 {
@@ -124,7 +138,9 @@ impl GearboxCacheFile {
         Ok(())
     }
 
-    fn load_model_data(&mut self, tag_data_header: &CacheFileTagDataHeaderPC) -> RinghopperResult<()> {
+    fn load_model_data(&mut self) -> RinghopperResult<()> {
+        let tag_data_header = CacheFileTagDataHeaderExternalModels::read_from_map(self, self.base_memory_address, &DomainType::TagData)?;
+
         let model_data_start = tag_data_header.model_data_file_offset as usize;
         let model_data_size = tag_data_header.model_data_size as usize;
         let model_data_end = model_data_start.add_overflow_checked(model_data_size)?;
@@ -264,8 +280,18 @@ impl Map for GearboxCacheFile {
 
             // OK because these are checked on load
             DomainType::TagData => Some((unsafe { self.data.get_unchecked(self.tag_data.clone()) }, self.base_memory_address)),
-            DomainType::ModelVertexData => Some((unsafe { self.data.get_unchecked(self.vertex_data.clone()) }, 0)),
-            DomainType::ModelTriangleData => Some((unsafe { self.data.get_unchecked(self.triangle_data.clone()) }, 0)),
+            DomainType::ModelVertexData => if self.engine.external_models {
+                Some((unsafe { self.data.get_unchecked(self.vertex_data.clone()) }, 0))
+            }
+            else {
+                None
+            },
+            DomainType::ModelTriangleData => if self.engine.external_models {
+                Some((unsafe { self.data.get_unchecked(self.triangle_data.clone()) }, 0))
+            }
+            else {
+                None
+            },
             DomainType::BSP(b) => {
                 let bsp = self.bsp_data.get(*b)?;
                 Some((unsafe { self.data.get_unchecked(bsp.range.clone()) }, bsp.base_address))
@@ -313,8 +339,12 @@ impl Map for GearboxCacheFile {
             }
             hasher.update(self.get_domain(&DomainType::BSP(bsp)).unwrap().0);
         }
-        hasher.update(self.get_domain(&DomainType::ModelVertexData).unwrap().0);
-        hasher.update(self.get_domain(&DomainType::ModelTriangleData).unwrap().0);
+
+        if self.engine.external_models {
+            hasher.update(self.get_domain(&DomainType::ModelVertexData).unwrap().0);
+            hasher.update(self.get_domain(&DomainType::ModelTriangleData).unwrap().0);
+        }
+
         hasher.update(self.get_domain(&DomainType::TagData).unwrap().0);
 
         hasher.crc()

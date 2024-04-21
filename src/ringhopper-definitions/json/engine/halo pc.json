@@ -16,6 +16,7 @@
         "cache_default": true,
         "compression_type": "none",
         "compressed_models": false,
+        "external_models": true,
         "bitmap_options": {
             "swizzled": false,
             "texture_dimension_must_modulo_block_size": false,

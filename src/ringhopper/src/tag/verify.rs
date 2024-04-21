@@ -13,6 +13,7 @@ mod model;
 mod dependencies;
 mod unicode_string_list;
 mod sound;
+mod particle_system;
 
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
@@ -33,6 +34,7 @@ use self::hud_interface::*;
 use self::dependencies::*;
 use self::unicode_string_list::*;
 use self::sound::*;
+use self::particle_system::*;
 use super::dependency::recursively_get_dependencies_for_map;
 
 pub use self::sound::sound_is_playable;
@@ -199,6 +201,7 @@ impl<T: TagTree + Send + Sync + 'static> VerifyContext<T> {
                     TagGroup::UnicodeStringList => verify_unicode_string_list(tag, path, self, &mut result),
                     TagGroup::Bitmap => verify_bitmap(tag, path, self, &mut result),
                     TagGroup::Sound => verify_sound(tag, path, self, &mut result),
+                    TagGroup::ParticleSystem => verify_particle_system(tag, path, self, &mut result),
                     _ => ()
                 }
             },
