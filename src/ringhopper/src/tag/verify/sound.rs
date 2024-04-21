@@ -3,7 +3,7 @@ use std::usize;
 use primitives::{dynamic::DynamicTagDataArray, primitive::TagPath, tag::PrimaryTagStructDyn};
 use ringhopper_structs::{Sound, SoundChannelCount, SoundFormat};
 
-use crate::tag::{sound::get_correct_sound_buffer_size, tree::TagTree};
+use crate::tag::{sound::{sample_rate_to_u32, SoundPermutationMetadata}, tree::TagTree};
 
 use super::{VerifyContext, VerifyResult};
 
@@ -29,7 +29,6 @@ fn verify_sound_buffer_size(sound: &Sound, result: &mut VerifyResult) {
     };
     for (pr, pitch_range) in ziperator!(sound.pitch_ranges) {
         for (pe, permutation) in ziperator!(pitch_range.permutations) {
-            let buff = permutation.buffer_size as usize;
             match permutation.format {
                 SoundFormat::PCM => {
                     let data = permutation.samples.bytes.len();
@@ -50,16 +49,24 @@ fn verify_sound_buffer_size(sound: &Sound, result: &mut VerifyResult) {
                 _ => ()
             }
 
-            let expected_buffer_size = match get_correct_sound_buffer_size(sound, permutation) {
+            let metadata = match SoundPermutationMetadata::read_from_sound_permutation(sound, permutation) {
                 Ok(n) => n,
                 Err(e) => {
-                    result.errors.push(format!("Permutation #{pe} (`{}`) of pitch range #{pr} had an error while finding the buffer size: {e}", permutation.name.as_str()));
+                    result.errors.push(format!("Permutation #{pe} (`{}`) of pitch range #{pr} had an error while querying sound metadata: {e}", permutation.name.as_str()));
                     continue;
                 }
             };
 
-            if expected_buffer_size != buff {
-                result.errors.push(format!("Permutation #{pe} (`{}`) of pitch range #{pr} has an incorrect buffer size (expected {expected_buffer_size}, got {buff} instead)", permutation.name.as_str()));
+            if sound.channel_count != metadata.channel_count {
+                result.errors.push(format!("Permutation #{pe} (`{}`) of pitch range #{pr} has a mismatched channel count (permutation is {}, where sound tag is {})", permutation.name.as_str(), metadata.channel_count, sound.channel_count));
+            }
+
+            if sound.sample_rate != metadata.sample_rate {
+                result.errors.push(format!("Permutation #{pe} (`{}`) of pitch range #{pr} has a mismatched sample rate (permutation is {} Hz, where sound tag is {} Hz)", permutation.name.as_str(), sample_rate_to_u32(metadata.sample_rate), sample_rate_to_u32(sound.sample_rate)));
+            }
+
+            if permutation.buffer_size != metadata.buffer_size {
+                result.errors.push(format!("Permutation #{pe} (`{}`) of pitch range #{pr} has a mismatched buffer size (permutation is {}, where sound tag is {})", permutation.name.as_str(), metadata.buffer_size, permutation.buffer_size));
             }
         }
     }
