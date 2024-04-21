@@ -14,3 +14,4 @@ pub mod bitmap;
 pub mod archive;
 pub mod recover;
 pub mod verify;
+pub mod sound;

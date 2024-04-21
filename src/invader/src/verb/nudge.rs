@@ -1,7 +1,7 @@
 use std::env::Args;
 use cli::CommandLineParser;
 use ringhopper::tag::nudge::{is_nudgeable, nudge_tag};
-use ringhopper::tag::tree::{TagTree};
+use ringhopper::tag::tree::TagTree;
 use threading::{DisplayMode, do_with_threads, ProcessSuccessType};
 use util::make_stdout_logger;
 

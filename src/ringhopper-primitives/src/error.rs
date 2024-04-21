@@ -73,7 +73,7 @@ impl Error {
             Error::FailedToReadFile(file, err) => Cow::Owned(format!("failed to read file `{}`: {err}", file.display())),
             Error::FailedToWriteFile(file, err) => Cow::Owned(format!("failed to write file `{}`: {err}", file.display())),
             Error::MapDataOutOfBounds(explanation) => Cow::Owned(format!("map data out of bounds: {explanation}")),
-            Error::InvalidTagData(explanation) => Cow::Owned(format!("out of bounds index: `{explanation}`")),
+            Error::InvalidTagData(explanation) => Cow::Owned(format!("invalid tag data: `{explanation}`")),
             Error::InvalidTagsDirectory => Cow::Borrowed("invalid tags directory"),
             Error::Other(explanation) => Cow::Owned(explanation.to_owned())
         }

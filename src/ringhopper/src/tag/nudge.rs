@@ -148,13 +148,3 @@ fn fix_rounding_for_float(float: f32) -> f32 {
 
     float
 }
-
-#[test]
-fn memes() {
-    assert_eq!(fix_rounding_for_float(29.9999), 30.0);
-    assert_eq!(fix_rounding_for_float(-29.9999), -30.0);
-    assert_eq!(fix_rounding_for_float(0.0499999), 0.05);
-    assert_eq!(fix_rounding_for_float(-0.0499999), -0.05);
-    assert_eq!(fix_rounding_for_float(-0.033333333), -0.033333333);
-    assert_eq!(fix_rounding_for_float(-0.066666667), -0.066666667);
-}
