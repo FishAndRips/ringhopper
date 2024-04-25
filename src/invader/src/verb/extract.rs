@@ -6,6 +6,7 @@ use ringhopper::definitions::ScenarioType;
 use ringhopper::map::load_map_from_filesystem;
 use ringhopper::primitives::primitive::TagGroup;
 use ringhopper::primitives::tag::ParseStrictness;
+use ringhopper::tag::default::unset_all_defaults_for_tag;
 use ringhopper::tag::tree::{TagTree, VirtualTagsDirectory};
 use threading::{DisplayMode, do_with_threads, ProcessSuccessType};
 use util::make_stdout_logger;
@@ -67,7 +68,8 @@ pub fn extract(args: Args, description: &'static str) -> Result<(), String> {
             return Ok(ProcessSuccessType::Skipped("refusing to extract a non-multiplayer globals tag without --non-mp-globals"))
         }
         let mut tag = context.tags_directory.open_tag_copy(path)?;
-        tag.unset_defaults(); // always unset defaults when doing tag extraction
+        unset_all_defaults_for_tag(tag.as_mut()); // always unset defaults when doing tag extraction
+
         let tag = tag.as_ref();
         user_data.output_tags_dir.write_tag_to_directory(path, tag, 0).map(|r|
             if r {

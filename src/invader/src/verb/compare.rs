@@ -6,6 +6,7 @@ use std::sync::{Arc, Mutex};
 use cli::{CommandLineParser, CommandLineValue, CommandLineValueType, Parameter};
 use ringhopper::error::Error;
 use ringhopper::map::load_map_from_filesystem_as_tag_tree;
+use ringhopper::tag::default::set_all_defaults_for_tag;
 use ringhopper::primitives::byteorder::WriteBytesExt;
 use ringhopper::primitives::primitive::TagPath;
 use ringhopper::primitives::tag::ParseStrictness;
@@ -90,7 +91,7 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
             return Err(format!("Source `{i}` does not exist"))
         }
         else if path.is_file() && path.extension() == Some("map".as_ref()) {
-            should_strip.write_u8(if raw { 0 } else { 1 }).unwrap();
+            should_strip.write_u8(1).unwrap();
             let map = load_map_from_filesystem_as_tag_tree(path, ParseStrictness::Strict)
                 .map_err(|e| format!("Cannot load {path:?} as a cache file: {e}"))?;
             source.push_back(map);
@@ -133,18 +134,18 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
 
         let mut primary = context.tags_directory.open_tag_copy(path)?;
 
-        // Strip any cache-only fields
-        if user_data.should_strip[0] {
-            primary = ringhopper::definitions::read_any_tag_from_file_buffer(&primary.to_tag_file()?, ParseStrictness::Relaxed)?;
-        }
-        if user_data.should_strip[1] {
-            secondary = ringhopper::definitions::read_any_tag_from_file_buffer(&secondary.to_tag_file()?, ParseStrictness::Relaxed)?;
-        }
-
-        // Unset defaults if raw was not requested
         if !user_data.raw {
-            primary.unset_defaults();
-            secondary.unset_defaults();
+            // Strip any cache-only fields
+            if user_data.should_strip[0] {
+                primary = ringhopper::definitions::read_any_tag_from_file_buffer(&primary.to_tag_file()?, ParseStrictness::Relaxed)?;
+            }
+            if user_data.should_strip[1] {
+                secondary = ringhopper::definitions::read_any_tag_from_file_buffer(&secondary.to_tag_file()?, ParseStrictness::Relaxed)?;
+            }
+
+            // Set defaults (functional comparison)
+            set_all_defaults_for_tag(primary.as_mut());
+            set_all_defaults_for_tag(secondary.as_mut());
         }
 
         let differences = compare_tags(primary.as_ref(), secondary.as_ref());

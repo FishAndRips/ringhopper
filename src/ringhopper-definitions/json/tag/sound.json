@@ -320,14 +320,10 @@
                 "read_only": true
             },
             {
-                "name": "minimum distance",
+                "name": "distance bounds",
                 "unit": "world units",
-                "type": "float"
-            },
-            {
-                "name": "maximum distance",
-                "unit": "world units",
-                "type": "float"
+                "type": "float",
+                "bounds": true
             },
             {
                 "name": "skip fraction",
@@ -337,10 +333,6 @@
                 "name": "random pitch bounds",
                 "bounds": true,
                 "type": "float",
-                "default": [
-                    1.0,
-                    1.0
-                ],
                 "comment": "This is the base playback rate of the sound, affecting tempo and pitch."
             },
             {

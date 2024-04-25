@@ -242,23 +242,24 @@
             },
             {
                 "name": "xx moment",
-                "type": "float"
+                "type": "float",
+                "cache_only": true
             },
             {
                 "name": "yy moment",
-                "type": "float"
+                "type": "float",
+                "cache_only": true
             },
             {
                 "name": "zz moment",
-                "type": "float"
+                "type": "float",
+                "cache_only": true
             },
             {
                 "name": "inertial matrix and inverse",
                 "type": "Reflexive",
                 "struct": "PhysicsInertialMatrix",
-                "minimum": 2,
-                "volatile": true,
-                "limit": 2
+                "cache_only": true
             },
             {
                 "name": "powered mass points",
