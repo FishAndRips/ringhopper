@@ -21,6 +21,7 @@ pub fn generate_ringhopper_structs(_: TokenStream) -> TokenStream {
     let mut read_any_map_lines = String::new();
     let mut referenceable_tag_groups_hint = String::new();
     let mut supported_groups_for_engines = String::new();
+    let mut defaultable_tag_groups_hint = String::new();
 
     for (group_name, group) in &definitions.groups {
         let struct_name = &group.struct_name;
@@ -28,7 +29,23 @@ pub fn generate_ringhopper_structs(_: TokenStream) -> TokenStream {
         stream.extend(group.to_token_stream(&definitions));
 
         let mut groups: HashSet<String> = HashSet::new();
-        get_all_tags_this_object_can_depend_on(&definitions, &group.struct_name, &mut groups);
+        let mut has_defaults = false;
+
+        recursively_access_all_objects_in_definition(&definitions, &group.struct_name, |s| {
+            for f in &s.fields {
+                if let StructFieldType::Object(ObjectType::TagReference(r)) = &f.field_type {
+                    for g in &r.allowed_groups {
+                        groups.insert(format!("TagGroup::{}", camel_case(g)));
+                    }
+                }
+
+                has_defaults |= f.default_value.is_some();
+            }
+        });
+
+        if has_defaults {
+            writeln!(&mut defaultable_tag_groups_hint, "TagGroup::{group_name_fixed} => true,").unwrap();
+        }
 
         let mut list = String::new();
         for g in groups {
@@ -91,6 +108,16 @@ pub fn generate_ringhopper_structs(_: TokenStream) -> TokenStream {
         }}
     }}
 
+    /// Return `true` if the tag group uses defaults values.
+    ///
+    /// This is used to hint whether or not `TagDataDefaults::set_defaults` will do anything.
+    pub fn group_has_default_in_definitions(what: TagGroup) -> bool {{
+        match what {{
+            {defaultable_tag_groups_hint}
+            _ => false
+        }}
+    }}
+
     /// Return `true` if the tag group is supported on the target engine.
     pub fn group_supported_on_engine(group: TagGroup, engine: &Engine) -> bool {{
         match group {{
@@ -103,23 +130,22 @@ pub fn generate_ringhopper_structs(_: TokenStream) -> TokenStream {
     stream
 }
 
-fn get_all_tags_this_object_can_depend_on(definitions: &ParsedDefinitions, object: &str, list: &mut HashSet<String>) {
-    let object = &definitions.objects[object];
-    if let NamedObject::Struct(s) = object {
-        for f in &s.fields {
-            if let StructFieldType::Object(n) = &f.field_type {
-                match n {
-                    ObjectType::NamedObject(n) | ObjectType::Reflexive(n) => get_all_tags_this_object_can_depend_on(definitions, n, list),
-                    ObjectType::TagReference(r) => {
-                        for g in &r.allowed_groups {
-                            list.insert(format!("TagGroup::{}", camel_case(g)));
-                        }
-                    },
-                    _ => continue
+fn recursively_access_all_objects_in_definition<P: FnMut(&Struct)>(definitions: &ParsedDefinitions, object: &str, mut predicate: P) {
+    fn recursion<P: FnMut(&Struct)>(definitions: &ParsedDefinitions, object: &str, predicate: &mut P) {
+        let object = &definitions.objects[object];
+        if let NamedObject::Struct(s) = object {
+            predicate(s);
+            for f in &s.fields {
+                if let StructFieldType::Object(n) = &f.field_type {
+                    match n {
+                        ObjectType::NamedObject(n) | ObjectType::Reflexive(n) => recursion(definitions, n, predicate),
+                        _ => continue
+                    }
                 }
             }
         }
     }
+    recursion(definitions, object, &mut predicate);
 }
 
 trait ToTokenStream {
