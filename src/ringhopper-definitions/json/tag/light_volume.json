@@ -114,8 +114,7 @@
                 "name": "perpendicular brightness scale",
                 "type": "float",
                 "minimum": 0.0,
-                "maximum": 1.0,
-                "default": 1.0
+                "maximum": 1.0
             },
             {
                 "name": "parallel brightness scale",
