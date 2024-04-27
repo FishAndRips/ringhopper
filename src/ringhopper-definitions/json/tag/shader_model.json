@@ -315,13 +315,12 @@
         "type": "struct"
     },
     {
-        "name": "ShaderModelUnknown",
+        "name": "ShaderModelBullshit",
         "fields": [
             {
                 "name": "bullshit",
                 "type": "float",
-                "developer_note": "tool.exe will copy this value into a cache file as big endian if it's higher than 0 but lower than 2, otherwise it sets it to 1 as little endian. We treat this as cache only and always set it to 1 when building a map",
-                "cache_only": true
+                "developer_note": "tool.exe will copy this value into a cache file as big endian if it's higher than 0 but lower than 2, otherwise it sets it to 1 as little endian. We treat this as cache only and always set it to 1 when building a map"
             },
             {
                 "type": "pad",
@@ -389,8 +388,9 @@
                 "type": "ShaderModelReflection"
             },
             {
-                "name": "unknown",
-                "type": "ShaderModelUnknown"
+                "name": "bullshit",
+                "type": "ShaderModelBullshit",
+                "cache_only": true
             }
         ],
         "type": "struct",
