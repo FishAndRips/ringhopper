@@ -309,8 +309,7 @@
         "fields": [
             {
                 "name": "weight",
-                "type": "float",
-                "default": 1.0
+                "type": "float"
             },
             {
                 "name": "color",
