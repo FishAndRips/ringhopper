@@ -4,12 +4,14 @@ mod object;
 mod sound;
 mod light;
 mod particle;
+mod light_volume;
 
 use self::{
     light::*,
     object::*,
     sound::*,
-    particle::*
+    particle::*,
+    light_volume::*
 };
 
 use super::object::is_object;
@@ -21,6 +23,7 @@ pub fn set_all_defaults_for_tag(tag: &mut dyn PrimaryTagStructDyn) {
         TagGroup::Sound => set_defaults_for_sound(tag),
         TagGroup::Light => set_defaults_for_light(tag),
         TagGroup::Particle => set_defaults_for_particle(tag),
+        TagGroup::LightVolume => set_defaults_for_light_volume(tag),
         _ => ()
     }
 
@@ -36,6 +39,7 @@ pub fn unset_all_defaults_for_tag(tag: &mut dyn PrimaryTagStructDyn) {
         TagGroup::Sound => unset_defaults_for_sound(tag),
         TagGroup::Light => unset_defaults_for_light(tag),
         TagGroup::Particle => unset_defaults_for_particle(tag),
+        TagGroup::LightVolume => unset_defaults_for_light_volume(tag),
         _ => ()
     }
 
