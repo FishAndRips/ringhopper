@@ -51,18 +51,21 @@ pub fn verify(args: Args, description: &'static str) -> Result<(), String> {
             other => locked.warning_fmt_ln(format_args!("Verified {scenario_path} and found {other} issues:"))
         }
 
-        // First pass: warnings
+        // First pass: pedantic warnings
         for (path, vr) in &everything {
             for i in &vr.pedantic_warnings {
                 locked.minor_warning_fmt_ln(format_args!("WARNING (minor) {path}: {i}"))
             }
+        }
 
+        // Second pass: warnings
+        for (path, vr) in &everything {
             for i in &vr.warnings {
                 locked.warning_fmt_ln(format_args!("WARNING {path}: {i}"))
             }
         }
 
-        // Second pass: errors
+        // Final pass: errors
         for (path, vr) in &everything {
             for i in &vr.errors {
                 locked.error_fmt_ln(format_args!("ERROR {path}: {i}"))

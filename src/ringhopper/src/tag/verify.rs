@@ -14,6 +14,7 @@ mod dependencies;
 mod unicode_string_list;
 mod sound;
 mod particle_system;
+mod particle;
 
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
@@ -25,16 +26,21 @@ use ringhopper_engines::Engine;
 use ringhopper_structs::{Globals, Scenario, ScenarioType};
 use crate::tag::object::is_object;
 use crate::tag::tree::TagTree;
-use self::bitmap::verify_bitmap;
-use self::object::*;
-use self::effect::*;
-use self::globals::*;
-use self::model::*;
-use self::hud_interface::*;
-use self::dependencies::*;
-use self::unicode_string_list::*;
-use self::sound::*;
-use self::particle_system::*;
+
+use self::{
+    bitmap::*,
+    object::*,
+    effect::*,
+    globals::*,
+    model::*,
+    hud_interface::*,
+    particle::*,
+    dependencies::*,
+    unicode_string_list::*,
+    sound::*,
+    particle_system::*
+};
+
 use super::dependency::recursively_get_dependencies_for_map;
 
 pub use self::sound::sound_is_playable;
@@ -202,6 +208,7 @@ impl<T: TagTree + Send + Sync + 'static> VerifyContext<T> {
                     TagGroup::Bitmap => verify_bitmap(tag, path, self, &mut result),
                     TagGroup::Sound => verify_sound(tag, path, self, &mut result),
                     TagGroup::ParticleSystem => verify_particle_system(tag, path, self, &mut result),
+                    TagGroup::Particle => verify_particle(tag, path, self, &mut result),
                     _ => ()
                 }
             },
