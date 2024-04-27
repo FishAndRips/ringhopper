@@ -82,24 +82,8 @@
                 "type": "ShaderTransparentGlassReflectionType"
             },
             {
-                "name": "perpendicular brightness",
-                "minimum": 0.0,
-                "maximum": 1.0,
-                "type": "float"
-            },
-            {
-                "name": "perpendicular tint color",
-                "type": "ColorRGBFloat"
-            },
-            {
-                "name": "parallel brightness",
-                "minimum": 0.0,
-                "maximum": 1.0,
-                "type": "float"
-            },
-            {
-                "name": "parallel tint color",
-                "type": "ColorRGBFloat"
+                "name": "reflection map properties",
+                "type": "ShaderSpecularProperties"
             },
             {
                 "name": "reflection map",

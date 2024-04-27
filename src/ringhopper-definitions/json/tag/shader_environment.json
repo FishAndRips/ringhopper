@@ -403,11 +403,13 @@
             },
             {
                 "name": "perpendicular color",
-                "type": "ColorRGBFloat"
+                "type": "ColorRGBFloat",
+                "comment": "specular tint when the surface is directly facing the camera"
             },
             {
                 "name": "parallel color",
-                "type": "ColorRGBFloat"
+                "type": "ColorRGBFloat",
+                "comment": "specular tint when the surface is facing 90° from the camera"
             },
             {
                 "type": "pad",
@@ -442,13 +444,15 @@
                 "name": "perpendicular brightness",
                 "minimum": 0.0,
                 "maximum": 1.0,
-                "type": "float"
+                "type": "float",
+                "comment": "specular brightness when the surface is directly facing the camera"
             },
             {
                 "name": "parallel brightness",
                 "minimum": 0.0,
                 "maximum": 1.0,
-                "type": "float"
+                "type": "float",
+                "comment": "specular brightness when the surface is facing 90° from the camera"
             },
             {
                 "type": "pad",

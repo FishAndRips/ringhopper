@@ -94,25 +94,8 @@
                 "size": 16
             },
             {
-                "name": "view perpendicular brightness",
-                "minimum": 0.0,
-                "maximum": 1.0,
-                "type": "float"
-            },
-            {
-                "name": "view perpendicular tint color",
-                "type": "ColorRGBFloat"
-            },
-            {
-                "name": "view parallel brightness",
-                "minimum": 0.0,
-                "maximum": 1.0,
-                "type": "float",
-                "default": 1.0
-            },
-            {
-                "name": "view parallel tint color",
-                "type": "ColorRGBFloat"
+                "name": "reflection map properties",
+                "type": "ShaderSpecularProperties"
             },
             {
                 "type": "pad",
