@@ -238,8 +238,7 @@
             {
                 "name": "rotation function scale",
                 "type": "Angle",
-                "comment": "Prior to CEA's newer MCC Halo CE: Mod Tools, this was defaulted to 360 radians (as a bug), thus all Bungie, Gearbox, and early CEA releases had this scaled to 360 radians. As of MCC CEA, it's defaulted to 2*pi instead",
-                "default": 6.283185307179586
+                "developer_note": "Defaults to 360 degrees, but this has to be done manually in code. Prior to CEA's newer MCC Halo CE: Mod Tools, this was defaulted to 360 radians (as a bug), thus all Bungie, Gearbox, and early CEA releases had this scaled to 360 radians. As of MCC CEA, it's defaulted to the correct value, instead."
             },
             {
                 "type": "pad",

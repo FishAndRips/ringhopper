@@ -375,12 +375,12 @@ impl Angle {
     }
 
     /// Create an Angle from radians.
-    pub fn from_radians(rad: f32) -> Self {
-        rad.into()
+    pub const fn from_radians(rad: f32) -> Self {
+        Self { angle: rad }
     }
 
     /// Convert an Angle to radians.
-    pub fn to_radians(self) -> f32 {
+    pub const fn to_radians(self) -> f32 {
         self.angle
     }
 }

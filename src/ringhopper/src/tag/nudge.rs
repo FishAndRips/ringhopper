@@ -129,16 +129,20 @@ fn nudge(float: &mut f32, was_nudged_thus_far: &mut bool) {
     }
 }
 
-fn fix_rounding_for_float(float: f32) -> f32 {
+/// Fix the rounding for a floating point number.
+pub(crate) fn fix_rounding_for_float(float: f32) -> f32 {
+    // Too much rounding error.
     if float < -32766.0 || float > 32766.0 {
         return float
     }
 
+    // Are we close to an integer?
     let nearest_int = ((float + 0.001 * float.signum()) as i16) as f32;
     if (nearest_int - float).abs() < 0.0005 {
         return nearest_int
     }
 
+    // Try thousandths then!
     let float_thousand = float * 1000.0;
     let nearest_thousandth_int = (float_thousand + 0.001 * float.signum()) as i32;
     let nearest_thousandth = nearest_thousandth_int as f32;

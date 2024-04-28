@@ -7,6 +7,7 @@ mod light;
 mod particle;
 mod light_volume;
 mod shader;
+mod lens_flare;
 
 use self::{
     light::*,
@@ -14,7 +15,8 @@ use self::{
     sound::*,
     particle::*,
     light_volume::*,
-    shader::*
+    shader::*,
+    lens_flare::*
 };
 
 use super::object::is_object;
@@ -49,6 +51,7 @@ fn get_default_fns(group: TagGroup) -> [Option<DefaultFnHolder>; 3] {
         TagGroup::ShaderTransparentChicago => Some((set_defaults_for_shader_transparent_chicago, unset_defaults_for_shader_transparent_chicago)),
         TagGroup::ShaderTransparentChicagoExtended => Some((set_defaults_for_shader_transparent_chicago_extended, unset_defaults_for_shader_transparent_chicago_extended)),
         TagGroup::ShaderTransparentGeneric => Some((set_defaults_for_shader_transparent_generic, unset_defaults_for_shader_transparent_generic)),
+        TagGroup::LensFlare => Some((set_defaults_for_lens_flare, unset_defaults_for_lens_flare)),
         _ => None
     };
 
