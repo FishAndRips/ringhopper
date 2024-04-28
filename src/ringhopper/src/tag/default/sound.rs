@@ -51,23 +51,19 @@ fn set_or_unset_defaults_for_sound(tag: &mut dyn PrimaryTagStructDyn, undefault:
     for pitch_range in &mut sound.pitch_ranges {
         let actual_natural_pitch = if pitch_range.natural_pitch <= 0.0 { 1.0 } else { pitch_range.natural_pitch };
 
-        // If the lower value is greater than actual_natural_pitch, or upper is less than it, those respective value(s)
-        // get set to actual_natural_pitch.
+        // Reverse-clamp bend bounds
         if undefault {
-            if pitch_range.bend_bounds.lower > actual_natural_pitch || pitch_range.bend_bounds.lower == actual_natural_pitch {
-                pitch_range.bend_bounds.lower = 0.0;
-            }
-            if pitch_range.bend_bounds.upper < actual_natural_pitch || pitch_range.bend_bounds.upper == actual_natural_pitch {
+            if pitch_range.bend_bounds.upper <= actual_natural_pitch && pitch_range.bend_bounds.lower <= 0.0 {
                 pitch_range.bend_bounds.upper = 0.0;
             }
         }
         else {
-            if pitch_range.bend_bounds.lower > actual_natural_pitch || pitch_range.bend_bounds.lower == 0.0 {
-                pitch_range.bend_bounds.lower = actual_natural_pitch;
-            }
-            if pitch_range.bend_bounds.upper < actual_natural_pitch || pitch_range.bend_bounds.upper == 0.0 {
+            if pitch_range.bend_bounds.upper < actual_natural_pitch {
                 pitch_range.bend_bounds.upper = actual_natural_pitch;
             }
+        }
+        if pitch_range.bend_bounds.lower > actual_natural_pitch {
+            pitch_range.bend_bounds.lower = actual_natural_pitch;
         }
 
         let actual_permutation_count = if use_subpermutations {
