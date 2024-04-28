@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use crc64::crc64;
 use primitives::error::{Error, RinghopperResult};
-use primitives::primitive::{HALO_PATH_SEPARATOR, TagGroup, TagPath};
+use primitives::primitive::{TagGroup, TagPath, TagReference, HALO_PATH_SEPARATOR};
 use primitives::tag::{ParseStrictness, PrimaryTagStructDyn};
 
 /// Tag tree implementation for traversing and loading/saving tags.
@@ -58,6 +58,7 @@ pub trait TagTree {
 /// # Examples:
 /// - `*` matches anything as a catch-all
 /// - `*.bitmap` matches any bitmap if `group` is unset (if group is set, it matches any `.bitmap.<group>`)
+#[derive(Clone)]
 pub struct TagFilter {
     filter: String,
     group: Option<TagGroup>
@@ -87,6 +88,11 @@ impl TagFilter {
             filter: fixed,
             group
         }
+    }
+
+    /// Return the group, if any.
+    pub const fn group(&self) -> Option<TagGroup> {
+        self.group
     }
 
     /// Test that the path passes the filter.
@@ -125,19 +131,67 @@ impl TagFilter {
         }
     }
 
+    /// Test that the tag reference passes the filter.
+    ///
+    /// If the filter has a group set, it will also match null references.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ringhopper::tag::tree::TagFilter;
+    /// use ringhopper::primitives::primitive::{TagPath, TagGroup, TagReference};
+    ///
+    /// let all_models = TagFilter::new("*", Some(TagGroup::Model));
+    ///
+    /// let model_reference_set = TagReference::Set(TagPath::from_path("weapons\\pistol\\pistol.model").expect("should work"));
+    /// assert!(all_models.reference_matches(&model_reference_set), "set model");
+    ///
+    /// let model_reference_null = TagReference::Null(TagGroup::Model);
+    /// assert!(all_models.reference_matches(&model_reference_null), "null model");
+    ///
+    /// let gbxmodel_reference_set = TagReference::Set(TagPath::from_path("weapons\\pistol\\pistol.gbxmodel").expect("should work"));
+    /// assert!(!all_models.reference_matches(&gbxmodel_reference_set), "set gbxmodel");
+    ///
+    /// let gbxmodel_reference_null = TagReference::Null(TagGroup::GBXModel);
+    /// assert!(!all_models.reference_matches(&gbxmodel_reference_null), "unset gbxmodel");
+    /// ```
+    pub fn reference_matches(&self, reference: &TagReference) -> bool {
+        match reference {
+            TagReference::Null(g) => {
+                if self.group.is_some_and(|f| f != *g) {
+                    return false;
+                }
+                Self::filter_passes_raw(&self.filter, "")
+            },
+            TagReference::Set(p) => self.passes(p)
+        }
+    }
+
     fn filter_passes_raw(mut filter: &str, mut what: &str) -> bool {
         loop {
             let filter_first = filter.chars().next();
             let what_first = what.chars().next();
 
-            if filter_first.is_none() && what_first.is_none() {
-                return true
+            // Empty matches if both are empty
+            if filter_first.is_none() {
+                return what_first.is_none()
             }
-            else if filter_first.is_none() || what_first.is_none() {
+
+            // Remove successive *s
+            let filter_first = filter_first.unwrap();
+            if filter_first == '*' {
+                let next_unsuccessive_asterisk = match filter.find(|f| f != filter_first) {
+                    Some(n) => n - 1,
+                    None => return true // only asterisks left, so everything is matched
+                };
+                filter = &filter[next_unsuccessive_asterisk..];
+            }
+
+            // If the test string is now empty, bail
+            if what_first.is_none() {
                 return false
             }
 
-            let filter_first = filter_first.unwrap();
             let what_first = what_first.unwrap();
 
             filter = &filter[1..];
@@ -147,9 +201,6 @@ impl TagFilter {
                 continue
             }
             else if filter_first == '*' {
-                while filter.chars().next() == Some('*') {
-                    filter = &filter[1..]
-                }
                 if filter.is_empty() {
                     return true
                 }

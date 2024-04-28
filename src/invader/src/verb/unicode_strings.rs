@@ -9,7 +9,7 @@ use threading::{DisplayMode, do_with_threads, ProcessSuccessType};
 use util::{make_stdout_logger, read_file};
 
 pub fn unicode_strings(args: Args, description: &'static str) -> Result<(), String> {
-    let parser = CommandLineParser::new(description, "<tag*> [args]")
+    let parser = CommandLineParser::new(description, "<unicode_string_list*> [args]")
         .add_tags(false)
         .add_data()
         .add_help()

@@ -412,24 +412,49 @@ impl ToTokenStream for Struct {
         let mut field_list = String::new();
         let mut getter = String::new();
         let mut getter_mut = String::new();
+        let mut metadata_matcher = String::new();
 
-        let mut tag_reference_matcher = String::new();
-        if !simple_struct {
-            for i in 0..field_count {
-                let field = &self.fields[i];
-                if field.flags.exclude {
-                    continue;
-                }
-                if let StructFieldType::Object(ObjectType::TagReference(reference)) = &field.field_type {
-                    let mut list = String::new();
-                    for g in &reference.allowed_groups {
-                        list += &format!("TagGroup::{},", camel_case(g));
-                    }
+        for i in 0..field_count {
+            let field = &self.fields[i];
 
-                    let field_name = &fields_with_matchers[i];
-                    writeln!(&mut tag_reference_matcher, "\"{field_name}\" => Some(&[{list}]),").unwrap();
-                }
+            if field.flags.exclude {
+                continue;
             }
+
+            match &field.field_type {
+                StructFieldType::Object(_) => (),
+                _ => continue
+            };
+
+            let read_only = field.flags.uneditable_in_editor;
+            let allowed_references = if let StructFieldType::Object(ObjectType::TagReference(reference)) = &field.field_type {
+                let mut list = String::new();
+                for g in &reference.allowed_groups {
+                    list += &format!("TagGroup::{},", camel_case(g));
+                }
+                format!("Some(&[{list}])")
+            }
+            else {
+                "None".to_owned()
+            };
+
+            let comment = if let Some(n) = &field.flags.comment {
+                let r = n.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n");
+                format!("Some(\"{r}\")")
+            }
+            else {
+                "None".to_owned()
+            };
+
+            let metadata = format!("
+TagFieldMetadata {{
+    comment: {comment},
+    read_only: {read_only},
+    allowed_references: {allowed_references}
+}}");
+
+            let field_name = &fields_with_matchers[i];
+            writeln!(&mut metadata_matcher, "\"{field_name}\" => Some({metadata}),").unwrap();
         }
 
         // Tag I/O
@@ -662,16 +687,16 @@ impl ToTokenStream for Struct {
                 }}
             }}
 
+            fn get_metadata_for_field(&self, field: &str) -> Option<TagFieldMetadata> {{
+                match field {{
+                    {metadata_matcher}
+                    _ => None
+                }}
+            }}
+
             fn name_of_field_from_ptr(&self, field: *const dyn DynamicTagData) -> &'static str {{
                 {reverse_field_matcher}
                 panic!(\"field does not point to anything in this block\");
-            }}
-
-            fn allowed_groups_for_tag_reference_field(&self, field: &str) -> Option<&'static [TagGroup]> {{
-                match field {{
-                    {tag_reference_matcher}
-                    _ => None
-                }}
             }}
 
             fn fields(&self) -> &'static [&'static str] {{
@@ -773,6 +798,10 @@ impl ToTokenStream for Enum {
             }}
 
             fn get_field_mut(&mut self, field: &str) -> Option<&mut dyn DynamicTagData> {{
+                None
+            }}
+
+            fn get_metadata_for_field(&self, field: &str) -> Option<TagFieldMetadata> {{
                 None
             }}
 
@@ -912,6 +941,11 @@ impl ToTokenStream for Bitfield {
                     {getter_mut}
                     _ => None
                 }}
+            }}
+
+            fn get_metadata_for_field(&self, field: &str) -> Option<TagFieldMetadata> {{
+                // TODO
+                None
             }}
 
             fn fields(&self) -> &'static [&'static str] {{

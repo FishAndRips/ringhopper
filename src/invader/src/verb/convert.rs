@@ -3,12 +3,12 @@ use cli::CommandLineParser;
 use ringhopper::error::Error;
 use ringhopper::primitives::primitive::TagGroup;
 use ringhopper::tag::convert::get_tag_conversion_fn;
-use ringhopper::tag::tree::{TagTree};
+use ringhopper::tag::tree::TagTree;
 use threading::{DisplayMode, do_with_threads, ProcessSuccessType};
 use util::make_stdout_logger;
 
 pub fn convert(args: Args, description: &'static str) -> Result<(), String> {
-    let parser = CommandLineParser::new(description, "<tag*> <group> [args]")
+    let parser = CommandLineParser::new(description, "<tag.group*> <group> [args]")
         .add_tags(false)
         .add_overwrite()
         .add_help()

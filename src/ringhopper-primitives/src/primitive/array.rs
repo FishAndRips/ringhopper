@@ -33,6 +33,10 @@ impl<T: DynamicTagData> DynamicTagData for Bounds<T> {
         }
     }
 
+    fn get_metadata_for_field(&self, _field: &str) -> Option<TagFieldMetadata> {
+        None
+    }
+
     fn fields(&self) -> &'static [&'static str] {
         &["lower", "upper"]
     }
@@ -131,6 +135,10 @@ impl<T: DynamicTagData + SimpleTagData + Sized, const U: usize> DynamicTagData f
     }
 
     fn get_field_mut(&mut self, _field: &str) -> Option<&mut dyn DynamicTagData> {
+        None
+    }
+
+    fn get_metadata_for_field(&self, _field: &str) -> Option<TagFieldMetadata> {
         None
     }
 

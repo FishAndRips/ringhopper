@@ -22,7 +22,7 @@ struct UserData {
 }
 
 pub fn recover(args: Args, description: &'static str) -> Result<(), String> {
-    let parser = CommandLineParser::new(description, "<tag*> [args]")
+    let parser = CommandLineParser::new(description, "<tag.group*> [args]")
         .add_tags(false)
         .add_data()
         .add_help()

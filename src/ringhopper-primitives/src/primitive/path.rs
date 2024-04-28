@@ -425,6 +425,14 @@ impl TagReference {
             Self::Set(p) => Some(&p)
         }
     }
+
+    /// Replace the group in the tag reference.
+    pub fn set_group(&mut self, new_group: TagGroup) {
+        match self {
+            TagReference::Null(_) => *self = TagReference::Null(new_group),
+            TagReference::Set(s) => s.set_group(new_group)
+        }
+    }
 }
 
 impl From<TagPath> for TagReference {
@@ -538,6 +546,10 @@ impl DynamicTagData for TagReference {
 
     fn as_any_mut(&mut self) -> &mut dyn Any {
         self
+    }
+
+    fn get_metadata_for_field(&self, _field: &str) -> Option<crate::dynamic::TagFieldMetadata> {
+        None
     }
 
     fn data_type(&self) -> DynamicTagDataType {

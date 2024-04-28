@@ -5,7 +5,7 @@ use crate::parse::*;
 use crate::error::*;
 use byteorder::*;
 use std::fmt::Display;
-use crate::dynamic::{DynamicReflexive, DynamicTagData, DynamicTagDataArray, DynamicTagDataType, SimplePrimitiveType};
+use crate::dynamic::{DynamicReflexive, DynamicTagData, DynamicTagDataArray, DynamicTagDataType, SimplePrimitiveType, TagFieldMetadata};
 use crate::map::{DomainType, Map, ResourceMapType};
 
 /// 16-bit index type
@@ -472,6 +472,10 @@ macro_rules! make_data_dynamic_tag_data {
                 None
             }
 
+            fn get_metadata_for_field(&self, _field: &str) -> Option<TagFieldMetadata> {
+                None
+            }
+
             fn fields(&self) -> &'static [&'static str] {
                 &[]
             }
@@ -797,6 +801,10 @@ impl<T: DynamicTagData + Sized + Default + Clone> DynamicTagData for Reflexive<T
     }
 
     fn get_field_mut(&mut self, _field: &str) -> Option<&mut dyn DynamicTagData> {
+        None
+    }
+
+    fn get_metadata_for_field(&self, _field: &str) -> Option<TagFieldMetadata> {
         None
     }
 

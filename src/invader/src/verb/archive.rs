@@ -12,7 +12,7 @@ use util::make_stdout_logger;
 use crate::threading::{do_with_threads, DisplayMode, ProcessSuccessType};
 
 pub fn archive_tag(args: Args, description: &'static str) -> Result<(), String> {
-    let parser = CommandLineParser::new(description, "<tag> [args]")
+    let parser = CommandLineParser::new(description, "<tag.group> [args]")
         .add_tags(false)
         .add_help()
         .add_overwrite()

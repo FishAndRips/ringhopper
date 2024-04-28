@@ -3,32 +3,94 @@ use definitions::{get_all_referenceable_tag_groups_for_group, Scenario, Scenario
 use primitives::dynamic::DynamicTagData;
 use primitives::engine::Engine;
 use primitives::error::{Error, RinghopperResult};
-use primitives::primitive::{TagPath, TagReference};
+use primitives::primitive::{TagGroup, TagPath, TagReference};
 use crate::tag::tree::{iterate_through_all_tags, TagTree};
 
-/// Get all dependencies for a block of tag data or a tag itself.
-pub fn get_tag_dependencies_for_block<T: DynamicTagData + ?Sized>(data: &T) -> HashSet<TagPath> {
-    let mut result = HashSet::new();
-
-    fn iterate_dependencies_recursively<T: DynamicTagData + ?Sized>(data: &T, result: &mut HashSet<TagPath>) {
+/// Iterate through each [`TagReference`] of a block.
+pub fn for_each_dependency<T: DynamicTagData + ?Sized, P: FnMut(&TagReference)>(data: &T, mut predicate: P) {
+    fn recursion<T: DynamicTagData + ?Sized, P: FnMut(&TagReference)>(data: &T, predicate: &mut P) {
         for field in data.fields() {
             let field = data.get_field(field).unwrap();
-            if let Some(TagReference::Set(p)) = field.as_any().downcast_ref::<TagReference>() {
-                result.insert(p.clone());
+            if let Some(p) = field.as_any().downcast_ref::<TagReference>() {
+                predicate(p);
                 continue;
             }
             if let Some(arr) = field.as_array() {
                 for i in 0..arr.len() {
                     let item = arr.get_at_index(i).unwrap();
-                    iterate_dependencies_recursively(item, result);
+                    recursion(item, predicate);
                 }
             }
-            iterate_dependencies_recursively(field, result);
+            recursion(field, predicate);
         }
     }
+    recursion(data, &mut predicate);
+}
 
-    iterate_dependencies_recursively(data, &mut result);
+/// Mutably iterate through each [`TagReference`] of a block.
+fn for_each_dependency_mut<P: FnMut(&'static [TagGroup], &mut TagReference)>(data: &mut dyn DynamicTagData, access_read_only_fields: bool, mut predicate: P) {
+    fn recursion<P: FnMut(&'static [TagGroup], &mut TagReference)>(data: &mut dyn DynamicTagData, predicate: &mut P, access_read_only_fields: bool) {
+        for field_name in data.fields() {
+            let metadata = match data.get_metadata_for_field(field_name) {
+                Some(n) => n,
+                None => continue
+            };
+
+            if !access_read_only_fields && metadata.read_only {
+                continue;
+            }
+
+            let field = data.get_field_mut(field_name).unwrap();
+            if let Some(p) = field.as_any_mut().downcast_mut::<TagReference>() {
+                predicate(metadata.allowed_references.unwrap(), p);
+                continue;
+            }
+            if let Some(arr) = field.as_array_mut() {
+                for i in 0..arr.len() {
+                    let item = arr.get_at_index_mut(i).unwrap();
+                    recursion(item, predicate, access_read_only_fields);
+                }
+            }
+            recursion(field, predicate, access_read_only_fields);
+        }
+    }
+    recursion(data, &mut predicate, access_read_only_fields);
+}
+
+/// Get all dependencies for a block of tag data or a tag itself.
+pub fn get_tag_dependencies_for_block<T: DynamicTagData + ?Sized>(data: &T) -> HashSet<TagPath> {
+    let mut result = HashSet::new();
+    for_each_dependency(data, |dependency| {
+        if let TagReference::Set(p) = dependency {
+            result.insert(p.clone());
+        }
+    });
     result
+}
+
+pub fn refactor_groups_for_block<T: TagTree>(data: &mut dyn DynamicTagData, from: TagGroup, to: TagGroup, tag_tree: &T, access_read_only_fields: bool) -> bool {
+    let mut anything_done = false;
+
+    for_each_dependency_mut(data, access_read_only_fields, |allowed, dependency| {
+        let allowed = allowed.contains(&to);
+
+        if !allowed || dependency.group() != from {
+            return;
+        }
+
+        if let TagReference::Set(p) = dependency {
+            let mut new_path = p.clone();
+            new_path.set_group(to);
+            if !tag_tree.contains(&new_path) {
+                return;
+            }
+        }
+
+        dependency.set_group(to);
+        anything_done = true;
+    });
+
+    anything_done
 }
 
 /// Get all dependencies for a tag.

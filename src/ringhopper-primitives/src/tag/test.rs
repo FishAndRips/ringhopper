@@ -57,6 +57,10 @@ impl DynamicTagData for UnicodeStringList {
         todo!()
     }
 
+    fn get_metadata_for_field(&self, _field: &str) -> Option<TagFieldMetadata> {
+        todo!()
+    }
+
     fn fields(&self) -> &'static [&'static str] {
         todo!()
     }

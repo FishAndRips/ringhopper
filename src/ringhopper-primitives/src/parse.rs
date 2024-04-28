@@ -272,6 +272,10 @@ impl <T: SimplePrimitive + SimpleTagData + Sized + 'static> DynamicTagData for T
         None
     }
 
+    fn get_metadata_for_field(&self, _field: &str) -> Option<crate::dynamic::TagFieldMetadata> {
+        None
+    }
+
     fn fields(&self) -> &'static [&'static str] {
         &[]
     }

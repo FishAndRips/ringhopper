@@ -6,7 +6,7 @@ use threading::{DisplayMode, do_with_threads, ProcessSuccessType};
 use util::make_stdout_logger;
 
 pub fn nudge(args: Args, description: &'static str) -> Result<(), String> {
-    let parser = CommandLineParser::new(description, "<tag*> [args]")
+    let parser = CommandLineParser::new(description, "<tag.group*> [args]")
         .add_tags(false)
         .add_help()
         .add_cow_tags()

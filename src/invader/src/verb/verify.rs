@@ -17,7 +17,7 @@ struct UserData {
 
 pub fn verify(args: Args, description: &'static str) -> Result<(), String> {
     let parser = CommandLineParser::new(description, "<scenario*> [args]")
-        .add_tags(false)
+        .add_tags(true)
         .add_help()
         .add_engine()
         .add_jobs()

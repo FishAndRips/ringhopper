@@ -15,6 +15,9 @@ pub trait DynamicTagData: TagData + 'static {
     /// Returns `None` if the field does not exist.
     fn get_field_mut(&mut self, field: &str) -> Option<&mut dyn DynamicTagData>;
 
+    /// Get all metadata for the field.
+    fn get_metadata_for_field(&self, field: &str) -> Option<TagFieldMetadata>;
+
     /// Get all available fields in the object.
     fn fields(&self) -> &'static [&'static str];
 
@@ -31,12 +34,6 @@ pub trait DynamicTagData: TagData + 'static {
     #[allow(unused_variables)]
     fn name_of_field_from_ptr(&self, field: *const dyn DynamicTagData) -> &'static str {
         panic!("not a tag data block")
-    }
-
-    /// Get all allowed groups for the tag reference of a given field name.
-    #[allow(unused_variables)]
-    fn allowed_groups_for_tag_reference_field(&self, field: &str) -> Option<&'static [TagGroup]> {
-        None
     }
 
     /// Get the `DynamicTagData` object as a mutable `DynamicReflexive` reference.
@@ -73,6 +70,13 @@ pub trait DynamicTagData: TagData + 'static {
     fn as_enum_mut(&mut self) -> Option<&mut dyn DynamicEnum> {
         None
     }
+}
+
+#[derive(Copy, Clone, Default)]
+pub struct TagFieldMetadata {
+    pub comment: Option<&'static str>,
+    pub read_only: bool,
+    pub allowed_references: Option<&'static [TagGroup]>
 }
 
 /// Trait for dynamically accessing an array of fields, including reflexives.

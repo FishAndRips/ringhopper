@@ -255,6 +255,25 @@ impl CommandLineParser {
         self
     }
 
+    pub fn add_no_safeguards(mut self) -> Self {
+        let p = Parameter {
+            values: None,
+            name: "no-safeguards",
+            short: Some('n'),
+            description: "Allow all tag data to be edited (proceed at your own risk)",
+            default_values: None,
+            value_type: None,
+            required: false,
+            value_count: 0,
+            usage: "",
+            multiple: false,
+        };
+
+        assert!(self.standard_parameters.get(&StandardParameterType::NoSafeguards).is_none());
+        self.standard_parameters.insert(StandardParameterType::NoSafeguards, p);
+        self
+    }
+
     pub fn add_jobs(mut self) -> Self {
         let p = Parameter {
             values: None,
@@ -556,6 +575,17 @@ impl CommandLineArgs {
             .path()
     }
 
+    /// Get the No Safeguards parameter.
+    ///
+    /// Panics if No Safeguards was not added.
+    pub fn get_no_safeguards(&self) -> bool {
+        self.standard_parameters
+            .get(&StandardParameterType::NoSafeguards)
+            .expect("no_safeguards not added as standard parameter")
+            .values
+            .is_some()
+    }
+
     /// Get the Overwrite parameter.
     ///
     /// Panics if Overwrite was not added.
@@ -653,6 +683,7 @@ enum StandardParameterType {
     Overwrite,
     Jobs,
     Engine,
+    NoSafeguards,
 }
 
 #[derive(Debug, Clone)]

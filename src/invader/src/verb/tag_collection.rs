@@ -12,7 +12,7 @@ use util::read_file;
 macro_rules! make_tag_collection_fn {
     ($name:tt, $tag_struct:tt) => {
         pub fn $name(args: Args, description: &'static str) -> Result<(), String> {
-            let parser = CommandLineParser::new(description, "<tag*> [args]")
+            let parser = CommandLineParser::new(description, "<tag_collection*> [args]")
                 .add_tags(false)
                 .add_data()
                 .add_help()

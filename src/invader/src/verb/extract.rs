@@ -20,7 +20,7 @@ pub fn extract(args: Args, description: &'static str) -> Result<(), String> {
             "filter",
             'f',
             "Filter tags to extract. By default, all tags are extracted.",
-            "<param>",
+            "<tag.group*>",
             Some(CommandLineValueType::String),
             1,
             Some(vec![CommandLineValue::String("*".to_owned())]),

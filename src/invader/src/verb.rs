@@ -21,6 +21,7 @@ mod plate;
 mod archive;
 mod recover;
 mod verify;
+mod refactor_groups;
 
 pub struct Verb {
     pub name: &'static str,
@@ -48,6 +49,7 @@ pub const ALL_VERBS: &'static [Verb] = &[
     Verb::new("nudge", "Fix floating point precision errors from tag extraction", nudge::nudge),
     Verb::new("plate", "Generate color plates for bitmaps", plate::plate),
     Verb::new("recover", "Recover data from tags", recover::recover),
+    Verb::new("refactor-groups", "Batch refactor dependencies by tag group if the new dependency exists", refactor_groups::refactor_groups),
     Verb::new("strip", "Clean tags", strip::strip),
     Verb::new("tag-collection", "Generate tag_collection tags from data", tag_collection::tag_collection),
     Verb::new("ui-widget-collection", "Generate ui_widget_collection tags from data", tag_collection::ui_widget_collection),

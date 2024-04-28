@@ -28,8 +28,11 @@ pub fn verify_dependencies<T: TagTree + Send + Sync>(tag: &dyn PrimaryTagStructD
             let field = data.get_field(field_name).unwrap();
             if let Some(TagReference::Set(path)) = field.as_any().downcast_ref::<TagReference>() {
                 let group = path.group();
-
-                let allowed = data.allowed_groups_for_tag_reference_field(field_name).unwrap();
+                let metadata = match data.get_metadata_for_field(field_name) {
+                    Some(n) => n,
+                    None => continue
+                };
+                let allowed = metadata.allowed_references.expect("should have a list of allowed_references");
 
                 if !allowed.contains(&group) {
                     let stack_path = make_stack_path();
