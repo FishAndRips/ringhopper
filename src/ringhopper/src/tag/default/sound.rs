@@ -62,10 +62,10 @@ fn set_or_unset_defaults_for_sound(tag: &mut dyn PrimaryTagStructDyn, undefault:
             }
         }
         else {
-            if pitch_range.bend_bounds.lower > actual_natural_pitch || pitch_range.bend_bounds.lower == 0.0 {
+            if pitch_range.bend_bounds.lower > actual_natural_pitch {
                 pitch_range.bend_bounds.lower = actual_natural_pitch;
             }
-            if pitch_range.bend_bounds.upper < actual_natural_pitch || pitch_range.bend_bounds.upper == 0.0 {
+            if pitch_range.bend_bounds.upper < actual_natural_pitch {
                 pitch_range.bend_bounds.upper = actual_natural_pitch;
             }
         }
