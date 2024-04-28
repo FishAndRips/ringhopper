@@ -173,8 +173,7 @@
                 "name": "gain",
                 "minimum": 0.0,
                 "maximum": 1.0,
-                "type": "float",
-                "default": 1.0
+                "type": "float"
             },
             {
                 "name": "format",

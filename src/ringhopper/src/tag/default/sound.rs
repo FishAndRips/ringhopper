@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use primitives::error::{Error, RinghopperResult};
 use primitives::primitive::{Bounds, TagGroup};
 use primitives::tag::PrimaryTagStructDyn;
@@ -44,6 +46,77 @@ fn set_or_unset_defaults_for_sound(tag: &mut dyn PrimaryTagStructDyn, undefault:
         }
     };
 
+    let use_subpermutations = sound.flags.split_long_sound_into_permutations;
+
+    for pitch_range in &mut sound.pitch_ranges {
+        let actual_permutation_count = if use_subpermutations {
+            pitch_range.actual_permutation_count as usize
+        }
+        else {
+            pitch_range.permutations.items.len()
+        };
+
+        // Bad value set
+        if pitch_range.permutations.items.len() < actual_permutation_count {
+            continue;
+        }
+
+        // Default/undefault the primary fields
+        for i in &mut pitch_range.permutations.items[..actual_permutation_count] {
+            default(&mut [&mut i.gain], &[1.0])
+        }
+
+        if use_subpermutations {
+            if undefault {
+                let subpermutations = match pitch_range.permutations.items.get_mut(actual_permutation_count..) {
+                    Some(n) => n,
+                    None => continue
+                };
+                for i in subpermutations {
+                    i.gain = 0.0;
+                }
+            }
+            else {
+                for p in 0..actual_permutation_count {
+                    let main = &pitch_range.permutations.items[p];
+                    let gain = main.gain;
+
+                    let mut found: HashMap<u16, bool> = HashMap::new();
+                    let mut next = main.next_permutation_index;
+                    loop {
+                        // Done
+                        let index = match next {
+                            Some(n) => n,
+                            None => break
+                        };
+
+                        // Infinite loop
+                        if found.contains_key(&index) {
+                            break;
+                        }
+
+                        found.insert(index, true);
+                        match pitch_range.permutations.items.get_mut(index as usize) {
+                            Some(n) => {
+                                n.gain = gain;
+                                next = n.next_permutation_index;
+                            }
+                            None => break
+                        };
+                    }
+                }
+            }
+        }
+        else if actual_permutation_count < u16::MAX as usize {
+            if undefault {
+                pitch_range.actual_permutation_count = 0;
+            }
+            else {
+                pitch_range.actual_permutation_count = actual_permutation_count as u16;
+            }
+        }
+    }
+
     default(&mut [&mut sound.distance_bounds.lower], &[defaults.lower]);
     default(&mut [&mut sound.distance_bounds.upper], &[defaults.upper]);
     default(&mut [&mut sound.random_pitch_bounds.lower], &[1.0]);
@@ -51,6 +124,8 @@ fn set_or_unset_defaults_for_sound(tag: &mut dyn PrimaryTagStructDyn, undefault:
     default(&mut [&mut sound.zero_skip_fraction_modifier, &mut sound.one_skip_fraction_modifier], &[1.0, 1.0]);
     default(&mut [&mut sound.zero_pitch_modifier, &mut sound.one_pitch_modifier], &[1.0, 1.0]);
     default(&mut [&mut sound.zero_gain_modifier, &mut sound.one_gain_modifier], &[default_zero_gain_modifier_for_class(sound.sound_class), 1.0]);
+
+
 }
 
 fn default_zero_gain_modifier_for_class(sound_class: SoundClass) -> f32 {
