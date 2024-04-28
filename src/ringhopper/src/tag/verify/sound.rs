@@ -12,6 +12,24 @@ pub fn verify_sound<T: TagTree + Send + Sync>(tag: &dyn PrimaryTagStructDyn, _pa
     verify_sound_permutation_indices(sound, result);
     verify_sound_formats(sound, result);
     verify_sound_buffer_size(sound, result);
+
+    for (p, pitch_range) in ziperator!(sound.pitch_ranges) {
+        let actual_natural_pitch = if pitch_range.natural_pitch <= 0.0 { 1.0 } else { pitch_range.natural_pitch };
+
+        let pitch_range_ok = if pitch_range.bend_bounds.lower > actual_natural_pitch && pitch_range.bend_bounds.lower != 0.0 {
+            false
+        }
+        else if pitch_range.bend_bounds.upper < actual_natural_pitch && pitch_range.bend_bounds.upper != 0.0 {
+            false
+        }
+        else {
+            true
+        };
+
+        if !pitch_range_ok {
+            result.warnings.push(format!("Pitch range #{p}'s bend bounds does not fit the natural pitch value ({actual_natural_pitch}) and will be adjusted."));
+        }
+    }
 }
 
 pub fn sound_is_playable(sound: &Sound) -> bool {

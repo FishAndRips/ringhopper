@@ -67,7 +67,8 @@ fn get_default_fns(group: TagGroup) -> [Option<DefaultFnHolder>; 3] {
 }
 
 pub fn set_all_defaults_for_tag(tag: &mut dyn PrimaryTagStructDyn) {
-    for i in get_default_fns(tag.group()) {
+    let default_fns = get_default_fns(tag.group());
+    for i in default_fns {
         if let Some(n) = i {
             (n.default)(tag)
         }
@@ -75,7 +76,10 @@ pub fn set_all_defaults_for_tag(tag: &mut dyn PrimaryTagStructDyn) {
 }
 
 pub fn unset_all_defaults_for_tag(tag: &mut dyn PrimaryTagStructDyn) {
-    for i in get_default_fns(tag.group()) {
+    // Undefaulting gets applied in reverse, in case defaulting depends on something that was also defaulted.
+
+    let default_fns = get_default_fns(tag.group());
+    for i in default_fns.iter().rev() {
         if let Some(n) = i {
             (n.undefault)(tag)
         }
