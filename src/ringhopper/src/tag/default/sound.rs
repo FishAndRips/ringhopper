@@ -127,12 +127,8 @@ fn set_or_unset_defaults_for_sound(tag: &mut dyn PrimaryTagStructDyn, undefault:
             }
         }
         else if actual_permutation_count < u16::MAX as usize {
-            if undefault {
-                pitch_range.actual_permutation_count = 0;
-            }
-            else {
-                pitch_range.actual_permutation_count = actual_permutation_count as u16;
-            }
+            // Some tags do not have this set, so this should be set (we do not unset this)
+            pitch_range.actual_permutation_count = actual_permutation_count as u16;
         }
     }
 
