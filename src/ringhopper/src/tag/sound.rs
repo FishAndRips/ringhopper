@@ -22,14 +22,7 @@ impl SoundPermutationMetadata {
     ///
     /// Returns `Err` if it's invalid.
     pub fn read_from_sound_permutation(sound: &Sound, permutation: &SoundPermutation) -> RinghopperResult<Self> {
-        let pformat = permutation.format;
-        let sformat = sound.format;
-
-        if sound.format != permutation.format {
-            return Err(Error::InvalidTagData(format!("Refusing to get sound metadata because its format ({pformat}) does not match the sound ({sformat})")))
-        }
-
-        Ok(match pformat {
+        Ok(match permutation.format {
             SoundFormat::ImaADPCM | SoundFormat::XboxADPCM => Self {
                 buffer_size: 0,
                 channel_count: sound.channel_count,

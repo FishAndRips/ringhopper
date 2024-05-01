@@ -1,9 +1,3 @@
-macro_rules! ziperator {
-    ($reflexive:expr) => {{
-        (0..$reflexive.items.len()).zip($reflexive.items.iter())
-    }};
-}
-
 mod object;
 mod effect;
 mod bitmap;
@@ -12,7 +6,7 @@ mod hud_interface;
 mod model;
 mod dependencies;
 mod unicode_string_list;
-mod sound;
+pub(crate) mod sound;
 mod particle_system;
 mod particle;
 
