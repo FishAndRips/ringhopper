@@ -1,4 +1,4 @@
-# Ringhopper
+# 🐧 Ringhopper
 
 Ringhopper is a pure-Rust library as well as a toolkit used for creating and manipulating tag data and map files for
 Halo: Combat Evolved.
@@ -51,3 +51,22 @@ Foundation. This project is not licensed under any other version of this license
 a potential GPLv4, GPLv3.1, etc. unless all contributor(s) agree), nor under any other license (e.g. MIT, BSD, etc.).
 
 See [COPYING](COPYING) for a copy of the license.
+
+### Content made with Ringhopper
+
+A common myth perpetuated in CE's modding history is that the copyright belongs to the people who made the tools. This
+should go without saying, but video game assets (i.e. tags) and maps created with Ringhopper are not subject to
+Ringhopper's licensing. They belong to their respective copyright holders.
+
+First, this means that any original content that you make by yourself belongs to you. For example, if you make a model
+in Blender, a texture for the model in GIMP or Photoshop, and the tags with Invader, all done from scratch, then you own
+all of these assets.
+
+However, if you choose to use, modify, or derive pre-existing content, including with tag extraction, then this content
+may still belong to its original owner(s). The GPL is not magic: it doesn't give you any right to use or modify existing
+content, including content supplied by official releases of the game or their respective modding tools.
+
+For example, the usage of MCC's officially released maps or tags to make content would be bound by the MCC EULA.
+Additionally, any cache files you create with Ringhopper which contain those tags would also be bound by that license
+agreement. This is not a condition of using Ringhopper, and thus it is not a GPL license incompatibility. This is a
+condition of using those tags.
