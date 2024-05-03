@@ -63,7 +63,7 @@ fn for_each_node_in_scenario<
     Ok(())
 }
 
-pub fn flip_scenario_script_endianness<From: ByteOrder, To: ByteOrder>(scenario: &mut Scenario) -> RinghopperResult<()> {
+pub(crate) fn flip_scenario_script_endianness<From: ByteOrder, To: ByteOrder>(scenario: &mut Scenario) -> RinghopperResult<()> {
     for_each_node_in_scenario::<From, _, _, _>(
         scenario,
         |data, table| table.write::<To>(data, 0, data.len()).unwrap(),
@@ -139,6 +139,7 @@ pub fn decompile_scripts(scenario: &mut Scenario, scenario_name: &str) -> Ringho
         return Ok(())
     }
 
+    scenario.source_files.items.clear();
     scenario.source_files.items.reserve_exact(page_count);
 
     // If the scenario name is extraordinarily long, split it

@@ -5,6 +5,7 @@ mod globals;
 mod hud_interface;
 mod model;
 mod dependencies;
+pub(crate) mod scenario;
 mod unicode_string_list;
 pub(crate) mod sound;
 mod particle_system;
@@ -32,7 +33,8 @@ use self::{
     dependencies::*,
     unicode_string_list::*,
     sound::*,
-    particle_system::*
+    particle_system::*,
+    scenario::*
 };
 
 use super::dependency::recursively_get_dependencies_for_map;
@@ -203,6 +205,7 @@ impl<T: TagTree + Send + Sync + 'static> VerifyContext<T> {
                     TagGroup::Sound => verify_sound(tag, path, self, &mut result),
                     TagGroup::ParticleSystem => verify_particle_system(tag, path, self, &mut result),
                     TagGroup::Particle => verify_particle(tag, path, self, &mut result),
+                    TagGroup::Scenario => verify_scenario(tag, path, self, &mut result),
                     _ => ()
                 }
             },

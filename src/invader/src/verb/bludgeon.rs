@@ -20,7 +20,7 @@ pub fn bludgeon(args: Args, description: &'static str) -> Result<(), String> {
     do_with_threads(parser.get_virtual_tags_directory(), parser, &tag, None, (), DisplayMode::ShowAll, make_stdout_logger(), |context, path, _, _| {
         let mut tag = context.tags_directory.open_tag_copy(&path)?;
 
-        match bludgeon::bludgeon_tag(tag.as_mut()) {
+        match bludgeon::bludgeon_tag(tag.as_mut(), path) {
             BludgeonResult::CannotRepair => Ok(ProcessSuccessType::Skipped("cannot repair; tag is FUBAR")),
             BludgeonResult::Done => ProcessSuccessType::wrap_write_result(context.tags_directory.write_tag(path, tag.as_ref()))
         }
