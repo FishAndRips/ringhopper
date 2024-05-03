@@ -36,12 +36,12 @@ pub trait ModelFunctions {
 
     /// Fix compressed vertices being missing from a model.
     ///
-    /// Returns true if the model was fixed, false if the model was OK, and an error if the model is broken.
+    /// Returns true if the model was fixed or false if the model was OK (or does not support compressed vertices).
     fn fix_compressed_vertices(&mut self) -> bool;
 
     /// Fix uncompressed vertices being missing from a model.
     ///
-    /// Returns true if the model was fixed, false if the model was OK, and an error if the model is broken.
+    /// Returns true if the model was fixed or false if the model was OK.
     fn fix_uncompressed_vertices(&mut self) -> bool;
 
     /// Flip LoD cutoffs.
