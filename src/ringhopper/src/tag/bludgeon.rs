@@ -3,6 +3,7 @@ use primitives::{primitive::{TagGroup, TagPath}, tag::PrimaryTagStructDyn};
 mod sound;
 mod model;
 mod scenario;
+mod unicode_string_list;
 
 pub enum BludgeonResult {
     Done,
@@ -14,8 +15,8 @@ pub fn bludgeon_tag(tag: &mut dyn PrimaryTagStructDyn, path: &TagPath) -> Bludge
         TagGroup::Model | TagGroup::GBXModel => model::repair_model(tag),
         TagGroup::Sound => sound::repair_sound(tag),
         TagGroup::Scenario => scenario::repair_scenario(tag, path),
+        TagGroup::UnicodeStringList => unicode_string_list::repair_unicode_string_list(tag),
 
-        // TODO: unicode_string_list null termination and line endings
         // TODO: non normal vectors
         // TODO: indices
         // TODO: out-of-range clamping

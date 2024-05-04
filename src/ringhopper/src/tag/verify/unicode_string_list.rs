@@ -1,12 +1,11 @@
 use primitives::{primitive::TagPath, tag::PrimaryTagStructDyn};
 use ringhopper_structs::UnicodeStringList;
 use crate::tag::tree::TagTree;
+use crate::tag::unicode_string_list::*;
 use super::{VerifyContext, VerifyResult};
 
 pub fn verify_unicode_string_list<T: TagTree + Send + Sync>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, _context: &VerifyContext<T>, result: &mut VerifyResult) {
     let list: &UnicodeStringList = tag.as_any().downcast_ref().unwrap();
-    const CR: Option<u16> = Some('\r' as u16);
-    const LF: u16 = '\n' as u16;
 
     for (i, string) in ziperator!(list.strings) {
         let bytes = string.string.bytes.as_slice();
@@ -39,12 +38,12 @@ pub fn verify_unicode_string_list<T: TagTree + Send + Sync>(tag: &dyn PrimaryTag
             }
 
             if i == LF {
-                if last_character != CR {
+                if last_character != Some(CR) {
                     result.errors.push(format!("String #{i} has LF line endings with no matching CR"));
                     break;
                 }
             }
-            else if last_character == CR {
+            else if last_character == Some(CR) {
                 result.errors.push(format!("String #{i} has CR line endings with no matching LF"));
                 break;
             }

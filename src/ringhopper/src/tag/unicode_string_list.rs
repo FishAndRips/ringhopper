@@ -3,6 +3,9 @@ use definitions::{UnicodeStringList, UnicodeStringListString};
 use primitives::dynamic::DynamicTagDataArray;
 use primitives::primitive::{Data, Reflexive};
 
+pub const CR: u16 = '\r' as u16;
+pub const LF: u16 = '\n' as u16;
+
 #[derive(Debug)]
 pub enum UnicodeStringListError {
     InvalidStringData,
@@ -182,7 +185,7 @@ impl UnicodeStringListFunctions for UnicodeStringList {
     fn string_count(&self) -> usize {
         self.strings.len()
     }
-    
+
     fn read_string_data(&self, index: usize) -> Result<String, UnicodeStringListError> {
         let bytes = &self.strings.items[index].string.bytes;
         if bytes.len() % 2 != 0 || bytes.is_empty() {
@@ -192,7 +195,7 @@ impl UnicodeStringListFunctions for UnicodeStringList {
         let mut utf16 = bytes
             .chunks(2)
             .map(|b| u16::from_le_bytes([b[0], b[1]]))
-            .filter(|c| *c != '\r' as u16)
+            .filter(|c| *c != CR)
             .collect::<Vec<u16>>();
 
         // Must be null terminated!
