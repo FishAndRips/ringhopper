@@ -233,10 +233,8 @@ impl Color for ColorRGBFloat {
 
         let clamped = self.clamp();
 
-        let vector = Vector3D { x: clamped.red, y: clamped.green, z: clamped.blue }
-            .sub(&HALF_VECTOR)
-            .normalize_into(HALF)
-            .add(&HALF_VECTOR);
+        let delta = Vector3D { x: clamped.red, y: clamped.green, z: clamped.blue } - HALF_VECTOR;
+        let vector = delta.normalize_into(HALF) + HALF_VECTOR;
 
         ColorRGBFloat { red: vector.x, green: vector.y, blue: vector.z }
     }

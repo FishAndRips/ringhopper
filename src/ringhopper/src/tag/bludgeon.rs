@@ -4,6 +4,7 @@ mod sound;
 mod model;
 mod scenario;
 mod unicode_string_list;
+mod scenario_structure_bsp;
 
 pub enum BludgeonResult {
     Done,
@@ -16,8 +17,8 @@ pub fn bludgeon_tag(tag: &mut dyn PrimaryTagStructDyn, path: &TagPath) -> Bludge
         TagGroup::Sound => sound::repair_sound(tag),
         TagGroup::Scenario => scenario::repair_scenario(tag, path),
         TagGroup::UnicodeStringList => unicode_string_list::repair_unicode_string_list(tag),
+        TagGroup::ScenarioStructureBSP => scenario_structure_bsp::repair_scenario_structure_bsp(tag),
 
-        // TODO: non normal vectors
         // TODO: indices
         // TODO: out-of-range clamping
 

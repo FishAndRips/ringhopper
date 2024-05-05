@@ -11,10 +11,27 @@ use super::*;
 /// Max error tolerance for determinig if a vector is normalized.
 const NONNORMAL_THRESHOLD: f32 = 0.00001;
 
+trait VectorMathOps {
+    /// Compute the sum of this vector and another vector.
+    fn add(&self, of: &Self) -> Self;
+
+    /// Subtract the components of this vector with the components of another.
+    fn sub(&self, with: &Self) -> Self;
+
+    /// Multiply the components of this vector and another vector.
+    fn mul(&self, by: &Self) -> Self;
+
+    /// Divide the components this vector by the components of the other vector.
+    fn div(&self, by: &Self) -> Self;
+}
+
 /// General functionality for vector types.
-pub trait Vector: Sized {
+pub trait Vector: Sized + Copy + Clone {
     /// Normalize the vector into a unit vector.
     fn normalize(&self) -> Self {
+        if self.is_unit_vector() {
+            return *self
+        }
         let value = self.normalize_into(1.0);
         debug_assert!(value.is_unit_vector());
         value
@@ -55,18 +72,6 @@ pub trait Vector: Sized {
 
     /// Scale the vector by `by`.
     fn scale(&self, by: f32) -> Self;
-
-    /// Compute the sum of this vector and another vector.
-    fn add(&self, of: &Self) -> Self;
-
-    /// Subtract the components of this vector with the components of another.
-    fn sub(&self, with: &Self) -> Self;
-
-    /// Multiply the components of this vector and another vector.
-    fn mul(&self, by: &Self) -> Self;
-
-    /// Divide the components this vector by the components of the other vector.
-    fn div(&self, by: &Self) -> Self;
 
     /// Compute the distance the point lies from a plane.
     ///
@@ -159,6 +164,13 @@ impl Vector for Vector2D {
         }
     }
 
+    fn distance_squared(&self, of: &Self) -> f32 {
+        let delta = *self - *of;
+        delta.dot(&delta)
+    }
+}
+
+impl VectorMathOps for Vector2D {
     fn add(&self, of: &Self) -> Self {
         Self {
             x: self.x + of.x,
@@ -185,12 +197,6 @@ impl Vector for Vector2D {
             x: self.x / of.x,
             y: self.y / of.y,
         }
-    }
-
-    fn distance_squared(&self, of: &Self) -> f32 {
-        let x = self.x - of.x;
-        let y = self.y - of.y;
-        x*x + y*y
     }
 }
 
@@ -233,6 +239,13 @@ impl Vector for Vector3D {
         }
     }
 
+    fn distance_squared(&self, of: &Self) -> f32 {
+        let delta = *self - *of;
+        delta.dot(&delta)
+    }
+}
+
+impl VectorMathOps for Vector3D {
     fn add(&self, of: &Self) -> Self {
         Self {
             x: self.x + of.x,
@@ -264,13 +277,6 @@ impl Vector for Vector3D {
             z: self.z / of.z,
         }
     }
-
-    fn distance_squared(&self, of: &Self) -> f32 {
-        let x = self.x - of.x;
-        let y = self.y - of.y;
-        let z = self.z - of.z;
-        x*x + y*y + z*z
-    }
 }
 
 generate_tag_data_simple_primitive_code!(Vector3D, f32, x, y, z);
@@ -285,6 +291,77 @@ pub struct Quaternion {
 }
 
 generate_tag_data_simple_primitive_code!(Quaternion, f32, x, y, z, w);
+
+impl Vector for Quaternion {
+    fn dot(&self, with: &Self) -> f32 {
+        self.x * with.x + self.y * with.y + self.z * with.z + self.w * with.w
+    }
+
+    fn zero() -> Self {
+        Self::default()
+    }
+
+    fn one() -> Self {
+        Self {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            w: 1.0,
+        }
+    }
+
+    fn scale(&self, by: f32) -> Self {
+        Self {
+            x: self.x * by,
+            y: self.y * by,
+            z: self.z * by,
+            w: self.w * by,
+        }
+    }
+
+    fn distance_squared(&self, of: &Self) -> f32 {
+        let delta = *self - *of;
+        delta.dot(&delta)
+    }
+}
+
+impl VectorMathOps for Quaternion {
+    fn add(&self, of: &Self) -> Self {
+        Self {
+            x: self.x + of.x,
+            y: self.y + of.y,
+            z: self.z + of.z,
+            w: self.w + of.w,
+        }
+    }
+
+    fn sub(&self, with: &Self) -> Self {
+        Self {
+            x: self.x - with.x,
+            y: self.y - with.y,
+            z: self.z - with.z,
+            w: self.w - with.w,
+        }
+    }
+
+    fn mul(&self, by: &Self) -> Self {
+        Self {
+            x: self.x * by.x,
+            y: self.y * by.y,
+            z: self.z * by.z,
+            w: self.w * by.w,
+        }
+    }
+
+    fn div(&self, by: &Self) -> Self {
+        Self {
+            x: self.x / by.x,
+            y: self.y / by.y,
+            z: self.z / by.z,
+            w: self.w / by.w,
+        }
+    }
+}
 
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 #[repr(C)]
@@ -498,45 +575,45 @@ macro_rules! define_ops_for_vector {
         impl Add for $vector {
             type Output = Self;
             fn add(self, rhs: Self) -> Self::Output {
-                Vector::add(&self, &rhs)
+                VectorMathOps::add(&self, &rhs)
             }
         }
         impl AddAssign for $vector {
             fn add_assign(&mut self, rhs: Self) {
-                *self = Vector::add(&self, &rhs)
+                *self = VectorMathOps::add(&self, &rhs)
             }
         }
         impl Sub for $vector {
             type Output = Self;
             fn sub(self, rhs: Self) -> Self {
-                Vector::sub(&self, &rhs)
+                VectorMathOps::sub(&self, &rhs)
             }
         }
         impl SubAssign for $vector {
             fn sub_assign(&mut self, rhs: Self) {
-                *self = Vector::sub(&self, &rhs)
+                *self = VectorMathOps::sub(&self, &rhs)
             }
         }
         impl Mul for $vector {
             type Output = Self;
             fn mul(self, rhs: Self) -> Self {
-                Vector::mul(&self, &rhs)
+                VectorMathOps::mul(&self, &rhs)
             }
         }
         impl MulAssign for $vector {
             fn mul_assign(&mut self, rhs: Self) {
-                *self = Vector::mul(&self, &rhs)
+                *self = VectorMathOps::mul(&self, &rhs)
             }
         }
         impl Div for $vector {
             type Output = Self;
             fn div(self, rhs: Self) -> Self {
-                Vector::div(&self, &rhs)
+                VectorMathOps::div(&self, &rhs)
             }
         }
         impl DivAssign for $vector {
             fn div_assign(&mut self, rhs: Self) {
-                *self = Vector::div(&self, &rhs)
+                *self = VectorMathOps::div(&self, &rhs)
             }
         }
         impl Mul<f32> for $vector {
@@ -561,6 +638,7 @@ macro_rules! define_ops_for_vector {
 
 define_ops_for_vector!(Vector2D);
 define_ops_for_vector!(Vector3D);
+define_ops_for_vector!(Quaternion);
 
 /// Denotes a float compressed into a 16-bit integer.
 #[derive(Clone, Copy, Default, PartialEq)]

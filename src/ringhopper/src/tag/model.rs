@@ -23,8 +23,14 @@ pub trait ModelFunctions {
     /// Get the nodes of the model.
     fn nodes(&self) -> &[ModelNode];
 
+    /// Get a mutable reference to the nodes of the model.
+    fn nodes_mut(&mut self) -> &mut [ModelNode];
+
     /// Get the regions of the model.
     fn regions(&self) -> &[ModelRegion];
+
+    /// Get a mutable reference to the regions of the model.
+    fn regions_mut(&mut self) -> &mut [ModelRegion];
 
     /// Get the number of geometries in the model.
     fn geometry_count(&self) -> usize;
@@ -197,8 +203,14 @@ impl ModelFunctions for Model {
     fn nodes(&self) -> &[ModelNode] {
         self.nodes.items.as_ref()
     }
+    fn nodes_mut(&mut self) -> &mut [ModelNode] {
+        self.nodes.items.as_mut()
+    }
     fn regions(&self) -> &[ModelRegion] {
         self.regions.items.as_ref()
+    }
+    fn regions_mut(&mut self) -> &mut [ModelRegion] {
+        self.regions.items.as_mut()
     }
     fn geometry_count(&self) -> usize {
         self.geometries.items.len()
@@ -308,13 +320,17 @@ impl ModelFunctions for GBXModel {
     fn shaders(&self) -> &[ModelShaderReference] {
         self.shaders.items.as_ref()
     }
-
     fn nodes(&self) -> &[ModelNode] {
         self.nodes.items.as_ref()
     }
-
+    fn nodes_mut(&mut self) -> &mut [ModelNode] {
+        self.nodes.items.as_mut()
+    }
     fn regions(&self) -> &[ModelRegion] {
         self.regions.items.as_ref()
+    }
+    fn regions_mut(&mut self) -> &mut [ModelRegion] {
+        self.regions.items.as_mut()
     }
     fn geometry_count(&self) -> usize {
         self.geometries.items.len()

@@ -10,6 +10,7 @@ mod unicode_string_list;
 pub(crate) mod sound;
 mod particle_system;
 mod particle;
+pub(crate) mod scenario_structure_bsp;
 
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
@@ -34,7 +35,8 @@ use self::{
     unicode_string_list::*,
     sound::*,
     particle_system::*,
-    scenario::*
+    scenario::*,
+    scenario_structure_bsp::*
 };
 
 use super::dependency::recursively_get_dependencies_for_map;
@@ -206,6 +208,7 @@ impl<T: TagTree + Send + Sync + 'static> VerifyContext<T> {
                     TagGroup::ParticleSystem => verify_particle_system(tag, path, self, &mut result),
                     TagGroup::Particle => verify_particle(tag, path, self, &mut result),
                     TagGroup::Scenario => verify_scenario(tag, path, self, &mut result),
+                    TagGroup::ScenarioStructureBSP => verify_scenario_structure_bsp(tag, path, self, &mut result),
                     _ => ()
                 }
             },
