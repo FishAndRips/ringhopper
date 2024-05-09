@@ -35,63 +35,62 @@ impl Default for TTYMetadata {
 }
 
 /// Get the metadata for the current shell.
+#[cfg(not(any(target_os = "windows", target_os = "linux", target_os = "macos")))]
 pub fn get_tty_metadata() -> Option<TTYMetadata> {
-    if cfg!(target_os = "linux") {
-        #[cfg(target_os = "linux")]
-        {
-            // Use the Linux API to get this
-            let mut ws = libc::winsize { ws_col: 0, ws_row: 0, ws_xpixel: 0, ws_ypixel: 0 };
-            let result = unsafe { libc::ioctl(libc::STDOUT_FILENO, libc::TIOCGWINSZ, &mut ws as *mut libc::winsize) };
+    // Fallback
+    None
+}
 
-            return if result == 0 {
-                Some(TTYMetadata { width: ws.ws_col as usize, height: ws.ws_row as usize, color: true })
-            }
-            else {
-                None
-            }
-        }
+/// Get the metadata for the current shell.
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+pub fn get_tty_metadata() -> Option<TTYMetadata> {
+    // Use the Linux API to get this
+    let mut ws = libc::winsize { ws_col: 0, ws_row: 0, ws_xpixel: 0, ws_ypixel: 0 };
+    let result = unsafe { libc::ioctl(libc::STDOUT_FILENO, libc::TIOCGWINSZ, &mut ws as *mut libc::winsize) };
+
+    return if result == 0 {
+        Some(TTYMetadata { width: ws.ws_col as usize, height: ws.ws_row as usize, color: true })
     }
-    else if cfg!(target_os = "windows") {
-        #[cfg(target_os = "windows")]
-        {
-            // Use the Windows API to get this
-            use windows::Win32::System::Console;
+    else {
+        None
+    }
+}
 
-            let mut w = Console::CONSOLE_SCREEN_BUFFER_INFO::default();
-            let handle = unsafe { Console::GetStdHandle(Console::STD_OUTPUT_HANDLE).unwrap() };
-            let is_terminal = unsafe { Console::GetConsoleScreenBufferInfo(handle, &mut w) }.is_ok();
+/// Get the metadata for the current shell.
+#[cfg(target_os = "windows")]
+pub fn get_tty_metadata() -> Option<TTYMetadata> {
+    // Use the Windows API to get this
+    use windows::Win32::System::Console;
 
-            if !is_terminal {
-                return None
-            }
+    let mut w = Console::CONSOLE_SCREEN_BUFFER_INFO::default();
+    let handle = unsafe { Console::GetStdHandle(Console::STD_OUTPUT_HANDLE).unwrap() };
+    let is_terminal = unsafe { Console::GetConsoleScreenBufferInfo(handle, &mut w) }.is_ok();
 
-            // Now check if color is supported
-            let mut console_mode = Console::CONSOLE_MODE::default();
-            let color_support = if unsafe { Console::GetConsoleMode(handle, &mut console_mode).is_ok() } {
-                if (console_mode & Console::ENABLE_VIRTUAL_TERMINAL_PROCESSING).0 != 0 {
-                    // We already have color support
-                    true
-                }
-                else {
-                    // Try enabling color support
-                    unsafe { Console::SetConsoleMode(handle, console_mode | Console::ENABLE_VIRTUAL_TERMINAL_PROCESSING) }.is_ok()
-                }
-            }
-            else {
-                false
-            };
+    if !is_terminal {
+        return None
+    }
 
-            return Some(TTYMetadata {
-                width: w.srWindow.Right as usize - w.srWindow.Left as usize + 1,
-                height: w.srWindow.Bottom as usize - w.srWindow.Top as usize + 1,
-                color: color_support
-            })
+    // Now check if color is supported
+    let mut console_mode = Console::CONSOLE_MODE::default();
+    let color_support = if unsafe { Console::GetConsoleMode(handle, &mut console_mode).is_ok() } {
+        if (console_mode & Console::ENABLE_VIRTUAL_TERMINAL_PROCESSING).0 != 0 {
+            // We already have color support
+            true
+        }
+        else {
+            // Try enabling color support
+            unsafe { Console::SetConsoleMode(handle, console_mode | Console::ENABLE_VIRTUAL_TERMINAL_PROCESSING) }.is_ok()
         }
     }
     else {
-        return None
-    }
-    unreachable!();
+        false
+    };
+
+    return Some(TTYMetadata {
+        width: w.srWindow.Right as usize - w.srWindow.Left as usize + 1,
+        height: w.srWindow.Bottom as usize - w.srWindow.Top as usize + 1,
+        color: color_support
+    })
 }
 
 pub fn make_stdout_logger() -> Arc<StdoutLogger> {

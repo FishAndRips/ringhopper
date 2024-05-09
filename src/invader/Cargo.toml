@@ -9,7 +9,7 @@ license = "GPL-3.0-only"
 ringhopper = { path = "../ringhopper" }
 ringhopper-engines = { path = "../ringhopper-engines" }
 
-[target.'cfg(target_os = "linux")'.dependencies.libc]
+[target.'cfg(any(target_os = "linux", target_os = "macos"))'.dependencies.libc]
 version = "0.2.153"
 
 [target.'cfg(target_os = "windows")'.dependencies.windows]
