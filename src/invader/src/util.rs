@@ -44,11 +44,11 @@ pub fn get_tty_metadata() -> Option<TTYMetadata> {
 /// Get the metadata for the current shell.
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 pub fn get_tty_metadata() -> Option<TTYMetadata> {
-    // Use the Linux API to get this
+    // Use libc to get this
     let mut ws = libc::winsize { ws_col: 0, ws_row: 0, ws_xpixel: 0, ws_ypixel: 0 };
     let result = unsafe { libc::ioctl(libc::STDOUT_FILENO, libc::TIOCGWINSZ, &mut ws as *mut libc::winsize) };
 
-    return if result == 0 {
+    if result == 0 {
         Some(TTYMetadata { width: ws.ws_col as usize, height: ws.ws_row as usize, color: true })
     }
     else {
@@ -86,7 +86,7 @@ pub fn get_tty_metadata() -> Option<TTYMetadata> {
         false
     };
 
-    return Some(TTYMetadata {
+    Some(TTYMetadata {
         width: w.srWindow.Right as usize - w.srWindow.Left as usize + 1,
         height: w.srWindow.Bottom as usize - w.srWindow.Top as usize + 1,
         color: color_support

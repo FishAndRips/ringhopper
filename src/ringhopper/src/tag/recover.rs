@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
-use definitions::Bitmap;
+use definitions::*;
 use primitives::error::RinghopperResult;
 use primitives::primitive::{TagGroup, TagPath};
 use primitives::tag::PrimaryTagStructDyn;
@@ -11,6 +11,7 @@ pub type RecoverFunction = fn(tag_path: &TagPath, tag_data: &Box<dyn PrimaryTagS
 pub fn get_recover_function(group: TagGroup) -> Option<RecoverFunction> {
     match group {
         TagGroup::Bitmap => Some(recover_bitmap),
+        TagGroup::Scenario => Some(recover_scenario_scripts),
         _ => None
     }
 }
@@ -25,6 +26,34 @@ fn recover_bitmap(tag_path: &TagPath, tag_data: &Box<dyn PrimaryTagStructDyn>) -
     let result = PathBuf::from(tag_path.to_native_path()).with_extension("tif");
     let mut fs = HashMap::new();
     fs.insert(result, color_plate_data.to_tiff());
+
+    Ok(Some(fs))
+}
+
+fn recover_scenario_scripts(tag_path: &TagPath, tag_data: &Box<dyn PrimaryTagStructDyn>) -> RinghopperResult<Option<HashMap<PathBuf, Vec<u8>>>> {
+    let scenario: &Scenario = tag_data.as_any().downcast_ref().unwrap();
+    if scenario.source_files.items.is_empty() {
+        return Ok(None)
+    }
+
+    // TODO: Verify that there are no duplicate script source files, and that all source files have lowercase names.
+
+    let base_scripts_dir = PathBuf::from(tag_path.to_native_path()).parent().unwrap().join("scripts");
+    let mut fs = HashMap::new();
+    for i in &scenario.source_files.items {
+        let path = match i.name.as_str() {
+            "global_scripts" => "global_scripts.hsc".into(),
+            name => base_scripts_dir.clone().join(format!("{name}.hsc"))
+        };
+
+        // Trim to null terminator if present
+        let data = &i.source.bytes;
+        let end = data.iter().position(|p| *p == 0).unwrap_or(data.len());
+
+        // Finally add the script
+        let mut data = data[..end].to_owned();
+        fs.insert(path, data);
+    }
 
     Ok(Some(fs))
 }
