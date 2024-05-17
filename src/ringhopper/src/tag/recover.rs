@@ -51,7 +51,7 @@ fn recover_scenario_scripts(tag_path: &TagPath, tag_data: &Box<dyn PrimaryTagStr
         let end = data.iter().position(|p| *p == 0).unwrap_or(data.len());
 
         // Finally add the script
-        let mut data = data[..end].to_owned();
+        let data = data[..end].to_owned();
         fs.insert(path, data);
     }
 

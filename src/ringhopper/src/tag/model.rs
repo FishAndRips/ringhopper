@@ -114,6 +114,7 @@ macro_rules! fix_vertices {
     }};
 }
 
+#[allow(dead_code)]
 pub(crate) trait ModelPartGet {
     /// Get the base model part.
     fn get_model_part(&self) -> &ModelGeometryPart;

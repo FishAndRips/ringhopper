@@ -15,6 +15,6 @@ flate2 = { version = "1.0.28", features = ["zlib"], default-features = false }
 tiff = "0.9.1"
 jxl-oxide = "0.8.0"
 png = "0.17.13"
-zip = { version = "0.6.6", default-features = false, features = ["zstd", "time"] }
+sevenz-rust = "0.6.0"
 aotuv_lancer_vorbis_sys = "0.1.4"
 libc = "0.2.153"

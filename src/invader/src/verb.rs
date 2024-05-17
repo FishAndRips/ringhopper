@@ -39,8 +39,8 @@ impl Verb {
 }
 
 pub const ALL_VERBS: &'static [Verb] = &[
-    Verb::new("archive-scenario", "Create a .zip of a map's tag structure", archive::archive_scenario),
-    Verb::new("archive-tag", "Create a .zip of a tag and its dependencies", archive::archive_tag),
+    Verb::new("archive-scenario", "Create a .7z of a map's tag structure", archive::archive_scenario),
+    Verb::new("archive-tag", "Create a .7z of a tag and its dependencies", archive::archive_tag),
     Verb::new("bludgeon", "Automatically repair common issues with tags", bludgeon::bludgeon),
     Verb::new("compare", "Compare tags between two tag sources", compare::compare),
     Verb::new("convert", "Convert tags to another tag group", convert::convert),
