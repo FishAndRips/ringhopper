@@ -197,6 +197,12 @@ impl Color for ColorARGBFloat {
     }
 }
 
+impl From<[f32; 4]> for ColorARGBFloat {
+    fn from(value: [f32; 4]) -> Self {
+        Self { alpha: value[0], red: value[1], green: value[2], blue: value[3] }
+    }
+}
+
 /// Refers to a color composed of floats without an alpha channel.
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 #[repr(C)]
