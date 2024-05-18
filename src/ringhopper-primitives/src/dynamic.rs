@@ -76,6 +76,8 @@ pub trait DynamicTagData: TagData + 'static {
 pub struct TagFieldMetadata {
     pub comment: Option<&'static str>,
     pub read_only: bool,
+    pub cache_only: bool,
+    pub non_cached: bool,
     pub allowed_references: Option<&'static [TagGroup]>
 }
 

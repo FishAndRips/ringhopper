@@ -11,22 +11,29 @@ pub struct TagComparisonDifference {
     pub difference: String
 }
 
+#[derive(Default)]
+struct Context {
+    differences: Vec<TagComparisonDifference>,
+    allow_cache_only: bool
+}
+
 /// Compare two tags.
 ///
 /// # Panics
 ///
 /// The groups and internal structure must be the same, or else this function may panic or output bad results.
-pub fn compare_tags(first: &dyn PrimaryTagStructDyn, second: &dyn PrimaryTagStructDyn) -> Vec<TagComparisonDifference> {
+pub fn compare_tags(first: &dyn PrimaryTagStructDyn, second: &dyn PrimaryTagStructDyn, allow_cache_only: bool) -> Vec<TagComparisonDifference> {
     assert_eq!(first.group(), second.group());
 
     let mut path = String::with_capacity(1024);
-    let mut comparison = Vec::new();
+    let mut comparison = Context::default();
+    comparison.allow_cache_only = allow_cache_only;
     compare_tag_data_blocks(first, second, &mut path, &mut comparison, 0);
 
-    comparison
+    comparison.differences
 }
 
-fn compare_tag_data<T: DynamicTagData + ?Sized>(first: &T, second: &T, path: &mut String, comparison: &mut Vec<TagComparisonDifference>, depth: usize) {
+fn compare_tag_data<T: DynamicTagData + ?Sized>(first: &T, second: &T, path: &mut String, comparison: &mut Context, depth: usize) {
     let data_type = first.data_type();
     debug_assert_eq!(data_type, second.data_type());
 
@@ -123,9 +130,9 @@ fn compare_tag_data<T: DynamicTagData + ?Sized>(first: &T, second: &T, path: &mu
     }
 }
 
-fn compare_primitive<T: PartialEq + Display>(first: &T, second: &T, path: &mut String, comparison: &mut Vec<TagComparisonDifference>, depth: usize) {
+fn compare_primitive<T: PartialEq + Display>(first: &T, second: &T, path: &mut String, comparison: &mut Context, depth: usize) {
     if first != second {
-        comparison.push(TagComparisonDifference {
+        comparison.differences.push(TagComparisonDifference {
             depth,
             path: path[1..].to_owned(),
             difference: format!("value is different ({first} != {second})")
@@ -133,9 +140,9 @@ fn compare_primitive<T: PartialEq + Display>(first: &T, second: &T, path: &mut S
     }
 }
 
-fn compare_index(first: &Index, second: &Index, path: &mut String, comparison: &mut Vec<TagComparisonDifference>, depth: usize) {
+fn compare_index(first: &Index, second: &Index, path: &mut String, comparison: &mut Context, depth: usize) {
     if first != second {
-        comparison.push(TagComparisonDifference {
+        comparison.differences.push(TagComparisonDifference {
             depth,
             path: path[1..].to_owned(),
             difference: format!("value is different ({first:?} != {second:?})")
@@ -143,9 +150,9 @@ fn compare_index(first: &Index, second: &Index, path: &mut String, comparison: &
     }
 }
 
-fn compare_string32(first: &String32, second: &String32, path: &mut String, comparison: &mut Vec<TagComparisonDifference>, depth: usize) {
+fn compare_string32(first: &String32, second: &String32, path: &mut String, comparison: &mut Context, depth: usize) {
     if first != second {
-        comparison.push(TagComparisonDifference {
+        comparison.differences.push(TagComparisonDifference {
             depth,
             path: path[1..].to_owned(),
             difference: format!("value is different (`{first}` != `{second}`)")
@@ -153,9 +160,15 @@ fn compare_string32(first: &String32, second: &String32, path: &mut String, comp
     }
 }
 
-fn compare_tag_data_blocks<T: DynamicTagData + ?Sized>(first: &T, second: &T, path: &mut String, comparison: &mut Vec<TagComparisonDifference>, depth: usize) {
+fn compare_tag_data_blocks<T: DynamicTagData + ?Sized>(first: &T, second: &T, path: &mut String, comparison: &mut Context, depth: usize) {
     let length_before = path.len();
     for i in first.fields() {
+        if !comparison.allow_cache_only {
+            if first.get_metadata_for_field(i).is_some_and(|f| f.cache_only) {
+                continue;
+            }
+        }
+
         *path += ".";
         *path += i;
         compare_tag_data(first.get_field(i).unwrap(), second.get_field(i).unwrap(), path, comparison, depth + 1);
@@ -164,12 +177,12 @@ fn compare_tag_data_blocks<T: DynamicTagData + ?Sized>(first: &T, second: &T, pa
     return;
 }
 
-fn compare_data(first: &[u8], second: &[u8], path: &mut String, comparison: &mut Vec<TagComparisonDifference>, depth: usize) {
+fn compare_data(first: &[u8], second: &[u8], path: &mut String, comparison: &mut Context, depth: usize) {
     let flength = first.len();
     let slength = second.len();
 
     if flength != slength {
-        comparison.push(TagComparisonDifference {
+        comparison.differences.push(TagComparisonDifference {
             depth,
             path: path[1..].to_owned(),
             difference: format!("length is different ({flength} != {slength})")
@@ -181,7 +194,7 @@ fn compare_data(first: &[u8], second: &[u8], path: &mut String, comparison: &mut
         let first = crc64(0, first);
         let second = crc64(0, second);
         let op = if first != second { "!=" } else { "~= (forged??)" };
-        comparison.push(TagComparisonDifference {
+        comparison.differences.push(TagComparisonDifference {
             depth,
             path: path[1..].to_owned(),
             difference: format!("data is different (CRC64: {first:016X} {op} {second:016X})")
@@ -190,12 +203,12 @@ fn compare_data(first: &[u8], second: &[u8], path: &mut String, comparison: &mut
     }
 }
 
-fn compare_enums(first: &dyn DynamicEnum, second: &dyn DynamicEnum, path: &mut String, comparison: &mut Vec<TagComparisonDifference>, depth: usize) {
+fn compare_enums(first: &dyn DynamicEnum, second: &dyn DynamicEnum, path: &mut String, comparison: &mut Context, depth: usize) {
     let first = first.get_enum_string_value();
     let second = second.get_enum_string_value();
 
     if first != second {
-        comparison.push(TagComparisonDifference {
+        comparison.differences.push(TagComparisonDifference {
             depth,
             path: path[1..].to_owned(),
             difference: format!("enum is different (`{first}` != `{second}`)")
@@ -203,13 +216,13 @@ fn compare_enums(first: &dyn DynamicEnum, second: &dyn DynamicEnum, path: &mut S
     }
 }
 
-fn compare_array(first: &dyn DynamicTagDataArray, second: &dyn DynamicTagDataArray, path: &mut String, comparison: &mut Vec<TagComparisonDifference>, depth: usize) {
+fn compare_array(first: &dyn DynamicTagDataArray, second: &dyn DynamicTagDataArray, path: &mut String, comparison: &mut Context, depth: usize) {
     let flength = first.len();
     let slength = second.len();
 
     // Cannot compare the arrays if the lengths are different
     if flength != slength {
-        comparison.push(TagComparisonDifference {
+        comparison.differences.push(TagComparisonDifference {
             depth,
             path: path[1..].to_owned(),
             difference: format!("length is different ({flength} != {slength})")
@@ -226,11 +239,11 @@ fn compare_array(first: &dyn DynamicTagDataArray, second: &dyn DynamicTagDataArr
     }
 }
 
-fn compare_tag_references(first: &TagReference, second: &TagReference, path: &mut String, comparison: &mut Vec<TagComparisonDifference>, depth: usize) {
+fn compare_tag_references(first: &TagReference, second: &TagReference, path: &mut String, comparison: &mut Context, depth: usize) {
     if first == second {
         return
     }
-    comparison.push(TagComparisonDifference {
+    comparison.differences.push(TagComparisonDifference {
         depth,
         path: path[1..].to_owned(),
         difference: format!("reference is different (`{first}` != `{second}`)")

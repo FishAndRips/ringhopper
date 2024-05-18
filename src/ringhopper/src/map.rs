@@ -18,7 +18,7 @@ use crate::map::gearbox::GearboxCacheFile;
 use crate::map::header::ParsedCacheFileHeader;
 use crate::map::xbox::XboxCacheFile;
 use crate::tag::object::downcast_base_object_mut;
-use crate::tag::tree::{TagFilter, TagTree, TagTreeItem};
+use crate::tag::tree::{TagFilter, TagTree, TagTreeItem, TreeType};
 
 mod extract;
 pub mod resource;
@@ -107,6 +107,10 @@ macro_rules! tag_tree_impl {
             else {
                 all_tags
             }
+        }
+
+        fn tree_type(&self) -> TreeType {
+            TreeType::CacheFile
         }
     };
 }

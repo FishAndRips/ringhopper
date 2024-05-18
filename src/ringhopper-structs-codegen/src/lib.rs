@@ -3,7 +3,7 @@ extern crate ringhopper_definitions;
 use std::fmt::Write;
 use std::borrow::Cow;
 
-use ringhopper_definitions::{load_all_definitions, SizeableObject, Struct, NamedObject, Enum, Bitfield, StructFieldType, ObjectType, ParsedDefinitions, FieldCount, TagGroup, StaticValue};
+use ringhopper_definitions::{load_all_definitions, SizeableObject, Struct, NamedObject, Enum, Bitfield, StructFieldType, ObjectType, ParsedDefinitions, FieldCount, TagGroup, StaticValue, Flags};
 
 use proc_macro::TokenStream;
 use std::collections::HashSet;
@@ -417,16 +417,10 @@ impl ToTokenStream for Struct {
         for i in 0..field_count {
             let field = &self.fields[i];
 
-            if field.flags.exclude {
+            if field.flags.exclude || !matches!(field.field_type, StructFieldType::Object(_)) {
                 continue;
             }
 
-            match &field.field_type {
-                StructFieldType::Object(_) => (),
-                _ => continue
-            };
-
-            let read_only = field.flags.uneditable_in_editor;
             let allowed_references = if let StructFieldType::Object(ObjectType::TagReference(reference)) = &field.field_type {
                 let mut list = String::new();
                 for g in &reference.allowed_groups {
@@ -438,23 +432,13 @@ impl ToTokenStream for Struct {
                 "None".to_owned()
             };
 
-            let comment = if let Some(n) = &field.flags.comment {
-                let r = n.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n");
-                format!("Some(\"{r}\")")
-            }
-            else {
-                "None".to_owned()
-            };
-
-            let metadata = format!("
-TagFieldMetadata {{
-    comment: {comment},
-    read_only: {read_only},
-    allowed_references: {allowed_references}
-}}");
-
-            let field_name = &fields_with_matchers[i];
-            writeln!(&mut metadata_matcher, "\"{field_name}\" => Some({metadata}),").unwrap();
+            let metadata = build_metadata(&field.flags, &allowed_references);
+            let field_name = &fields_with_names[i];
+            let field_matcher = &fields_with_matchers[i];
+            writeln!(&mut metadata_matcher, "\"{field_matcher}\" => Some({metadata}),").unwrap();
+            write!(&mut field_list, "\"{field_matcher}\",").unwrap();
+            writeln!(&mut getter, "\"{field_matcher}\" => Some(&self.{field_name}),").unwrap();
+            writeln!(&mut getter_mut, "\"{field_matcher}\" => Some(&mut self.{field_name}),").unwrap();
         }
 
         // Tag I/O
@@ -462,7 +446,6 @@ TagFieldMetadata {{
             let length = &fields_with_sizes[i];
 
             let field_name = &fields_with_names[i];
-            let field_matcher = &fields_with_matchers[i];
             let field_type = &fields_with_types[i];
 
             let little_endian = self.fields[i].flags.little_endian_in_tags;
@@ -478,10 +461,6 @@ TagFieldMetadata {{
 
             if fields_read_from_tags[i] {
                 writeln!(&mut read_tag_in, "output.{field_name} = {read_tag_code};").unwrap();
-                write!(&mut field_list, "\"{field_matcher}\",").unwrap();
-                writeln!(&mut getter, "\"{field_matcher}\" => Some(&self.{field_name}),").unwrap();
-                writeln!(&mut getter_mut, "\"{field_matcher}\" => Some(&mut self.{field_name}),").unwrap();
-
                 if little_endian {
                     writeln!(&mut write_out, "self.{field_name}.write::<LittleEndian>(data, _pos, struct_end)?;").unwrap();
                 }
@@ -896,6 +875,17 @@ impl ToTokenStream for Bitfield {
         let getter_mut = writeln_for_each_field!("\"{field_matcher}\" => Some(&mut self.{field_rust}), // {value}");
         let list = writeln_for_each_field!("\"{field_matcher}\", // {field_rust}, {value}");
 
+        let mut all_metadata = String::new();
+        for i in 0..self.fields.len() {
+            let field = &self.fields[i];
+            if field.flags.exclude {
+                continue
+            }
+            let field_matcher = &field_names_matchers[i];
+            let metadata = build_metadata(&field.flags, "None");
+            writeln!(&mut all_metadata, "\"{field_matcher}\" => Some({metadata}),").unwrap();
+        }
+
         // Do not read/write cache_only stuff from tag files
         let cache_only_mask = self.fields.iter()
             .map(|f| match f.flags.cache_only { true => f.value, false => 0 } )
@@ -944,8 +934,10 @@ impl ToTokenStream for Bitfield {
             }}
 
             fn get_metadata_for_field(&self, field: &str) -> Option<TagFieldMetadata> {{
-                // TODO
-                None
+                match field {{
+                    {all_metadata}
+                    _ => None
+                }}
             }}
 
             fn fields(&self) -> &'static [&'static str] {{
@@ -1145,4 +1137,25 @@ fn safe_str(string: &str, safety_level: SafetyLevel) -> Cow<str> {
     }
 
     string
+}
+
+fn build_metadata(flags: &Flags, allowed_references: &str) -> String {
+    let comment = if let Some(n) = &flags.comment {
+        let r = n.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n");
+        format!("Some(\"{r}\")")
+    }
+    else {
+        "None".to_owned()
+    };
+    let read_only = flags.uneditable_in_editor;
+    let cache_only = flags.cache_only;
+    let non_cached = flags.non_cached;
+
+    format!("TagFieldMetadata {{
+        comment: {comment},
+        read_only: {read_only},
+        cache_only: {cache_only},
+        non_cached: {non_cached},
+        allowed_references: {allowed_references}
+    }}")
 }

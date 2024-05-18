@@ -43,8 +43,17 @@ pub trait TagTree {
     /// Get the root tag tree item.
     fn root(&self) -> TagTreeItem;
 
+    /// Get the type of tree the TagTree is.
+    fn tree_type(&self) -> TreeType;
+
     /// Get all tags in the tree.
     fn get_all_tags_with_filter(&self, filter: Option<&TagFilter>) -> Vec<TagPath>;
+}
+
+/// Specify the type of tag tree.
+pub enum TreeType {
+    LooseTags,
+    CacheFile
 }
 
 /// Tag filter
@@ -488,6 +497,9 @@ impl<T: TagTree> TagTree for CachingTagTree<T> {
     fn get_all_tags_with_filter(&self, filter: Option<&TagFilter>) -> Vec<TagPath> {
         self.inner.get_all_tags_with_filter(filter)
     }
+    fn tree_type(&self) -> TreeType {
+        self.inner.tree_type()
+    }
 }
 
 #[derive(Clone)]
@@ -674,6 +686,10 @@ impl TagTree for VirtualTagsDirectory {
     fn get_all_tags_with_filter(&self, filter: Option<&TagFilter>) -> Vec<TagPath> {
         iterate_through_all_tags(self, filter).collect()
     }
+
+    fn tree_type(&self) -> TreeType {
+        TreeType::LooseTags
+    }
 }
 
 /// Thread-safe wrapper for tag trees.
@@ -719,6 +735,10 @@ impl<T: TagTree + Send> TagTree for AtomicTagTree<T> {
     fn get_all_tags_with_filter(&self, filter: Option<&TagFilter>) -> Vec<TagPath> {
         self.inner.lock().unwrap().get_all_tags_with_filter(filter)
     }
+
+    fn tree_type(&self) -> TreeType {
+        self.inner.lock().unwrap().tree_type()
+    }
 }
 
 impl<T: TagTree> TagTree for Arc<T> {
@@ -752,6 +772,10 @@ impl<T: TagTree> TagTree for Arc<T> {
 
     fn get_all_tags_with_filter(&self, filter: Option<&TagFilter>) -> Vec<TagPath> {
         self.as_ref().get_all_tags_with_filter(filter)
+    }
+
+    fn tree_type(&self) -> TreeType {
+        self.as_ref().tree_type()
     }
 }
 
@@ -812,6 +836,10 @@ impl TagTree for Box<dyn TagTree + Send + Sync> {
     fn get_all_tags_with_filter(&self, filter: Option<&TagFilter>) -> Vec<TagPath> {
         self.as_ref().get_all_tags_with_filter(filter)
     }
+
+    fn tree_type(&self) -> TreeType {
+        self.as_ref().tree_type()
+    }
 }
 
 impl TagTree for Arc<dyn TagTree + Send + Sync> {
@@ -845,6 +873,10 @@ impl TagTree for Arc<dyn TagTree + Send + Sync> {
 
     fn get_all_tags_with_filter(&self, filter: Option<&TagFilter>) -> Vec<TagPath> {
         self.as_ref().get_all_tags_with_filter(filter)
+    }
+
+    fn tree_type(&self) -> TreeType {
+        self.as_ref().tree_type()
     }
 }
 

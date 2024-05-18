@@ -1,17 +1,15 @@
 use std::collections::{HashMap, VecDeque};
 use std::env::Args;
-use std::io::Cursor;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 use cli::{CommandLineParser, CommandLineValue, CommandLineValueType, Parameter};
 use ringhopper::error::Error;
 use ringhopper::map::load_map_from_filesystem_as_tag_tree;
 use ringhopper::tag::default::set_all_defaults_for_tag;
-use ringhopper::primitives::byteorder::WriteBytesExt;
 use ringhopper::primitives::primitive::TagPath;
 use ringhopper::primitives::tag::ParseStrictness;
 use ringhopper::tag::compare::{compare_tags, TagComparisonDifference};
-use ringhopper::tag::tree::{TagTree, VirtualTagsDirectory};
+use ringhopper::tag::tree::{TagTree, TreeType, VirtualTagsDirectory};
 use threading::{DisplayMode, do_with_threads, ProcessSuccessType};
 use util::make_stdout_logger;
 
@@ -28,7 +26,6 @@ enum Show {
 struct UserData {
     tags: Arc<dyn TagTree + Send + Sync>,
     differences: Arc<Mutex<HashMap<TagPath, Vec<TagComparisonDifference>>>>,
-    should_strip: [bool; 2],
     raw: bool
 }
 
@@ -69,7 +66,7 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
             false
         ))
         .add_jobs()
-        .add_custom_parameter(Parameter::single("raw", 'r', "Do not strip cache-only fields from cache file tags when comparing.", "", None))
+        .add_custom_parameter(Parameter::single("raw", 'r', "Also compare cache-only fields, and disable defaulting when comparing.", "", None))
         .set_required_extra_parameters(2)
         .parse(args)?;
 
@@ -84,20 +81,17 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
     let raw = parser.get_custom("raw").is_some();
 
     let mut source: VecDeque<Arc<dyn TagTree + Send + Sync>> = VecDeque::new();
-    let mut should_strip = Cursor::new([0u8; 2]);
     for i in parser.get_extra() {
         let path: &Path = i.as_ref();
         if !path.exists() {
             return Err(format!("Source `{i}` does not exist"))
         }
         else if path.is_file() && path.extension() == Some("map".as_ref()) {
-            should_strip.write_u8(1).unwrap();
             let map = load_map_from_filesystem_as_tag_tree(path, ParseStrictness::Strict)
                 .map_err(|e| format!("Cannot load {path:?} as a cache file: {e}"))?;
             source.push_back(map);
         }
         else if path.is_dir() {
-            should_strip.write_u8(0).unwrap();
             let dir = match VirtualTagsDirectory::new(&[path], None) {
                 Ok(n) => n,
                 Err(e) => return Err(format!("Error with tags directory {}: {e}", path.display()))
@@ -109,9 +103,6 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
         }
     }
 
-    let should_strip = should_strip.into_inner();
-    let should_strip = [should_strip[0] != 0, should_strip[1] != 0];
-
     let primary = source.pop_front().unwrap();
     let secondary = source.pop_front().unwrap();
     let tag = parser.get_custom("filter").unwrap()[0].string().to_owned();
@@ -119,7 +110,6 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
     let user_data = UserData {
         tags: secondary,
         differences: Arc::new(Mutex::new(HashMap::new())),
-        should_strip,
         raw
     };
 
@@ -134,21 +124,13 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
 
         let mut primary = context.tags_directory.open_tag_copy(path)?;
 
+        // Set defaults (functional comparison)
         if !user_data.raw {
-            // Strip any cache-only fields
-            if user_data.should_strip[0] {
-                primary = ringhopper::definitions::read_any_tag_from_file_buffer(&primary.to_tag_file()?, ParseStrictness::Relaxed)?;
-            }
-            if user_data.should_strip[1] {
-                secondary = ringhopper::definitions::read_any_tag_from_file_buffer(&secondary.to_tag_file()?, ParseStrictness::Relaxed)?;
-            }
-
-            // Set defaults (functional comparison)
             set_all_defaults_for_tag(primary.as_mut());
             set_all_defaults_for_tag(secondary.as_mut());
         }
 
-        let differences = compare_tags(primary.as_ref(), secondary.as_ref());
+        let differences = compare_tags(primary.as_ref(), secondary.as_ref(), user_data.raw);
         user_data.differences.lock().unwrap().insert(path.to_owned(), differences);
 
         Ok(ProcessSuccessType::Success)
