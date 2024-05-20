@@ -308,5 +308,52 @@ impl TagFile {
     }
 }
 
+/// Iterate through each [`DynamicTagData`] of a block.
+pub fn for_each_field<P: FnMut(Option<TagFieldMetadata>, &dyn DynamicTagData)>(data: &dyn DynamicTagData, mut predicate: P) {
+    fn recursion<P: FnMut(Option<TagFieldMetadata>, &dyn DynamicTagData)>(data: &dyn DynamicTagData, predicate: &mut P) {
+        for field_name in data.fields() {
+            let field = data.get_field(field_name).unwrap();
+            predicate(data.get_metadata_for_field(field_name), field);
+
+            if let Some(arr) = field.as_array() {
+                for i in 0..arr.len() {
+                    let item = arr.get_at_index(i).unwrap();
+                    recursion(item, predicate);
+                }
+            }
+            else if !field.fields().is_empty() {
+                recursion(field, predicate);
+            }
+        }
+    }
+    recursion(data, &mut predicate);
+}
+
+/// Mutably iterate through each [`DynamicTagData`] of a block.
+pub fn for_each_field_mut<P: FnMut(Option<TagFieldMetadata>, &mut dyn DynamicTagData)>(data: &mut dyn DynamicTagData, access_read_only_fields: bool, mut predicate: P) {
+    fn recursion<P: FnMut(Option<TagFieldMetadata>, &mut dyn DynamicTagData)>(data: &mut dyn DynamicTagData, predicate: &mut P, access_read_only_fields: bool) {
+        for field_name in data.fields() {
+            let metadata = data.get_metadata_for_field(field_name);
+            if !access_read_only_fields && metadata.is_some_and(|m| m.read_only) {
+                continue;
+            }
+
+            let field = data.get_field_mut(field_name).unwrap();
+            predicate(metadata, field);
+
+            if let Some(arr) = field.as_array_mut() {
+                for i in 0..arr.len() {
+                    let item = arr.get_at_index_mut(i).unwrap();
+                    recursion(item, predicate, access_read_only_fields);
+                }
+            }
+            else if !field.fields().is_empty() {
+                recursion(field, predicate, access_read_only_fields);
+            }
+        }
+    }
+    recursion(data, &mut predicate, access_read_only_fields);
+}
+
 #[cfg(test)]
 mod test;

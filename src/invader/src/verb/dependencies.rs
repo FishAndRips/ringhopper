@@ -45,7 +45,7 @@ pub fn dependencies(args: Args, description: &'static str) -> Result<(), String>
         }
         else {
             let tag = str_unwrap!(tags.open_tag_copy(&tag_path), "Failed to open tag: {error}");
-            get_tag_dependencies_for_block(tag.as_ref())
+            get_tag_dependencies_for_block(tag.as_ref().as_dynamic())
         }
     };
 

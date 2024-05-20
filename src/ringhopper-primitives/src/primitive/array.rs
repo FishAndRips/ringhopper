@@ -52,6 +52,36 @@ impl<T: DynamicTagData> DynamicTagData for Bounds<T> {
     fn data_type(&self) -> DynamicTagDataType {
         DynamicTagDataType::Block
     }
+
+    fn as_array(&self) -> Option<&dyn DynamicTagDataArray> {
+        Some(self)
+    }
+
+    fn as_array_mut(&mut self) -> Option<&mut dyn DynamicTagDataArray> {
+        Some(self)
+    }
+}
+
+impl<T: DynamicTagData> DynamicTagDataArray for Bounds<T> {
+    fn get_at_index(&self, index: usize) -> Option<&dyn DynamicTagData> {
+        match index {
+            0 => Some(&self.lower),
+            1 => Some(&self.upper),
+            _ => None
+        }
+    }
+
+    fn get_at_index_mut(&mut self, index: usize) -> Option<&mut dyn DynamicTagData> {
+        match index {
+            0 => Some(&mut self.lower),
+            1 => Some(&mut self.upper),
+            _ => None
+        }
+    }
+
+    fn len(&self) -> usize {
+        2
+    }
 }
 
 impl<T: TagData> TagData for Bounds<T> {

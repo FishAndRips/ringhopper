@@ -4,61 +4,31 @@ use primitives::dynamic::DynamicTagData;
 use primitives::engine::Engine;
 use primitives::error::{Error, RinghopperResult};
 use primitives::primitive::{TagGroup, TagPath, TagReference};
+use primitives::tag::{for_each_field, for_each_field_mut};
 use crate::tag::tree::{iterate_through_all_tags, TagTree};
 
 /// Iterate through each [`TagReference`] of a block.
-pub fn for_each_dependency<T: DynamicTagData + ?Sized, P: FnMut(&TagReference)>(data: &T, mut predicate: P) {
-    fn recursion<T: DynamicTagData + ?Sized, P: FnMut(&TagReference)>(data: &T, predicate: &mut P) {
-        for field in data.fields() {
-            let field = data.get_field(field).unwrap();
-            if let Some(p) = field.as_any().downcast_ref::<TagReference>() {
-                predicate(p);
-                continue;
-            }
-            if let Some(arr) = field.as_array() {
-                for i in 0..arr.len() {
-                    let item = arr.get_at_index(i).unwrap();
-                    recursion(item, predicate);
-                }
-            }
-            recursion(field, predicate);
+pub fn for_each_dependency<P: FnMut(&TagReference)>(data: &dyn DynamicTagData, mut predicate: P) {
+    for_each_field(data, |_, b| {
+        let reference_maybe: Option<&TagReference> = b.as_any().downcast_ref();
+        if let Some(n) = reference_maybe {
+            predicate(n)
         }
-    }
-    recursion(data, &mut predicate);
+    });
 }
 
 /// Mutably iterate through each [`TagReference`] of a block.
-fn for_each_dependency_mut<P: FnMut(&'static [TagGroup], &mut TagReference)>(data: &mut dyn DynamicTagData, access_read_only_fields: bool, mut predicate: P) {
-    fn recursion<P: FnMut(&'static [TagGroup], &mut TagReference)>(data: &mut dyn DynamicTagData, predicate: &mut P, access_read_only_fields: bool) {
-        for field_name in data.fields() {
-            let metadata = match data.get_metadata_for_field(field_name) {
-                Some(n) => n,
-                None => continue
-            };
-
-            if !access_read_only_fields && metadata.read_only {
-                continue;
-            }
-
-            let field = data.get_field_mut(field_name).unwrap();
-            if let Some(p) = field.as_any_mut().downcast_mut::<TagReference>() {
-                predicate(metadata.allowed_references.unwrap(), p);
-                continue;
-            }
-            if let Some(arr) = field.as_array_mut() {
-                for i in 0..arr.len() {
-                    let item = arr.get_at_index_mut(i).unwrap();
-                    recursion(item, predicate, access_read_only_fields);
-                }
-            }
-            recursion(field, predicate, access_read_only_fields);
+pub fn for_each_dependency_mut<P: FnMut(&'static [TagGroup], &mut TagReference)>(data: &mut dyn DynamicTagData, access_read_only_fields: bool, mut predicate: P) {
+    for_each_field_mut(data, access_read_only_fields, |a, b| {
+        let reference_maybe: Option<&mut TagReference> = b.as_any_mut().downcast_mut();
+        if let Some(n) = reference_maybe {
+            predicate(a.unwrap().allowed_references.unwrap(), n)
         }
-    }
-    recursion(data, &mut predicate, access_read_only_fields);
+    });
 }
 
 /// Get all dependencies for a block of tag data or a tag itself.
-pub fn get_tag_dependencies_for_block<T: DynamicTagData + ?Sized>(data: &T) -> HashSet<TagPath> {
+pub fn get_tag_dependencies_for_block(data: &dyn DynamicTagData) -> HashSet<TagPath> {
     let mut result = HashSet::new();
     for_each_dependency(data, |dependency| {
         if let TagReference::Set(p) = dependency {
@@ -121,7 +91,7 @@ pub fn recursively_get_dependencies_for_tag<T: TagTree>(tag: &TagPath, tag_tree:
             Err(e) => return Err(e)
         };
 
-        let dependencies = get_tag_dependencies_for_block(tag.lock().unwrap().as_ref());
+        let dependencies = get_tag_dependencies_for_block(tag.lock().unwrap().as_ref().as_dynamic());
         for i in &dependencies {
             if result.contains_key(i) || pending.iter().find(|p| &p.0 == i).is_some() {
                 continue
@@ -145,7 +115,7 @@ pub fn get_reverse_dependencies_for_tag<T: TagTree>(tag: &TagPath, tag_tree: &T)
 
         let t = tag_tree.open_tag_shared(&i).unwrap();
         let t = t.lock().unwrap();
-        if get_tag_dependencies_for_block(t.as_ref()).contains(tag) {
+        if get_tag_dependencies_for_block(t.as_ref().as_dynamic()).contains(tag) {
             result.insert(i);
         }
     }

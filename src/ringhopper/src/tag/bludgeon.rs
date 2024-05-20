@@ -5,6 +5,7 @@ mod model;
 mod scenario;
 mod unicode_string_list;
 mod scenario_structure_bsp;
+mod floats;
 
 pub enum BludgeonResult {
     Done,
@@ -12,6 +13,8 @@ pub enum BludgeonResult {
 }
 
 pub fn bludgeon_tag(tag: &mut dyn PrimaryTagStructDyn, path: &TagPath) -> BludgeonResult {
+    floats::fix_bad_floats(tag);
+
     match tag.group() {
         TagGroup::Model | TagGroup::GBXModel => model::repair_model(tag),
         TagGroup::Sound => sound::repair_sound(tag),

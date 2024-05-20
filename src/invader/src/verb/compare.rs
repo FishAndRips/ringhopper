@@ -9,7 +9,7 @@ use ringhopper::tag::default::set_all_defaults_for_tag;
 use ringhopper::primitives::primitive::TagPath;
 use ringhopper::primitives::tag::ParseStrictness;
 use ringhopper::tag::compare::{compare_tags, TagComparisonDifference};
-use ringhopper::tag::tree::{TagTree, TreeType, VirtualTagsDirectory};
+use ringhopper::tag::tree::{TagTree, VirtualTagsDirectory};
 use threading::{DisplayMode, do_with_threads, ProcessSuccessType};
 use util::make_stdout_logger;
 

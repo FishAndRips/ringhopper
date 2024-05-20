@@ -685,7 +685,7 @@
                 "name": "projectile",
                 "type": "TagReference",
                 "groups": [
-                    "projectile"
+                    "object"
                 ]
             }
         ],

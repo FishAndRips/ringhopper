@@ -11,6 +11,7 @@ pub(crate) mod sound;
 mod particle_system;
 mod particle;
 pub(crate) mod scenario_structure_bsp;
+mod floats;
 
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
@@ -183,6 +184,8 @@ impl<T: TagTree + Send + Sync + 'static> VerifyContext<T> {
 
                 let tag = lock.as_ref();
                 let group = path.group();
+
+                floats::check_bad_floats(tag, &mut result);
 
                 // TODO: Verify indices
                 verify_dependencies(tag, path, self, &mut result);
