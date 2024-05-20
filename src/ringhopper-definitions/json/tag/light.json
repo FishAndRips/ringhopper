@@ -163,17 +163,7 @@
             {
                 "name": "color",
                 "type": "ColorARGBFloat",
-                "bounds": true,
-                "default": [
-                    1.0,
-                    1.0,
-                    1.0,
-                    1.0,
-                    1.0,
-                    1.0,
-                    1.0,
-                    1.0
-                ]
+                "bounds": true
             },
             {
                 "type": "pad",

@@ -3,6 +3,7 @@ use ringhopper_structs::group_has_default_in_definitions;
 
 mod object;
 mod sound;
+mod light;
 mod particle;
 mod light_volume;
 mod shader;
@@ -10,6 +11,7 @@ mod lens_flare;
 mod sound_looping;
 
 use self::{
+    light::*,
     object::*,
     sound::*,
     particle::*,
@@ -44,6 +46,7 @@ fn get_default_fns(group: TagGroup) -> [Option<DefaultFnHolder>; 3] {
 
     let default_undefault: Option<(DefaultFn, DefaultFn)> = match group {
         TagGroup::Sound => Some((set_defaults_for_sound, unset_defaults_for_sound)),
+        TagGroup::Light => Some((set_defaults_for_light, unset_defaults_for_light)),
         TagGroup::Particle => Some((set_defaults_for_particle, unset_defaults_for_particle)),
         TagGroup::LightVolume => Some((set_defaults_for_light_volume, unset_defaults_for_light_volume)),
         TagGroup::ShaderModel => Some((set_defaults_for_shader_model, unset_defaults_for_shader_model)),
