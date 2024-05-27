@@ -274,6 +274,10 @@ fn verify_sound_permutation_indices(sound: &Sound, result: &mut VerifyResult) {
     let split_permutations = sound_tag_actually_contains_split_permutations(sound);
 
     'l: for pitch_range in &sound.pitch_ranges {
+        if pitch_range.actual_permutation_count == 0 && pitch_range.permutations.items.is_empty() {
+            result.errors.push("Pitch range has unset actual_permutation_count.".to_owned());
+            break 'l;
+        }
         for permutation in &pitch_range.permutations {
             if permutation.next_permutation_index == Some(0) {
                 result.errors.push("Sound tag contains permutations with next_permutation_index set to 0. This is invalid.".to_owned());
