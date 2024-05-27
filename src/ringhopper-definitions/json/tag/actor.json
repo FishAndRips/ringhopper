@@ -75,7 +75,7 @@
                 "name": "unused",
                 "exclude": true
             },
-            "shoot at target s last location",
+            "shoot at targets last location",
             "try to stay still when crouched",
             "crouch when not in combat",
             "crouch when guarding",
