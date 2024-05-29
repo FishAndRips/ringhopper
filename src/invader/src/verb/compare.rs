@@ -46,11 +46,11 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
         .add_custom_parameter(Parameter::new(
             "show",
             's',
-            "Set whether to display `matched`, `mismatched`, or `all`. Default: `all`",
+            "Set whether to display `all`, `matched`, or `mismatched`. Default: `mismatched`",
             "<param>",
             Some(CommandLineValueType::String),
             1,
-            Some(vec![CommandLineValue::String("all".to_owned())]),
+            Some(vec![CommandLineValue::String("mismatched".to_owned())]),
             false,
             false
         ))
