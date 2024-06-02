@@ -19,7 +19,8 @@ use self::{
     light_volume::*,
     shader::*,
     lens_flare::*,
-    sound_looping::*
+    sound_looping::*,
+    model::*
 };
 
 use super::object::is_object;
@@ -56,6 +57,8 @@ fn get_default_fns(group: TagGroup) -> [Option<DefaultFnHolder>; 3] {
         TagGroup::ShaderTransparentGeneric => Some((set_defaults_for_shader_transparent_generic, unset_defaults_for_shader_transparent_generic)),
         TagGroup::LensFlare => Some((set_defaults_for_lens_flare, unset_defaults_for_lens_flare)),
         TagGroup::SoundLooping => Some((set_defaults_for_sound_looping, unset_defaults_for_sound_looping)),
+        TagGroup::Model => Some((set_defaults_for_model, unset_defaults_for_model)),
+        TagGroup::GBXModel => Some((set_defaults_for_gbxmodel, unset_defaults_for_gbxmodel)),
         _ => None
     };
 
