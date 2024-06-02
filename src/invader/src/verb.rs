@@ -23,6 +23,7 @@ mod recover;
 mod verify;
 mod refactor_groups;
 mod bludgeon;
+mod recompress_vertices;
 
 pub struct Verb {
     pub name: &'static str,
@@ -50,6 +51,7 @@ pub const ALL_VERBS: &'static [Verb] = &[
     Verb::new("list-scenario-tags", "View all tags needed to build a scenario into a map", dependencies::list_scenario_tags),
     Verb::new("nudge", "Fix floating point precision errors from tag extraction", nudge::nudge),
     Verb::new("plate", "Generate color plates for bitmaps", plate::plate),
+    Verb::new("recompress-vertices", "Recompress model vertices", recompress_vertices::recompress_vertices),
     Verb::new("recover", "Recover data from tags", recover::recover),
     Verb::new("refactor-groups", "Batch refactor dependencies by tag group if the new dependency exists", refactor_groups::refactor_groups),
     Verb::new("strip", "Clean tags", strip::strip),

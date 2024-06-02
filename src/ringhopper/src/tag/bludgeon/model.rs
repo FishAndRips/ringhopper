@@ -1,15 +1,10 @@
-use primitives::{primitive::{TagGroup, Vector}, tag::PrimaryTagStructDyn};
-use ringhopper_structs::{GBXModel, Model};
+use primitives::{primitive::Vector, tag::PrimaryTagStructDyn};
 
-use crate::tag::model::ModelFunctions;
+use crate::tag::model::downcast_model_mut;
 use super::BludgeonResult;
 
 pub fn repair_model(tag: &mut dyn PrimaryTagStructDyn) -> BludgeonResult {
-    let model_fns: &mut dyn ModelFunctions = match tag.group() {
-        TagGroup::Model => tag.as_any_mut().downcast_mut::<Model>().unwrap(),
-        TagGroup::GBXModel => tag.as_any_mut().downcast_mut::<GBXModel>().unwrap(),
-        g => unreachable!("can't repair non-model group {g}")
-    };
+    let model_fns = downcast_model_mut(tag).unwrap();
 
     if model_fns.fix_runtime_markers().is_err() {
         return BludgeonResult::CannotRepair

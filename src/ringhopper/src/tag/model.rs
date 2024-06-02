@@ -1,7 +1,8 @@
 use definitions::{GBXModel, GBXModelFlags, GBXModelGeometry, GBXModelGeometryPart, Model, ModelDetailCutoff, ModelFlags, ModelGeometry, ModelGeometryPart, ModelNode, ModelRegion, ModelRegionPermutationMarker, ModelShaderReference, ModelVertexCompressed, ModelVertexUncompressed};
 use primitives::dynamic::DynamicTagDataArray;
 use primitives::error::{Error, RinghopperResult};
-use primitives::primitive::{Index, Reflexive, Vector2D};
+use primitives::primitive::{Index, Reflexive, TagGroup, Vector2D};
+use primitives::tag::PrimaryTagStructDyn;
 
 pub trait ModelFunctions {
     /// Convert into a model tag.
@@ -39,6 +40,11 @@ pub trait ModelFunctions {
     ///
     /// Returns true if the model was fixed, false if the model was OK, and an error if the model is broken.
     fn fix_runtime_markers(&mut self) -> RinghopperResult<bool>;
+
+    /// Fix compressed vertices being missing from a model or recompress them if they do exist.
+    ///
+    /// Returns true if the model was fixed or false if it is not possible to recompress vertices for the given tag.
+    fn recompress_vertices(&mut self) -> bool;
 
     /// Fix compressed vertices being missing from a model.
     ///
@@ -141,6 +147,28 @@ impl ModelPartGet for GBXModelGeometryPart {
     }
 }
 
+/// Get the model functions of a tag if it's a model.
+///
+/// Returns `None` if no such functions exist.
+pub fn downcast_model(tag: &dyn PrimaryTagStructDyn) -> Option<&dyn ModelFunctions> {
+    match tag.group() {
+        TagGroup::Model => Some(tag.as_any().downcast_ref::<Model>().unwrap()),
+        TagGroup::GBXModel => Some(tag.as_any().downcast_ref::<GBXModel>().unwrap()),
+        _ => None
+    }
+}
+
+/// Get the model functions of a tag if it's a model.
+///
+/// Returns `None` if no such functions exist.
+pub fn downcast_model_mut(tag: &mut dyn PrimaryTagStructDyn) -> Option<&mut dyn ModelFunctions> {
+    match tag.group() {
+        TagGroup::Model => Some(tag.as_any_mut().downcast_mut::<Model>().unwrap()),
+        TagGroup::GBXModel => Some(tag.as_any_mut().downcast_mut::<GBXModel>().unwrap()),
+        _ => None
+    }
+}
+
 impl ModelFunctions for Model {
     fn convert_to_model(self) -> Model {
         self
@@ -220,6 +248,16 @@ impl ModelFunctions for Model {
         fix_runtime_markers!(self)
     }
 
+    fn recompress_vertices(&mut self) -> bool {
+        let result = fix_vertices!(self, destroy_compressed_vertices);
+
+        if !self.supports_compressed_vertices() {
+            return result
+        }
+
+        self.fix_uncompressed_vertices()
+    }
+
     fn fix_compressed_vertices(&mut self) -> bool {
         if !self.supports_compressed_vertices() {
             return false
@@ -235,7 +273,6 @@ impl ModelFunctions for Model {
     fn flip_lod_cutoffs(&mut self) {
         flip_lod_cutoffs(&mut self.detail_cutoff)
     }
-
     fn supports_compressed_vertices(&mut self) -> bool {
         self.nodes.len() <= MAX_NODES_FOR_COMPRESSED_VERTICES
     }
@@ -297,7 +334,6 @@ impl ModelFunctions for GBXModel {
             shaders: self.shaders
         }
     }
-
     fn convert_to_gbxmodel(self) -> GBXModel {
         self
     }
@@ -321,6 +357,7 @@ impl ModelFunctions for GBXModel {
     fn shaders(&self) -> &[ModelShaderReference] {
         self.shaders.items.as_ref()
     }
+
     fn nodes(&self) -> &[ModelNode] {
         self.nodes.items.as_ref()
     }
@@ -338,6 +375,15 @@ impl ModelFunctions for GBXModel {
     }
     fn fix_runtime_markers(&mut self) -> RinghopperResult<bool> {
         fix_runtime_markers!(self)
+    }
+    fn recompress_vertices(&mut self) -> bool {
+        let result = fix_vertices!(self, destroy_compressed_vertices);
+
+        if !self.supports_compressed_vertices() {
+            return result
+        }
+
+        self.fix_uncompressed_vertices()
     }
 
     fn fix_compressed_vertices(&mut self) -> bool {
@@ -541,6 +587,17 @@ fn restore_missing_compressed_vertices(part: &mut ModelGeometryPart) -> bool {
     }
 
     true
+}
+
+fn destroy_compressed_vertices(part: &mut ModelGeometryPart) -> bool {
+    // If there are no uncompressed vertices, the tag cannot be restored.
+    if part.uncompressed_vertices.items.is_empty() {
+        return false;
+    }
+
+    part.compressed_vertices.items.clear();
+
+    true // to let it work with fix_vertices
 }
 
 fn restore_missing_uncompressed_vertices(part: &mut ModelGeometryPart) -> bool {
