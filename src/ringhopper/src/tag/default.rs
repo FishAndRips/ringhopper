@@ -9,6 +9,7 @@ mod light_volume;
 mod shader;
 mod lens_flare;
 mod sound_looping;
+mod model;
 
 use self::{
     light::*,

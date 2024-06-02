@@ -1,7 +1,7 @@
 #[cfg(target_os = "windows")]
 extern crate windows;
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 extern crate libc;
 
 use std::process::ExitCode;

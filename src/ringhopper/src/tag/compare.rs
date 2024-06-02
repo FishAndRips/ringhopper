@@ -22,18 +22,18 @@ struct Context {
 /// # Panics
 ///
 /// The groups and internal structure must be the same, or else this function may panic or output bad results.
-pub fn compare_tags(first: &dyn PrimaryTagStructDyn, second: &dyn PrimaryTagStructDyn, allow_cache_only: bool) -> Vec<TagComparisonDifference> {
+pub fn compare_tags(first: &dyn PrimaryTagStructDyn, second: &dyn PrimaryTagStructDyn, allow_cache_only: bool, abbreviated: bool) -> Vec<TagComparisonDifference> {
     assert_eq!(first.group(), second.group());
 
     let mut path = String::with_capacity(1024);
     let mut comparison = Context::default();
     comparison.allow_cache_only = allow_cache_only;
-    compare_tag_data_blocks(first, second, &mut path, &mut comparison, 0);
+    compare_tag_data_blocks(first, second, &mut path, &mut comparison, 0, abbreviated);
 
     comparison.differences
 }
 
-fn compare_tag_data<T: DynamicTagData + ?Sized>(first: &T, second: &T, path: &mut String, comparison: &mut Context, depth: usize) {
+fn compare_tag_data<T: DynamicTagData + ?Sized>(first: &T, second: &T, path: &mut String, comparison: &mut Context, depth: usize, abbreviated: bool) {
     let data_type = first.data_type();
     debug_assert_eq!(data_type, second.data_type());
 
@@ -41,7 +41,7 @@ fn compare_tag_data<T: DynamicTagData + ?Sized>(first: &T, second: &T, path: &mu
         DynamicTagDataType::Reflexive | DynamicTagDataType::Array => {
             let first = first.as_array().unwrap();
             let second = second.as_array().unwrap();
-            return compare_array(first, second, path, comparison, depth);
+            return compare_array(first, second, path, comparison, depth, abbreviated);
         },
 
         DynamicTagDataType::Enum => {
@@ -57,7 +57,7 @@ fn compare_tag_data<T: DynamicTagData + ?Sized>(first: &T, second: &T, path: &mu
         },
 
         DynamicTagDataType::Block => {
-            return compare_tag_data_blocks(first, second, path, comparison, depth);
+            return compare_tag_data_blocks(first, second, path, comparison, depth, abbreviated);
         },
 
         DynamicTagDataType::Data => {
@@ -160,18 +160,39 @@ fn compare_string32(first: &String32, second: &String32, path: &mut String, comp
     }
 }
 
-fn compare_tag_data_blocks<T: DynamicTagData + ?Sized>(first: &T, second: &T, path: &mut String, comparison: &mut Context, depth: usize) {
+fn compare_tag_data_blocks<T: DynamicTagData + ?Sized>(first: &T, second: &T, path: &mut String, comparison: &mut Context, depth: usize, abbreviated: bool) {
     let length_before = path.len();
+    let depth_inner = depth + 1;
     for i in first.fields() {
+        let metadata = first.get_metadata_for_field(i);
         if !comparison.allow_cache_only {
-            if first.get_metadata_for_field(i).is_some_and(|f| f.cache_only) {
+            if metadata.is_some_and(|f| f.cache_only) {
                 continue;
             }
         }
 
+        let first = first.get_field(i).unwrap();
+        let second = second.get_field(i).unwrap();
+        let should_be_abbreviated = abbreviated && first.as_array().is_some_and(|a| a.len() > 1);
+
+        let amount_start = comparison.differences.len();
+
         *path += ".";
         *path += i;
-        compare_tag_data(first.get_field(i).unwrap(), second.get_field(i).unwrap(), path, comparison, depth + 1);
+        compare_tag_data(first, second, path, comparison, depth_inner, abbreviated);
+
+        let amount_end = comparison.differences.len();
+        let differences_found = amount_end - amount_start;
+
+        if should_be_abbreviated && (amount_end - amount_start) > 1 {
+            comparison.differences.truncate(amount_start);
+            comparison.differences.insert(amount_start, TagComparisonDifference {
+                depth: depth_inner,
+                path: path[1..].to_owned(),
+                difference: format!("{differences_found} difference(s) found (minimized)")
+            })
+        }
+
         path.truncate(length_before);
     }
     return;
@@ -216,7 +237,7 @@ fn compare_enums(first: &dyn DynamicEnum, second: &dyn DynamicEnum, path: &mut S
     }
 }
 
-fn compare_array(first: &dyn DynamicTagDataArray, second: &dyn DynamicTagDataArray, path: &mut String, comparison: &mut Context, depth: usize) {
+fn compare_array(first: &dyn DynamicTagDataArray, second: &dyn DynamicTagDataArray, path: &mut String, comparison: &mut Context, depth: usize, abbreviated: bool) {
     let flength = first.len();
     let slength = second.len();
 
@@ -234,7 +255,7 @@ fn compare_array(first: &dyn DynamicTagDataArray, second: &dyn DynamicTagDataArr
     let length_before = path.len();
     for i in 0..flength {
         *path += &format!("[{i}]");
-        compare_tag_data(first.get_at_index(i).unwrap(), second.get_at_index(i).unwrap(), path, comparison, depth + 1);
+        compare_tag_data(first.get_at_index(i).unwrap(), second.get_at_index(i).unwrap(), path, comparison, depth + 1, abbreviated);
         path.truncate(length_before);
     }
 }

@@ -26,7 +26,8 @@ enum Show {
 struct UserData {
     tags: Arc<dyn TagTree + Send + Sync>,
     differences: Arc<Mutex<HashMap<TagPath, Vec<TagComparisonDifference>>>>,
-    raw: bool
+    raw: bool,
+    abbreviated: bool
 }
 
 pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
@@ -65,6 +66,17 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
             false,
             false
         ))
+        .add_custom_parameter(Parameter::new(
+            "abbreviated",
+            'a',
+            "Minimize reflexives that have multiple differences.",
+            "",
+            None,
+            0,
+            None,
+            false,
+            false
+        ))
         .add_jobs()
         .add_custom_parameter(Parameter::single("raw", 'r', "Also compare cache-only fields, and disable defaulting when comparing.", "", None))
         .set_required_extra_parameters(2)
@@ -79,6 +91,7 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
 
     let verbose = parser.get_custom("verbose").is_some();
     let raw = parser.get_custom("raw").is_some();
+    let abbreviated = parser.get_custom("abbreviated").is_some();
 
     let mut source: VecDeque<Arc<dyn TagTree + Send + Sync>> = VecDeque::new();
     for i in parser.get_extra() {
@@ -110,7 +123,8 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
     let user_data = UserData {
         tags: secondary,
         differences: Arc::new(Mutex::new(HashMap::new())),
-        raw
+        raw,
+        abbreviated
     };
 
     let logger = make_stdout_logger();
@@ -130,7 +144,7 @@ pub fn compare(args: Args, description: &'static str) -> Result<(), String> {
             set_all_defaults_for_tag(secondary.as_mut());
         }
 
-        let differences = compare_tags(primary.as_ref(), secondary.as_ref(), user_data.raw);
+        let differences = compare_tags(primary.as_ref(), secondary.as_ref(), user_data.raw, user_data.abbreviated);
         user_data.differences.lock().unwrap().insert(path.to_owned(), differences);
 
         Ok(ProcessSuccessType::Success)
