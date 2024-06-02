@@ -47,7 +47,7 @@ fn generate_test_tag_tree() -> MockTagTree {
 fn dependencies_single_tag() {
     let test_tree = generate_test_tag_tree();
     let dependencies = get_tag_dependencies_for_block(
-        test_tree.open_tag_shared(&TagPath::from_path("weapons\\myweapon\\myweapons.weapon").unwrap()).unwrap().lock().unwrap().as_ref()
+        test_tree.open_tag_shared(&TagPath::from_path("weapons\\myweapon\\myweapons.weapon").unwrap()).unwrap().lock().unwrap().as_ref().as_dynamic()
     );
 
     assert_eq!(5, dependencies.len());

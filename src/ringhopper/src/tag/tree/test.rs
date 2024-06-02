@@ -6,7 +6,7 @@ use definitions::{Model, ModelAnimations, Weapon};
 use primitives::error::RinghopperResult;
 use primitives::primitive::{TagGroup, TagPath};
 use primitives::tag::PrimaryTagStructDyn;
-use crate::tag::tree::{CachingTagTree, CachingTagTreeWriteStrategy, TagFilter, TagTree, TagTreeItem, TagTreeItemType, VirtualTagsDirectory};
+use crate::tag::tree::{CachingTagTree, CachingTagTreeWriteStrategy, TagFilter, TagTree, TagTreeItem, TagTreeItemType, TreeType, VirtualTagsDirectory};
 
 
 #[derive(Default)]
@@ -20,7 +20,7 @@ impl TagTree for MockTagTree {
     fn open_tag_copy(&self, path: &TagPath) -> RinghopperResult<Box<dyn PrimaryTagStructDyn>> {
         let b = self
             .items
-            .get(&path.to_string())
+            .get(&path.to_internal_path())
             .unwrap_or_else(|| panic!("can't open {path} in mocked tag tree", path=path))
             .as_ref()
             .unwrap()
@@ -33,7 +33,7 @@ impl TagTree for MockTagTree {
     }
     fn write_tag(&mut self, path: &TagPath, tag: &dyn PrimaryTagStructDyn) -> RinghopperResult<bool> {
         self.write_tag_calls.lock().unwrap().push(path.to_owned());
-        self.items.insert(path.to_string(), Some(tag.clone_inner()));
+        self.items.insert(path.to_internal_path(), Some(tag.clone_inner()));
         Ok(true)
     }
 
@@ -47,6 +47,10 @@ impl TagTree for MockTagTree {
 
     fn root(&self) -> TagTreeItem {
         TagTreeItem::new(TagTreeItemType::Directory, Cow::Borrowed(""), None, self)
+    }
+
+    fn tree_type(&self) -> TreeType {
+        TreeType::LooseTags
     }
 
     fn get_all_tags_with_filter(&self, _filter: Option<&TagFilter>) -> Vec<TagPath> {
