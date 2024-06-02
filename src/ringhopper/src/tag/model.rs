@@ -255,7 +255,7 @@ impl ModelFunctions for Model {
             return result
         }
 
-        self.fix_uncompressed_vertices()
+        self.fix_compressed_vertices()
     }
 
     fn fix_compressed_vertices(&mut self) -> bool {
@@ -383,7 +383,7 @@ impl ModelFunctions for GBXModel {
             return result
         }
 
-        self.fix_uncompressed_vertices()
+        self.fix_compressed_vertices()
     }
 
     fn fix_compressed_vertices(&mut self) -> bool {
