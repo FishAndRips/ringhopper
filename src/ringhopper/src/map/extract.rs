@@ -44,8 +44,24 @@ pub fn fix_weapon_tag(tag: &mut Weapon, tag_path: &TagPath, scenario_tag: &Scena
     }
 }
 
+fn multiply_by_tick_rate(val: &mut f32) {
+    // do the actual multiplication
+    let result = fixed_med!(*val).saturating_mul(fixed_med!(30.0));
+
+    // save
+    *val = result.to_num();
+}
+
+fn divide_by_tick_rate(val: &mut f32) {
+    // do the actual multiplication
+    let result = fixed_med!(*val).saturating_div(fixed_med!(30));
+
+    // save
+    *val = result.to_num();
+}
+
 pub fn fix_damage_effect_tag(damage_effect: &mut DamageEffect, tag_path: &TagPath, scenario_tag: &Scenario) {
-    damage_effect.camera_shaking.wobble_period /= TICK_RATE;
+    divide_by_tick_rate(&mut damage_effect.camera_shaking.wobble_period);
     nudge_tag(damage_effect);
 
     if scenario_tag._type == ScenarioType::Singleplayer
@@ -56,36 +72,39 @@ pub fn fix_damage_effect_tag(damage_effect: &mut DamageEffect, tag_path: &TagPat
 }
 
 pub fn fix_actor_variant_tag(actor_variant: &mut ActorVariant) {
-    actor_variant.grenades.grenade_velocity /= TICK_RATE_RECIPROCOL;
+    multiply_by_tick_rate(&mut actor_variant.grenades.grenade_velocity);
     nudge_tag(actor_variant);
 }
 
 pub fn fix_continuous_damage_effect_tag(continuous_damage_effect: &mut ContinuousDamageEffect) {
-    continuous_damage_effect.camera_shaking.wobble_period /= TICK_RATE;
+    divide_by_tick_rate(&mut continuous_damage_effect.camera_shaking.wobble_period);
     nudge_tag(continuous_damage_effect);
 }
 
 pub fn fix_point_physics_tag(point_physics: &mut PointPhysics) {
-    point_physics.air_friction /= 10000.0;
-    point_physics.water_friction /= 10000.0;
+    let scalar = fixed_med!(10000);
+
+    point_physics.air_friction = (fixed_med!(point_physics.air_friction) / scalar).to_num();
+    point_physics.water_friction = (fixed_med!(point_physics.water_friction) / scalar).to_num();
+
     nudge_tag(point_physics);
 }
 
 pub fn fix_projectile_tag(projectile: &mut Projectile) {
-    projectile.minimum_velocity /= TICK_RATE_RECIPROCOL;
-    projectile.initial_velocity /= TICK_RATE_RECIPROCOL;
-    projectile.final_velocity /= TICK_RATE_RECIPROCOL;
+    multiply_by_tick_rate(&mut projectile.minimum_velocity);
+    multiply_by_tick_rate(&mut projectile.initial_velocity);
+    multiply_by_tick_rate(&mut projectile.final_velocity);
 
     for i in &mut projectile.material_response {
-        i.potential_and.upper /= TICK_RATE_RECIPROCOL;
-        i.potential_and.lower /= TICK_RATE_RECIPROCOL;
+        multiply_by_tick_rate(&mut i.potential_and.upper);
+        multiply_by_tick_rate(&mut i.potential_and.lower);
     }
 
     nudge_tag(projectile);
 }
 
 pub fn fix_light_tag(light: &mut Light) {
-    light.effect_parameters.duration /= TICK_RATE;
+    divide_by_tick_rate(&mut light.effect_parameters.duration);
     nudge_tag(light);
 }
 
@@ -208,8 +227,8 @@ pub fn fix_scenario_tag(scenario: &mut Scenario, scenario_name: &str) -> Ringhop
 
     for i in &mut scenario.cutscene_titles {
         i.up_time -= i.fade_in_time;
-        i.fade_in_time *= TICK_RATE_RECIPROCOL;
-        i.fade_out_time *= TICK_RATE_RECIPROCOL;
+        divide_by_tick_rate(&mut i.fade_in_time);
+        divide_by_tick_rate(&mut i.fade_out_time);
         i.up_time *= TICK_RATE_RECIPROCOL;
     }
 

@@ -1,6 +1,7 @@
 use definitions::{ActorVariant, ContinuousDamageEffect, DamageEffect, Light, Object, PointPhysics, Projectile, Scenario, Sound};
 use primitives::primitive::TagGroup;
 use primitives::tag::PrimaryTagStructDyn;
+use crate::FixedPrecision;
 use crate::tag::object::{downcast_base_object_mut, is_object};
 
 /// Return `true` if the tag group can be nudged.
@@ -131,24 +132,21 @@ fn nudge(float: &mut f32, was_nudged_thus_far: &mut bool) {
 
 /// Fix the rounding for a floating point number.
 pub(crate) fn fix_rounding_for_float(float: f32) -> f32 {
-    // Too much rounding error.
-    if float < -32766.0 || float > 32766.0 {
-        return float
-    }
+    let med = fixed_med!(float);
+    let mut bits = med.to_bits();
 
-    // Are we close to an integer?
-    let nearest_int = ((float + 0.001 * float.signum()) as i16) as f32;
-    if (nearest_int - float).abs() < 0.0005 {
-        return nearest_int
+    let very_low_bits = bits & 0xFFFFF;
+    if very_low_bits.count_ones() < 3 {
+        bits -= very_low_bits;
+        return FixedPrecision::from_bits(bits).to_num();
     }
-
-    // Try thousandths then!
-    let float_thousand = float * 1000.0;
-    let nearest_thousandth_int = (float_thousand + 0.001 * float.signum()) as i32;
-    let nearest_thousandth = nearest_thousandth_int as f32;
-    if (float_thousand - nearest_thousandth).abs() < 0.0005 {
-        return nearest_thousandth / 1000.0
+    if (very_low_bits & 0xF0000) == 0xF0000 {
+        bits += 0x100000 - very_low_bits;
+        return FixedPrecision::from_bits(bits).to_num();
     }
 
     float
 }
+
+#[cfg(test)]
+mod test;

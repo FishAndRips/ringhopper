@@ -7,7 +7,7 @@ use crate::tag::nudge::fix_rounding_for_float;
 ///
 /// 360 radians is approximately ~20626.5 degrees.
 ///
-/// This was was fixed unofficially in Invader and officially in CEA.
+/// This was fixed originally in Invader and officially in CEA.
 const BUGGY_RADIUS_DEFAULT: Angle = Angle::from_radians(360.0);
 
 pub fn set_defaults_for_lens_flare(tag: &mut dyn PrimaryTagStructDyn) {
