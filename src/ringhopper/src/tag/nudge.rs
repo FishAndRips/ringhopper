@@ -1,3 +1,4 @@
+use std::str::FromStr;
 use definitions::{ActorVariant, ContinuousDamageEffect, DamageEffect, Light, Object, PointPhysics, Projectile, Scenario, Sound};
 use primitives::primitive::TagGroup;
 use primitives::tag::PrimaryTagStructDyn;
@@ -47,17 +48,26 @@ fn nudge_object(object: &mut Object) -> bool {
             continue
         }
 
-        let mut value = None;
-        let mut all_same = true;
         for p in &mut cc.permutations {
             nudge(&mut p.weight, &mut result);
-            match value {
-                Some(n) => if n != p.weight { all_same = false; }
-                None => value = Some(p.weight)
+        }
+
+        let permutation_ratio = fixed_med!(1) / fixed_med!(cc.permutations.items.len());
+        let mut all_same = true;
+
+        const ERROR: FixedPrecision = match FixedPrecision::from_str("0.001") { Ok(n) => n, Err(_) => unreachable!() };
+
+        for p in &cc.permutations.items {
+            let fixed_weight = fixed_med!(p.weight);
+            let proportion = (fixed_weight / permutation_ratio) - fixed_med!(1);
+
+            if fixed_weight.is_negative() || proportion > ERROR {
+                all_same = false;
+                break;
             }
         }
 
-        if all_same && value != Some(1.0) {
+        if all_same {
             result = true;
             for p in &mut cc.permutations {
                 p.weight = 1.0;
@@ -123,29 +133,89 @@ fn nudge_light(a: &mut Light) -> bool {
 }
 
 fn nudge(float: &mut f32, was_nudged_thus_far: &mut bool) {
-    let fixed = fix_rounding_for_float(*float);
+    let fixed = fix_decimal_rounding(*float);
     if fixed != *float {
         *float = fixed;
         *was_nudged_thus_far |= true;
     }
 }
 
-/// Fix the rounding for a floating point number.
-pub(crate) fn fix_rounding_for_float(float: f32) -> f32 {
-    let med = fixed_med!(float);
-    let mut bits = med.to_bits();
+pub(crate) fn fix_decimal_rounding(float: f32) -> f32 {
+    use std::io::Write;
 
-    let very_low_bits = bits & 0xFFFFF;
-    if very_low_bits.count_ones() < 3 {
-        bits -= very_low_bits;
-        return FixedPrecision::from_bits(bits).to_num();
-    }
-    if (very_low_bits & 0xF0000) == 0xF0000 {
-        bits += 0x100000 - very_low_bits;
-        return FixedPrecision::from_bits(bits).to_num();
+    // Too much rounding error.
+    if float < -32766.0 || float > 32766.0 || float == 0.0 {
+        return float
     }
 
-    float
+    let sign = float.signum();
+    let float_positive = float * sign;
+
+    let mut number = std::io::Cursor::new(['0' as u8; 128]);
+    number.write(&['0' as u8]).unwrap(); // ensure we have one extra digit for carrying
+    write!(&mut number, "{float_positive}").unwrap();
+    let mut number = number.into_inner();
+
+    // Find the decimal
+    let Some(decimal_location) = number.iter().position(|c| *c == '.' as u8) else {
+        return float;
+    };
+
+    // Find the left side of the number
+    let decimals = &mut number[decimal_location + 1..];
+    let Some(first_non_zero) = decimals.iter().position(|c| *c != '0' as u8) else {
+        return float;
+    };
+    let decimals = &mut decimals[first_non_zero..];
+
+    // This is so many places away that we're probably just dealing with a whole number that got rekt by floats...
+    if float_positive > 1.0 && first_non_zero > 4 {
+        decimals.fill('0' as u8);
+    }
+
+    // Find the right side of the number
+    let right_side = match decimals.iter().rev().position(|c| *c != '0' as u8) {
+        Some(n) => decimals.len() - n,
+        None => decimals.len()
+    };
+
+    let decimals = &mut decimals[..right_side];
+    if decimals.len() < 3 {
+        return float;
+    }
+
+    let decimals_as_num = std::str::from_utf8(decimals).unwrap();
+    let first_000 = decimals_as_num.find("000");
+    let first_999 = decimals_as_num.find("999");
+
+    if first_000.is_some() && (first_999.is_none() || first_000 < first_999) {
+        decimals[first_000.unwrap()..].fill('0' as u8);
+    }
+    else if let Some(first_999) = first_999 {
+        decimals[first_999..].fill('0' as u8);
+        let actual_position = first_999 + first_non_zero + decimal_location + 1;
+        for i in (0..actual_position).rev() {
+            let character = &mut number[i];
+
+            match *character {
+                x if x == '9' as u8 => {
+                    *character = '0' as u8;
+                },
+                x if x == '.' as u8 => {
+                    continue;
+                },
+                x => {
+                    *character = x + 1;
+                    break;
+                }
+            }
+        }
+    }
+    else {
+        return float;
+    }
+
+    f32::from_str(std::str::from_utf8(&number).unwrap()).unwrap() * sign
 }
 
 #[cfg(test)]

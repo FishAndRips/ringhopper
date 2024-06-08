@@ -2,15 +2,7 @@ pub extern crate ringhopper_primitives as primitives;
 pub extern crate ringhopper_structs as definitions;
 pub use primitives::error;
 
-use fixed::types::{I16F48, I32F32};
-type FixedPrecision = I32F32;
-type FixedPrecisionSmall = I16F48;
-
-macro_rules! fixed_small {
-    ($val:expr) => {
-        crate::FixedPrecisionSmall::saturating_from_num($val)
-    };
-}
+type FixedPrecision = fixed::types::I64F64;
 
 macro_rules! fixed_med {
     ($val:expr) => {
