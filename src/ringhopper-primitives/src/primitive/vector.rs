@@ -1,5 +1,6 @@
 use std::fmt::{Display, Debug, Formatter};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use bigdecimal::{BigDecimal, FromPrimitive, ToPrimitive};
 
 use byteorder::ByteOrder;
 use crate::dynamic::SimplePrimitiveType;
@@ -649,21 +650,14 @@ pub struct CompressedFloat {
 
 impl From<f32> for CompressedFloat {
     fn from(value: f32) -> Self {
-        Self { data: compress_f16(value) as u16 }
+        Self { data: compress_float::<16>(value) as u16 }
     }
 }
 
 impl From<CompressedFloat> for f32 {
     fn from(value: CompressedFloat) -> Self {
-        decompress_f16(value.data as u32)
+        decompress_float::<16>(value.data as u32)
     }
-}
-
-#[test]
-fn asdfuihjkoafsd() {
-    let f = CompressedFloat { data: 0xC7FF };
-
-    println!("{f} -> {}", f32::from(f));
 }
 
 impl SimpleTagData for CompressedFloat {
@@ -688,13 +682,13 @@ impl SimplePrimitive for CompressedFloat {
 
 impl Debug for CompressedFloat {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("compressed<0x{:02X} = {:?}>", self.data, f32::from(*self)))
+        f.write_fmt(format_args!("compressed<0x{:04X} = {:?}>", self.data, f32::from(*self)))
     }
 }
 
 impl Display for CompressedFloat {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("compressed<0x{:02X} = {}>", self.data, f32::from(*self)))
+        f.write_fmt(format_args!("compressed<0x{:04X} = {}>", self.data, f32::from(*self)))
     }
 }
 
@@ -801,74 +795,78 @@ impl SimplePrimitive for CompressedVector2D {
 }
 
 fn compress_vector3d(vector: &Vector3D) -> u32 {
-    let x = compress_f11(vector.x);
-    let y = compress_f11(vector.y) << 11;
-    let z = compress_f10(vector.z) << 22;
+    let x = compress_float::<11>(vector.x);
+    let y = compress_float::<11>(vector.y) << 11;
+    let z = compress_float::<10>(vector.z) << 22;
 
     x | y | z
 }
 
 fn decompress_vector3d(vector: u32) -> Vector3D {
-    let x = decompress_f11(vector);
-    let y = decompress_f11(vector >> 11);
-    let z = decompress_f10(vector >> 22);
+    let x = decompress_float::<11>(vector);
+    let y = decompress_float::<11>(vector >> 11);
+    let z = decompress_float::<10>(vector >> 22);
 
     Vector3D { x, y, z }
 }
 
 fn compress_vector2d(vector: &Vector2D) -> u32 {
-    let x = compress_f16(vector.x);
-    let y = compress_f16(vector.y) << 16;
+    let x = compress_float::<16>(vector.x);
+    let y = compress_float::<16>(vector.y) << 16;
 
     x | y
 }
 
 fn decompress_vector2d(vector: u32) -> Vector2D {
-    let x = decompress_f16(vector);
-    let y = decompress_f16(vector >> 16);
+    let x = decompress_float::<16>(vector);
+    let y = decompress_float::<16>(vector >> 16);
 
     Vector2D { x, y }
 }
 
-macro_rules! make_compress_fns {
-    ($compress_name:tt, $decompress_name:tt, $signed:tt, $unsigned:tt, $bits:tt) => {
-        fn $compress_name(float: f32) -> u32 {
-            type IntTypeSigned = fixed::types::$signed;
-            type IntTypeUnsigned = fixed::types::$unsigned;
+fn decompress_float<const BITS: usize>(value: u32) -> f32 {
+    let is_negative = (value & (1 << (BITS - 1))) != 0;
+    let mut max = ((1 << (BITS - 1)) - 1) as u32;
+    let mut value = value & max;
 
-            // we don't have the full bitness with compressed floats, so we have to do some conversion
-            const ONE: IntTypeSigned = match IntTypeSigned::from_str("1") { Ok(n) => n, Err(_) => unreachable!() };
-            let limit_positive = IntTypeSigned::from_bits((IntTypeUnsigned::MAX.frac().to_bits() / 2) as i32);
-            let float = float.clamp(-1.0, 1.0);
-            let fixed = IntTypeSigned::from_num(float);
-            let value = fixed * limit_positive / ONE;
+    if is_negative {
+        max += 1;
+        value = max - value;
+    }
 
-            // isolate the value
-            const MASK: u32 = ((1 << $bits) - 1);
+    let mut value = BigDecimal::from_u32(value).unwrap();
+    value *= BigDecimal::from_f64((1.0) / (max as f64)).unwrap(); // multiply by reciprocol - division is super slow
 
-            (value.to_bits() as u32) & MASK
-        }
-
-        #[inline(always)]
-        fn $decompress_name(fixed: u32) -> f32 {
-            type IntTypeSigned = fixed::types::$signed;
-            type IntTypeUnsigned = fixed::types::$unsigned;
-
-            const ONE: IntTypeSigned = match IntTypeSigned::from_str("1") { Ok(n) => n, Err(_) => unreachable!() };
-            const SIGN_BIT: u32 = (1 << ($bits - 1));
-
-            let sign = if (fixed & SIGN_BIT) == 0 { 1 } else { -1 };
-            let fixed = ((fixed & (SIGN_BIT - 1)) as i32) * sign;
-
-            let limit_positive = IntTypeSigned::from_bits((IntTypeUnsigned::MAX.frac().to_bits() / 2) as i32);
-            let fixed = IntTypeSigned::from_bits(fixed).clamp(-limit_positive, limit_positive);
-            let value = fixed * ONE / limit_positive;
-
-            value.to_num()
-        }
-    };
+    let float = value.to_f32().unwrap();
+    if is_negative {
+        -float
+    }
+    else {
+        float
+    }
 }
 
-make_compress_fns!(compress_f16, decompress_f16, I16F16, U16F16, 16);
-make_compress_fns!(compress_f10, decompress_f10, I22F10, U22F10, 10);
-make_compress_fns!(compress_f11, decompress_f11, I21F11, U21F11, 11);
+fn compress_float<const BITS: usize>(value: f32) -> u32 {
+    let value = value.clamp(-1.0, 1.0);
+    let mut positive = value.abs();
+    let is_negative = positive != value;
+    let mut max = ((1 << (BITS - 1)) - 1) as u32;
+
+    if is_negative {
+        positive = 1.0 - positive;
+        max += 1;
+    }
+
+    let mut value = BigDecimal::from_f32(positive).unwrap();
+    value = (value * max).round(0);
+
+    let mut integer = value.to_u32().unwrap();
+    if is_negative {
+        integer = integer | 1 << (BITS - 1);
+    }
+
+    integer
+}
+
+#[cfg(test)]
+mod test;

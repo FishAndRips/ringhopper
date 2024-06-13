@@ -1,8 +1,8 @@
 use std::str::FromStr;
+use bigdecimal::{BigDecimal, FromPrimitive, One, Signed};
 use definitions::{ActorVariant, ContinuousDamageEffect, DamageEffect, Light, Object, PointPhysics, Projectile, Scenario, Sound};
 use primitives::primitive::TagGroup;
 use primitives::tag::PrimaryTagStructDyn;
-use crate::FixedPrecision;
 use crate::tag::object::{downcast_base_object_mut, is_object};
 
 /// Return `true` if the tag group can be nudged.
@@ -52,16 +52,16 @@ fn nudge_object(object: &mut Object) -> bool {
             nudge(&mut p.weight, &mut result);
         }
 
-        let permutation_ratio = fixed_med!(1) / fixed_med!(cc.permutations.items.len());
         let mut all_same = true;
 
-        const ERROR: FixedPrecision = match FixedPrecision::from_str("0.001") { Ok(n) => n, Err(_) => unreachable!() };
+        let error = BigDecimal::from_str("0.001").unwrap();
+        let permutation_ratio_inverse = BigDecimal::from_usize(cc.permutations.items.len()).unwrap();
 
         for p in &cc.permutations.items {
-            let fixed_weight = fixed_med!(p.weight);
-            let proportion = (fixed_weight / permutation_ratio) - fixed_med!(1);
+            let weight = BigDecimal::from_f32(p.weight).unwrap();
+            let proportion = (weight * &permutation_ratio_inverse) - BigDecimal::one();
 
-            if fixed_weight.is_negative() || proportion > ERROR {
+            if p.weight.is_negative() || proportion.abs() > error {
                 all_same = false;
                 break;
             }
