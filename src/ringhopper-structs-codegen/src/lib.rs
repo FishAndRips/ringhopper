@@ -532,6 +532,8 @@ impl ToTokenStream for Struct {
             for i in 0..field_count {
                 let field = &self.fields[i];
                 let field_name = &fields_with_names[i];
+                let field_type = &fields_with_types[i].replace("<", "::<");
+
                 if let Some(n) = &field.default_value {
                     let merge_vector = |vector: &[StaticValue]| -> String {
                         if vector.len() == 1 {
@@ -559,7 +561,7 @@ impl ToTokenStream for Struct {
                         }
                     };
 
-                    writeln!(&mut all_defaulting_code, "if self.{field_name} == Default::default() {{
+                    writeln!(&mut all_defaulting_code, "if self.{field_name} == {field_type}::default() {{
                         self.{field_name} = {default_value};
                     }}").unwrap();
                     writeln!(&mut all_undefaulting_code, "if self.{field_name} == {default_value} {{

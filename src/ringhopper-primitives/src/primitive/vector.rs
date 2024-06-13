@@ -8,7 +8,7 @@ use crate::error::*;
 
 use super::*;
 
-/// Max error tolerance for determinig if a vector is normalized.
+/// Max error tolerance for determining if a vector is normalized.
 const NONNORMAL_THRESHOLD: f32 = 0.00001;
 
 trait VectorMathOps {
@@ -649,14 +649,21 @@ pub struct CompressedFloat {
 
 impl From<f32> for CompressedFloat {
     fn from(value: f32) -> Self {
-        Self { data: compress_float::<16>(value) as u16 }
+        Self { data: compress_f16(value) as u16 }
     }
 }
 
 impl From<CompressedFloat> for f32 {
     fn from(value: CompressedFloat) -> Self {
-        decompress_float::<16>(value.data as u32)
+        decompress_f16(value.data as u32)
     }
+}
+
+#[test]
+fn asdfuihjkoafsd() {
+    let f = CompressedFloat { data: 0xC7FF };
+
+    println!("{f} -> {}", f32::from(f));
 }
 
 impl SimpleTagData for CompressedFloat {
@@ -794,65 +801,74 @@ impl SimplePrimitive for CompressedVector2D {
 }
 
 fn compress_vector3d(vector: &Vector3D) -> u32 {
-    let x = compress_float::<11>(vector.x);
-    let y = compress_float::<11>(vector.y) << 11;
-    let z = compress_float::<10>(vector.z) << 22;
+    let x = compress_f11(vector.x);
+    let y = compress_f11(vector.y) << 11;
+    let z = compress_f10(vector.z) << 22;
 
     x | y | z
 }
 
 fn decompress_vector3d(vector: u32) -> Vector3D {
-    let x = decompress_float::<11>(vector);
-    let y = decompress_float::<11>(vector >> 11);
-    let z = decompress_float::<10>(vector >> 22);
+    let x = decompress_f11(vector);
+    let y = decompress_f11(vector >> 11);
+    let z = decompress_f10(vector >> 22);
 
     Vector3D { x, y, z }
 }
 
 fn compress_vector2d(vector: &Vector2D) -> u32 {
-    let x = compress_float::<16>(vector.x);
-    let y = compress_float::<16>(vector.y) << 16;
+    let x = compress_f16(vector.x);
+    let y = compress_f16(vector.y) << 16;
 
     x | y
 }
 
 fn decompress_vector2d(vector: u32) -> Vector2D {
-    let x = decompress_float::<16>(vector);
-    let y = decompress_float::<16>(vector >> 16);
+    let x = decompress_f16(vector);
+    let y = decompress_f16(vector >> 16);
 
     Vector2D { x, y }
 }
 
-fn decompress_float<const BITS: usize>(float: u32) -> f32 {
-    let signed_bit = 1u32 << (BITS - 1);
-    let mask = signed_bit - 1;
+macro_rules! make_compress_fns {
+    ($compress_name:tt, $decompress_name:tt, $signed:tt, $unsigned:tt, $bits:tt) => {
+        fn $compress_name(float: f32) -> u32 {
+            type IntTypeSigned = fixed::types::$signed;
+            type IntTypeUnsigned = fixed::types::$unsigned;
 
-    let negative = (float & signed_bit) != 0;
-    let divisor;
-    let base;
+            // we don't have the full bitness with compressed floats, so we have to do some conversion
+            const ONE: IntTypeSigned = match IntTypeSigned::from_str("1") { Ok(n) => n, Err(_) => unreachable!() };
+            let limit_positive = IntTypeSigned::from_bits((IntTypeUnsigned::MAX.frac().to_bits() / 2) as i32);
+            let float = float.clamp(-1.0, 1.0);
+            let fixed = IntTypeSigned::from_num(float);
+            let value = fixed * limit_positive / ONE;
 
-    if negative {
-        base = (float ^ mask) & mask;
-        divisor = -(mask as f32);
-    }
-    else {
-        base = float & mask;
-        divisor = mask as f32;
-    }
+            // isolate the value
+            const MASK: u32 = ((1 << $bits) - 1);
 
-    (base as f32) / divisor
+            (value.to_bits() as u32) & MASK
+        }
+
+        #[inline(always)]
+        fn $decompress_name(fixed: u32) -> f32 {
+            type IntTypeSigned = fixed::types::$signed;
+            type IntTypeUnsigned = fixed::types::$unsigned;
+
+            const ONE: IntTypeSigned = match IntTypeSigned::from_str("1") { Ok(n) => n, Err(_) => unreachable!() };
+            const SIGN_BIT: u32 = (1 << ($bits - 1));
+
+            let sign = if (fixed & SIGN_BIT) == 0 { 1 } else { -1 };
+            let fixed = ((fixed & (SIGN_BIT - 1)) as i32) * sign;
+
+            let limit_positive = IntTypeSigned::from_bits((IntTypeUnsigned::MAX.frac().to_bits() / 2) as i32);
+            let fixed = IntTypeSigned::from_bits(fixed).clamp(-limit_positive, limit_positive);
+            let value = fixed * ONE / limit_positive;
+
+            value.to_num()
+        }
+    };
 }
 
-fn compress_float<const BITS: usize>(float: f32) -> u32 {
-    let signed_bit = 1u32 << (BITS - 1);
-    let mask = signed_bit - 1;
-    let clamped = float.abs().clamp(0.0, 1.0);
-    let multiplied = ((mask as f32) * clamped).round() as u32;
-
-    if float < 0.0 {
-        (multiplied ^ mask) | signed_bit
-    }
-    else {
-        multiplied
-    }
-}
+make_compress_fns!(compress_f16, decompress_f16, I16F16, U16F16, 16);
+make_compress_fns!(compress_f10, decompress_f10, I22F10, U22F10, 10);
+make_compress_fns!(compress_f11, decompress_f11, I21F11, U21F11, 11);

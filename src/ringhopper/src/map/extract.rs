@@ -130,7 +130,7 @@ macro_rules! extract_vertices {
                 let external_models = engine.external_models;
 
                 // Xbox maps use indirect pointers here
-                let pointer = if compressed_models && external_models {
+                let pointer = if compressed_models && !external_models {
                     let vertex_pointer = CacheFileModelDataPointer::read_from_map($map, part.vertices.vertex_pointer.into(), &DomainType::TagData)?;
                     vertex_pointer.data.into()
                 }
@@ -550,3 +550,6 @@ pub fn fix_sound_tag(tag: &mut Sound) -> RinghopperResult<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod test;
