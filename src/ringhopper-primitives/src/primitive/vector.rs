@@ -1,6 +1,5 @@
 use std::fmt::{Display, Debug, Formatter};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
-use bigdecimal::{BigDecimal, FromPrimitive, ToPrimitive};
 
 use byteorder::ByteOrder;
 use crate::dynamic::SimplePrimitiveType;
@@ -834,10 +833,10 @@ fn decompress_float<const BITS: usize>(value: u32) -> f32 {
         value = max - value;
     }
 
-    let mut value = BigDecimal::from_u32(value).unwrap();
-    value *= BigDecimal::from_f64((1.0) / (max as f64)).unwrap(); // multiply by reciprocol - division is super slow
+    let mut value = value as f64;
+    value *= (1.0) / (max as f64);
 
-    let float = value.to_f32().unwrap();
+    let float = value as f32;
     if is_negative {
         -float
     }
@@ -857,10 +856,8 @@ fn compress_float<const BITS: usize>(value: f32) -> u32 {
         max += 1;
     }
 
-    let mut value = BigDecimal::from_f32(positive).unwrap();
-    value = (value * max).round(0);
-
-    let mut integer = value.to_u32().unwrap();
+    let value = (positive * (max as f32)).round();
+    let mut integer = value as u32;
     if is_negative {
         integer = integer | 1 << (BITS - 1);
     }

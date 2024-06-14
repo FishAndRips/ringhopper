@@ -1,7 +1,5 @@
 use std::borrow::Cow;
 use std::num::NonZeroUsize;
-use std::str::FromStr;
-use bigdecimal::{BigDecimal, FromPrimitive, ToPrimitive};
 use definitions::{BitmapType, ModelTriangleStripData, ScenarioStructureBSP};
 use primitives::parse::TagData;
 use primitives::primitive::{calculate_padding_for_alignment, ColorARGBInt, TagGroup};
@@ -47,19 +45,11 @@ pub fn fix_weapon_tag(tag: &mut Weapon, tag_path: &TagPath, scenario_tag: &Scena
 }
 
 fn multiply_by_tick_rate(val: &mut f32) {
-    // do the actual multiplication
-    let result = BigDecimal::from_f32(*val).unwrap() * BigDecimal::from_f32(TICK_RATE).unwrap();
-
-    // save
-    *val = result.to_f32().unwrap();
+    *val = *val * TICK_RATE;
 }
 
 fn divide_by_tick_rate(val: &mut f32) {
-    // do the actual multiplication
-    let result = BigDecimal::from_f32(*val).unwrap() / BigDecimal::from_f32(TICK_RATE).unwrap();
-
-    // save
-    *val = result.to_f32().unwrap();
+    *val = *val / TICK_RATE;
 }
 
 pub fn fix_damage_effect_tag(damage_effect: &mut DamageEffect, tag_path: &TagPath, scenario_tag: &Scenario) {
@@ -84,10 +74,8 @@ pub fn fix_continuous_damage_effect_tag(continuous_damage_effect: &mut Continuou
 }
 
 pub fn fix_point_physics_tag(point_physics: &mut PointPhysics) {
-    let scalar = BigDecimal::from_str("0.0001").unwrap();
-
-    point_physics.air_friction = (BigDecimal::from_f32(point_physics.air_friction).unwrap() * &scalar).to_f32().unwrap();
-    point_physics.water_friction = (BigDecimal::from_f32(point_physics.water_friction).unwrap() * &scalar).to_f32().unwrap();
+    point_physics.air_friction /= 10000.0;
+    point_physics.water_friction /= 10000.0;
 
     nudge_tag(point_physics);
 }
@@ -228,8 +216,8 @@ pub fn fix_scenario_tag(scenario: &mut Scenario, scenario_name: &str) -> Ringhop
     decompile_scripts(scenario, scenario_name)?;
 
     for i in &mut scenario.cutscene_titles {
-        let up_time_seconds = BigDecimal::from_f32(i.up_time).unwrap() - BigDecimal::from_f32(i.fade_in_time).unwrap();
-        i.up_time = (up_time_seconds / BigDecimal::from_f32(TICK_RATE).unwrap()).to_f32().unwrap();
+        let up_time_seconds = i.up_time - i.fade_in_time;
+        i.up_time = up_time_seconds / TICK_RATE;
         divide_by_tick_rate(&mut i.fade_in_time);
         divide_by_tick_rate(&mut i.fade_out_time);
     }
@@ -263,16 +251,16 @@ pub fn fix_object_tag(object: &mut Object) -> RinghopperResult<()> {
                     return Err(Error::InvalidTagData("change colors has invalid weights (last_weight != 1.0)".to_owned()));
                 }
 
-                let mut this_big = BigDecimal::from_f32(last_weight).unwrap();
+                let mut this_big = last_weight;
 
                 // Apply the weights
                 for i in (1..permutation_count).rev() {
-                    let next_big = BigDecimal::from_f32(cc.permutations.items[i-1].weight).unwrap();
-                    let difference = &this_big - &next_big;
+                    let next_big = cc.permutations.items[i-1].weight as f32;
+                    let difference = this_big - next_big;
                     this_big = next_big;
 
                     let this = &mut cc.permutations.items[i].weight;
-                    *this = difference.to_f32().unwrap();
+                    *this = difference;
                 }
             }
         }

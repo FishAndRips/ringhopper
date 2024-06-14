@@ -1,5 +1,4 @@
 use std::str::FromStr;
-use bigdecimal::{BigDecimal, FromPrimitive, One, Signed};
 use definitions::{ActorVariant, ContinuousDamageEffect, DamageEffect, Light, Object, PointPhysics, Projectile, Scenario, Sound};
 use primitives::primitive::TagGroup;
 use primitives::tag::PrimaryTagStructDyn;
@@ -54,14 +53,14 @@ fn nudge_object(object: &mut Object) -> bool {
 
         let mut all_same = true;
 
-        let error = BigDecimal::from_str("0.001").unwrap();
-        let permutation_ratio_inverse = BigDecimal::from_usize(cc.permutations.items.len()).unwrap();
+        let error = 0.001;
+        let permutation_ratio_inverse = cc.permutations.items.len() as f32;
 
         for p in &cc.permutations.items {
-            let weight = BigDecimal::from_f32(p.weight).unwrap();
-            let proportion = (weight * &permutation_ratio_inverse) - BigDecimal::one();
+            let weight = p.weight;
+            let proportion = (weight * &permutation_ratio_inverse) - 1.0;
 
-            if p.weight.is_negative() || proportion.abs() > error {
+            if p.weight < 0.0 || proportion.abs() > error {
                 all_same = false;
                 break;
             }
