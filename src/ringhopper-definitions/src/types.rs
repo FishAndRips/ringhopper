@@ -418,6 +418,7 @@ pub enum ObjectType {
     ColorARGBInt,
     String32,
     ScenarioScriptNodeValue,
+    UTF16String,
 }
 
 impl ObjectType {
@@ -425,7 +426,7 @@ impl ObjectType {
         match self {
             Self::Reflexive(_) => 0xC,
             Self::TagReference(_) => 0x10,
-            Self::Data | Self::FileData | Self::BSPVertexData => 0x14,
+            Self::Data | Self::FileData | Self::BSPVertexData | Self::UTF16String => 0x14,
             Self::F32
             | Self::Angle
             | Self::U32
@@ -462,7 +463,7 @@ impl ObjectType {
             Self::Reflexive(_) => 1,
             Self::TagReference(_) => 1,
             Self::NamedObject(_) => 1,
-            Self::Data | Self::FileData | Self::BSPVertexData => 1,
+            Self::Data | Self::FileData | Self::BSPVertexData | Self::UTF16String => 1,
             Self::TagID | Self::ID => 1,
             Self::TagGroup => 1,
             Self::F32 | Self::Angle | Self::U32 | Self::Address | Self::I32 | Self::ColorARGBInt | Self::CompressedVector2D | Self::CompressedVector3D | Self::CompressedFloat => 1,
@@ -491,6 +492,7 @@ impl ObjectType {
             | Self::Data
             | Self::FileData
             | Self::BSPVertexData
+            | Self::UTF16String
             | Self::TagID
             | Self::ID
             | Self::Address

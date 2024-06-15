@@ -130,6 +130,7 @@ pub enum DynamicTagDataType {
     FileData,
     BSPVertexData,
     TagReference,
+    UTF16String,
     Enum,
     SimplePrimitive(SimplePrimitiveType)
 }

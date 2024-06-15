@@ -834,7 +834,7 @@ fn decompress_float<const BITS: usize>(value: u32) -> f32 {
     }
 
     let mut value = value as f64;
-    value *= (1.0) / (max as f64);
+    value /= max as f64;
 
     let float = value as f32;
     if is_negative {

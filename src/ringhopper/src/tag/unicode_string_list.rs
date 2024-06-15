@@ -1,10 +1,13 @@
 use std::fmt::Formatter;
+use std::sync::Arc;
 use definitions::{UnicodeStringList, UnicodeStringListString};
 use primitives::dynamic::DynamicTagDataArray;
-use primitives::primitive::{Data, Reflexive};
+use primitives::primitive::{Reflexive, UTF16String};
 
-pub const CR: u16 = '\r' as u16;
-pub const LF: u16 = '\n' as u16;
+pub const CR: char = '\r';
+pub const LF: char = '\n';
+pub const CR16: u16 = CR as u16;
+pub const LF16: u16 = LF as u16;
 
 #[derive(Debug)]
 pub enum UnicodeStringListError {
@@ -72,8 +75,8 @@ pub trait UnicodeStringListFunctions {
     /// ).expect("should have worked");
     ///
     /// assert_eq!(result.string_count(), 2);
-    /// assert_eq!(result.read_string_data(0).expect("should be valid"), "This is my string!");
-    /// assert_eq!(result.read_string_data(1).expect("should be valid"), "This is another string!\nWow!");
+    /// assert_eq!(result.read_string_data(0).expect("should be valid").as_str(), "This is my string!");
+    /// assert_eq!(result.read_string_data(1).expect("should be valid").as_str(), "This is another string!\r\nWow!");
     /// ```
     fn from_text_data(data: &[u8]) -> Result<Self, UnicodeStringListError> where Self: Sized;
 
@@ -106,19 +109,20 @@ pub trait UnicodeStringListFunctions {
     /// use ringhopper::tag::unicode_string_list::*;
     /// use ringhopper::definitions::{UnicodeStringList, UnicodeStringListString};
     /// use ringhopper::primitives::primitive::{Data, Reflexive};
+    /// use ringhopper_primitives::primitive::UTF16String;
     ///
     /// let result = UnicodeStringList {
     ///     strings: Reflexive::new(vec![
     ///         UnicodeStringListString {
-    ///             string: Data::new(vec!['h' as u8, 0u8, 'e' as u8, 0u8, 'l' as u8, 0u8, 'l' as u8, 0u8, 'o' as u8, 0u8, 0u8, 0u8])
+    ///             string: UTF16String::from_str("hello")
     ///         }
     ///     ]),
     ///     ..Default::default()
     /// };
     ///
-    /// assert_eq!(result.read_string_data(0).expect("should be valid"), "hello");
+    /// assert_eq!(result.read_string_data(0).expect("should be valid").as_str(), "hello");
     /// ```
-    fn read_string_data(&self, index: usize) -> Result<String, UnicodeStringListError>;
+    fn read_string_data(&self, index: usize) -> Result<Arc<String>, UnicodeStringListError>;
 }
 
 impl UnicodeStringListFunctions for UnicodeStringList {
@@ -163,20 +167,9 @@ impl UnicodeStringListFunctions for UnicodeStringList {
                     .map(|&string| [string, "\r\n"])
                     .flatten()
                     .chain(std::iter::once(last_line))
-
-                    // now convert into a u16 iterator
-                    .map(|u| u.encode_utf16())
-                    .flatten()
-
-                    // add a null byte at the end
-                    .chain(std::iter::once(0u16))
-
-                    // now convert to u16 little endian bytes
-                    .map(|c| c.to_le_bytes())
-                    .flatten()
-                    .collect::<Data>()
+                    .collect::<String>()
             })
-            .map(|string| UnicodeStringListString { string })
+            .map(|string| UnicodeStringListString { string: UTF16String::from_str(&string) })
             .collect::<Reflexive<UnicodeStringListString>>();
 
         Ok(UnicodeStringList { strings, ..Default::default() })
@@ -186,25 +179,7 @@ impl UnicodeStringListFunctions for UnicodeStringList {
         self.strings.len()
     }
 
-    fn read_string_data(&self, index: usize) -> Result<String, UnicodeStringListError> {
-        let bytes = &self.strings.items[index].string.bytes;
-        if bytes.len() % 2 != 0 || bytes.is_empty() {
-            return Err(UnicodeStringListError::InvalidStringData)
-        }
-
-        let mut utf16 = bytes
-            .chunks(2)
-            .map(|b| u16::from_le_bytes([b[0], b[1]]))
-            .filter(|c| *c != CR)
-            .collect::<Vec<u16>>();
-
-        // Must be null terminated!
-        if utf16.pop() != Some(0) {
-            return Err(UnicodeStringListError::InvalidStringData)
-        }
-
-        String::from_utf16(utf16.as_slice())
-            .ok()
-            .ok_or(UnicodeStringListError::InvalidStringData)
+    fn read_string_data(&self, index: usize) -> Result<Arc<String>, UnicodeStringListError> {
+        self.strings.items[index].string.get_string().map_err(|_| UnicodeStringListError::InvalidStringData)
     }
 }

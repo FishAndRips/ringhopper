@@ -301,38 +301,14 @@ pub struct BSPVertexData {
     pub bytes: Vec<u8>
 }
 
-macro_rules! make_data_tag_data_fns {
-    () => {
-        fn size() -> usize {
-            <DataC as TagData>::size()
-        }
+impl DataData for FileData {
+    fn from_bytes(bytes: &[u8]) -> RinghopperResult<Self> {
+        Ok(Self { bytes: bytes.to_owned() })
+    }
 
-        fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> {
-            let c_primitive = DataC::read_from_tag_file(data, at, struct_end, extra_data_cursor)?;
-
-            let size = c_primitive.size as usize;
-            let data_location = *extra_data_cursor;
-            fits(size, data_location, data.len())?;
-            *extra_data_cursor += size;
-
-            Ok(Self {
-                bytes: data[data_location..*extra_data_cursor].to_owned()
-            })
-        }
-
-        fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {
-            (DataC {
-                size: self.bytes.len().into_u32()?,
-                ..Default::default()
-            }).write_to_tag_file(data, at, struct_end)?;
-            data.extend_from_slice(&self.bytes);
-            Ok(())
-        }
-    };
-}
-
-impl TagData for FileData {
-    make_data_tag_data_fns!();
+    fn get_bytes(&self) -> &[u8] {
+        self.bytes.as_ref()
+    }
 
     fn read_from_map<M: Map>(map: &M, address: usize, domain_type: &DomainType) -> RinghopperResult<Self> {
         let c_primitive = DataC::read_from_map(map, address, domain_type)?;
@@ -360,15 +336,17 @@ impl TagData for FileData {
     }
 }
 
-impl TagData for Data {
-    make_data_tag_data_fns!();
+pub(crate) trait DataData: TagDataDefaults + Sized {
+    fn from_bytes(bytes: &[u8]) -> RinghopperResult<Self>;
+
+    fn get_bytes(&self) -> &[u8];
 
     fn read_from_map<M: Map>(map: &M, address: usize, domain_type: &DomainType) -> RinghopperResult<Self> {
         let c_primitive = DataC::read_from_map(map, address, domain_type)?;
         let address = c_primitive.address.into();
         let length = c_primitive.size as usize;
         if length == 0 {
-            return Ok(Self::default())
+            return Self::from_bytes(&[])
         }
         let data = map.get_data_at_address(address, domain_type, length);
         let data = match data {
@@ -376,12 +354,65 @@ impl TagData for Data {
             None => return Err(Error::MapDataOutOfBounds(format!("can't read 0x{address:08X}[0x{length}] bytes from {domain_type:?}")))
         };
 
-        Ok(Self { bytes: data.to_vec() })
+        Self::from_bytes(data.as_ref())
     }
 }
 
-impl TagData for BSPVertexData {
-    make_data_tag_data_fns!();
+// Used to bypass conflicting implementation error
+macro_rules! make_tag_data_implementation_for_datadata {
+    ($ty:ty) => {
+        impl TagData for $ty {
+            fn size() -> usize {
+                <DataC as TagData>::size()
+            }
+
+            fn read_from_tag_file(data: &[u8], at: usize, struct_end: usize, extra_data_cursor: &mut usize) -> RinghopperResult<Self> {
+                let c_primitive = DataC::read_from_tag_file(data, at, struct_end, extra_data_cursor)?;
+
+                let size = c_primitive.size as usize;
+                let data_location = *extra_data_cursor;
+                fits(size, data_location, data.len())?;
+                *extra_data_cursor += size;
+
+                DataData::from_bytes(&data[data_location..*extra_data_cursor])
+            }
+
+            fn write_to_tag_file(&self, data: &mut Vec<u8>, at: usize, struct_end: usize) -> RinghopperResult<()> {
+                let bytes = self.get_bytes();
+                (DataC {
+                    size: bytes.len().into_u32()?,
+                    ..Default::default()
+                }).write_to_tag_file(data, at, struct_end)?;
+                data.extend_from_slice(bytes);
+                Ok(())
+            }
+
+            fn read_from_map<M: Map>(map: &M, address: usize, domain_type: &DomainType) -> RinghopperResult<Self> {
+                DataData::read_from_map(map, address, domain_type)
+            }
+        }
+    };
+}
+pub(crate) use make_tag_data_implementation_for_datadata;
+
+impl DataData for Data {
+    fn from_bytes(bytes: &[u8]) -> RinghopperResult<Self> {
+        Ok(Self { bytes: bytes.to_owned() })
+    }
+
+    fn get_bytes(&self) -> &[u8] {
+        self.bytes.as_ref()
+    }
+}
+
+impl DataData for BSPVertexData {
+    fn from_bytes(bytes: &[u8]) -> RinghopperResult<Self> {
+        Ok(Self { bytes: bytes.to_owned() })
+    }
+
+    fn get_bytes(&self) -> &[u8] {
+        self.bytes.as_ref()
+    }
 
     fn read_from_map<M: Map>(_map: &M, _address: usize, _domain_type: &DomainType) -> RinghopperResult<Self> {
         unimplemented!("read_from_map is unimplemented for BSP vertex data; use read_from_map_with_offset instead")
@@ -462,6 +493,8 @@ macro_rules! make_data_dynamic_tag_data {
                 Self { bytes }
             }
         }
+
+        make_tag_data_implementation_for_datadata!($t);
 
         impl DynamicTagData for $t {
             fn get_field(&self, _field: &str) -> Option<&dyn DynamicTagData> {

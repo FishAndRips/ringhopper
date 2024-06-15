@@ -766,6 +766,7 @@ impl LoadFromSerdeJSON for ObjectType {
             "Data" => Self::Data,
             "FileData" => Self::FileData,
             "BSPVertexData" => Self::BSPVertexData,
+            "UTF16String" => Self::UTF16String,
             "float" => Self::F32,
             "uint8" => Self::U8,
             "uint16" => Self::U16,

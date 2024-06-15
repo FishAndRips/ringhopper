@@ -4,7 +4,7 @@
         "fields": [
             {
                 "name": "string",
-                "type": "Data",
+                "type": "UTF16String",
                 "limit": 32768
             }
         ],

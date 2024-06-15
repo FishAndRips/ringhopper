@@ -28,3 +28,18 @@ fn parse_string32() {
     assert_eq!(valid_dirty, String32::read_from_tag_file(&valid_dirty_bytes, 0, valid_dirty_bytes.len(), &mut 0).unwrap());
     assert_eq!(invalid, String32::read_from_tag_file(&invalid_bytes, 0, invalid_bytes.len(), &mut 0).unwrap());
 }
+
+#[test]
+fn parse_utf16_string() {
+    let some_string = &[
+        0, 0, 0, 10,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        'H' as u8, 0, 'e' as u8, 0, 'y' as u8, 0, '!' as u8, 0, 0, 0,
+    ];
+
+    let string = UTF16String::read_from_tag_file(some_string, 0, 0x14, &mut 0x14).unwrap();
+    assert_eq!("Hey!", string.get_string().unwrap().as_str());
+}

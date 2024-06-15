@@ -1,7 +1,7 @@
 use std::fmt::Display;
 use crc64::crc64;
 use primitives::dynamic::{DynamicEnum, DynamicTagData, DynamicTagDataArray, DynamicTagDataType, SimplePrimitiveType};
-use primitives::primitive::{Address, Angle, BSPVertexData, ColorARGBFloat, ColorARGBInt, ColorARGBIntBytes, ColorRGBFloat, CompressedFloat, CompressedVector2D, CompressedVector3D, Data, Euler2D, Euler3D, FileData, ID, Index, Matrix3x3, Plane2D, Plane3D, Quaternion, Rectangle, ScenarioScriptNodeValue, String32, TagGroup, TagReference, Vector2D, Vector2DInt, Vector3D};
+use primitives::primitive::{Address, Angle, BSPVertexData, ColorARGBFloat, ColorARGBInt, ColorARGBIntBytes, ColorRGBFloat, CompressedFloat, CompressedVector2D, CompressedVector3D, Data, Euler2D, Euler3D, FileData, ID, Index, Matrix3x3, Plane2D, Plane3D, Quaternion, Rectangle, ScenarioScriptNodeValue, String32, TagGroup, TagReference, UTF16String, Vector2D, Vector2DInt, Vector3D};
 use primitives::tag::PrimaryTagStructDyn;
 
 #[derive(Clone)]
@@ -78,6 +78,12 @@ fn compare_tag_data<T: DynamicTagData + ?Sized>(first: &T, second: &T, path: &mu
             return compare_data(&first.bytes, &second.bytes, path, comparison, depth);
         },
 
+        DynamicTagDataType::UTF16String => {
+            let first = first.as_any().downcast_ref::<UTF16String>().unwrap();
+            let second = second.as_any().downcast_ref::<UTF16String>().unwrap();
+            return compare_utf16_string(first, second, path, comparison, depth);
+        },
+
         DynamicTagDataType::SimplePrimitive(primitive_type) => {
             macro_rules! do_compare {
                 ($prim:tt) => {
@@ -93,7 +99,7 @@ fn compare_tag_data<T: DynamicTagData + ?Sized>(first: &T, second: &T, path: &mu
 
             match primitive_type {
                 SimplePrimitiveType::Bool => do_compare!(bool),
-                SimplePrimitiveType::String32 => compare_string32(first.as_any().downcast_ref().unwrap(), second.as_any().downcast_ref().unwrap(), path, comparison, depth),
+                SimplePrimitiveType::String32 => compare_string32(first.as_any().downcast_ref::<String32>().unwrap(), second.as_any().downcast_ref().unwrap(), path, comparison, depth),
                 SimplePrimitiveType::I8 => do_compare!(i8),
                 SimplePrimitiveType::U8 => do_compare!(u8),
                 SimplePrimitiveType::I16 => do_compare!(i16),
@@ -140,7 +146,7 @@ fn compare_primitive<T: PartialEq + Display>(first: &T, second: &T, path: &mut S
     }
 }
 
-fn compare_index(first: &Index, second: &Index, path: &mut String, comparison: &mut Context, depth: usize) {
+fn compare_utf16_string(first: &UTF16String, second: &UTF16String, path: &mut String, comparison: &mut Context, depth: usize) {
     if first != second {
         comparison.differences.push(TagComparisonDifference {
             depth,
@@ -152,10 +158,29 @@ fn compare_index(first: &Index, second: &Index, path: &mut String, comparison: &
 
 fn compare_string32(first: &String32, second: &String32, path: &mut String, comparison: &mut Context, depth: usize) {
     if first != second {
+        let first = first.to_string()
+            .replace("\t", "\\t")
+            .replace("\r", "\\r")
+            .replace("\n", "\\n");
+        let second = second.to_string()
+            .replace("\t", "\\t")
+            .replace("\r", "\\r")
+            .replace("\n", "\\n");
+
         comparison.differences.push(TagComparisonDifference {
             depth,
             path: path[1..].to_owned(),
             difference: format!("value is different (`{first}` != `{second}`)")
+        });
+    }
+}
+
+fn compare_index(first: &Index, second: &Index, path: &mut String, comparison: &mut Context, depth: usize) {
+    if first != second {
+        comparison.differences.push(TagComparisonDifference {
+            depth,
+            path: path[1..].to_owned(),
+            difference: format!("value is different ({first:?} != {second:?})")
         });
     }
 }
