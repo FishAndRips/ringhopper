@@ -184,6 +184,8 @@ impl UTF16String {
     }
 
     /// Create a UTF-16 string from a string reference.
+    ///
+    /// The return value is guaranteed to be a valid UTF-16 string.
     pub fn from_str(string: &str) -> Self {
         let mut data = Vec::with_capacity((string.len() + 1) * 2);
         for i in string.encode_utf16() {
@@ -191,13 +193,18 @@ impl UTF16String {
         }
         data.extend_from_slice(&[0,0]);
 
-        Self {
+        let string_data = Self {
             data,
             cache: Mutex::new(None)
+        };
+
+        match string_data.get_string_lossy() {
+            Ok(_) => string_data,
+            Err(n) => Self::from_str(n.as_str())
         }
     }
 
-    /// Get the bytes.
+    /// Get the bytes for the underlying UTF-16 data.
     pub fn get_utf16_bytes(&self) -> &[u8] {
         self.data.as_slice()
     }

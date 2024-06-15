@@ -273,12 +273,11 @@ fn compare_array(first: &dyn DynamicTagDataArray, second: &dyn DynamicTagDataArr
             path: path[1..].to_owned(),
             difference: format!("length is different ({flength} != {slength})")
         });
-        return;
     }
 
     // Now compare!
     let length_before = path.len();
-    for i in 0..flength {
+    for i in 0..flength.min(slength) {
         *path += &format!("[{i}]");
         compare_tag_data(first.get_at_index(i).unwrap(), second.get_at_index(i).unwrap(), path, comparison, depth + 1, abbreviated);
         path.truncate(length_before);
