@@ -1041,7 +1041,7 @@
         "fields": [
             {
                 "name": "count",
-                "type": "int16"
+                "type": "uint16"
             }
         ],
         "type": "struct",

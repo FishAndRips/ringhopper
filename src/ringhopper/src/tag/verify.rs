@@ -122,7 +122,6 @@ impl<T: TagTree + Send + Sync + 'static> VerifyContext<T> {
         let context = Arc::new(context);
         let thread_count = threads.get();
         let mut threads = Vec::with_capacity(thread_count);
-
         for _ in 0..thread_count {
             let all_dependencies = all_dependencies.clone();
             let context = context.clone();

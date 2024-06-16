@@ -1,6 +1,6 @@
 use crate::engine::Engine;
 use crate::error::RinghopperResult;
-use crate::primitive::{ID, IDType, Index, TagPath};
+use crate::primitive::{ID, IDType, Index, TagPath, TagReference};
 use crate::tag::PrimaryTagStructDyn;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -104,6 +104,18 @@ pub trait Map {
         }
         let id = ID::new(Index::from(index.try_into().ok()), IDType::Tag as u16);
         self.get_tag_by_id(id)
+    }
+
+    /// Get the tag for the given tag reference.
+    ///
+    /// Returns `None` if the tag index is not a valid tag index.
+    ///
+    /// The default implementation should satisfy all use-cases.
+    fn get_tag_by_tag_reference(
+        &self,
+        reference: &TagReference
+    ) -> Option<&Tag> {
+        self.get_tag(reference.path()?)
     }
 
     /// Get the data at the given location.
