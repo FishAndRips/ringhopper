@@ -228,45 +228,45 @@ pub fn fix_scenario_tag(scenario: &mut Scenario, scenario_name: &str) -> Ringhop
 }
 
 pub fn fix_scenario_structure_bsp_tag<M: Map>(bsp: &mut ScenarioStructureBSP, scenario_tag: &Scenario, map: &M) -> RinghopperResult<()> {
+    // Preload all of the detail object collections' global z offsets.
+    let mut global_z_offset = [0.0; 32];
+    for i in 0..scenario_tag.detail_object_collection_palette.items.len().min(global_z_offset.len())  {
+        let Some(reference) = scenario_tag
+            .detail_object_collection_palette
+            .items
+            .get(i)
+            .map(|r| &r.reference) else {
+            continue // tool.exe will just not apply an offset
+        };
+
+        let Some(tag) = map.get_tag_by_tag_reference(&reference) else {
+            continue // tool.exe will just not apply an offset
+        };
+
+        let offset = map.extract_tag(&tag.tag_path)?
+            .as_any()
+            .downcast_ref::<DetailObjectCollection>()
+            .expect("we just verified this existed!")
+            .global_z_offset * 0.125;
+
+        global_z_offset[i] = offset;
+    }
+
     for obj in &mut bsp.detail_objects {
         for cell in &obj.cells.items {
             let reference_and_count_index = cell.count_index as usize;
-            let reference_and_count_count = cell.valid_layers_flags.count_ones() as usize;
-
-            let reference_vector_range = reference_and_count_index..reference_and_count_count.add_overflow_checked(reference_and_count_index)?;
-            let Some(reference_vectors) = obj.z_reference_vectors.items.get_mut(reference_vector_range) else {
-                return Err(Error::InvalidTagData("Detail objects have out-of-bound z reference vectors; can't extract".to_owned()))
-            };
-
-            let mut reference_vector_offset = 0;
+            let mut reference_vector_offset = reference_and_count_index;
             for bit_offset in 0..32 {
                 let bit = (cell.valid_layers_flags >> bit_offset as u32) & 1;
                 if bit == 0 {
                     continue
                 }
 
-                let reference_vector = &mut reference_vectors[reference_vector_offset];
-                reference_vector_offset += 1;
-
-                let Some(reference) = scenario_tag
-                    .detail_object_collection_palette
-                    .items
-                    .get(bit_offset)
-                    .map(|r| &r.reference) else {
-                    continue // tool.exe will just not apply an offset
+                let Some(vector) = obj.z_reference_vectors.items.get_mut(reference_vector_offset) else {
+                    return Err(Error::InvalidTagData(format!("Unable to get z reference vector #{reference_vector_offset}")))
                 };
-
-                let Some(tag) = map.get_tag_by_tag_reference(&reference) else {
-                    continue // tool.exe will just not apply an offset
-                };
-
-                let offset = map.extract_tag(&tag.tag_path)?
-                    .as_any()
-                    .downcast_ref::<DetailObjectCollection>()
-                    .expect("we just verified this existed!")
-                    .global_z_offset * 0.125;
-
-                reference_vector.z_reference_l -= offset;
+                reference_vector_offset = reference_vector_offset.add_overflow_checked(1).unwrap();
+                vector.z_reference_l -= global_z_offset[bit_offset];
             }
         }
     }

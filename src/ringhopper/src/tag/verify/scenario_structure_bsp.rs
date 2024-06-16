@@ -36,18 +36,19 @@ pub fn verify_scenario_structure_bsp<T: TagTree + Send + Sync + 'static>(tag: &d
             };
 
             // Make sure all counts are valid
+            let mut start_index = cell.start_index as usize;
             for c in counts {
                 let count = c.count as usize;
-                let start = cell.start_index as usize;
-                let Ok(end) = start.add_overflow_checked(count) else {
+                let Ok(end) = start_index.add_overflow_checked(count) else {
                     result.errors.push(format!("BSP detail object cell #{cell_i} has an invalid count (out-of-bounds)"));
                     continue 'next_cell;
                 };
-                let range = start..end;
+                let range = start_index..end;
                 if let None = obj.instances.items.get(range.clone()) {
                     result.errors.push(format!("BSP detail object cell #{cell_i} has an invalid count (can't get instances {range:?})"));
                     continue 'next_cell;
                 }
+                start_index = end;
             }
 
             // Make sure all z reference vectors are valid
