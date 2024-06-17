@@ -337,12 +337,12 @@
             {
                 "name": "inner cone angle",
                 "type": "Angle",
-                "default": 6.28318548202515
+                "default": 360.0
             },
             {
                 "name": "outer cone angle",
                 "type": "Angle",
-                "default": 6.28318548202515
+                "default": 360.0
             },
             {
                 "name": "outer cone gain",
