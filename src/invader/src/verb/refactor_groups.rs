@@ -12,7 +12,6 @@ pub fn refactor_groups(args: Args, description: &'static str) -> Result<(), Stri
         .add_help()
         .add_cow_tags()
         .add_jobs()
-        .add_no_safeguards()
         .add_custom_parameter(Parameter::new(
             "filter",
             'f',
@@ -35,7 +34,6 @@ pub fn refactor_groups(args: Args, description: &'static str) -> Result<(), Stri
     struct UserData {
         group_from: TagGroup,
         group_to: TagGroup,
-        no_safeguards: bool
     }
 
     let group_from = parse_group(&parser.get_extra()[0])?;
@@ -44,7 +42,6 @@ pub fn refactor_groups(args: Args, description: &'static str) -> Result<(), Stri
     let user_data = UserData {
         group_from,
         group_to,
-        no_safeguards: parser.get_no_safeguards()
     };
 
     let tag = parser.get_custom("filter").unwrap()[0].string().to_owned();
@@ -58,7 +55,7 @@ pub fn refactor_groups(args: Args, description: &'static str) -> Result<(), Stri
 
         // Actually open and do something.
         let mut tag = context.tags_directory.open_tag_copy(&path)?;
-        if !refactor_groups_for_block(tag.as_mut_dynamic(), user_data.group_from, user_data.group_to, &context.tags_directory, user_data.no_safeguards) {
+        if !refactor_groups_for_block(tag.as_mut_dynamic(), user_data.group_from, user_data.group_to, &context.tags_directory, true) {
             return Ok(ProcessSuccessType::Skipped("no matching references found"))
         }
         ProcessSuccessType::wrap_write_result(context.tags_directory.write_tag(path, tag.as_ref()))
