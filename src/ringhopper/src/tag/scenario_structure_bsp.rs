@@ -2,7 +2,6 @@ use definitions::{ScenarioStructureBSP, ScenarioStructureBSPMaterial, ScenarioSt
 use primitives::byteorder::LittleEndian;
 use primitives::error::{Error, OverflowCheck, RinghopperResult};
 use primitives::parse::{RawStructIteratorInfallible, SimpleTagData};
-use primitives::primitive::Vector;
 
 /// Detect if compressed or uncompressed vertices are missing and attempt to restore them.
 pub fn recompress_scenario_structure_bsp_vertices(bsp: &mut ScenarioStructureBSP) -> RinghopperResult<bool> {
@@ -79,13 +78,7 @@ fn compress_rendered_bsp_vertex(vertex: ScenarioStructureBSPMaterialUncompressed
 }
 
 fn decompress_rendered_bsp_vertex(vertex: ScenarioStructureBSPMaterialCompressedRenderedVertex) -> ScenarioStructureBSPMaterialUncompressedRenderedVertex {
-    let mut q = convert_rendered_bsp_vertex!(vertex, ScenarioStructureBSPMaterialUncompressedRenderedVertex);
-
-    q.normal = q.normal.normalize();
-    q.binormal = q.binormal.normalize();
-    q.tangent = q.tangent.normalize();
-
-    q
+    convert_rendered_bsp_vertex!(vertex, ScenarioStructureBSPMaterialUncompressedRenderedVertex)
 }
 
 macro_rules! convert_lightmap_bsp_vertex {
