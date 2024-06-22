@@ -1,3 +1,4 @@
+use definitions::{BitmapDataFormat, BitmapFormat};
 use primitives::{error::OverflowCheck, primitive::TagPath, tag::PrimaryTagStructDyn};
 use ringhopper_structs::{Bitmap, BitmapType};
 use crate::{primitives::dynamic::DynamicEnumImpl, tag::{bitmap::{bytes_per_block, MipmapFaceIterator}, tree::TagTree}};
@@ -12,6 +13,34 @@ pub enum SequenceType {
 
 pub fn verify_bitmap<T: TagTree + Send + Sync>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, _context: &VerifyContext<T>, result: &mut VerifyResult) {
     let bitmap = tag.as_any().downcast_ref::<Bitmap>().unwrap();
+
+    let error_count = result.errors.len();
+
+    // Verify the data lines up with the format.
+    for (i, data) in ziperator!(bitmap.bitmap_data) {
+        let allowed_formats: &[BitmapDataFormat] = match bitmap.encoding_format {
+            BitmapFormat::_16Bit => &[BitmapDataFormat::A1R5G5B5, BitmapDataFormat::A4R4G4B4, BitmapDataFormat::R5G6B5],
+            BitmapFormat::_32Bit => &[BitmapDataFormat::A8R8G8B8, BitmapDataFormat::X8R8G8B8],
+            BitmapFormat::DXT1 => &[BitmapDataFormat::DXT1],
+            BitmapFormat::DXT3 => &[BitmapDataFormat::DXT1, BitmapDataFormat::DXT3],
+            BitmapFormat::DXT5 => &[BitmapDataFormat::DXT1, BitmapDataFormat::DXT5],
+            BitmapFormat::Monochrome => &[BitmapDataFormat::A8, BitmapDataFormat::Y8, BitmapDataFormat::AY8, BitmapDataFormat::A8Y8],
+            BitmapFormat::BC7 => &[BitmapDataFormat::BC7]
+        };
+
+        if !allowed_formats.contains(&data.format) {
+            result.errors.push(format!("Bitmap #{i} is {}, but the bitmap tag is set to {} which doesn't match", data.format, bitmap.encoding_format));
+        }
+    }
+
+    if error_count != result.errors.len() {
+        if bitmap.color_plate.compressed_data.bytes.is_empty() {
+            result.errors.push("If the bitmap(s) are the correct format, you can change the encoding format of the bitmap. No source data is present in the tag, so it cannot be regenerated.".to_owned());
+        }
+        else {
+            result.errors.push("This tag has source data; you can regenerate the bitmap(s). If they are already the correct format, you can instead change the encoding format of the bitmap tag to match.".to_owned());
+        }
+    }
 
     // Verify that each bitmap data doesn't overflow the bitmap data
     for (i, data) in ziperator!(bitmap.bitmap_data) {
