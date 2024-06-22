@@ -6,7 +6,7 @@ use ringhopper::tag::tree::TagTree;
 
 use crate::util::make_stdout_logger;
 
-pub fn dependencies(args: Args, description: &'static str) -> Result<(), String> {
+pub fn dependency_list(args: Args, description: &'static str) -> Result<(), String> {
     let parser = CommandLineParser::new(description, "<tag> [args]")
         .add_tags(true)
         .add_custom_parameter(Parameter::single(

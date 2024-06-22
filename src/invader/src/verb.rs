@@ -6,7 +6,7 @@ macro_rules! str_unwrap {
     };
 }
 
-mod dependencies;
+mod dependency_list;
 mod version;
 mod unicode_strings;
 mod strip;
@@ -46,11 +46,11 @@ pub const ALL_VERBS: &'static [Verb] = &[
     Verb::new("bludgeon", "Automatically repair common issues with tags", bludgeon::bludgeon),
     Verb::new("compare", "Compare tags between two tag sources", compare::compare),
     Verb::new("convert", "Convert tags to another tag group", convert::convert),
-    Verb::new("dependencies", "View dependencies of tags", dependencies::dependencies),
+    Verb::new("dependency-list", "View dependencies of tags", dependency_list::dependency_list),
     Verb::new("dependency-tree", "View dependencies of a tag in a recursive tree", dependency_tree::dependency_tree),
     Verb::new("extract", "Extract tags from a map", extract::extract),
     Verb::new("list-engines", "List all available engine targets", list_engines::list_engines),
-    Verb::new("list-scenario-tags", "View all tags needed to build a scenario into a map", dependencies::list_scenario_tags),
+    Verb::new("list-scenario-tags", "View all tags needed to build a scenario into a map", dependency_list::list_scenario_tags),
     Verb::new("nudge", "Fix floating point precision errors from tag extraction", nudge::nudge),
     Verb::new("plate", "Generate color plates for bitmaps", plate::plate),
     Verb::new("recompress-vertices", "Recompress model vertices", recompress_vertices::recompress_vertices),
