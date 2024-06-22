@@ -66,7 +66,7 @@ pub fn refactor_groups_for_block<T: TagTree>(data: &mut dyn DynamicTagData, from
 /// Get all dependencies for a tag.
 ///
 /// Returns `Err` if a depended tag could not be opened from a tag tree.
-pub fn recursively_get_dependencies_for_tag<T: TagTree>(tag: &TagPath, tag_tree: &T) -> RinghopperResult<HashSet<TagPath>> {
+pub fn recursively_get_dependencies_for_tag<T: TagTree>(tag: &TagPath, tag_tree: &T, allow_broken: bool) -> RinghopperResult<HashMap<TagPath, HashSet<TagPath>>> {
     let mut result: HashMap<TagPath, HashSet<TagPath>> = HashMap::new();
     let mut pending: Vec<(TagPath, Option<TagPath>)> = Vec::from([(tag.to_owned(), None)]);
 
@@ -74,6 +74,9 @@ pub fn recursively_get_dependencies_for_tag<T: TagTree>(tag: &TagPath, tag_tree:
         // Do not open tags that cannot possibly contain dependencies
         if get_all_referenceable_tag_groups_for_group(p.0.group()).is_empty() {
             if !tag_tree.contains(&p.0) {
+                if allow_broken {
+                    continue;
+                }
                 if let Some(depender) = p.1 {
                     return Err(Error::BrokenDependency(depender, p.0))
                 }
@@ -81,14 +84,24 @@ pub fn recursively_get_dependencies_for_tag<T: TagTree>(tag: &TagPath, tag_tree:
                     return Err(Error::TagNotFound(p.0))
                 }
             }
+            result.insert(p.0, HashSet::new());
             continue
         }
 
         // Try to open it now, converting the TagNotFound error to one that has the tag that depends on it
         let tag = match tag_tree.open_tag_shared(&p.0) {
+            Ok(n) => Ok(n),
+            Err(Error::TagNotFound(a)) if p.1.is_some() => Err(Error::BrokenDependency(p.1.unwrap(), a)),
+            Err(e) => Err(e)
+        };
+        let tag = match tag {
             Ok(n) => n,
-            Err(Error::TagNotFound(a)) if p.1.is_some() => return Err(Error::BrokenDependency(p.1.unwrap(), a)),
-            Err(e) => return Err(e)
+            Err(e) => {
+                if allow_broken {
+                    continue;
+                }
+                return Err(e)
+            }
         };
 
         let dependencies = get_tag_dependencies_for_block(tag.lock().unwrap().as_ref().as_dynamic());
@@ -101,7 +114,7 @@ pub fn recursively_get_dependencies_for_tag<T: TagTree>(tag: &TagPath, tag_tree:
         result.insert(p.0, dependencies);
     }
 
-    Ok(result.into_values().flatten().collect())
+    Ok(result)
 }
 
 /// Get all tags that depend on a tag.
@@ -141,11 +154,11 @@ pub fn recursively_get_dependencies_for_map<T: TagTree>(scenario: &TagPath, tag_
     // prevent deadlocking for caching tag trees
     drop(lock);
 
-    all_dependencies.extend(recursively_get_dependencies_for_tag(scenario, tag_tree)?);
+    all_dependencies.extend(recursively_get_dependencies_for_tag(scenario, tag_tree, false)?.into_values().flatten());
 
     for i in [engine.required_tags.all, other].into_iter().flatten() {
         let tag = TagPath::from_path(i).unwrap();
-        all_dependencies.extend(recursively_get_dependencies_for_tag(&tag, tag_tree)?);
+        all_dependencies.extend(recursively_get_dependencies_for_tag(&tag, tag_tree, false)?.into_values().flatten());
         all_dependencies.insert(tag);
     }
 

@@ -33,7 +33,7 @@ pub fn dependencies(args: Args, description: &'static str) -> Result<(), String>
     let reverse = parser.get_custom("reverse").is_some();
 
     if recursive && reverse {
-        return Err("--reverse and --recursive are not yet supported together".to_owned());
+        return Err("--reverse and --recursive are not supported together".to_owned());
     }
 
     let result = if reverse {
@@ -41,7 +41,8 @@ pub fn dependencies(args: Args, description: &'static str) -> Result<(), String>
     }
     else {
         if recursive {
-            str_unwrap!(recursively_get_dependencies_for_tag(&tag_path, &tags), "Failed to recursively get dependencies: {error}")
+            let result = str_unwrap!(recursively_get_dependencies_for_tag(&tag_path, &tags, false), "Failed to recursively get dependencies: {error}");
+            result.into_values().flatten().collect()
         }
         else {
             let tag = str_unwrap!(tags.open_tag_copy(&tag_path), "Failed to open tag: {error}");

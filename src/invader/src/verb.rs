@@ -20,10 +20,11 @@ mod undefault;
 mod plate;
 mod archive;
 mod recover;
-mod verify;
+mod verify_scenario;
 mod refactor_groups;
 mod bludgeon;
 mod recompress_vertices;
+mod dependency_tree;
 
 pub struct Verb {
     pub name: &'static str,
@@ -46,6 +47,7 @@ pub const ALL_VERBS: &'static [Verb] = &[
     Verb::new("compare", "Compare tags between two tag sources", compare::compare),
     Verb::new("convert", "Convert tags to another tag group", convert::convert),
     Verb::new("dependencies", "View dependencies of tags", dependencies::dependencies),
+    Verb::new("dependency-tree", "View dependencies of a tag in a recursive tree", dependency_tree::dependency_tree),
     Verb::new("extract", "Extract tags from a map", extract::extract),
     Verb::new("list-engines", "List all available engine targets", list_engines::list_engines),
     Verb::new("list-scenario-tags", "View all tags needed to build a scenario into a map", dependencies::list_scenario_tags),
@@ -59,7 +61,7 @@ pub const ALL_VERBS: &'static [Verb] = &[
     Verb::new("ui-widget-collection", "Generate ui_widget_collection tags from data", tag_collection::ui_widget_collection),
     Verb::new("undefault", "Strip default values from tags", undefault::undefault),
     Verb::new("unicode-strings", "Generate unicode_string_list tags from data", unicode_strings::unicode_strings),
-    Verb::new("verify", "Verify that a tag does not contain errors", verify::verify),
+    Verb::new("verify-scenario", "Verify that a scenario tree does not contain errors", verify_scenario::verify_scenario),
     Verb::new("version", "View the version/license of Invader", version::version)
 ];
 

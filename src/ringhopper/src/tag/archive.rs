@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::io::Cursor;
 use primitives::engine::Engine;
 use primitives::error::{Error, RinghopperResult};
@@ -71,7 +72,7 @@ pub fn archive_map_to_7zip<T: TagTree>(scenario: &TagPath, tag_tree: &T, engine:
 }
 
 pub fn archive_tag_to_7zip<T: TagTree>(tag: &TagPath, tag_tree: &T, compression_level: LZMACompressionLevel) -> RinghopperResult<Vec<u8>> {
-    let mut all_dependencies = recursively_get_dependencies_for_tag(tag, tag_tree)?;
+    let mut all_dependencies: HashSet<TagPath> = recursively_get_dependencies_for_tag(tag, tag_tree, false)?.into_values().flatten().collect();
     all_dependencies.insert(tag.to_owned());
     archive_tag_set_to_zip(all_dependencies, tag_tree, compression_level)
 }

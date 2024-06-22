@@ -15,7 +15,7 @@ struct UserData {
     logger: Arc<StdoutLogger>
 }
 
-pub fn verify(args: Args, description: &'static str) -> Result<(), String> {
+pub fn verify_scenario(args: Args, description: &'static str) -> Result<(), String> {
     let parser = CommandLineParser::new(description, "<scenario*> [args]")
         .add_tags(true)
         .add_help()
