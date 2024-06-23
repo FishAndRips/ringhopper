@@ -166,12 +166,12 @@ pub fn dependency_tree(args: Args, description: &'static str) -> Result<(), Stri
     let mut next_on_depths = Vec::new();
     let output = make_stdout_logger();
     let root_tags = all_tags.iter().filter(|&t| {
+        if tags_with_broken_dependencies.is_some_and(|b| !b.contains(&t)) {
+            return false;
+        }
         for r in &result {
             if r.1.contains(t) {
                 return false
-            }
-            if tags_with_broken_dependencies.is_some_and(|t| !t.contains(&r.0)) {
-                continue;
             }
         }
         true
