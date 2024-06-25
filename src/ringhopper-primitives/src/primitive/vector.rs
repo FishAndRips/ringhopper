@@ -437,27 +437,27 @@ impl SimplePrimitive for Matrix3x3 {
 #[repr(transparent)]
 pub struct Angle {
     /// Angle value, represented in radians.
-    pub angle: f64
+    pub angle: f32
 }
 
 impl Angle {
     /// Create an Angle from degrees.
-    pub fn from_degrees(deg: f64) -> Self {
+    pub fn from_degrees(deg: f32) -> Self {
         Angle { angle: deg.to_radians() }
     }
 
     /// Convert an Angle to degrees.
-    pub fn to_degrees(self) -> f64 {
+    pub fn to_degrees(self) -> f32 {
         self.angle.to_degrees()
     }
 
     /// Create an Angle from radians.
-    pub const fn from_radians(rad: f64) -> Self {
+    pub const fn from_radians(rad: f32) -> Self {
         Self { angle: rad }
     }
 
     /// Convert an Angle to radians.
-    pub const fn to_radians(self) -> f64 {
+    pub const fn to_radians(self) -> f32 {
         self.angle
     }
 }
@@ -474,13 +474,13 @@ impl Debug for Angle {
     }
 }
 
-impl From<f64> for Angle {
-    fn from(value: f64) -> Self {
+impl From<f32> for Angle {
+    fn from(value: f32) -> Self {
         Angle { angle: value }
     }
 }
 
-impl From<Angle> for f64 {
+impl From<Angle> for f32 {
     fn from(value: Angle) -> Self {
         value.angle
     }
@@ -530,14 +530,14 @@ impl DivAssign for Angle {
         *self = Angle::from_radians(self.angle / rhs.angle)
     }
 }
-impl Mul<f64> for Angle {
+impl Mul<f32> for Angle {
     type Output = Self;
-    fn mul(self, rhs: f64) -> Self::Output {
+    fn mul(self, rhs: f32) -> Self::Output {
         Angle::from_radians(self.angle * rhs)
     }
 }
-impl MulAssign<f64> for Angle {
-    fn mul_assign(&mut self, rhs: f64) {
+impl MulAssign<f32> for Angle {
+    fn mul_assign(&mut self, rhs: f32) {
         *self = Angle::from_radians(self.angle * rhs)
     }
 }
@@ -550,17 +550,17 @@ impl Neg for Angle {
 
 impl SimpleTagData for Angle {
     fn simple_size() -> usize {
-        f64::simple_size()
+        4
     }
 
     fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
         Ok(Self {
-            angle: f64::read::<B>(data, at, struct_end)?
+            angle: f32::from_bits(u32::read::<B>(data, at, struct_end)?)
         })
     }
 
     fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
-        self.angle.write::<B>(data, at, struct_end)
+        self.angle.to_bits().write::<B>(data, at, struct_end)
     }
 }
 

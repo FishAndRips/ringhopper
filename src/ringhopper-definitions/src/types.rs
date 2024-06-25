@@ -189,7 +189,7 @@ impl Display for StaticValue {
             StaticValue::String(s) => fmt.write_fmt(format_args!("\"{s}\"")),
             StaticValue::Uint(i) => fmt.write_fmt(format_args!("{i}")),
             StaticValue::Int(i) => fmt.write_fmt(format_args!("{i}")),
-            StaticValue::F32(f) => fmt.write_fmt(format_args!("{f:0.032}"))
+            StaticValue::F32(f) => fmt.write_fmt(format_args!("{f:0.032}f32 as f64"))
         }
     }
 }

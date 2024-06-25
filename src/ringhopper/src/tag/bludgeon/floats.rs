@@ -14,7 +14,9 @@ pub fn fix_bad_floats(tag: &mut dyn PrimaryTagStructDyn) {
                 }
                 SimplePrimitiveType::Angle => {
                     let f: &mut Angle = field.as_any_mut().downcast_mut().unwrap();
-                    check_field(&mut f.angle);
+                    let mut angle = f.angle as f64;
+                    check_field(&mut angle);
+                    f.angle = angle as f32;
                 }
                 SimplePrimitiveType::Euler2D => {
                     let f: &mut Euler2D = field.as_any_mut().downcast_mut().unwrap();

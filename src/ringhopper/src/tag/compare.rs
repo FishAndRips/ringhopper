@@ -96,6 +96,17 @@ fn compare_tag_data<T: DynamicTagData + ?Sized>(first: &T, second: &T, path: &mu
                     )
                 };
             }
+            macro_rules! do_compare_low_precision {
+                ($prim:tt) => {
+                    compare_primitive::<$prim>(
+                        &first.as_any().downcast_ref::<$prim>().unwrap().low_precision(),
+                        &second.as_any().downcast_ref::<$prim>().unwrap().low_precision(),
+                        path,
+                        comparison,
+                        depth
+                    )
+                };
+            }
 
             match primitive_type {
                 SimplePrimitiveType::Bool => do_compare!(bool),
@@ -106,23 +117,11 @@ fn compare_tag_data<T: DynamicTagData + ?Sized>(first: &T, second: &T, path: &mu
                 SimplePrimitiveType::U16 => do_compare!(u16),
                 SimplePrimitiveType::I32 => do_compare!(i32),
                 SimplePrimitiveType::U32 => do_compare!(u32),
-                SimplePrimitiveType::Float => do_compare!(f64),
                 SimplePrimitiveType::Size => do_compare!(usize),
                 SimplePrimitiveType::Angle => do_compare!(Angle),
-                SimplePrimitiveType::Vector2D => do_compare!(Vector2D),
-                SimplePrimitiveType::Vector3D => do_compare!(Vector3D),
-                SimplePrimitiveType::Plane2D => do_compare!(Plane2D),
-                SimplePrimitiveType::Plane3D => do_compare!(Plane3D),
-                SimplePrimitiveType::Euler2D => do_compare!(Euler2D),
-                SimplePrimitiveType::Euler3D => do_compare!(Euler3D),
-                SimplePrimitiveType::Quaternion => do_compare!(Quaternion),
-                SimplePrimitiveType::Matrix3x3 => do_compare!(Matrix3x3),
-                SimplePrimitiveType::Vector2DInt => do_compare!(Vector2DInt),
-                SimplePrimitiveType::Rectangle => do_compare!(Rectangle),
-                SimplePrimitiveType::ColorRGBFloat => do_compare!(ColorRGBFloat),
+
                 SimplePrimitiveType::ColorARGBInt => do_compare!(ColorARGBInt),
                 SimplePrimitiveType::ColorARGBIntBytes => do_compare!(ColorARGBIntBytes),
-                SimplePrimitiveType::ColorARGBFloat => do_compare!(ColorARGBFloat),
                 SimplePrimitiveType::Index => compare_index(first.as_any().downcast_ref().unwrap(), second.as_any().downcast_ref().unwrap(), path, comparison, depth),
                 SimplePrimitiveType::ID => do_compare!(ID),
                 SimplePrimitiveType::TagGroup => do_compare!(TagGroup),
@@ -130,7 +129,21 @@ fn compare_tag_data<T: DynamicTagData + ?Sized>(first: &T, second: &T, path: &mu
                 SimplePrimitiveType::ScenarioScriptNodeValue => do_compare!(ScenarioScriptNodeValue),
                 SimplePrimitiveType::CompressedVector3D => do_compare!(CompressedVector3D),
                 SimplePrimitiveType::CompressedVector2D => do_compare!(CompressedVector2D),
-                SimplePrimitiveType::CompressedFloat => do_compare!(CompressedFloat)
+                SimplePrimitiveType::CompressedFloat => do_compare!(CompressedFloat),
+                SimplePrimitiveType::Vector2DInt => do_compare!(Vector2DInt),
+                SimplePrimitiveType::Euler2D => do_compare!(Euler2D),
+                SimplePrimitiveType::Euler3D => do_compare!(Euler3D),
+                SimplePrimitiveType::Rectangle => do_compare!(Rectangle),
+
+                SimplePrimitiveType::Float => do_compare_low_precision!(f64),
+                SimplePrimitiveType::Vector2D => do_compare_low_precision!(Vector2D),
+                SimplePrimitiveType::Vector3D => do_compare_low_precision!(Vector3D),
+                SimplePrimitiveType::Plane2D => do_compare_low_precision!(Plane2D),
+                SimplePrimitiveType::Plane3D => do_compare_low_precision!(Plane3D),
+                SimplePrimitiveType::Quaternion => do_compare_low_precision!(Quaternion),
+                SimplePrimitiveType::Matrix3x3 => do_compare_low_precision!(Matrix3x3),
+                SimplePrimitiveType::ColorRGBFloat => do_compare_low_precision!(ColorRGBFloat),
+                SimplePrimitiveType::ColorARGBFloat => do_compare_low_precision!(ColorARGBFloat),
             }
         }
     }
@@ -293,4 +306,93 @@ fn compare_tag_references(first: &TagReference, second: &TagReference, path: &mu
         path: path[1..].to_owned(),
         difference: format!("reference is different (`{first}` != `{second}`)")
     })
+}
+
+// Floats in working memory are 64-bit, but the extra precision should not be considered when
+// comparing to an f32. As such, we convert to f32 and back to f64.
+trait LowPrecisionCompare {
+    fn low_precision(&self) -> Self;
+}
+
+impl LowPrecisionCompare for f64 {
+    fn low_precision(&self) -> Self {
+        (*self as f32) as f64
+    }
+}
+
+impl LowPrecisionCompare for Vector2D {
+    fn low_precision(&self) -> Self {
+        Self {
+            x: self.x.low_precision(),
+            y: self.y.low_precision(),
+        }
+    }
+}
+
+impl LowPrecisionCompare for Vector3D {
+    fn low_precision(&self) -> Self {
+        Self {
+            x: self.x.low_precision(),
+            y: self.y.low_precision(),
+            z: self.z.low_precision(),
+        }
+    }
+}
+
+impl LowPrecisionCompare for Plane2D {
+    fn low_precision(&self) -> Self {
+        Self {
+            vector: self.vector.low_precision(),
+            d: self.d.low_precision(),
+        }
+    }
+}
+
+impl LowPrecisionCompare for Plane3D {
+    fn low_precision(&self) -> Self {
+        Self {
+            vector: self.vector.low_precision(),
+            d: self.d.low_precision(),
+        }
+    }
+}
+
+impl LowPrecisionCompare for Quaternion {
+    fn low_precision(&self) -> Self {
+        Self {
+            x: self.x.low_precision(),
+            y: self.y.low_precision(),
+            z: self.z.low_precision(),
+            w: self.w.low_precision(),
+        }
+    }
+}
+
+impl LowPrecisionCompare for ColorRGBFloat {
+    fn low_precision(&self) -> Self {
+        Self {
+            red: self.red.low_precision(),
+            green: self.green.low_precision(),
+            blue: self.blue.low_precision(),
+        }
+    }
+}
+
+impl LowPrecisionCompare for ColorARGBFloat {
+    fn low_precision(&self) -> Self {
+        Self {
+            alpha: self.alpha.low_precision(),
+            red: self.red.low_precision(),
+            green: self.green.low_precision(),
+            blue: self.blue.low_precision(),
+        }
+    }
+}
+
+impl LowPrecisionCompare for Matrix3x3 {
+    fn low_precision(&self) -> Self {
+        Self {
+            vectors: [self.vectors[0].low_precision(), self.vectors[1].low_precision(), self.vectors[2].low_precision()]
+        }
+    }
 }

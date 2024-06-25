@@ -17,7 +17,7 @@ pub fn check_bad_floats(tag: &dyn PrimaryTagStructDyn, result: &mut VerifyResult
                 }
                 SimplePrimitiveType::Angle => {
                     let f: &Angle = field.as_any().downcast_ref().unwrap();
-                    check_field(&f.angle, result);
+                    check_field(&(f.angle as f64), result);
                 }
                 SimplePrimitiveType::Euler2D => {
                     let f: &Euler2D = field.as_any().downcast_ref().unwrap();
