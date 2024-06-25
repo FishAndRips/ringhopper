@@ -1,4 +1,4 @@
-use definitions::{BitmapDataFormat, BitmapFormat};
+use definitions::{BitmapDataFormat, BitmapFormat, BitmapUsage};
 use primitives::{error::OverflowCheck, primitive::TagPath, tag::PrimaryTagStructDyn};
 use ringhopper_structs::{Bitmap, BitmapType};
 use crate::{primitives::dynamic::DynamicEnumImpl, tag::{bitmap::{bytes_per_block, MipmapFaceIterator}, tree::TagTree}};
@@ -18,6 +18,19 @@ pub fn verify_bitmap<T: TagTree + Send + Sync>(tag: &dyn PrimaryTagStructDyn, _p
 
     // Verify the data lines up with the format.
     for (i, data) in ziperator!(bitmap.bitmap_data) {
+        if data.format == BitmapDataFormat::P8 {
+            if bitmap.flags.disable_height_map_compression {
+                result.errors.push(format!("Bitmap #{i} is {}, but the bitmap tag has height compression disabled", data.format));
+            }
+            continue;
+        }
+        else if data.format != BitmapDataFormat::P8 && !bitmap.flags.disable_height_map_compression {
+            if bitmap.usage == BitmapUsage::HeightMap || bitmap.usage == BitmapUsage::VectorMap {
+                result.errors.push(format!("Bitmap #{i} is {}, but the bitmap tag has height compression enabled", data.format));
+                continue;
+            }
+        }
+
         let allowed_formats: &[BitmapDataFormat] = match bitmap.encoding_format {
             BitmapFormat::_16Bit => &[BitmapDataFormat::A1R5G5B5, BitmapDataFormat::A4R4G4B4, BitmapDataFormat::R5G6B5],
             BitmapFormat::_32Bit => &[BitmapDataFormat::A8R8G8B8, BitmapDataFormat::X8R8G8B8],
