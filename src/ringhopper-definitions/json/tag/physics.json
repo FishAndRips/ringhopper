@@ -113,7 +113,7 @@
             {
                 "name": "mass",
                 "type": "float",
-                "read_only": true
+                "cache_only": true
             },
             {
                 "name": "relative density",
@@ -122,7 +122,7 @@
             {
                 "name": "density",
                 "type": "float",
-                "read_only": true
+                "cache_only": true
             },
             {
                 "name": "position",
@@ -182,7 +182,7 @@
             {
                 "name": "center of mass",
                 "type": "Vector3D",
-                "read_only": true
+                "cache_only": true
             },
             {
                 "name": "density",
