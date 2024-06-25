@@ -56,7 +56,7 @@ fn dependencies_single_tag() {
 #[test]
 fn dependencies_recursive() {
     let test_tree = generate_test_tag_tree();
-    let dependencies = recursively_get_dependencies_for_tag(&TagPath::from_path("weapons\\myweapon\\myweapons.weapon").unwrap(), &test_tree).unwrap();
+    let dependencies = recursively_get_dependencies_for_tag(&TagPath::from_path("weapons\\myweapon\\myweapons.weapon").unwrap(), &test_tree, false).unwrap();
 
-    assert_eq!(7, dependencies.len());
+    assert_eq!(8, dependencies.len());
 }

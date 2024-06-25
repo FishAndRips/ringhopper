@@ -1048,7 +1048,7 @@ impl From<i32> for ScenarioScriptNodeValue {
 }
 impl From<f32> for ScenarioScriptNodeValue {
     fn from(value: f32) -> Self {
-        Self { data: unsafe { std::mem::transmute(value) } }
+        Self { data: value.to_bits() }
     }
 }
 impl From<ID> for ScenarioScriptNodeValue {
@@ -1078,7 +1078,7 @@ impl From<ScenarioScriptNodeValue> for i32 {
 }
 impl From<ScenarioScriptNodeValue> for f32 {
     fn from(value: ScenarioScriptNodeValue) -> Self {
-        unsafe { std::mem::transmute(value.data) }
+        f32::from_bits(value.data)
     }
 }
 impl From<ScenarioScriptNodeValue> for ID {

@@ -145,7 +145,7 @@ pub enum SimplePrimitiveType {
     U16,
     I32,
     U32,
-    F32,
+    Float,
 
     Angle,
     Vector2D,

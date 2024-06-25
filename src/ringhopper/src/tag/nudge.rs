@@ -54,7 +54,7 @@ fn nudge_object(object: &mut Object) -> bool {
         let mut all_same = true;
 
         let error = 0.001;
-        let permutation_ratio_inverse = cc.permutations.items.len() as f32;
+        let permutation_ratio_inverse = cc.permutations.items.len() as f64;
 
         for p in &cc.permutations.items {
             let weight = p.weight;
@@ -131,7 +131,7 @@ fn nudge_light(a: &mut Light) -> bool {
     result
 }
 
-fn nudge(float: &mut f32, was_nudged_thus_far: &mut bool) {
+fn nudge(float: &mut f64, was_nudged_thus_far: &mut bool) {
     let fixed = fix_decimal_rounding(*float);
     if fixed != *float {
         *float = fixed;
@@ -139,7 +139,7 @@ fn nudge(float: &mut f32, was_nudged_thus_far: &mut bool) {
     }
 }
 
-pub(crate) fn fix_decimal_rounding(float: f32) -> f32 {
+pub(crate) fn fix_decimal_rounding(float: f64) -> f64 {
     use std::io::Write;
 
     // Too much rounding error.
@@ -214,7 +214,7 @@ pub(crate) fn fix_decimal_rounding(float: f32) -> f32 {
         return float;
     }
 
-    f32::from_str(std::str::from_utf8(&number).unwrap()).unwrap() * sign
+    f64::from_str(std::str::from_utf8(&number).unwrap()).unwrap() * sign
 }
 
 #[cfg(test)]

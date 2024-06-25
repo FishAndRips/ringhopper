@@ -388,7 +388,7 @@ pub enum ObjectType {
     Data,
     FileData,
     BSPVertexData,
-    F32,
+    Float,
     U8,
     U16,
     U32,
@@ -427,7 +427,7 @@ impl ObjectType {
             Self::Reflexive(_) => 0xC,
             Self::TagReference(_) => 0x10,
             Self::Data | Self::FileData | Self::BSPVertexData | Self::UTF16String => 0x14,
-            Self::F32
+            Self::Float
             | Self::Angle
             | Self::U32
             | Self::Address
@@ -451,7 +451,7 @@ impl ObjectType {
             | Self::ColorRGBFloat
             | Self::Euler2D
             | Self::Euler3D
-            | Self::ColorARGBFloat => ObjectType::F32.primitive_size() * self.composite_count(),
+            | Self::ColorARGBFloat => ObjectType::Float.primitive_size() * self.composite_count(),
             Self::String32 => 32,
 
             Self::NamedObject(_) => unreachable!()
@@ -466,7 +466,7 @@ impl ObjectType {
             Self::Data | Self::FileData | Self::BSPVertexData | Self::UTF16String => 1,
             Self::TagID | Self::ID => 1,
             Self::TagGroup => 1,
-            Self::F32 | Self::Angle | Self::U32 | Self::Address | Self::I32 | Self::ColorARGBInt | Self::CompressedVector2D | Self::CompressedVector3D | Self::CompressedFloat => 1,
+            Self::Float | Self::Angle | Self::U32 | Self::Address | Self::I32 | Self::ColorARGBInt | Self::CompressedVector2D | Self::CompressedVector3D | Self::CompressedFloat => 1,
             Self::U16 | Self::I16 | Self::Index => 1,
             Self::U8 | Self::I8 => 1,
             Self::Rectangle => 4,
@@ -518,7 +518,7 @@ impl ObjectType {
             | Self::Rectangle
             | Self::Vector2DInt => Some(StaticValue::Int(0)),
 
-            Self::F32
+            Self::Float
             | Self::Angle
             | Self::Vector2D
             | Self::Vector3D

@@ -29,7 +29,7 @@ pub trait Color: Sized {
     /// assert!(color.luma() < brighter_color.luma());
     /// assert!(color.luma() > darker_color.luma());
     /// ```
-    fn luma(&self) -> f32 {
+    fn luma(&self) -> f64 {
         let color = self.rgb_float().clamp();
 
         // Already monochrome
@@ -62,7 +62,7 @@ pub trait Color: Sized {
     /// let color = ColorARGBFloat { alpha: 1.0, red: 0.25, green: 0.5, blue: 0.75 };
     /// assert_eq!(color.alpha_float(), 1.0);
     /// ```
-    fn alpha_float(&self) -> f32;
+    fn alpha_float(&self) -> f64;
 
     /// Convert from a [`ColorARGBFloat`] type.
     ///
@@ -169,16 +169,16 @@ pub trait Color: Sized {
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 #[repr(C)]
 pub struct ColorARGBFloat {
-    pub alpha: f32,
-    pub red: f32,
-    pub green: f32,
-    pub blue: f32
+    pub alpha: f64,
+    pub red: f64,
+    pub green: f64,
+    pub blue: f64
 }
 
-generate_tag_data_simple_primitive_code!(ColorARGBFloat, f32, alpha, red, green, blue);
+generate_tag_data_simple_primitive_code!(ColorARGBFloat, f64, alpha, red, green, blue);
 
 impl ColorARGBFloat {
-    const fn combine(alpha: f32, rgb: &ColorRGBFloat) -> Self {
+    const fn combine(alpha: f64, rgb: &ColorRGBFloat) -> Self {
         ColorARGBFloat { alpha, red: rgb.red, green: rgb.green, blue: rgb.blue }
     }
 }
@@ -188,7 +188,7 @@ impl Color for ColorARGBFloat {
         ColorRGBFloat { red: self.red, green: self.green, blue: self.blue }
     }
 
-    fn alpha_float(&self) -> f32 {
+    fn alpha_float(&self) -> f64 {
         self.alpha
     }
 
@@ -197,8 +197,8 @@ impl Color for ColorARGBFloat {
     }
 }
 
-impl From<[f32; 4]> for ColorARGBFloat {
-    fn from(value: [f32; 4]) -> Self {
+impl From<[f64; 4]> for ColorARGBFloat {
+    fn from(value: [f64; 4]) -> Self {
         Self { alpha: value[0], red: value[1], green: value[2], blue: value[3] }
     }
 }
@@ -207,13 +207,13 @@ impl From<[f32; 4]> for ColorARGBFloat {
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 #[repr(C)]
 pub struct ColorRGBFloat {
-    pub red: f32,
-    pub green: f32,
-    pub blue: f32
+    pub red: f64,
+    pub green: f64,
+    pub blue: f64
 }
 
-impl From<[f32; 3]> for ColorRGBFloat {
-    fn from(value: [f32; 3]) -> Self {
+impl From<[f64; 3]> for ColorRGBFloat {
+    fn from(value: [f64; 3]) -> Self {
         Self { red: value[0], green: value[1], blue: value[2] }
     }
 }
@@ -223,7 +223,7 @@ impl Color for ColorRGBFloat {
         *self
     }
 
-    fn alpha_float(&self) -> f32 {
+    fn alpha_float(&self) -> f64 {
         1.0
     }
 
@@ -234,7 +234,7 @@ impl Color for ColorRGBFloat {
     fn vector_normalize(&self) -> Self {
         use super::Vector;
 
-        const HALF: f32 = 0.5;
+        const HALF: f64 = 0.5;
         const HALF_VECTOR: Vector3D = Vector3D { x: HALF, y: HALF, z: HALF };
 
         let clamped = self.clamp();
@@ -264,7 +264,7 @@ impl Color for ColorRGBFloat {
     }
 }
 
-generate_tag_data_simple_primitive_code!(ColorRGBFloat, f32, red, green, blue);
+generate_tag_data_simple_primitive_code!(ColorRGBFloat, f64, red, green, blue);
 
 /// Refers to a color composed of 8-bit integer color with alpha stored in integer form.
 #[derive(Clone, Copy, Default, Debug, PartialEq, Eq, Hash)]
@@ -303,7 +303,7 @@ impl Color for ColorARGBInt {
         color.rgb_float()
     }
 
-    fn alpha_float(&self) -> f32 {
+    fn alpha_float(&self) -> f64 {
         let color: ColorARGBIntBytes = (*self).into();
         color.alpha_float()
     }
@@ -362,11 +362,11 @@ pub struct ColorARGBIntBytes {
 
 impl Color for ColorARGBIntBytes {
     fn rgb_float(&self) -> ColorRGBFloat {
-        ColorRGBFloat { red: self.red as f32 / 255.0, green: self.green as f32 / 255.0, blue: self.blue as f32 / 255.0 }
+        ColorRGBFloat { red: self.red as f64 / 255.0, green: self.green as f64 / 255.0, blue: self.blue as f64 / 255.0 }
     }
 
-    fn alpha_float(&self) -> f32 {
-        self.alpha as f32 / 255.0
+    fn alpha_float(&self) -> f64 {
+        self.alpha as f64 / 255.0
     }
 
     fn from_argb_float(color: &ColorARGBFloat) -> Self {

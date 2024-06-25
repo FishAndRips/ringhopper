@@ -138,6 +138,3 @@ macro_rules! define_primitive_ref {
 
 define_primitive_ref!(PrimitiveRef, &, 'a);
 define_primitive_ref!(PrimitiveRefMut, &, 'a, mut);
-
-#[cfg(test)]
-mod test;

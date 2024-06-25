@@ -2,11 +2,11 @@ use crate::tag::nudge::fix_decimal_rounding;
 
 #[test]
 pub fn test_nudgification() {
-    fn test_nudge(expected: f32, value_to_nudge: f32) {
+    fn test_nudge(expected: f64, value_to_nudge: f64) {
         assert_ne!(expected, value_to_nudge, "values already equal");
         assert_eq!(expected, fix_decimal_rounding(value_to_nudge), "nudging failed");
     }
-    fn test_no_nudge(value_to_nudge: f32) {
+    fn test_no_nudge(value_to_nudge: f64) {
         assert_eq!(value_to_nudge, fix_decimal_rounding(value_to_nudge), "nudged when it shouldn't");
     }
 

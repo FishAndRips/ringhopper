@@ -6,8 +6,8 @@ pub fn fix_bad_floats(tag: &mut dyn PrimaryTagStructDyn) {
     fn check_field(field: &mut dyn DynamicTagData) {
         match field.data_type() {
             DynamicTagDataType::SimplePrimitive(t) => match t {
-                SimplePrimitiveType::F32 => {
-                    let f: &mut f32 = field.as_any_mut().downcast_mut().unwrap();
+                SimplePrimitiveType::Float => {
+                    let f: &mut f64 = field.as_any_mut().downcast_mut().unwrap();
                     if f.is_nan() {
                         *f = 0.0;
                     }

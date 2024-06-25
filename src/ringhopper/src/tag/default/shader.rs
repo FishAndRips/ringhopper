@@ -54,7 +54,7 @@ fn fix_shader_transparent_chicago_extended(tag: &mut dyn PrimaryTagStructDyn, un
     fix_chicago_map_reflexive(&mut shader._4_stage_maps, undefault);
 }
 
-fn fix_map_scale(u: &mut f32, v: &mut f32, undefault: bool) {
+fn fix_map_scale(u: &mut f64, v: &mut f64, undefault: bool) {
     if undefault {
         if (*u == 1.0 || *u == 0.0) && (*v == 1.0 || *v == 0.0) {
             *u = 0.0;

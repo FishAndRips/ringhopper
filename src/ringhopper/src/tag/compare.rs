@@ -106,7 +106,7 @@ fn compare_tag_data<T: DynamicTagData + ?Sized>(first: &T, second: &T, path: &mu
                 SimplePrimitiveType::U16 => do_compare!(u16),
                 SimplePrimitiveType::I32 => do_compare!(i32),
                 SimplePrimitiveType::U32 => do_compare!(u32),
-                SimplePrimitiveType::F32 => do_compare!(f32),
+                SimplePrimitiveType::Float => do_compare!(f64),
                 SimplePrimitiveType::Size => do_compare!(usize),
                 SimplePrimitiveType::Angle => do_compare!(Angle),
                 SimplePrimitiveType::Vector2D => do_compare!(Vector2D),

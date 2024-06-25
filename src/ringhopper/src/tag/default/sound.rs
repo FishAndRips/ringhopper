@@ -19,7 +19,7 @@ fn set_or_unset_defaults_for_sound(tag: &mut dyn PrimaryTagStructDyn, undefault:
     let sound: &mut Sound = tag.as_any_mut().downcast_mut().unwrap();
     let defaults = default_min_max_distance_sounds(sound.sound_class);
 
-    let default = |value: &mut [&mut f32], default: &[f32]| {
+    let default = |value: &mut [&mut f64], default: &[f64]| {
         if undefault {
             // Check for defaults
             for (val, default) in value.iter().zip(default.iter()) {
@@ -139,7 +139,7 @@ fn set_or_unset_defaults_for_sound(tag: &mut dyn PrimaryTagStructDyn, undefault:
 
 }
 
-fn default_zero_gain_modifier_for_class(sound_class: SoundClass) -> f32 {
+fn default_zero_gain_modifier_for_class(sound_class: SoundClass) -> f64 {
     match sound_class {
         SoundClass::ObjectImpacts
         | SoundClass::ParticleImpacts
@@ -159,8 +159,8 @@ fn default_zero_gain_modifier_for_class(sound_class: SoundClass) -> f32 {
 }
 
 #[allow(dead_code)] // TODO: remove this allow(dead_code) directive when build code is added
-fn calculate_sound_looping_distance<T: TagTree>(sound_looping: &SoundLooping, tag_tree: &T) -> RinghopperResult<f32> {
-    let mut maximum_distance: f32 = 0.0;
+fn calculate_sound_looping_distance<T: TagTree>(sound_looping: &SoundLooping, tag_tree: &T) -> RinghopperResult<f64> {
+    let mut maximum_distance: f64 = 0.0;
 
     let detail_sounds = sound_looping
         .detail_sounds
@@ -193,7 +193,7 @@ fn calculate_sound_looping_distance<T: TagTree>(sound_looping: &SoundLooping, ta
     Ok(maximum_distance)
 }
 
-fn default_min_max_distance_sounds(sound_class: SoundClass) -> Bounds<f32> {
+fn default_min_max_distance_sounds(sound_class: SoundClass) -> Bounds<f64> {
     match sound_class {
         SoundClass::DeviceMachinery
         | SoundClass::DeviceForceField

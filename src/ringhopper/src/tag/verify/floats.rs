@@ -5,12 +5,12 @@ use crate::tag::verify::VerifyResult;
 
 pub fn check_bad_floats(tag: &dyn PrimaryTagStructDyn, result: &mut VerifyResult) {
     fn check_field(field: &dyn DynamicTagData, result: &mut VerifyResult) {
-        let zero_to_one = 0.0f32..=1.0f32;
+        let zero_to_one = 0.0f64..=1.0f64;
 
         match field.data_type() {
             DynamicTagDataType::SimplePrimitive(t) => match t {
-                SimplePrimitiveType::F32 => {
-                    let f: &f32 = field.as_any().downcast_ref().unwrap();
+                SimplePrimitiveType::Float => {
+                    let f: &f64 = field.as_any().downcast_ref().unwrap();
                     if f.is_nan() {
                         result.errors.push("NaN float(s) detected. This can be automatically fixed.".to_string());
                     }
