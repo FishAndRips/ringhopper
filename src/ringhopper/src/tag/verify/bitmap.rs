@@ -118,7 +118,7 @@ pub fn verify_bitmap_sequence_index(
         SequenceType::Bitmap => if (seq.bitmap_count as usize) < minimum {
             return Err(format!("expected sequence index #{s} to have at least {minimum} bitmap(s), found only {}", seq.bitmap_count))
         }
-        SequenceType::Sprite => if (seq.sprites.items.len() as usize) < minimum {
+        SequenceType::Sprite => if seq.sprites.items.len() < minimum {
             return Err(format!("expected sequence index #{s} to have at least {minimum} sprite(s), found only {}", seq.sprites.items.len()))
         },
         SequenceType::Any => unreachable!()

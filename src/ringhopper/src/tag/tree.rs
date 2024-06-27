@@ -530,6 +530,11 @@ impl VirtualTagsDirectory {
         Ok(Self { directories, strictness: ParseStrictness::Strict, cow_output })
     }
 
+    /// Get the path to the directory at the given index.
+    pub fn get_directory(&self, dir: usize) -> Option<&Path> {
+        self.directories.get(dir).map(|d| d.as_path())
+    }
+
     /// Set the strictness for opening tags.
     pub fn set_strictness(&mut self, strictness: ParseStrictness) -> () {
         self.strictness = strictness

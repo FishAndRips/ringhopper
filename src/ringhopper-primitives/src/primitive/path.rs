@@ -10,6 +10,7 @@ use crate::map::{DomainType, Map};
 
 /// Halo path separator
 pub const HALO_PATH_SEPARATOR: char = '\\';
+pub const HALO_PATH_SEPARATOR_STR: &'static str = "\\";
 
 /// Refers to a tag path and provides functions for handling these.
 #[derive(Clone, Debug, Eq, Hash)]

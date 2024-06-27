@@ -25,6 +25,7 @@ mod refactor_groups;
 mod bludgeon;
 mod recompress_vertices;
 mod dependency_tree;
+mod refactor_paths;
 
 pub struct Verb {
     pub name: &'static str,
@@ -56,6 +57,7 @@ pub const ALL_VERBS: &'static [Verb] = &[
     Verb::new("recompress-vertices", "Recompress model vertices", recompress_vertices::recompress_vertices),
     Verb::new("recover", "Recover data from tags", recover::recover),
     Verb::new("refactor-groups", "Batch refactor dependencies by tag group if the new dependency exists", refactor_groups::refactor_groups),
+    Verb::new("refactor-paths", "Batch refactor dependencies by tag path (file extensions cannot be changed)", refactor_paths::refactor_paths),
     Verb::new("strip", "Clean tags", strip::strip),
     Verb::new("tag-collection", "Generate tag_collection tags from data", tag_collection::tag_collection),
     Verb::new("ui-widget-collection", "Generate ui_widget_collection tags from data", tag_collection::ui_widget_collection),
