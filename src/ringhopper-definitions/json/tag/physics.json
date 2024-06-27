@@ -95,11 +95,13 @@
             },
             {
                 "name": "powered mass point",
-                "type": "int16"
+                "type": "Index",
+                "reflexive": "powered mass points",
+                "struct": "Physics"
             },
             {
                 "name": "model node",
-                "type": "int16",
+                "type": "Index",
                 "read_only": true
             },
             {
