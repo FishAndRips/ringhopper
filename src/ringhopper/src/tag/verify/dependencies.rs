@@ -3,13 +3,13 @@ use std::borrow::Cow;
 use primitives::{dynamic::DynamicTagData, primitive::{TagPath, TagReference}, tag::PrimaryTagStructDyn};
 use ringhopper_structs::group_supported_on_engine;
 use crate::tag::tree::TagTree;
-use super::{VerifyContext, VerifyResult};
+use super::{ScenarioContext, ScenarioTreeTagResult};
 
-pub fn verify_dependencies<T: TagTree + Send + Sync>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, context: &VerifyContext<T>, result: &mut VerifyResult) {
+pub fn verify_dependencies<T: TagTree + Send + Sync>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, context: &ScenarioContext<T>, result: &mut ScenarioTreeTagResult) {
     fn iterate_dependencies_recursively<D: DynamicTagData + ?Sized, T: TagTree + Send + Sync>(
         data: &D,
-        result: &mut VerifyResult,
-        context: &VerifyContext<T>,
+        result: &mut ScenarioTreeTagResult,
+        context: &ScenarioContext<T>,
         stack: &mut Vec<Cow<str>>
     ) {
         for field_name in data.fields() {

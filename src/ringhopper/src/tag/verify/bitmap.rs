@@ -3,7 +3,7 @@ use primitives::{error::OverflowCheck, primitive::TagPath, tag::PrimaryTagStruct
 use ringhopper_structs::{Bitmap, BitmapType};
 use crate::{primitives::dynamic::DynamicEnumImpl, tag::{bitmap::{bytes_per_block, MipmapFaceIterator}, tree::TagTree}};
 
-use super::{VerifyContext, VerifyResult};
+use super::{ScenarioContext, ScenarioTreeTagResult};
 
 pub enum SequenceType {
     Any,
@@ -11,7 +11,7 @@ pub enum SequenceType {
     Bitmap
 }
 
-pub fn verify_bitmap<T: TagTree + Send + Sync>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, _context: &VerifyContext<T>, result: &mut VerifyResult) {
+pub fn verify_bitmap<T: TagTree + Send + Sync>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, _context: &ScenarioContext<T>, result: &mut ScenarioTreeTagResult) {
     let bitmap = tag.as_any().downcast_ref::<Bitmap>().unwrap();
 
     let error_count = result.errors.len();

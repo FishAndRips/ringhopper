@@ -3,9 +3,9 @@ use ringhopper_structs::{Bitmap, ParticleSystem, ParticleSystemComplexSpriteRend
 
 use crate::tag::tree::TagTree;
 
-use super::{bitmap::{verify_bitmap_sequence_index, SequenceType}, VerifyContext, VerifyResult};
+use super::{bitmap::{verify_bitmap_sequence_index, SequenceType}, ScenarioContext, ScenarioTreeTagResult};
 
-pub fn verify_particle_system<T: TagTree + Send + Sync + 'static>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, context: &VerifyContext<T>, result: &mut VerifyResult) {
+pub fn verify_particle_system<T: TagTree + Send + Sync + 'static>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, context: &ScenarioContext<T>, result: &mut ScenarioTreeTagResult) {
     let particle_system: &ParticleSystem = tag.as_any().downcast_ref().unwrap();
 
     for (t, ptype) in ziperator!(particle_system.particle_types) {

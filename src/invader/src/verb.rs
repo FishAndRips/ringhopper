@@ -1,4 +1,8 @@
+use std::collections::HashMap;
 use std::env::Args;
+use ringhopper::primitives::primitive::TagPath;
+use ringhopper::tag::result::ScenarioTreeTagResult;
+use util::LockedStdoutLogger;
 
 macro_rules! str_unwrap {
     ($what:expr, $($fmt:tt)+) => {
@@ -69,4 +73,39 @@ pub const ALL_VERBS: &'static [Verb] = &[
 
 pub fn get_verb(what: &str) -> Option<&'static Verb> {
     ALL_VERBS.binary_search_by(|c| c.name.cmp(what)).map(|i| &ALL_VERBS[i]).ok()
+}
+
+fn print_scenario_tree_tag_result(logger: &LockedStdoutLogger, results: &HashMap<TagPath, ScenarioTreeTagResult>, scenario_path: &TagPath) {
+    let total_issues = results
+        .iter()
+        .map(|a| a.1.errors.len() + a.1.warnings.len() + a.1.pedantic_warnings.len())
+        .reduce(|a,b| a + b)
+        .unwrap_or_default();
+
+    match total_issues {
+        0 => logger.success_fmt_ln(format_args!("Verified {scenario_path} and found no issues")),
+        1 => logger.warning_fmt_ln(format_args!("Verified {scenario_path} and found one issue:")),
+        other => logger.warning_fmt_ln(format_args!("Verified {scenario_path} and found {other} issues:"))
+    }
+
+    // First pass: pedantic warnings
+    for (path, vr) in results {
+        for i in &vr.pedantic_warnings {
+            logger.minor_warning_fmt_ln(format_args!("WARNING (minor) {path}: {i}"))
+        }
+    }
+
+    // Second pass: warnings
+    for (path, vr) in results {
+        for i in &vr.warnings {
+            logger.warning_fmt_ln(format_args!("WARNING {path}: {i}"))
+        }
+    }
+
+    // Final pass: errors
+    for (path, vr) in results {
+        for i in &vr.errors {
+            logger.error_fmt_ln(format_args!("ERROR {path}: {i}"))
+        }
+    }
 }

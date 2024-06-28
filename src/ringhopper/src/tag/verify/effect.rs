@@ -1,9 +1,9 @@
 use primitives::{primitive::{TagGroup, TagPath, TagReference}, tag::PrimaryTagStructDyn};
 use ringhopper_structs::Effect;
 use crate::tag::tree::TagTree;
-use super::{VerifyContext, VerifyResult};
+use super::{ScenarioContext, ScenarioTreeTagResult};
 
-pub fn verify_effect<T: TagTree + Send + Sync>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, _context: &VerifyContext<T>, result: &mut VerifyResult) {
+pub fn verify_effect<T: TagTree + Send + Sync>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, _context: &ScenarioContext<T>, result: &mut ScenarioTreeTagResult) {
     let effect: &Effect = tag.as_any().downcast_ref().unwrap();
 
     for (e, event) in (0..effect.events.items.len()).zip(effect.events.items.iter()) {

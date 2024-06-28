@@ -23,3 +23,4 @@ pub mod verify;
 pub mod sound;
 pub mod default;
 pub mod bludgeon;
+pub mod result;

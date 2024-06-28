@@ -3,9 +3,9 @@ use ringhopper_structs::Particle;
 
 use crate::tag::tree::TagTree;
 
-use super::{VerifyContext, VerifyResult};
+use super::{ScenarioContext, ScenarioTreeTagResult};
 
-pub fn verify_particle<T: TagTree + Send + Sync + 'static>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, _context: &VerifyContext<T>, result: &mut VerifyResult) {
+pub fn verify_particle<T: TagTree + Send + Sync + 'static>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, _context: &ScenarioContext<T>, result: &mut ScenarioTreeTagResult) {
     let particle: &Particle = tag.as_any().downcast_ref().unwrap();
 
     if ((particle.fade_start_size == 0.0) ^ (particle.fade_end_size == 0.0)) && particle.fade_start_size != 5.0 && particle.fade_end_size != 4.0 {
