@@ -57,7 +57,7 @@ pub fn refactor_paths(args: Args, description: &'static str) -> Result<(), Strin
 
     let start = Instant::now();
 
-    let tags_to_rename = match refactor_paths_for_tag_tree(
+    match refactor_paths_for_tag_tree(
         parser.get_extra()[0].as_str(),
         parser.get_extra()[1].as_str(),
         &parser.get_virtual_tags_directory(),
@@ -74,7 +74,8 @@ pub fn refactor_paths(args: Args, description: &'static str) -> Result<(), Strin
             for (from, to) in &n.0 {
                 logger.success_fmt_ln(format_args!("Renamed {from} to {to}"))
             }
-            print_tag_results(&logger, &n.1, format_args!("Renamed tags"));
+            let time_elapsed = (Instant::now() - start).as_millis();
+            print_tag_results(&logger, &n.1, format_args!("Renamed {} tag(s) in {time_elapsed} ms", n.0.len()));
             n.0
         },
         Err(e) => {
@@ -82,9 +83,6 @@ pub fn refactor_paths(args: Args, description: &'static str) -> Result<(), Strin
             return Err(format!("{}", e.0))
         }
     };
-
-    let time_elapsed = (Instant::now() - start).as_millis();
-    logger.success_fmt_ln(format_args!("Renamed {} tags in {time_elapsed} ms", tags_to_rename.len()));
 
     Ok(())
 }
