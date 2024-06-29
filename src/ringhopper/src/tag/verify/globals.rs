@@ -2,9 +2,9 @@ use primitives::{dynamic::DynamicTagDataArray, primitive::TagPath};
 use primitives::tag::PrimaryTagStructDyn;
 use ringhopper_structs::{Globals, ScenarioType};
 use crate::tag::tree::TagTree;
-use super::{ScenarioContext, ScenarioTreeTagResult};
+use super::{ScenarioContext, TagResult};
 
-pub fn verify_globals<T: TagTree + Send + Sync>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, context: &ScenarioContext<T>, result: &mut ScenarioTreeTagResult) {
+pub fn verify_globals<T: TagTree + Send + Sync>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, context: &ScenarioContext<T>, result: &mut TagResult) {
     let globals: &Globals = tag.as_any().downcast_ref().unwrap();
 
     let scenario_type = context.scenario_type;

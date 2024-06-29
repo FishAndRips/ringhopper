@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 use std::env::Args;
+use std::fmt::Arguments;
 use ringhopper::primitives::primitive::TagPath;
-use ringhopper::tag::result::ScenarioTreeTagResult;
+use ringhopper::tag::result::TagResult;
 use util::LockedStdoutLogger;
 
 macro_rules! str_unwrap {
@@ -75,7 +76,7 @@ pub fn get_verb(what: &str) -> Option<&'static Verb> {
     ALL_VERBS.binary_search_by(|c| c.name.cmp(what)).map(|i| &ALL_VERBS[i]).ok()
 }
 
-fn print_scenario_tree_tag_result(logger: &LockedStdoutLogger, results: &HashMap<TagPath, ScenarioTreeTagResult>, scenario_path: &TagPath) {
+fn print_tag_results(logger: &LockedStdoutLogger, results: &HashMap<TagPath, TagResult>, action: Arguments) {
     let total_issues = results
         .iter()
         .map(|a| a.1.errors.len() + a.1.warnings.len() + a.1.pedantic_warnings.len())
@@ -83,9 +84,9 @@ fn print_scenario_tree_tag_result(logger: &LockedStdoutLogger, results: &HashMap
         .unwrap_or_default();
 
     match total_issues {
-        0 => logger.success_fmt_ln(format_args!("Verified {scenario_path} and found no issues")),
-        1 => logger.warning_fmt_ln(format_args!("Verified {scenario_path} and found one issue:")),
-        other => logger.warning_fmt_ln(format_args!("Verified {scenario_path} and found {other} issues:"))
+        0 => logger.success_fmt_ln(format_args!("{action} and found no issues")),
+        1 => logger.warning_fmt_ln(format_args!("{action} and found one issue:")),
+        other => logger.warning_fmt_ln(format_args!("{action} and found {other} issues:"))
     }
 
     // First pass: pedantic warnings

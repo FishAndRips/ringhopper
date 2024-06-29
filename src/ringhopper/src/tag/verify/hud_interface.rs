@@ -6,12 +6,12 @@ use primitives::primitive::{TagPath, TagReference};
 use primitives::tag::PrimaryTagStructDyn;
 use ringhopper_structs::{Bitmap, GrenadeHUDInterface, HUDGlobals, HUDInterfaceMeterElement, HUDInterfaceStaticElement, UnicodeStringList, UnitHUDInterface};
 use crate::tag::tree::TagTree;
-use crate::tag::verify::ScenarioTreeTagResult;
+use crate::tag::verify::TagResult;
 
 use super::bitmap::{verify_bitmap_sequence_index, SequenceType};
 use super::ScenarioContext;
 
-pub fn verify_weapon_hud_interface<T: TagTree + Send + Sync + 'static>(tag: &dyn PrimaryTagStructDyn, path: &TagPath, context: &ScenarioContext<T>, result: &mut ScenarioTreeTagResult) {
+pub fn verify_weapon_hud_interface<T: TagTree + Send + Sync + 'static>(tag: &dyn PrimaryTagStructDyn, path: &TagPath, context: &ScenarioContext<T>, result: &mut TagResult) {
     let weapon_hud_interface: &WeaponHUDInterface = tag.as_any().downcast_ref().unwrap();
 
     macro_rules! check_sequence_index_for_2d_thing {
@@ -49,7 +49,7 @@ pub fn verify_weapon_hud_interface<T: TagTree + Send + Sync + 'static>(tag: &dyn
     verify_no_infinite_loop(weapon_hud_interface, path, context, result);
 }
 
-pub fn verify_unit_hud_interface<T: TagTree + Send + Sync + 'static>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, context: &ScenarioContext<T>, result: &mut ScenarioTreeTagResult) {
+pub fn verify_unit_hud_interface<T: TagTree + Send + Sync + 'static>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, context: &ScenarioContext<T>, result: &mut TagResult) {
     let unit_hud_interface: &UnitHUDInterface = tag.as_any().downcast_ref().unwrap();
 
     check_static_element(&unit_hud_interface.hud_background, context, result, || "HUD background".to_string());
@@ -70,7 +70,7 @@ pub fn verify_unit_hud_interface<T: TagTree + Send + Sync + 'static>(tag: &dyn P
     }
 }
 
-pub fn verify_grenade_hud_interface<T: TagTree + Send + Sync + 'static>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, context: &ScenarioContext<T>, result: &mut ScenarioTreeTagResult) {
+pub fn verify_grenade_hud_interface<T: TagTree + Send + Sync + 'static>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, context: &ScenarioContext<T>, result: &mut TagResult) {
     let grenade_hud_interface: &GrenadeHUDInterface = tag.as_any().downcast_ref().unwrap();
 
     check_static_element(&grenade_hud_interface.background, context, result, || "Background".to_string());
@@ -92,7 +92,7 @@ pub fn verify_grenade_hud_interface<T: TagTree + Send + Sync + 'static>(tag: &dy
     };
 }
 
-pub fn verify_hud_globals<T: TagTree + Send + Sync + 'static>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, context: &ScenarioContext<T>, result: &mut ScenarioTreeTagResult) {
+pub fn verify_hud_globals<T: TagTree + Send + Sync + 'static>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, context: &ScenarioContext<T>, result: &mut TagResult) {
     let hud_globals: &HUDGlobals = tag.as_any().downcast_ref().unwrap();
 
     match context.open_tag_reference_maybe(&hud_globals.messaging_parameters.item_message_text, result, None) {
@@ -121,7 +121,7 @@ pub fn verify_hud_globals<T: TagTree + Send + Sync + 'static>(tag: &dyn PrimaryT
     };
 }
 
-fn check_static_element<T: TagTree + Send + Sync + 'static, N: FnOnce() -> String>(element: &HUDInterfaceStaticElement, context: &ScenarioContext<T>, result: &mut ScenarioTreeTagResult, name: N) {
+fn check_static_element<T: TagTree + Send + Sync + 'static, N: FnOnce() -> String>(element: &HUDInterfaceStaticElement, context: &ScenarioContext<T>, result: &mut TagResult, name: N) {
     let bitmap = match context.open_tag_reference_maybe(&element.interface_bitmap, result, None) {
         Some(n) => n,
         None => return
@@ -134,7 +134,7 @@ fn check_static_element<T: TagTree + Send + Sync + 'static, N: FnOnce() -> Strin
     }
 }
 
-fn check_meter_element<T: TagTree + Send + Sync + 'static, N: FnOnce() -> String>(element: &HUDInterfaceMeterElement, context: &ScenarioContext<T>, result: &mut ScenarioTreeTagResult, name: N) {
+fn check_meter_element<T: TagTree + Send + Sync + 'static, N: FnOnce() -> String>(element: &HUDInterfaceMeterElement, context: &ScenarioContext<T>, result: &mut TagResult, name: N) {
     let bitmap = match context.open_tag_reference_maybe(&element.meter_bitmap, result, None) {
         Some(n) => n,
         None => return
@@ -147,7 +147,7 @@ fn check_meter_element<T: TagTree + Send + Sync + 'static, N: FnOnce() -> String
     }
 }
 
-fn verify_no_infinite_loop<T: TagTree + Send + Sync + 'static>(base: &WeaponHUDInterface, path: &TagPath, context: &ScenarioContext<T>, result: &mut ScenarioTreeTagResult) {
+fn verify_no_infinite_loop<T: TagTree + Send + Sync + 'static>(base: &WeaponHUDInterface, path: &TagPath, context: &ScenarioContext<T>, result: &mut TagResult) {
     let mut all_references = HashSet::new();
     all_references.insert(path.to_owned());
     let mut child_ref = base.child_hud.to_owned();

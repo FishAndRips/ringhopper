@@ -3,11 +3,11 @@ use ringhopper_structs::{GBXModel, Model};
 use crate::tag::tree::TagTree;
 use crate::tag::model::ModelFunctions;
 use crate::primitives::primitive::Vector;
-use super::{ScenarioContext, ScenarioTreeTagResult};
+use super::{ScenarioContext, TagResult};
 
 macro_rules! write_verify_model_fn {
     ($name:tt, $group:tt) => {
-        pub fn $name<T: TagTree + Send + Sync>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, _context: &ScenarioContext<T>, result: &mut ScenarioTreeTagResult) {
+        pub fn $name<T: TagTree + Send + Sync>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, _context: &ScenarioContext<T>, result: &mut TagResult) {
             let model: &$group = tag.as_any().downcast_ref().unwrap();
 
             if let Err(e) = model.check_indices() {

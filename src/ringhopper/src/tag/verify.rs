@@ -53,7 +53,7 @@ enum VerifyStatus {
 }
 
 
-pub fn verify<T: TagTree + Send + Sync + 'static>(scenario: &TagPath, tag_tree: T, engine: &'static Engine, threads: NonZeroUsize) -> RinghopperResult<HashMap<TagPath, ScenarioTreeTagResult>> {
+pub fn verify<T: TagTree + Send + Sync + 'static>(scenario: &TagPath, tag_tree: T, engine: &'static Engine, threads: NonZeroUsize) -> RinghopperResult<HashMap<TagPath, TagResult>> {
     let globals_path = TagPath::new("globals\\globals", TagGroup::Globals).unwrap();
 
     let scenario_ref = tag_tree.open_tag_shared(scenario)?;
@@ -138,7 +138,7 @@ impl<T: TagTree + Send + Sync + 'static> ScenarioContext<T> {
     ///
     /// Otherwise, return `true` if the tag is OK, and `false` if not.
     fn verify_tag(&self, path: &TagPath, skip_if_locked: bool) -> Option<bool> {
-        let mut result = ScenarioTreeTagResult::default();
+        let mut result = TagResult::default();
         match self.tag_tree.open_tag_shared(&path) {
             Ok(tag) => {
                 // We want to acquire the tag ASAP in case something tries to read this tag before we verify it
@@ -203,7 +203,7 @@ impl<T: TagTree + Send + Sync + 'static> ScenarioContext<T> {
         Some(is_ok)
     }
 
-    fn open_tag_reference_maybe(&self, tag_reference: &TagReference, result: &mut ScenarioTreeTagResult, must_be_set_error: Option<&'static str>) -> Option<Arc<Mutex<Box<dyn PrimaryTagStructDyn>>>> {
+    fn open_tag_reference_maybe(&self, tag_reference: &TagReference, result: &mut TagResult, must_be_set_error: Option<&'static str>) -> Option<Arc<Mutex<Box<dyn PrimaryTagStructDyn>>>> {
         match tag_reference {
             TagReference::Set(tp) => self.open_tag_maybe(tp, result),
             TagReference::Null(_) => {
@@ -215,7 +215,7 @@ impl<T: TagTree + Send + Sync + 'static> ScenarioContext<T> {
         }
     }
 
-    fn open_tag_maybe(&self, tag_path: &TagPath, result: &mut ScenarioTreeTagResult) -> Option<Arc<Mutex<Box<dyn PrimaryTagStructDyn>>>> {
+    fn open_tag_maybe(&self, tag_path: &TagPath, result: &mut TagResult) -> Option<Arc<Mutex<Box<dyn PrimaryTagStructDyn>>>> {
         self.open_tag_unverified(tag_path, result).and_then(|n| {
             if self.verify_tag(tag_path, false).unwrap() {
                 Some(n)
@@ -227,7 +227,7 @@ impl<T: TagTree + Send + Sync + 'static> ScenarioContext<T> {
         })
     }
 
-    fn open_tag_unverified(&self, tag_path: &TagPath, result: &mut ScenarioTreeTagResult) -> Option<Arc<Mutex<Box<dyn PrimaryTagStructDyn>>>> {
+    fn open_tag_unverified(&self, tag_path: &TagPath, result: &mut TagResult) -> Option<Arc<Mutex<Box<dyn PrimaryTagStructDyn>>>> {
         match self.tag_tree.open_tag_shared(tag_path) {
             Ok(n) => Some(n),
             Err(e) => {

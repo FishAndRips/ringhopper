@@ -1,10 +1,10 @@
 use primitives::dynamic::{DynamicTagData, DynamicTagDataType, SimplePrimitiveType};
 use primitives::primitive::{Angle, ColorARGBFloat, ColorRGBFloat, Euler2D, Euler3D, Matrix3x3, Plane2D, Plane3D, Quaternion, Vector2D, Vector3D};
 use primitives::tag::{for_each_field, PrimaryTagStructDyn};
-use crate::tag::verify::ScenarioTreeTagResult;
+use crate::tag::verify::TagResult;
 
-pub fn check_bad_floats(tag: &dyn PrimaryTagStructDyn, result: &mut ScenarioTreeTagResult) {
-    fn check_field(field: &dyn DynamicTagData, result: &mut ScenarioTreeTagResult) {
+pub fn check_bad_floats(tag: &dyn PrimaryTagStructDyn, result: &mut TagResult) {
+    fn check_field(field: &dyn DynamicTagData, result: &mut TagResult) {
         let zero_to_one = 0.0f64..=1.0f64;
 
         match field.data_type() {

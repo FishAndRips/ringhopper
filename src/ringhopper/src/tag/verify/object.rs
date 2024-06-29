@@ -5,13 +5,13 @@ use primitives::tag::PrimaryTagStructDyn;
 use ringhopper_structs::{GBXModel, HUDGlobals, Model, ModelAnimations, UnicodeStringList, WeaponHUDInterfaceCrosshairType};
 use crate::tag::object::downcast_base_object;
 use crate::tag::tree::TagTree;
-use crate::tag::verify::ScenarioTreeTagResult;
+use crate::tag::verify::TagResult;
 use super::bitmap::{verify_bitmap_sequence_index, SequenceType};
 use super::ScenarioContext;
 
 const IGNORED_MODEL_NODE_LIST_CHECKSUM: i32 = 0;
 
-pub fn verify_object<T: TagTree + Send + Sync + 'static>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, context: &ScenarioContext<T>, result: &mut ScenarioTreeTagResult) {
+pub fn verify_object<T: TagTree + Send + Sync + 'static>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, context: &ScenarioContext<T>, result: &mut TagResult) {
     let object = downcast_base_object(tag).unwrap();
 
     let model = context.open_tag_reference_maybe(&object.model, result, None);
@@ -69,7 +69,7 @@ pub fn verify_object<T: TagTree + Send + Sync + 'static>(tag: &dyn PrimaryTagStr
     }
 }
 
-pub fn verify_weapon<T: TagTree + Send + Sync + 'static>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, context: &ScenarioContext<T>, result: &mut ScenarioTreeTagResult) {
+pub fn verify_weapon<T: TagTree + Send + Sync + 'static>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, context: &ScenarioContext<T>, result: &mut TagResult) {
     let weapon: &Weapon = tag.as_any().downcast_ref().unwrap();
 
     let zoom_levels = weapon.zoom_levels as usize;

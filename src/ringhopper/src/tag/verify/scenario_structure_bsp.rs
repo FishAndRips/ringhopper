@@ -3,9 +3,9 @@ use ringhopper_structs::*;
 
 use crate::tag::tree::TagTree;
 
-use super::{ScenarioContext, ScenarioTreeTagResult};
+use super::{ScenarioContext, TagResult};
 
-pub fn verify_scenario_structure_bsp<T: TagTree + Send + Sync + 'static>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, context: &ScenarioContext<T>, result: &mut ScenarioTreeTagResult) {
+pub fn verify_scenario_structure_bsp<T: TagTree + Send + Sync + 'static>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, context: &ScenarioContext<T>, result: &mut TagResult) {
     let scenario_structure_bsp: &ScenarioStructureBSP = tag.as_any().downcast_ref().unwrap();
 
     // Check this before we can proceed.

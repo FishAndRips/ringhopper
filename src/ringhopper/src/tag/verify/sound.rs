@@ -3,9 +3,9 @@ use ringhopper_structs::{Sound, SoundChannelCount, SoundFormat, SoundPermutation
 
 use crate::tag::{sound::{sample_rate_to_u32, SoundPermutationMetadata}, tree::TagTree};
 
-use super::{ScenarioContext, ScenarioTreeTagResult};
+use super::{ScenarioContext, TagResult};
 
-pub fn verify_sound<T: TagTree + Send + Sync>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, _context: &ScenarioContext<T>, result: &mut ScenarioTreeTagResult) {
+pub fn verify_sound<T: TagTree + Send + Sync>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, _context: &ScenarioContext<T>, result: &mut TagResult) {
     let sound: &Sound = tag.as_any().downcast_ref().unwrap();
 
     let error_count_start = result.errors.len();
@@ -39,12 +39,12 @@ pub fn verify_sound<T: TagTree + Send + Sync>(tag: &dyn PrimaryTagStructDyn, _pa
 }
 
 pub fn sound_is_playable(sound: &Sound) -> bool {
-    let mut result = ScenarioTreeTagResult::default();
+    let mut result = TagResult::default();
     check_errors_with_sound(sound, &mut result);
     result.is_ok()
 }
 
-fn check_errors_with_sound(sound: &Sound, verify_result: &mut ScenarioTreeTagResult) {
+fn check_errors_with_sound(sound: &Sound, verify_result: &mut TagResult) {
     verify_split_permutation_flag_should_be_set_but_is_not(sound, verify_result);
     verify_sound_permutation_indices(sound, verify_result);
     verify_sound_formats(sound, verify_result);
@@ -69,7 +69,7 @@ pub(crate) fn sound_tag_actually_contains_split_permutations(sound: &Sound) -> b
     false
 }
 
-fn verify_split_permutation_flag_should_be_set_but_is_not(sound: &Sound, verify_result: &mut ScenarioTreeTagResult) {
+fn verify_split_permutation_flag_should_be_set_but_is_not(sound: &Sound, verify_result: &mut TagResult) {
     if sound.flags.split_long_sound_into_permutations != sound_tag_actually_contains_split_permutations(sound) {
         verify_result.errors.push("Detected split permutations, but the split permutations flag isn't set".to_owned());
     }
@@ -78,7 +78,7 @@ fn verify_split_permutation_flag_should_be_set_but_is_not(sound: &Sound, verify_
 
 /// Return `true` if the sound tag is fucked up beyond all repair.
 pub(crate) fn sound_tag_is_fubar(sound: &Sound) -> bool {
-    let mut result = ScenarioTreeTagResult::default();
+    let mut result = TagResult::default();
 
     verify_sound_block_size(sound, &mut result);
 
@@ -98,7 +98,7 @@ pub(crate) fn sound_tag_is_fubar(sound: &Sound) -> bool {
 }
 
 /// Return `true` if correctly set, and false if not
-fn verify_actual_permutation_count_is_correctly_set(sound: &Sound, result: &mut ScenarioTreeTagResult) -> bool {
+fn verify_actual_permutation_count_is_correctly_set(sound: &Sound, result: &mut TagResult) -> bool {
     let mut issues_found = false;
 
     for (pr, pitch_range) in ziperator!(sound.pitch_ranges) {
@@ -142,7 +142,7 @@ pub(crate) fn find_actual_permutation_count(sound: &Sound, pitch_range: &SoundPi
     }
 }
 
-fn verify_sound_block_size(sound: &Sound, result: &mut ScenarioTreeTagResult) {
+fn verify_sound_block_size(sound: &Sound, result: &mut TagResult) {
     let channel_count = match sound.channel_count {
         SoundChannelCount::Mono => 1,
         SoundChannelCount::Stereo => 2
@@ -174,7 +174,7 @@ fn verify_sound_block_size(sound: &Sound, result: &mut ScenarioTreeTagResult) {
 }
 
 /// Return `true` if any issues are repairable, or `None` if no issues were found.
-fn verify_sound_metadata(sound: &Sound, result: &mut ScenarioTreeTagResult) -> Option<bool> {
+fn verify_sound_metadata(sound: &Sound, result: &mut TagResult) -> Option<bool> {
     let mut first_sample_rate = None;
     let mut sample_rate_repairable = true;
 
@@ -237,7 +237,7 @@ fn verify_sound_metadata(sound: &Sound, result: &mut ScenarioTreeTagResult) -> O
 }
 
 /// Return `true` if the sound tag can be repaired, and `None` if no issues were found.
-pub(crate) fn verify_sound_formats(sound: &Sound, result: &mut ScenarioTreeTagResult) -> Option<bool> {
+pub(crate) fn verify_sound_formats(sound: &Sound, result: &mut TagResult) -> Option<bool> {
     let mut first_format = None;
     let mut format_repairable = true;
     let mut issues_found = false;
@@ -270,7 +270,7 @@ pub(crate) fn verify_sound_formats(sound: &Sound, result: &mut ScenarioTreeTagRe
     }
 }
 
-fn verify_sound_permutation_indices(sound: &Sound, result: &mut ScenarioTreeTagResult) {
+fn verify_sound_permutation_indices(sound: &Sound, result: &mut TagResult) {
     let split_permutations = sound_tag_actually_contains_split_permutations(sound);
 
     'l: for pitch_range in &sound.pitch_ranges {

@@ -3,9 +3,9 @@ use ringhopper_structs::Scenario;
 
 use crate::tag::tree::TagTree;
 
-use super::{ScenarioContext, ScenarioTreeTagResult};
+use super::{ScenarioContext, TagResult};
 
-pub fn verify_scenario<T: TagTree + Send + Sync + 'static>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, _context: &ScenarioContext<T>, result: &mut ScenarioTreeTagResult) {
+pub fn verify_scenario<T: TagTree + Send + Sync + 'static>(tag: &dyn PrimaryTagStructDyn, _path: &TagPath, _context: &ScenarioContext<T>, result: &mut TagResult) {
     let scenario: &Scenario = tag.as_any().downcast_ref().unwrap();
     if scenario_missing_source_data(scenario) {
         result.errors.push("No source data, but scripts/globals detected".to_owned())

@@ -7,7 +7,7 @@ use ringhopper::tag::verify::verify;
 use ringhopper_engines::Engine;
 use threading::{DisplayMode, do_with_threads, ProcessSuccessType};
 use util::make_stdout_logger;
-use verb::print_scenario_tree_tag_result;
+use verb::print_tag_results;
 use crate::util::StdoutLogger;
 
 #[derive(Clone)]
@@ -38,7 +38,7 @@ pub fn verify_scenario(args: Args, description: &'static str) -> Result<(), Stri
         let threads = unsafe { NonZeroUsize::new_unchecked(2) }; // TODO: add subjobs later?
         let everything = verify(scenario_path, context.tags_directory.clone(), user_data.engine, threads)?;
         let locked = user_data.logger.lock();
-        print_scenario_tree_tag_result(&locked, &everything, scenario_path);
+        print_tag_results(&locked, &everything, format_args!("Verified {scenario_path}"));
         Ok(ProcessSuccessType::Success)
     })
 }
