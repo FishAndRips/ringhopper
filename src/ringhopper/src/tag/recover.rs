@@ -1,10 +1,12 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 use definitions::*;
+use primitives::error::Error::InvalidTagData;
 use primitives::error::RinghopperResult;
 use primitives::primitive::{TagGroup, TagPath};
 use primitives::tag::PrimaryTagStructDyn;
 use crate::tag::bitmap::extract_compressed_color_plate_data;
+use crate::tag::unicode_string_list::UnicodeStringListFunctions;
 
 pub type RecoverFunction = fn(tag_path: &TagPath, tag_data: &Box<dyn PrimaryTagStructDyn>) -> RinghopperResult<Option<HashMap<PathBuf, Vec<u8>>>>;
 
@@ -12,6 +14,7 @@ pub fn get_recover_function(group: TagGroup) -> Option<RecoverFunction> {
     match group {
         TagGroup::Bitmap => Some(recover_bitmap),
         TagGroup::Scenario => Some(recover_scenario_scripts),
+        TagGroup::UnicodeStringList => Some(recover_unicode_string_lists),
         _ => None
     }
 }
@@ -27,6 +30,15 @@ fn recover_bitmap(tag_path: &TagPath, tag_data: &Box<dyn PrimaryTagStructDyn>) -
     let mut fs = HashMap::new();
     fs.insert(result, color_plate_data.to_tiff());
 
+    Ok(Some(fs))
+}
+
+fn recover_unicode_string_lists(tag_path: &TagPath, tag_data: &Box<dyn PrimaryTagStructDyn>) -> RinghopperResult<Option<HashMap<PathBuf, Vec<u8>>>> {
+    let unicode_string_list: &UnicodeStringList = tag_data.as_any().downcast_ref().unwrap();
+    let data = unicode_string_list.as_text_data().map_err(|e| InvalidTagData(format!("{e:?}")))?;
+    let result = PathBuf::from(tag_path.to_native_path()).with_extension("txt");
+    let mut fs = HashMap::new();
+    fs.insert(result, data);
     Ok(Some(fs))
 }
 

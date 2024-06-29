@@ -80,6 +80,26 @@ pub trait UnicodeStringListFunctions {
     /// ```
     fn from_text_data(data: &[u8]) -> Result<Self, UnicodeStringListError> where Self: Sized;
 
+    /// Generate a unicode string list text file.
+    ///
+    /// An error of type [`UnicodeStringListError`] will be returned if this function fails.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ringhopper::tag::unicode_string_list::*;
+    /// use ringhopper::definitions::UnicodeStringList;
+    ///
+    /// let result = UnicodeStringList::from_text_data(
+    ///     "This is my string!\n###END-STRING###\nThis is another string!\nWow!\r\n###END-STRING###".as_bytes()
+    /// ).expect("should have worked");
+    ///
+    /// let back_to_data = result.as_text_data().expect("should work");
+    /// let result_again = UnicodeStringList::from_text_data(back_to_data.as_slice()).expect("should also work");
+    /// assert_eq!(result_again, result);
+    /// ```
+    fn as_text_data(&self) -> Result<Vec<u8>, UnicodeStringListError>;
+
     /// Get the number of strings in the string list.
     ///
     /// # Examples
@@ -173,6 +193,20 @@ impl UnicodeStringListFunctions for UnicodeStringList {
             .collect::<Reflexive<UnicodeStringListString>>();
 
         Ok(UnicodeStringList { strings, ..Default::default() })
+    }
+
+    fn as_text_data(&self) -> Result<Vec<u8>, UnicodeStringListError> {
+        let mut data = Vec::new();
+        data.extend_from_slice(0xFEFFu16.to_le_bytes().as_slice());
+        for i in 0..self.string_count() {
+            let string = self.strings.items[i].string.get_string().map_err(|_| UnicodeStringListError::InvalidStringData)?;
+            for line in string.lines() {
+                let line_encoder = line.encode_utf16().chain("\r\n".encode_utf16()).map(|b| b.to_le_bytes()).flatten();
+                data.extend(line_encoder);
+            }
+            data.extend("###END-STRING###\r\n".encode_utf16().map(|b| b.to_le_bytes()).flatten());
+        }
+        Ok(data)
     }
 
     fn string_count(&self) -> usize {
