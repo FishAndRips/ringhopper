@@ -1058,7 +1058,7 @@ impl From<ID> for ScenarioScriptNodeValue {
 }
 impl From<ScenarioScriptNodeValue> for bool {
     fn from(value: ScenarioScriptNodeValue) -> Self {
-        i8::from(value) == 0
+        i8::from(value) != 0
     }
 }
 impl From<ScenarioScriptNodeValue> for i8 {
