@@ -114,10 +114,12 @@ impl TagFilter {
     ///
     /// let all_bitmaps = TagFilter::new("*.bitmap", None);
     /// assert!(all_bitmaps.passes(&TagPath::from_path("something.bitmap").unwrap()));
+    /// assert!(all_bitmaps.passes(&TagPath::from_path(".bitmap").unwrap()));
     /// assert!(!all_bitmaps.passes(&TagPath::from_path("something.weapon").unwrap()));
     ///
     /// let all_bitmaps = TagFilter::new("*", Some(TagGroup::Bitmap));
     /// assert!(all_bitmaps.passes(&TagPath::from_path("something.bitmap").unwrap()));
+    /// assert!(all_bitmaps.passes(&TagPath::from_path(".bitmap").unwrap()));
     ///
     /// let all_some_bitmaps = TagFilter::new("some*", Some(TagGroup::Bitmap));
     /// assert!(all_some_bitmaps.passes(&TagPath::from_path("something.bitmap").unwrap()));
@@ -198,13 +200,15 @@ impl TagFilter {
 
             // If the test string is now empty, bail
             if what_first.is_none() {
-                return false
+                return false;
             }
 
             let what_first = what_first.unwrap();
 
             filter = &filter[1..];
-            what = &what[1..];
+            if filter_first != '*' {
+                what = &what[1..];
+            }
 
             if filter_first == '?' || filter_first == what_first {
                 continue
