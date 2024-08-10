@@ -11,7 +11,6 @@ pub fn plate(args: Args, description: &'static str) -> Result<(), String> {
         .add_tags(false)
         .add_data()
         .add_help()
-        .add_cow_tags()
         .add_jobs()
         .set_required_extra_parameters(1)
         .parse(args)?;

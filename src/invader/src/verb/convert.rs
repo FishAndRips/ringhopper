@@ -12,6 +12,7 @@ pub fn convert(args: Args, description: &'static str) -> Result<(), String> {
         .add_tags(false)
         .add_overwrite()
         .add_help()
+        .add_cow_tags()
         .add_jobs()
         .set_required_extra_parameters(2)
         .parse(args)?;
