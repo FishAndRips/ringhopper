@@ -1,4 +1,3 @@
-use std::str::FromStr;
 use definitions::{ActorVariant, ContinuousDamageEffect, DamageEffect, Light, Object, PointPhysics, Projectile, Scenario, Sound};
 use primitives::primitive::TagGroup;
 use primitives::tag::PrimaryTagStructDyn;
@@ -139,82 +138,74 @@ fn nudge(float: &mut f64, was_nudged_thus_far: &mut bool) {
     }
 }
 
+const MAX_SIG_FIGS: usize = 6;
+
 pub(crate) fn fix_decimal_rounding(float: f64) -> f64 {
     use std::io::Write;
 
-    // Too much rounding error.
-    if float < -32766.0 || float > 32766.0 || float == 0.0 {
-        return float
-    }
+    let signum = float.signum();
+    let abs = float.abs();
 
-    let sign = float.signum();
-    let float_positive = float * sign;
+    // 512 digits should be more than enough to hold any 64-bit float
+    let mut buf = std::io::Cursor::new([0u8; 512]);
+    write!(&mut buf, "{abs}").expect("can't write float to buffer");
+    let mut buf = buf.into_inner();
+    let str_index = buf.iter().position(|b| *b == 0).expect("can't get float output");
 
-    let mut number = std::io::Cursor::new(['0' as u8; 128]);
-    number.write(&['0' as u8]).unwrap(); // ensure we have one extra digit for carrying
-    write!(&mut number, "{float_positive}").unwrap();
-    let mut number = number.into_inner();
+    let written = &mut buf[..str_index];
 
-    // Find the decimal
-    let Some(decimal_location) = number.iter().position(|c| *c == '.' as u8) else {
-        return float;
-    };
-
-    // Find the left side of the number
-    let decimals = &mut number[decimal_location + 1..];
-    let Some(first_non_zero) = decimals.iter().position(|c| *c != '0' as u8) else {
-        return float;
-    };
-    let decimals = &mut decimals[first_non_zero..];
-
-    // This is so many places away that we're probably just dealing with a whole number that got rekt by floats...
-    if float_positive > 1.0 && first_non_zero > 4 {
-        decimals.fill('0' as u8);
-    }
-
-    // Find the right side of the number
-    let right_side = match decimals.iter().rev().position(|c| *c != '0' as u8) {
-        Some(n) => decimals.len() - n,
-        None => decimals.len()
-    };
-
-    let decimals = &mut decimals[..right_side];
-    if decimals.len() < 3 {
+    // First, find the most significant digits
+    if written.len() <= MAX_SIG_FIGS {
         return float;
     }
 
-    let decimals_as_num = std::str::from_utf8(decimals).unwrap();
-    let first_000 = decimals_as_num.find("000");
-    let first_999 = decimals_as_num.find("999");
-
-    if first_000.is_some() && (first_999.is_none() || first_000 < first_999) {
-        decimals[first_000.unwrap()..].fill('0' as u8);
+    macro_rules! ignore_dot_iter {
+        ($a:expr) => {{
+            let len = $a.len();
+            let mut first_sig_fig_found = false;
+            ($a)
+                .iter_mut()
+                .zip(0..len)
+                .filter(move |(b,_)| {
+                    if **b == b'.' || (!first_sig_fig_found && **b == b'0') {
+                        return false;
+                    }
+                    first_sig_fig_found = true;
+                    true
+                })
+        }};
     }
-    else if let Some(first_999) = first_999 {
-        decimals[first_999..].fill('0' as u8);
-        let actual_position = first_999 + first_non_zero + decimal_location + 1;
-        for i in (0..actual_position).rev() {
-            let character = &mut number[i];
 
-            match *character {
-                x if x == '9' as u8 => {
-                    *character = '0' as u8;
-                },
-                x if x == '.' as u8 => {
-                    continue;
-                },
-                x => {
-                    *character = x + 1;
-                    break;
-                }
+    let mut sig_figs_end = str_index;
+    let mut sig_figs_index = 0usize;
+    let mut round_up = false;
+
+    for (byte, index) in ignore_dot_iter!(written) {
+        if sig_figs_index == MAX_SIG_FIGS {
+            sig_figs_end = index;
+            round_up = *byte >= b'5';
+        }
+        if sig_figs_index >= MAX_SIG_FIGS {
+            *byte = b'0';
+        }
+        sig_figs_index += 1;
+    }
+
+    // Do rounding here
+    if round_up {
+        for (byte, _) in ignore_dot_iter!(written[..sig_figs_end]).rev() {
+            if *byte == b'9' {
+                *byte = b'0';
+            } else {
+                *byte += 1;
+                break;
             }
         }
     }
-    else {
-        return float;
-    }
 
-    f64::from_str(std::str::from_utf8(&number).unwrap()).unwrap() * sign
+    let fstr = std::str::from_utf8(&written).expect("should be utf-8");
+    let f: f64 = fstr.parse().map_err(|e| panic!("can't parse the float we just made `{fstr}` as a float: {e:?}")).unwrap();
+    f * signum
 }
 
 #[cfg(test)]
