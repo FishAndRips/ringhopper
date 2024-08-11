@@ -4,6 +4,7 @@ authors = ["Snowy Mouse"]
 version = "0.2.0"
 description = "Tool for creating and manipulating content for Halo: Combat Evolved"
 license = "GPL-3.0-only"
+build = "build.rs"
 
 [dependencies]
 ringhopper = { path = "../ringhopper" }
@@ -13,8 +14,17 @@ ringhopper-engines = { path = "../ringhopper-engines" }
 version = "0.2.153"
 
 [target.'cfg(target_os = "windows")'.dependencies.windows]
-version = "0.56.0"
+version = "0.58.0"
 features = [
     "Win32_Foundation",
     "Win32_System_Console"
 ]
+
+[build-dependencies]
+winresource = "0.1"
+
+[package.metadata.winresource]
+CompanyName = "Fish and Rips"
+ProductName = "Invader"
+OriginalFilename = "invader.exe"
+LegalCopyright = "'24 Snowy Mouse"
