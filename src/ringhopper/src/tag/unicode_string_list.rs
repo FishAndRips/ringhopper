@@ -29,29 +29,23 @@ fn parse_string(string: &[u8]) -> Result<String, UnicodeStringListError> {
         return Ok(String::new())
     }
 
-    if string[0] > 0x80 {
-        if string.len() % 2 != 0 {
-            return Err(UnicodeStringListError::InvalidStringData)
-        }
-
+    // Possibly UTF-16 (LE/BE) with BOM.
+    if string.len() >= 2 && (string.len() % 2 == 0) {
         let mut iterator = string.chunks(2).map(|c| [c[0], c[1]]);
         let bom = iterator.next().unwrap();
 
-        let utf16_data = if u16::from_le_bytes(bom) == 0xFEFF {
-            iterator.map(u16::from_le_bytes).collect::<Vec<u16>>()
+        if u16::from_le_bytes(bom) == 0xFEFF {
+            let utf16_data = iterator.map(u16::from_le_bytes).collect::<Vec<u16>>();
+            return String::from_utf16(&utf16_data).map_err(|_| UnicodeStringListError::InvalidStringData);
         }
         else if u16::from_be_bytes(bom) == 0xFEFF {
-            iterator.map(u16::from_be_bytes).collect::<Vec<u16>>()
+            let utf16_data = iterator.map(u16::from_be_bytes).collect::<Vec<u16>>();
+            return String::from_utf16(&utf16_data).map_err(|_| UnicodeStringListError::InvalidStringData);
         }
-        else {
-            return Err(UnicodeStringListError::InvalidStringData)
-        };
-
-        String::from_utf16(&utf16_data).ok()
     }
-    else {
-        String::from_utf8(string.to_vec()).ok()
-    }.ok_or(UnicodeStringListError::InvalidStringData)
+
+    String::from_utf8(string.to_vec())
+        .map_err(|_| UnicodeStringListError::InvalidStringData)
 }
 
 /// Helper methods for [`UnicodeStringList`] tags.
