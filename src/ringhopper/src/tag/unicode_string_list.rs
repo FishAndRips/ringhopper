@@ -148,6 +148,14 @@ pub trait UnicodeStringListFunctions {
 impl UnicodeStringListFunctions for UnicodeStringList {
     fn from_text_data(data: &[u8]) -> Result<Self, UnicodeStringListError> {
         let parsed_string = parse_string(data)?;
+
+        // Null characters have a special meaning (null terminator), so we can't allow them in tags.
+        //
+        // Everything else should be fine.
+        if parsed_string.contains('\x00') {
+            return Err(UnicodeStringListError::InvalidStringData)
+        }
+
         let mut string_data = parsed_string.lines().collect::<Vec<&str>>();
 
         while string_data.last().is_some_and(|l| l.is_empty()) {
@@ -162,17 +170,6 @@ impl UnicodeStringListFunctions for UnicodeStringList {
             return Err(UnicodeStringListError::MissingEndString)
         }
 
-        // Find any bad characters
-        let illegal_character = string_data
-            .iter()
-            .map(|s| s.chars())
-            .flatten()
-            .any(|c| c.is_ascii_control());
-
-        if illegal_character {
-            return Err(UnicodeStringListError::InvalidStringData)
-        }
-
         let strings = string_data
             .split(|line| *line == "###END-STRING###")
             .map(|lines| {
@@ -182,7 +179,7 @@ impl UnicodeStringListFunctions for UnicodeStringList {
                 };
 
                 other_lines.iter()
-                    // intersperse is not stabilized so we have to do this manually
+                    // intersperse is not stabilized, so we have to do this manually
                     // (see https://github.com/rust-lang/rust/issues/79524)
                     .map(|&string| [string, "\r\n"])
                     .flatten()
