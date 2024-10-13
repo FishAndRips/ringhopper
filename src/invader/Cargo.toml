@@ -5,6 +5,7 @@ version = "0.2.0"
 description = "Tool for creating and manipulating content for Halo: Combat Evolved"
 license = "GPL-3.0-only"
 build = "build.rs"
+edition = "2021"
 
 [dependencies]
 ringhopper = { path = "../ringhopper" }

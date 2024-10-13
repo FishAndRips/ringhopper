@@ -1,15 +1,15 @@
 use std::env::Args;
 use std::path::Path;
 use std::sync::Arc;
-use cli::{CommandLineParser, CommandLineValue, CommandLineValueType, Parameter};
+use crate::cli::{CommandLineParser, CommandLineValue, CommandLineValueType, Parameter};
 use ringhopper::definitions::ScenarioType;
 use ringhopper::map::load_map_from_filesystem;
 use ringhopper::primitives::primitive::TagGroup;
 use ringhopper::primitives::tag::ParseStrictness;
 use ringhopper::tag::default::unset_all_defaults_for_tag;
 use ringhopper::tag::tree::{TagTree, VirtualTagsDirectory};
-use threading::{DisplayMode, do_with_threads, ProcessSuccessType};
-use util::make_stdout_logger;
+use crate::threading::{DisplayMode, do_with_threads, ProcessSuccessType};
+use crate::util::make_stdout_logger;
 
 pub fn extract(args: Args, description: &'static str) -> Result<(), String> {
     let parser = CommandLineParser::new(description, "<map>")

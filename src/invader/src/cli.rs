@@ -7,7 +7,7 @@ use ringhopper::primitives::engine::Engine;
 use ringhopper::primitives::tag::ParseStrictness;
 use ringhopper::tag::tree::VirtualTagsDirectory;
 use ringhopper_engines::ALL_SUPPORTED_ENGINES;
-use util::get_tty_metadata;
+use super::util::get_tty_metadata;
 
 pub struct CommandLineParser {
     description: &'static str,

@@ -2,7 +2,7 @@ use std::collections::{HashMap, VecDeque};
 use std::env::Args;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
-use cli::{CommandLineParser, CommandLineValue, CommandLineValueType, Parameter};
+use crate::cli::{CommandLineParser, CommandLineValue, CommandLineValueType, Parameter};
 use ringhopper::error::Error;
 use ringhopper::map::load_map_from_filesystem_as_tag_tree;
 use ringhopper::tag::default::set_all_defaults_for_tag;
@@ -10,8 +10,8 @@ use ringhopper::primitives::primitive::TagPath;
 use ringhopper::primitives::tag::ParseStrictness;
 use ringhopper::tag::compare::{compare_tags, TagComparisonDifference};
 use ringhopper::tag::tree::{TagTree, VirtualTagsDirectory};
-use threading::{DisplayMode, do_with_threads, ProcessSuccessType};
-use util::make_stdout_logger;
+use crate::threading::{DisplayMode, do_with_threads, ProcessSuccessType};
+use crate::util::make_stdout_logger;
 
 use crate::util::StdoutLogger;
 

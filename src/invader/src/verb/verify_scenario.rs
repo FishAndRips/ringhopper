@@ -1,13 +1,13 @@
 use std::num::NonZeroUsize;
 use std::{env::Args, sync::Arc};
-use cli::CommandLineParser;
+use crate::cli::CommandLineParser;
 use ringhopper::tag::tree::{CachingTagTree, CachingTagTreeWriteStrategy};
 use ringhopper::primitives::primitive::TagGroup;
 use ringhopper::tag::verify::verify;
 use ringhopper_engines::Engine;
-use threading::{DisplayMode, do_with_threads, ProcessSuccessType};
-use util::make_stdout_logger;
-use verb::print_tag_results;
+use crate::threading::{DisplayMode, do_with_threads, ProcessSuccessType};
+use crate::util::make_stdout_logger;
+use crate::verb::print_tag_results;
 use crate::util::StdoutLogger;
 
 #[derive(Clone)]

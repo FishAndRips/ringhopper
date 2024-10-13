@@ -1,13 +1,13 @@
 use std::env::Args;
-use cli::CommandLineParser;
+use crate::cli::CommandLineParser;
 use ringhopper::definitions::ScenarioStructureBSP;
 use ringhopper::error::RinghopperResult;
 use ringhopper::primitives::primitive::{TagGroup, TagPath};
 use ringhopper::tag::model::downcast_model_mut;
 use ringhopper::tag::scenario_structure_bsp::recompress_scenario_structure_bsp_vertices;
 use ringhopper::tag::tree::{TagTree, VirtualTagsDirectory};
-use threading::{DisplayMode, do_with_threads, ProcessSuccessType};
-use util::make_stdout_logger;
+use crate::threading::{DisplayMode, do_with_threads, ProcessSuccessType};
+use crate::util::make_stdout_logger;
 
 pub fn recompress_vertices(args: Args, description: &'static str) -> Result<(), String> {
     let parser = CommandLineParser::new(description, "<tag.group*> [args]")

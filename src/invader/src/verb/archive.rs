@@ -1,11 +1,11 @@
 use std::env::Args;
 use std::path::PathBuf;
 use std::sync::Arc;
-use cli::{CommandLineParser, CommandLineValue, CommandLineValueType, Parameter};
+use crate::cli::{CommandLineParser, CommandLineValue, CommandLineValueType, Parameter};
 use ringhopper::primitives::primitive::{TagGroup, TagPath};
 use ringhopper::tag::archive::*;
 use ringhopper::tag::tree::{CachingTagTree, CachingTagTreeWriteStrategy};
-use util::make_stdout_logger;
+use crate::util::make_stdout_logger;
 
 fn archive_command(args: Args, description: &'static str, full_scenario: bool) -> Result<(), String> {
     let usage = if full_scenario { "<tag> [args]" } else { "<tag.group> [args]" };

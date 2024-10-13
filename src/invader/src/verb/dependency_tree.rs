@@ -1,10 +1,10 @@
 use std::collections::{HashMap, HashSet};
 use std::env::Args;
-use cli::{CommandLineParser, CommandLineValue, CommandLineValueType, Parameter};
+use crate::cli::{CommandLineParser, CommandLineValue, CommandLineValueType, Parameter};
 use ringhopper::primitives::primitive::TagPath;
 use ringhopper::tag::dependency::*;
 use ringhopper::tag::tree::{CachingTagTree, CachingTagTreeWriteStrategy, TagFilter, TagTree};
-use util::{make_stdout_logger, StdoutLogger};
+use crate::util::{make_stdout_logger, StdoutLogger};
 
 pub fn dependency_tree(args: Args, description: &'static str) -> Result<(), String> {
     let parser = CommandLineParser::new(description, "<tag*> [args]")

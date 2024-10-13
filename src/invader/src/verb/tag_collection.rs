@@ -1,13 +1,13 @@
 use std::env::Args;
-use cli::CommandLineParser;
+use crate::cli::CommandLineParser;
 use ringhopper::definitions::{TagCollection, UIWidgetCollection};
 use ringhopper::error::Error;
 use ringhopper::primitives::primitive::TagGroup;
 use ringhopper::tag::tag_collection::TagCollectionFunctions;
 use ringhopper::tag::tree::TagTree;
 use crate::util::make_stdout_logger;
-use threading::*;
-use util::read_file;
+use crate::threading::*;
+use crate::util::read_file;
 
 macro_rules! make_tag_collection_fn {
     ($name:tt, $tag_struct:tt) => {

@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicU64, Ordering};
-use cli::CommandLineArgs;
+use super::cli::CommandLineArgs;
 use ringhopper::error::RinghopperResult;
 use ringhopper::primitives::primitive::{TagGroup, TagPath};
 use ringhopper::tag::tree::{TagFilter, TagTree};

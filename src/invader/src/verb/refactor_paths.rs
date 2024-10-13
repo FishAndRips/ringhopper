@@ -1,11 +1,11 @@
 use std::env::Args;
 use std::num::NonZeroUsize;
 use std::time::Instant;
-use cli::CommandLineParser;
+use crate::cli::CommandLineParser;
 use ringhopper::tag::tree::TagFilter;
 use ringhopper::tag::dependency::{refactor_paths_for_tag_tree, ReplaceType};
-use util::make_stdout_logger;
-use verb::print_tag_results;
+use crate::util::make_stdout_logger;
+use crate::verb::print_tag_results;
 
 use crate::cli::*;
 

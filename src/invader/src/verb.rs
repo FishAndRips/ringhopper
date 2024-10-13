@@ -3,7 +3,7 @@ use std::env::Args;
 use std::fmt::Arguments;
 use ringhopper::primitives::primitive::TagPath;
 use ringhopper::tag::result::TagResult;
-use util::LockedStdoutLogger;
+use super::util::LockedStdoutLogger;
 
 macro_rules! str_unwrap {
     ($what:expr, $($fmt:tt)+) => {

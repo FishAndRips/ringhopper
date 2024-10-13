@@ -1,9 +1,9 @@
 use std::env::Args;
-use cli::CommandLineParser;
+use crate::cli::CommandLineParser;
 use ringhopper::tag::nudge::{is_nudgeable, nudge_tag};
 use ringhopper::tag::tree::TagTree;
-use threading::{DisplayMode, do_with_threads, ProcessSuccessType};
-use util::make_stdout_logger;
+use crate::threading::{DisplayMode, do_with_threads, ProcessSuccessType};
+use crate::util::make_stdout_logger;
 
 pub fn nudge(args: Args, description: &'static str) -> Result<(), String> {
     let parser = CommandLineParser::new(description, "<tag.group*> [args]")

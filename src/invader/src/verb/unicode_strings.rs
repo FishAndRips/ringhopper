@@ -1,12 +1,12 @@
 use std::env::Args;
-use cli::CommandLineParser;
+use crate::cli::CommandLineParser;
 use ringhopper::tag::unicode_string_list::*;
 use ringhopper::definitions::UnicodeStringList;
 use ringhopper::error::Error;
 use ringhopper::primitives::primitive::TagGroup;
 use ringhopper::tag::tree::TagTree;
-use threading::{DisplayMode, do_with_threads, ProcessSuccessType};
-use util::{make_stdout_logger, read_file};
+use crate::threading::{DisplayMode, do_with_threads, ProcessSuccessType};
+use crate::util::{make_stdout_logger, read_file};
 
 pub fn unicode_strings(args: Args, description: &'static str) -> Result<(), String> {
     let parser = CommandLineParser::new(description, "<unicode_string_list*> [args]")

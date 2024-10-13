@@ -1,10 +1,10 @@
 use std::env::Args;
-use cli::CommandLineParser;
+use crate::cli::CommandLineParser;
 use ringhopper::data::bitmap::plate::make_color_plate_from_loose;
 use ringhopper::error::Error;
 use ringhopper::primitives::primitive::TagGroup;
-use threading::{DisplayMode, do_with_threads, ProcessSuccessType};
-use util::make_stdout_logger;
+use crate::threading::{DisplayMode, do_with_threads, ProcessSuccessType};
+use crate::util::make_stdout_logger;
 
 pub fn plate(args: Args, description: &'static str) -> Result<(), String> {
     let parser = CommandLineParser::new(description, "<bitmap*> [args]")
