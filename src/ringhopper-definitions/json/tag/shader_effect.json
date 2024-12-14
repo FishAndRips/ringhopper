@@ -153,8 +153,8 @@
                 "type": "ShaderEffectProperties"
             },
             {
-                "name": "secondary map",
-                "description": "Optional multitextured secondary map",
+                "heading": "Secondary Map",
+                "body": "Optional multitextured secondary map",
                 "type": "editor_section"
             },
             {

@@ -22,8 +22,8 @@
         "name": "Meter",
         "fields": [
             {
-                "name": "meter",
-                "description": "Meter tags appear to be an older implementation of what the unit HUD interface does, except they are directly referenced in the globals tag. They are not used in any engine.\n\nNOTE: If you were looking for the meter shader, you were probably looking for shader_transparent_meter.",
+                "heading": "Meter",
+                "body": "Meter tags appear to be an older implementation of what the unit HUD interface does, except they are directly referenced in the globals tag. They are not used in any engine.\n\nNOTE: If you were looking for the meter shader, you were probably looking for shader_transparent_meter.",
                 "type": "editor_section"
             },
             {

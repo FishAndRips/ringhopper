@@ -449,8 +449,11 @@
         "name": "HUDGlobals",
         "fields": [
             {
+                "heading": "Messaging Parameters",
+                "type": "editor_section"
+            },
+            {
                 "name": "messaging parameters",
-                "section": true,
                 "type": "HUDGlobalsMessagingParameters"
             },
             {
@@ -469,28 +472,43 @@
                 ]
             },
             {
+                "heading": "Objective Colors",
+                "type": "editor_section"
+            },
+            {
                 "name": "objective colors",
-                "section": true,
                 "type": "HUDGlobalsObjectiveColors"
             },
             {
+                "heading": "Waypoint Parameters",
+                "type": "editor_section"
+            },
+            {
                 "name": "waypoint parameters",
-                "section": true,
                 "type": "HUDGlobalsWaypointParameters"
             },
             {
+                "heading": "Hud Crap",
+                "type": "editor_section"
+            },
+            {
                 "name": "HUD crap",
-                "section": true,
                 "type": "HUDGlobalsCrap"
             },
             {
+                "heading": "Indicators",
+                "type": "editor_section"
+            },
+            {
                 "name": "indicators",
-                "section": true,
                 "type": "HUDGlobalsDamageIndicators"
             },
             {
+                "heading": "Not Much Time Left Color",
+                "type": "editor_section"
+            },
+            {
                 "name": "not much time left color",
-                "section": true,
                 "type": "HUDInterfaceElementColor"
             },
             {
@@ -498,8 +516,11 @@
                 "size": 4
             },
             {
+                "heading": "Time Out Color",
+                "type": "editor_section"
+            },
+            {
                 "name": "time out color",
-                "section": true,
                 "type": "HUDInterfaceElementColor"
             },
             {
@@ -511,8 +532,11 @@
                 "size": 40
             },
             {
+                "heading": "More Hud Crap",
+                "type": "editor_section"
+            },
+            {
                 "name": "more HUD crap",
-                "section": true,
                 "type": "HUDGlobalsExtraCrap"
             },
             {

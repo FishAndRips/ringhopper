@@ -76,8 +76,11 @@
                 "size": 24
             },
             {
+                "heading": "Vibrate Parameters",
+                "type": "editor_section"
+            },
+            {
                 "name": "vibrate parameters",
-                "section": true,
                 "type": "ContinuousDamageVibrateParameters"
             },
             {
@@ -105,8 +108,11 @@
                 "size": 160
             },
             {
+                "heading": "Damage",
+                "type": "editor_section"
+            },
+            {
                 "name": "damage",
-                "section": true,
                 "exclude": true,
                 "type": "DamageEffectDamage"
             }

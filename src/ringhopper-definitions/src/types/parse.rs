@@ -639,7 +639,7 @@ impl LoadFromSerdeJSON for StructField {
                 limit: None
             },
             StructFieldType::EditorSection(e) => return Self {
-                name: e.name.clone(),
+                name: e.heading.clone(),
                 count: FieldCount::One,
                 default_value: None,
                 field_type,
@@ -815,12 +815,13 @@ impl LoadFromSerdeJSON for StructFieldType {
 
 impl LoadFromSerdeJSON for EditorSectionData {
     fn load_from_json(object: &Map<String, Value>) -> Self {
-        let name = oget_str!(object, "name").to_owned();
-        let description = object
-            .get("description")
-            .map(|d| d.as_str().expect("description must be a string").to_owned());
+        let heading = oget_str!(object, "heading").to_owned();
+        let body = object
+            .get("body")
+            .map(|d| d.as_str().expect("body must be a string").to_owned());
         Self {
-            name, description
+            heading,
+            body
         }
     }
 }

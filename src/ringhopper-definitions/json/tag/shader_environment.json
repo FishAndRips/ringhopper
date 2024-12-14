@@ -414,7 +414,7 @@
             {
                 "name": "parallel color",
                 "type": "ColorRGBFloat",
-                "comment": "specular tint when the surface is facing 90° from the camera"
+                "comment": "specular tint when the surface is facing 90\u00b0 from the camera"
             },
             {
                 "type": "pad",
@@ -457,7 +457,7 @@
                 "minimum": 0.0,
                 "maximum": 1.0,
                 "type": "float",
-                "comment": "specular brightness when the surface is facing 90° from the camera"
+                "comment": "specular brightness when the surface is facing 90\u00b0 from the camera"
             },
             {
                 "type": "pad",
@@ -490,13 +490,19 @@
         "name": "ShaderEnvironment",
         "fields": [
             {
+                "heading": "Properties",
+                "type": "editor_section"
+            },
+            {
                 "name": "properties",
-                "section": true,
                 "type": "ShaderEnvironmentProperties"
             },
             {
+                "heading": "Lens Flares",
+                "type": "editor_section"
+            },
+            {
                 "name": "lens flares",
-                "section": true,
                 "type": "ShaderLensFlares"
             },
             {
@@ -504,33 +510,51 @@
                 "size": 44
             },
             {
+                "heading": "Diffuse",
+                "type": "editor_section"
+            },
+            {
                 "name": "diffuse",
-                "section": true,
                 "type": "ShaderEnvironmentDiffuse"
             },
             {
+                "heading": "Bump",
+                "type": "editor_section"
+            },
+            {
                 "name": "bump",
-                "section": true,
                 "type": "ShaderEnvironmentBump"
             },
             {
+                "heading": "Texture Scrolling Animation",
+                "type": "editor_section"
+            },
+            {
                 "name": "texture scrolling animation",
-                "section": true,
                 "type": "ShaderEnvironmentTextureScrollingAnimation"
             },
             {
+                "heading": "Self-Illumination",
+                "type": "editor_section"
+            },
+            {
                 "name": "self-illumination",
-                "section": true,
                 "type": "ShaderEnvironmentSelfIllumination"
             },
             {
+                "heading": "Specular",
+                "type": "editor_section"
+            },
+            {
                 "name": "specular",
-                "section": true,
                 "type": "ShaderEnvironmentSpecular"
             },
             {
+                "heading": "Reflection",
+                "type": "editor_section"
+            },
+            {
                 "name": "reflection",
-                "section": true,
                 "type": "ShaderEnvironmentReflection"
             }
         ],

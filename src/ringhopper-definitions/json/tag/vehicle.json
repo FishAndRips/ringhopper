@@ -122,14 +122,12 @@
     },
     {
         "name": "Vehicle",
-        "groups": [
-            {
-                "name": "vehicle",
-                "description": "attributes",
-                "first": "flags"
-            }
-        ],
         "fields": [
+            {
+                "heading": "Vehicle",
+                "body": "attributes",
+                "type": "editor_section"
+            },
             {
                 "name": "flags",
                 "type": "VehicleFlags"

@@ -59,7 +59,7 @@
         "name": "ContrailPointState",
         "fields": [
             {
-                "name": "state timing",
+                "heading": "State Timing",
                 "type": "editor_section"
             },
             {
@@ -75,7 +75,7 @@
                 "unit": "seconds"
             },
             {
-                "name": "point variables",
+                "heading": "Point Variables",
                 "type": "editor_section"
             },
             {
@@ -119,7 +119,7 @@
                 "type": "ContrailScaleFlags"
             },
             {
-                "name": "point creation",
+                "heading": "Point Creation",
                 "type": "editor_section"
             },
             {
@@ -142,7 +142,7 @@
                 "type": "float"
             },
             {
-                "name": "rendering",
+                "heading": "Rendering",
                 "type": "editor_section"
             },
             {

@@ -176,14 +176,12 @@
     },
     {
         "name": "Projectile",
-        "groups": [
-            {
-                "name": "projectile",
-                "description": "attributes",
-                "first": "flags"
-            }
-        ],
         "fields": [
+            {
+                "heading": "Projectile",
+                "body": "attributes",
+                "type": "editor_section"
+            },
             {
                 "name": "flags",
                 "type": "ProjectileFlags"

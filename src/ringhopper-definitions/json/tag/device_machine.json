@@ -28,14 +28,12 @@
     },
     {
         "name": "DeviceMachine",
-        "groups": [
-            {
-                "name": "device machine",
-                "description": "Device Machine attributes",
-                "first": "type"
-            }
-        ],
         "fields": [
+            {
+                "heading": "Device Machine",
+                "body": "Device Machine attributes",
+                "type": "editor_section"
+            },
             {
                 "name": "type",
                 "type": "MachineType"

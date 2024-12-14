@@ -194,28 +194,43 @@
         "name": "ShaderTransparentGlass",
         "fields": [
             {
+                "heading": "Properties",
+                "type": "editor_section"
+            },
+            {
                 "name": "properties",
-                "section": true,
                 "type": "ShaderTransparentGlassBase"
             },
             {
+                "heading": "Background Tint",
+                "type": "editor_section"
+            },
+            {
                 "name": "background tint",
-                "section": true,
                 "type": "ShaderTransparentGlassBackgroundTint"
             },
             {
+                "heading": "Reflection",
+                "type": "editor_section"
+            },
+            {
                 "name": "reflection",
-                "section": true,
                 "type": "ShaderTransparentGlassReflection"
             },
             {
+                "heading": "Diffuse",
+                "type": "editor_section"
+            },
+            {
                 "name": "diffuse",
-                "section": true,
                 "type": "ShaderTransparentGlassDiffuse"
             },
             {
+                "heading": "Specular",
+                "type": "editor_section"
+            },
+            {
                 "name": "specular",
-                "section": true,
                 "type": "ShaderTransparentGlassSpecular"
             }
         ],

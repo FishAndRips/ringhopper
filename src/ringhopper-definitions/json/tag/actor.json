@@ -844,7 +844,7 @@
                 "size": 2
             },
             {
-                "name": "perception",
+                "heading": "Perception",
                 "type": "editor_section"
             },
             {
@@ -852,7 +852,7 @@
                 "type": "ActorPerception"
             },
             {
-                "name": "movement",
+                "heading": "Movement",
                 "type": "editor_section"
             },
             {
@@ -860,7 +860,7 @@
                 "type": "ActorMovement"
             },
             {
-                "name": "looking",
+                "heading": "Looking",
                 "type": "editor_section"
             },
             {
@@ -868,7 +868,7 @@
                 "type": "ActorLooking"
             },
             {
-                "name": "unopposable",
+                "heading": "Unopposable",
                 "type": "editor_section"
             },
             {
@@ -876,7 +876,7 @@
                 "type": "ActorUnopposable"
             },
             {
-                "name": "panic",
+                "heading": "Panic",
                 "type": "editor_section"
             },
             {
@@ -884,7 +884,7 @@
                 "type": "ActorPanic"
             },
             {
-                "name": "defensive",
+                "heading": "Defensive",
                 "type": "editor_section"
             },
             {
@@ -892,7 +892,7 @@
                 "type": "ActorDefensive"
             },
             {
-                "name": "pursuit",
+                "heading": "Pursuit",
                 "type": "editor_section"
             },
             {
@@ -900,7 +900,7 @@
                 "type": "ActorPursuit"
             },
             {
-                "name": "berserk",
+                "heading": "Berserk",
                 "type": "editor_section"
             },
             {
@@ -908,7 +908,7 @@
                 "type": "ActorBerserk"
             },
             {
-                "name": "firing positions",
+                "heading": "Firing Positions",
                 "type": "editor_section"
             },
             {
@@ -916,7 +916,7 @@
                 "type": "ActorFiringPositions"
             },
             {
-                "name": "communication",
+                "heading": "Communication",
                 "type": "editor_section"
             },
             {

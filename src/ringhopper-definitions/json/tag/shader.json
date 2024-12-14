@@ -161,12 +161,12 @@
                 "minimum": 0.0,
                 "maximum": 1.0,
                 "type": "float",
-                "comment": "specular brightness when the surface is facing 90° from the camera"
+                "comment": "specular brightness when the surface is facing 90\u00b0 from the camera"
             },
             {
                 "name": "parallel tint color",
                 "type": "ColorRGBFloat",
-                "comment": "specular tint when the surface is facing 90° from the camera"
+                "comment": "specular tint when the surface is facing 90\u00b0 from the camera"
             }
         ],
         "size": 32,
@@ -219,13 +219,19 @@
         "name": "Shader",
         "fields": [
             {
+                "heading": "Radiosity",
+                "type": "editor_section"
+            },
+            {
                 "name": "radiosity",
-                "section": true,
                 "type": "ShaderRadiosityProperties"
             },
             {
+                "heading": "Physics",
+                "type": "editor_section"
+            },
+            {
                 "name": "physics",
-                "section": true,
                 "type": "ShaderPhysicsProperties"
             }
         ],

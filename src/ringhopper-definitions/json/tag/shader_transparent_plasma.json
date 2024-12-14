@@ -131,28 +131,43 @@
                 "size": 4
             },
             {
+                "heading": "Intensity",
+                "type": "editor_section"
+            },
+            {
                 "name": "intensity",
-                "section": true,
                 "type": "ShaderTransparentPlasmaIntensity"
             },
             {
+                "heading": "Offset",
+                "type": "editor_section"
+            },
+            {
                 "name": "offset",
-                "section": true,
                 "type": "ShaderTransparentPlasmaOffset"
             },
             {
+                "heading": "Color",
+                "type": "editor_section"
+            },
+            {
                 "name": "color",
-                "section": true,
                 "type": "ShaderTransparentPlasmaColor"
             },
             {
+                "heading": "Primary Noise Map",
+                "type": "editor_section"
+            },
+            {
                 "name": "primary noise map",
-                "section": true,
                 "type": "ShaderTransparentPlasmaNoiseMap"
             },
             {
+                "heading": "Secondary Noise Map",
+                "type": "editor_section"
+            },
+            {
                 "name": "secondary noise map",
-                "section": true,
                 "type": "ShaderTransparentPlasmaNoiseMap"
             }
         ],

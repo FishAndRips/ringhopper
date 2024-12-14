@@ -12,13 +12,6 @@
     },
     {
         "name": "ShaderTransparentWaterRipple",
-        "groups": [
-            {
-                "name": "transparent water shader",
-                "description": "Shader Transparent Water attributes",
-                "first": "contribution factor"
-            }
-        ],
         "fields": [
             {
                 "type": "pad",
@@ -27,6 +20,11 @@
             {
                 "type": "pad",
                 "size": 2
+            },
+            {
+                "heading": "Transparent Water Shader",
+                "body": "Shader Transparent Water attributes",
+                "type": "editor_section"
             },
             {
                 "name": "contribution factor",
@@ -180,13 +178,19 @@
         "name": "ShaderTransparentWater",
         "fields": [
             {
+                "heading": "Properties",
+                "type": "editor_section"
+            },
+            {
                 "name": "properties",
-                "section": true,
                 "type": "ShaderTransparentWaterProperties"
             },
             {
+                "heading": "Ripples",
+                "type": "editor_section"
+            },
+            {
                 "name": "ripples",
-                "section": true,
                 "type": "ShaderTransparentWaterRipples"
             }
         ],

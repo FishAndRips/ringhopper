@@ -19,14 +19,12 @@
     },
     {
         "name": "DeviceControl",
-        "groups": [
-            {
-                "name": "device control",
-                "description": "Device Control attributes",
-                "first": "type"
-            }
-        ],
         "fields": [
+            {
+                "heading": "Device Control",
+                "body": "Device Control attributes",
+                "type": "editor_section"
+            },
             {
                 "name": "type",
                 "type": "DeviceType"

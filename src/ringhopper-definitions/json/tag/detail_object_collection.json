@@ -14,7 +14,8 @@
             {
                 "name": "unused",
                 "exclude": true
-            },            {
+            },
+            {
                 "name": "unused1",
                 "exclude": true
             },

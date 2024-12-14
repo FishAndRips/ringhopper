@@ -46,8 +46,8 @@
         "name": "Biped",
         "fields": [
             {
-                "name": "biped attributes",
-                "description": "TODO",
+                "heading": "Biped Attributes",
+                "body": "TODO",
                 "type": "editor_section"
             },
             {

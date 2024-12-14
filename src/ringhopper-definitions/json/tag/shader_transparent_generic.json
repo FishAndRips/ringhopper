@@ -280,13 +280,19 @@
                 "size": 2
             },
             {
+                "heading": "Parameters",
+                "type": "editor_section"
+            },
+            {
                 "name": "parameters",
-                "section": true,
                 "type": "ShaderTransparentMapParameters"
             },
             {
+                "heading": "Animation",
+                "type": "editor_section"
+            },
+            {
                 "name": "animation",
-                "section": true,
                 "type": "ShaderTransparentMapAnimation"
             }
         ],
@@ -468,8 +474,11 @@
                 "size": 2
             },
             {
+                "heading": "Lens Flares",
+                "type": "editor_section"
+            },
+            {
                 "name": "lens flares",
-                "section": true,
                 "type": "ShaderLensFlares"
             },
             {
@@ -486,8 +495,11 @@
         "name": "ShaderTransparentGeneric",
         "fields": [
             {
+                "heading": "Properties",
+                "type": "editor_section"
+            },
+            {
                 "name": "properties",
-                "section": true,
                 "type": "ShaderTransparentProperties"
             },
             {

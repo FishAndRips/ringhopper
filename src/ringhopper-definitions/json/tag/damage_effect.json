@@ -146,9 +146,12 @@
                 "type": "Vector3D"
             },
             {
+                "heading": "Modifiers",
+                "body": "Damage is multiplied by these modifiers based on the material the damage is applied to.",
+                "type": "editor_section"
+            },
+            {
                 "name": "modifiers",
-                "section": true,
-                "description": "Damage is multiplied by these modifiers based on the material the damage is applied to.",
                 "type": "DamageEffectMaterialModifier"
             }
         ],
@@ -587,13 +590,19 @@
                 "size": 4
             },
             {
+                "heading": "Screen Flash",
+                "type": "editor_section"
+            },
+            {
                 "name": "screen flash",
-                "section": true,
                 "type": "DamageEffectScreenFlash"
             },
             {
+                "heading": "Low Frequency Vibrate",
+                "type": "editor_section"
+            },
+            {
                 "name": "low frequency vibrate",
-                "section": true,
                 "type": "DamageEffectVibrate"
             },
             {
@@ -601,8 +610,11 @@
                 "size": 8
             },
             {
+                "heading": "High Frequency Vibrate",
+                "type": "editor_section"
+            },
+            {
                 "name": "high frequency vibrate",
-                "section": true,
                 "type": "DamageEffectVibrate"
             },
             {
@@ -618,18 +630,27 @@
                 "size": 8
             },
             {
+                "heading": "Temporary Camera Impulse",
+                "type": "editor_section"
+            },
+            {
                 "name": "temporary camera impulse",
-                "section": true,
                 "type": "DamageEffectTemporaryCameraImpulse"
             },
             {
+                "heading": "Permanent Camera Impulse",
+                "type": "editor_section"
+            },
+            {
                 "name": "permanent camera impulse",
-                "section": true,
                 "type": "DamageEffectPermanentCameraImpulse"
             },
             {
+                "heading": "Camera Shaking",
+                "type": "editor_section"
+            },
+            {
                 "name": "camera shaking",
-                "section": true,
                 "type": "DamageEffectCameraShaking"
             },
             {
@@ -648,13 +669,19 @@
                 "size": 4
             },
             {
+                "heading": "Breaking Effect",
+                "type": "editor_section"
+            },
+            {
                 "name": "breaking effect",
-                "section": true,
                 "type": "DamageEffectBreakingEffect"
             },
             {
+                "heading": "Damage",
+                "type": "editor_section"
+            },
+            {
                 "name": "damage",
-                "section": true,
                 "type": "DamageEffectDamage"
             }
         ],

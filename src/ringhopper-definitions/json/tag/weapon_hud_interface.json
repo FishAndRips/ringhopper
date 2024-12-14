@@ -644,8 +644,11 @@
                 "size": 132
             },
             {
+                "heading": "Messaging Information",
+                "type": "editor_section"
+            },
+            {
                 "name": "messaging information",
-                "section": true,
                 "type": "HUDInterfaceMessagingInformation"
             }
         ],

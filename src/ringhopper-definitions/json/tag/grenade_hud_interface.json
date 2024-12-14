@@ -152,23 +152,35 @@
                 "size": 32
             },
             {
+                "heading": "Background",
+                "type": "editor_section"
+            },
+            {
                 "name": "background",
-                "section": true,
                 "type": "HUDInterfaceStaticElement"
+            },
+            {
+                "heading": "Total Grenades Background",
+                "type": "editor_section"
             },
             {
                 "name": "total grenades background",
-                "section": true,
                 "type": "HUDInterfaceStaticElement"
             },
             {
+                "heading": "Total Grenades Numbers",
+                "type": "editor_section"
+            },
+            {
                 "name": "total grenades numbers",
-                "section": true,
                 "type": "GrenadeHUDInterfaceTotalGrenadesNumberElement"
             },
             {
+                "heading": "Total Grenades Overlays",
+                "type": "editor_section"
+            },
+            {
                 "name": "total grenades overlays",
-                "section": true,
                 "type": "GrenadeHUDInterfaceTotalGrenadesOverlays"
             },
             {
@@ -176,8 +188,11 @@
                 "size": 68
             },
             {
+                "heading": "Messaging Information",
+                "type": "editor_section"
+            },
+            {
                 "name": "messaging information",
-                "section": true,
                 "type": "HUDInterfaceMessagingInformation"
             }
         ],

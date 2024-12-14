@@ -143,8 +143,8 @@
                 "size": 8
             },
             {
-                "name": "multipurpose map",
-                "description": "A multipurpose map is not actually a visible texture but rather a composite four-channel monochrome map used for shading the texture mapped to the UVs of the model.\n\nThe classic channel order (used for the Xbox version of the game) is the following:\n- alpha is the auxiliary channel (optional detail mask)\n- red is specular and detail mapping\n- green is self illumination\n- blue is color change\n\nThe swapped channel order (used for the PC releases of the game) is the following:\n- alpha is color change\n- red is the auxiliary channel (optional detail mask)\n- green is self illumination\n- blue is specular and detail mapping",
+                "heading": "Multipurpose Map",
+                "body": "A multipurpose map is not actually a visible texture but rather a composite four-channel monochrome map used for shading the texture mapped to the UVs of the model.\n\nThe classic channel order (used for the Xbox version of the game) is the following:\n- alpha is the auxiliary channel (optional detail mask)\n- red is specular and detail mapping\n- green is self illumination\n- blue is color change\n\nThe swapped channel order (used for the PC releases of the game) is the following:\n- alpha is color change\n- red is the auxiliary channel (optional detail mask)\n- green is self illumination\n- blue is specular and detail mapping",
                 "type": "editor_section"
             },
             {
@@ -159,7 +159,7 @@
                 "size": 8
             },
             {
-                "name": "detail map",
+                "heading": "Detail Map",
                 "type": "editor_section"
             },
             {
@@ -339,8 +339,8 @@
         "name": "ShaderModel",
         "fields": [
             {
-                "name": "shader model",
-                "description": "The shader_model group is typically used as an non-transparent texture for models, and it features support for multipurpose maps.",
+                "heading": "Shader Model",
+                "body": "The shader_model group is typically used as an non-transparent texture for models, and it features support for multipurpose maps.",
                 "type": "editor_section"
             },
             {
@@ -348,7 +348,7 @@
                 "type": "ShaderModelProperties"
             },
             {
-                "name": "change color",
+                "heading": "Change Color",
                 "type": "editor_section"
             },
             {
@@ -356,7 +356,7 @@
                 "type": "ShaderModelChangeColor"
             },
             {
-                "name": "self-illumination",
+                "heading": "Self-Illumination",
                 "type": "editor_section"
             },
             {
@@ -364,7 +364,7 @@
                 "type": "ShaderModelSelfIllumination"
             },
             {
-                "name": "maps",
+                "heading": "Maps",
                 "type": "editor_section"
             },
             {
@@ -372,7 +372,7 @@
                 "type": "ShaderModelMaps"
             },
             {
-                "name": "texture scrolling animation",
+                "heading": "Texture Scrolling Animation",
                 "type": "editor_section"
             },
             {
@@ -380,7 +380,7 @@
                 "type": "ShaderModelTextureScrollingAnimation"
             },
             {
-                "name": "reflection",
+                "heading": "Reflection",
                 "type": "editor_section"
             },
             {

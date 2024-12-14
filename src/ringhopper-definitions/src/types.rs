@@ -120,8 +120,8 @@ impl SizeableObject for StructField {
 }
 
 pub struct EditorSectionData {
-    pub name: String,
-    pub description: Option<String>
+    pub heading: String,
+    pub body: Option<String>
 }
 
 pub enum StructFieldType {

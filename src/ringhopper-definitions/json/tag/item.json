@@ -18,14 +18,12 @@
     },
     {
         "name": "Item",
-        "groups": [
-            {
-                "name": "item",
-                "description": "Base item attributes",
-                "first": "flags"
-            }
-        ],
         "fields": [
+            {
+                "heading": "Item",
+                "body": "Base item attributes",
+                "type": "editor_section"
+            },
             {
                 "name": "flags",
                 "type": "ItemFlags"

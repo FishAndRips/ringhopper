@@ -205,23 +205,35 @@
         "name": "Decal",
         "fields": [
             {
+                "heading": "Properties",
+                "type": "editor_section"
+            },
+            {
                 "name": "properties",
-                "section": true,
                 "type": "DecalProperties"
             },
             {
+                "heading": "Appearance",
+                "type": "editor_section"
+            },
+            {
                 "name": "appearance",
-                "section": true,
                 "type": "DecalAppearance"
             },
             {
+                "heading": "Animation",
+                "type": "editor_section"
+            },
+            {
                 "name": "animation",
-                "section": true,
                 "type": "DecalAnimation"
             },
             {
+                "heading": "Shader",
+                "type": "editor_section"
+            },
+            {
                 "name": "shader",
-                "section": true,
                 "type": "DecalShader"
             },
             {

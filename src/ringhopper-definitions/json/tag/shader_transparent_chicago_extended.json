@@ -1,17 +1,18 @@
 [
     {
         "name": "ShaderTransparentChicagoExtended",
-        "groups": [
-            {
-                "name": "transparent chicago extended shader",
-                "description": "This works the same as shader_transparent_chicago, but it supports 2-stage maps for 2003's low-end potato PCs that have no business running games more complex than Hearts.\nUse shader_transparent_chicago, instead, since it's the same thing but less annoying.",
-                "first": "numeric counter limit"
-            }
-        ],
         "fields": [
             {
+                "heading": "Transparent Chicago Extended Shader",
+                "body": "This works the same as shader_transparent_chicago, but it supports 2-stage maps for 2003's low-end potato PCs that have no business running games more complex than Hearts.\nUse shader_transparent_chicago, instead, since it's the same thing but less annoying.",
+                "type": "editor_section"
+            },
+            {
+                "heading": "Properties",
+                "type": "editor_section"
+            },
+            {
                 "name": "properties",
-                "section": true,
                 "type": "ShaderTransparentProperties"
             },
             {

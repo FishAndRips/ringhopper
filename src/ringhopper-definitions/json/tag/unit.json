@@ -383,14 +383,12 @@
     },
     {
         "name": "Unit",
-        "groups": [
-            {
-                "name": "unit",
-                "description": "Base unit attributes",
-                "first": "flags"
-            }
-        ],
         "fields": [
+            {
+                "heading": "Unit",
+                "body": "Base unit attributes",
+                "type": "editor_section"
+            },
             {
                 "name": "flags",
                 "type": "UnitFlags"
@@ -612,8 +610,11 @@
                 "size": 2
             },
             {
+                "heading": "Metagame Properties",
+                "type": "editor_section"
+            },
+            {
                 "name": "metagame properties",
-                "section": true,
                 "type": "MetagameProperties"
             },
             {

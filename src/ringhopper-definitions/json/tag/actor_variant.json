@@ -587,7 +587,7 @@
                 ]
             },
             {
-                "name": "metagame properties",
+                "heading": "Metagame Properties",
                 "type": "editor_section"
             },
             {
@@ -599,7 +599,7 @@
                 "size": 20
             },
             {
-                "name": "movement switching",
+                "heading": "Movement Switching",
                 "type": "editor_section"
             },
             {
@@ -607,7 +607,7 @@
                 "type": "ActorVariantMovementSwitching"
             },
             {
-                "name": "ranged combat",
+                "heading": "Ranged Combat",
                 "type": "editor_section"
             },
             {
@@ -615,7 +615,7 @@
                 "type": "ActorVariantRangedCombat"
             },
             {
-                "name": "burst geometry",
+                "heading": "Burst Geometry",
                 "type": "editor_section"
             },
             {
@@ -623,7 +623,7 @@
                 "type": "ActorVariantBurstGeometry"
             },
             {
-                "name": "firing patterns",
+                "heading": "Firing Patterns",
                 "type": "editor_section"
             },
             {
@@ -631,7 +631,7 @@
                 "type": "ActorVariantFiringPatterns"
             },
             {
-                "name": "special-case firing properties",
+                "heading": "Special-Case Firing Properties",
                 "type": "editor_section"
             },
             {
@@ -639,7 +639,7 @@
                 "type": "ActorVariantSpecialCaseFiringProperties"
             },
             {
-                "name": "berserking and melee",
+                "heading": "Berserking and Melee",
                 "type": "editor_section"
             },
             {
@@ -647,7 +647,7 @@
                 "type": "ActorVariantBerserkingAndMelee"
             },
             {
-                "name": "grenades",
+                "heading": "Grenades",
                 "type": "editor_section"
             },
             {
@@ -655,7 +655,7 @@
                 "type": "ActorVariantGrenades"
             },
             {
-                "name": "items",
+                "heading": "Items",
                 "type": "editor_section"
             },
             {
@@ -663,7 +663,7 @@
                 "type": "ActorVariantItems"
             },
             {
-                "name": "unit properties",
+                "heading": "Unit Properties",
                 "type": "editor_section"
             },
             {

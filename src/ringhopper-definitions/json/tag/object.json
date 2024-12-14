@@ -352,14 +352,12 @@
     },
     {
         "name": "Object",
-        "groups": [
-            {
-                "name": "object",
-                "description": "Base object attributes",
-                "first": "object type"
-            }
-        ],
         "fields": [
+            {
+                "heading": "Object",
+                "body": "Base object attributes",
+                "type": "editor_section"
+            },
             {
                 "name": "type",
                 "type": "ObjectType",

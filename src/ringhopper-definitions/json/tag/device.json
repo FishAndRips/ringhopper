@@ -23,14 +23,12 @@
     },
     {
         "name": "Device",
-        "groups": [
-            {
-                "name": "device",
-                "description": "Base device attributes",
-                "first": "flags"
-            }
-        ],
         "fields": [
+            {
+                "heading": "Device",
+                "body": "Base device attributes",
+                "type": "editor_section"
+            },
             {
                 "name": "flags",
                 "type": "DeviceFlags"

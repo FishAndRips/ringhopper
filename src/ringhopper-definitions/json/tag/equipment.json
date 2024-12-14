@@ -14,14 +14,12 @@
     },
     {
         "name": "Equipment",
-        "groups": [
-            {
-                "name": "equipment",
-                "description": "Equipment attributes",
-                "first": "powerup type"
-            }
-        ],
         "fields": [
+            {
+                "heading": "Equipment",
+                "body": "Equipment attributes",
+                "type": "editor_section"
+            },
             {
                 "name": "powerup type",
                 "type": "EquipmentPowerupType"

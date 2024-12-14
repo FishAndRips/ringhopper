@@ -123,18 +123,27 @@
         "name": "ShaderTransparentMeter",
         "fields": [
             {
+                "heading": "Properties",
+                "type": "editor_section"
+            },
+            {
                 "name": "properties",
-                "section": true,
                 "type": "ShaderTransparentMeterProperties"
             },
             {
+                "heading": "Colors",
+                "type": "editor_section"
+            },
+            {
                 "name": "colors",
-                "section": true,
                 "type": "ShaderTransparentMeterColors"
             },
             {
+                "heading": "External Function Sources",
+                "type": "editor_section"
+            },
+            {
                 "name": "external function sources",
-                "section": true,
                 "type": "ShaderTransparentMeterExternalFunctionSources"
             }
         ],

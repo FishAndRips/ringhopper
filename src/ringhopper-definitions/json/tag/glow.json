@@ -217,23 +217,35 @@
                 "size": 4
             },
             {
+                "heading": "Particle Rotational Velocity",
+                "type": "editor_section"
+            },
+            {
                 "name": "particle rotational velocity",
-                "section": true,
                 "type": "GlowRotationalVelocity"
+            },
+            {
+                "heading": "Effect Rotational Velocity",
+                "type": "editor_section"
             },
             {
                 "name": "effect rotational velocity",
-                "section": true,
                 "type": "GlowRotationalVelocity"
             },
             {
+                "heading": "Effect Translational Velocity",
+                "type": "editor_section"
+            },
+            {
                 "name": "effect translational velocity",
-                "section": true,
                 "type": "GlowTranslationalVelocity"
             },
             {
+                "heading": "Particle Distance To Object",
+                "type": "editor_section"
+            },
+            {
                 "name": "particle distance to object",
-                "section": true,
                 "type": "GlowDistanceToObject"
             },
             {
@@ -241,13 +253,19 @@
                 "size": 8
             },
             {
+                "heading": "Particle Size",
+                "type": "editor_section"
+            },
+            {
                 "name": "particle size",
-                "section": true,
                 "type": "GlowParticleSize"
             },
             {
+                "heading": "Color",
+                "type": "editor_section"
+            },
+            {
                 "name": "color",
-                "section": true,
                 "type": "GlowColor"
             },
             {

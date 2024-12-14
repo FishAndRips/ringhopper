@@ -108,13 +108,19 @@
         "name": "SkyLight",
         "fields": [
             {
+                "heading": "Lens Flare",
+                "type": "editor_section"
+            },
+            {
                 "name": "lens flare",
-                "section": true,
                 "type": "SkyLightLensFlare"
             },
             {
+                "heading": "Radiosity",
+                "type": "editor_section"
+            },
+            {
                 "name": "radiosity",
-                "section": true,
                 "type": "SkyLightRadiosity"
             }
         ],
@@ -190,23 +196,35 @@
                 "size": 24
             },
             {
+                "heading": "Indoor Ambient Radiosity",
+                "type": "editor_section"
+            },
+            {
                 "name": "indoor ambient radiosity",
-                "section": true,
                 "type": "SkyAmbientRadiosity"
+            },
+            {
+                "heading": "Outdoor Ambient Radiosity",
+                "type": "editor_section"
             },
             {
                 "name": "outdoor ambient radiosity",
-                "section": true,
                 "type": "SkyAmbientRadiosity"
             },
             {
+                "heading": "Outdoor Fog",
+                "type": "editor_section"
+            },
+            {
                 "name": "outdoor fog",
-                "section": true,
                 "type": "SkyFog"
             },
             {
+                "heading": "Indoor Fog",
+                "type": "editor_section"
+            },
+            {
                 "name": "indoor fog",
-                "section": true,
                 "type": "SkyFog"
             },
             {

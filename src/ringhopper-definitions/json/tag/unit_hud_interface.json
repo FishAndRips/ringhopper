@@ -283,45 +283,66 @@
                 "size": 32
             },
             {
+                "heading": "Hud Background",
+                "body": "This defines a static element present in the background of the HUD.",
+                "type": "editor_section"
+            },
+            {
                 "name": "hud background",
-                "section": true,
-                "description": "This defines a static element present in the background of the HUD.",
                 "type": "HUDInterfaceStaticElement"
+            },
+            {
+                "heading": "Shield Panel Background",
+                "body": "This defines a static element present behind the shield panel.",
+                "type": "editor_section"
             },
             {
                 "name": "shield panel background",
-                "section": true,
-                "description": "This defines a static element present behind the shield panel.",
                 "type": "HUDInterfaceStaticElement"
+            },
+            {
+                "heading": "Shield Panel Meter",
+                "body": "This defines a meter element for the shield panel.",
+                "type": "editor_section"
             },
             {
                 "name": "shield panel meter",
-                "section": true,
-                "description": "This defines a meter element for the shield panel.",
                 "type": "UnitHUDInterfaceShieldMeter"
             },
             {
+                "heading": "Health Panel Background",
+                "body": "This defines a static element present behind the health panel.",
+                "type": "editor_section"
+            },
+            {
                 "name": "health panel background",
-                "section": true,
-                "description": "This defines a static element present behind the health panel.",
                 "type": "HUDInterfaceStaticElement"
+            },
+            {
+                "heading": "Health Panel Meter",
+                "body": "This defines a meter element for the health panel.",
+                "type": "editor_section"
             },
             {
                 "name": "health panel meter",
-                "section": true,
-                "description": "This defines a meter element for the health panel.",
                 "type": "UnitHUDInterfaceHealthMeter"
             },
             {
+                "heading": "Motion Sensor Background",
+                "body": "This defines a static element present behind the motion sensor.",
+                "type": "editor_section"
+            },
+            {
                 "name": "motion sensor background",
-                "section": true,
-                "description": "This defines a static element present behind the motion sensor.",
                 "type": "HUDInterfaceStaticElement"
             },
             {
+                "heading": "Motion Sensor Foreground",
+                "body": "This defines parameters the motion sensor foreground such as placement for the blip.",
+                "type": "editor_section"
+            },
+            {
                 "name": "motion sensor foreground",
-                "section": true,
-                "description": "This defines parameters the motion sensor foreground such as placement for the blip.",
                 "type": "HUDInterfaceStaticElement"
             },
             {
@@ -329,14 +350,20 @@
                 "size": 32
             },
             {
+                "heading": "Motion Sensor Center",
+                "type": "editor_section"
+            },
+            {
                 "name": "motion sensor center",
-                "section": true,
                 "type": "UnitHUDInterfaceMotionSensorCenter"
             },
             {
+                "heading": "Auxiliary Elements",
+                "body": "This adds additional elements and meters such as flashlight meters, as well as defining warning sounds.",
+                "type": "editor_section"
+            },
+            {
                 "name": "auxiliary elements",
-                "section": true,
-                "description": "This adds additional elements and meters such as flashlight meters, as well as defining warning sounds.",
                 "type": "UnitHUDInterfaceAuxiliaryElements"
             }
         ],

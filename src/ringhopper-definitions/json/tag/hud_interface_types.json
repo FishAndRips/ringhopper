@@ -91,8 +91,11 @@
                 "type": "ColorARGBInt"
             },
             {
+                "heading": "Flags",
+                "type": "editor_section"
+            },
+            {
                 "name": "flags",
-                "section": true,
                 "type": "HUDInterfaceMeterFlags"
             },
             {
