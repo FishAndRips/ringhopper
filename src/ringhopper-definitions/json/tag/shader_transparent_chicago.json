@@ -78,6 +78,7 @@
                 "name": "maps",
                 "type": "Reflexive",
                 "struct": "ShaderTransparentChicagoMap",
+                "minimum": 1,
                 "limit": 4
             },
             {
