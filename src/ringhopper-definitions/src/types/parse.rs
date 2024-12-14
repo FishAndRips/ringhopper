@@ -499,6 +499,7 @@ pub(crate) fn get_all_definitions() -> Vec<Map<String, Value>> {
     jsons.insert("tag/scenario_structure_bsp.json", include_bytes!("../../json/tag/scenario_structure_bsp.json"));
     jsons.insert("tag/scenario.json", include_bytes!("../../json/tag/scenario.json"));
     jsons.insert("tag/scenery.json", include_bytes!("../../json/tag/scenery.json"));
+    jsons.insert("tag/shader_effect.json", include_bytes!("../../json/tag/shader_effect.json"));
     jsons.insert("tag/shader_environment.json", include_bytes!("../../json/tag/shader_environment.json"));
     jsons.insert("tag/shader_model.json", include_bytes!("../../json/tag/shader_model.json"));
     jsons.insert("tag/shader_transparent_chicago_extended.json", include_bytes!("../../json/tag/shader_transparent_chicago_extended.json"));

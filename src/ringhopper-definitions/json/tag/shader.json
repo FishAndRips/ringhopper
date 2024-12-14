@@ -50,26 +50,17 @@
     {
         "name": "ShaderTypeXbox",
         "options": [
-            {
-                "name": "don't use",
-                "exclude": true
-            },
-            {
-                "name": "won't use",
-                "exclude": true
-            },
-            {
-                "name": "can't use",
-                "exclude": true
-            },
-            "shader environment",
-            "shader model",
-            "shader transparent generic",
-            "shader transparent chicago",
-            "shader transparent water",
-            "shader transparent glass",
-            "shader transparent meter",
-            "shader transparent plasma"
+            "screen",
+            "effect",
+            "decal",
+            "environment",
+            "model",
+            "transparent generic",
+            "transparent chicago",
+            "transparent water",
+            "transparent glass",
+            "transparent meter",
+            "transparent plasma"
         ],
         "supported_engines": [
             "xbox"
@@ -80,27 +71,18 @@
     {
         "name": "ShaderTypePC",
         "options": [
-            {
-                "name": "don't use",
-                "exclude": true
-            },
-            {
-                "name": "won't use",
-                "exclude": true
-            },
-            {
-                "name": "can't use",
-                "exclude": true
-            },
-            "shader environment",
-            "shader model",
-            "shader transparent generic",
-            "shader transparent chicago",
-            "shader transparent chicago extended",
-            "shader transparent water",
-            "shader transparent glass",
-            "shader transparent meter",
-            "shader transparent plasma"
+            "screen",
+            "effect",
+            "decal",
+            "environment",
+            "model",
+            "transparent generic",
+            "transparent chicago",
+            "transparent chicago extended",
+            "transparent water",
+            "transparent glass",
+            "transparent meter",
+            "transparent plasma"
         ],
         "supported_engines": [
             "pc"

@@ -62,67 +62,6 @@
         "size": 228
     },
     {
-        "name": "LightningShader",
-        "fields": [
-            {
-                "type": "pad",
-                "size": 36
-            },
-            {
-                "name": "make it work",
-                "type": "uint32",
-                "cache_only": true
-            },
-            {
-                "name": "shader flags",
-                "type": "ParticleShaderFlags"
-            },
-            {
-                "name": "framebuffer blend function",
-                "type": "FramebufferBlendFunction"
-            },
-            {
-                "name": "framebuffer fade mode",
-                "type": "FramebufferFadeMode"
-            },
-            {
-                "name": "map flags",
-                "type": "IsUnfilteredFlag"
-            },
-            {
-                "type": "pad",
-                "size": 28
-            },
-            {
-                "type": "pad",
-                "size": 12
-            },
-            {
-                "name": "some more stuff that should be set for some reason",
-                "type": "uint32",
-                "cache_only": true
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "type": "pad",
-                "size": 2
-            },
-            {
-                "type": "pad",
-                "size": 56
-            },
-            {
-                "type": "pad",
-                "size": 28
-            }
-        ],
-        "type": "struct",
-        "size": 180
-    },
-    {
         "name": "Lightning",
         "fields": [
             {
@@ -188,7 +127,7 @@
             {
                 "name": "shader",
                 "type": "Reflexive",
-                "struct": "LightningShader",
+                "struct": "ShaderEffect",
                 "limit": 1
             },
             {

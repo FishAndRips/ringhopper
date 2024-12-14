@@ -59,6 +59,10 @@
         "name": "ContrailPointState",
         "fields": [
             {
+                "name": "state timing",
+                "type": "editor_section"
+            },
+            {
                 "name": "duration",
                 "bounds": true,
                 "type": "float",
@@ -69,6 +73,10 @@
                 "bounds": true,
                 "type": "float",
                 "unit": "seconds"
+            },
+            {
+                "name": "point variables",
+                "type": "editor_section"
             },
             {
                 "name": "physics",
@@ -111,6 +119,10 @@
                 "type": "ContrailScaleFlags"
             },
             {
+                "name": "point creation",
+                "type": "editor_section"
+            },
+            {
                 "name": "point generation rate",
                 "type": "float",
                 "unit": "points per second"
@@ -128,6 +140,10 @@
             {
                 "name": "inherited velocity fraction",
                 "type": "float"
+            },
+            {
+                "name": "rendering",
+                "type": "editor_section"
             },
             {
                 "name": "render type",
@@ -182,132 +198,8 @@
                 "size": 64
             },
             {
-                "type": "pad",
-                "size": 36
-            },
-            {
-                "name": "unknown int",
-                "type": "uint32",
-                "cache_only": true
-            },
-            {
-                "name": "shader flags",
-                "type": "ParticleShaderFlags"
-            },
-            {
-                "name": "framebuffer blend function",
-                "type": "FramebufferBlendFunction"
-            },
-            {
-                "name": "framebuffer fade mode",
-                "type": "FramebufferFadeMode"
-            },
-            {
-                "name": "map flags",
-                "type": "IsUnfilteredFlag"
-            },
-            {
-                "type": "pad",
-                "size": 12
-            },
-            {
-                "type": "pad",
-                "size": 16
-            },
-            {
-                "name": "secondary bitmap",
-                "type": "TagReference",
-                "groups": [
-                    "bitmap"
-                ]
-            },
-            {
-                "name": "anchor",
-                "type": "ParticleAnchor"
-            },
-            {
-                "name": "secondary map flags",
-                "type": "IsUnfilteredFlag"
-            },
-            {
-                "name": "u animation source",
-                "type": "FunctionOut"
-            },
-            {
-                "name": "u animation function",
-                "type": "WaveFunction"
-            },
-            {
-                "name": "u animation period",
-                "type": "float",
-                "unit": "seconds"
-            },
-            {
-                "name": "u animation phase",
-                "type": "float"
-            },
-            {
-                "name": "u animation scale",
-                "type": "float",
-                "unit": "repeats"
-            },
-            {
-                "name": "v animation source",
-                "type": "FunctionOut"
-            },
-            {
-                "name": "v animation function",
-                "type": "WaveFunction"
-            },
-            {
-                "name": "v animation period",
-                "type": "float",
-                "unit": "seconds"
-            },
-            {
-                "name": "v animation phase",
-                "type": "float"
-            },
-            {
-                "name": "v animation scale",
-                "type": "float",
-                "unit": "repeats"
-            },
-            {
-                "name": "rotation animation source",
-                "type": "FunctionOut"
-            },
-            {
-                "name": "rotation animation function",
-                "type": "WaveFunction"
-            },
-            {
-                "name": "rotation animation period",
-                "type": "float"
-            },
-            {
-                "name": "rotation animation phase",
-                "type": "float"
-            },
-            {
-                "name": "rotation animation scale",
-                "type": "Angle"
-            },
-            {
-                "name": "rotation animation center",
-                "type": "Vector2D"
-            },
-            {
-                "type": "pad",
-                "size": 4
-            },
-            {
-                "name": "zsprite radius scale",
-                "type": "float"
-            },
-            {
-                "type": "pad",
-                "size": 20
+                "name": "shader",
+                "type": "ShaderEffect"
             },
             {
                 "name": "point states",
