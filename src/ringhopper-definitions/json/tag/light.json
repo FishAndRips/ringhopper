@@ -215,7 +215,7 @@
                 "cache_only": true
             },
             {
-                "name": "unknown two",
+                "name": "specular radius multiplier",
                 "type": "float",
                 "cache_only": true,
                 "comment": "Not setting this to 2 breaks the first person flashlight."

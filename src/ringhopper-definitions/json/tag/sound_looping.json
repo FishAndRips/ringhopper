@@ -188,8 +188,8 @@
                 "cache_only": true
             },
             {
-                "name": "unknown int",
-                "type": "uint32",
+                "name": "runtime scripting sound",
+                "type": "TagID",
                 "cache_only": true
             },
             {
