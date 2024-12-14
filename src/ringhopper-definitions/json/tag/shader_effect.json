@@ -45,7 +45,7 @@
         "name": "ShaderEffectSecondaryMap",
         "fields": [
             {
-                "name": "secondary map bitmap",
+                "name": "bitmap",
                 "type": "TagReference",
                 "groups": [
                     "bitmap"
