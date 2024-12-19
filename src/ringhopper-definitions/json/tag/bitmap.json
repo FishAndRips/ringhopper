@@ -526,12 +526,15 @@
                 "cache_only": true
             },
             {
-                "type": "pad",
-                "size": 4
+                "name": "hardware format",
+                "type": "Address",
+                "comment": "Direct3D resource",
+                "cache_only": true
             },
             {
-                "type": "pad",
-                "size": 4,
+                "name": "base address",
+                "type": "Address",
+                "cache_only": true,
                 "comment": "this appears to be a pointer specific to the tool editing it; it gets changed whenever the tag is opened in any of the HEK tools (guerilla.exe, tool.exe, etc.)"
             }
         ],

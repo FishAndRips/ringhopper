@@ -279,13 +279,21 @@
                 "cache_only": true
             },
             {
-                "name": "unknown ffffffff 0",
+                "name": "used permutations",
+                "comment": "engine internal bitfield, set to 0xFFFFFFFF on cache build",
                 "type": "uint32",
                 "cache_only": true
             },
             {
-                "name": "unknown ffffffff 1",
-                "type": "uint32",
+                "name": "last permutation index",
+                "comment": "set to null index on cache build",
+                "type": "Index",
+                "cache_only": true
+            },
+            {
+                "name": "next permutation index",
+                "comment": "set to null index on cache build",
+                "type": "Index",
                 "cache_only": true
             },
             {
@@ -426,17 +434,25 @@
                 "cache_only": true
             },
             {
-                "type": "pad",
-                "size": 8
-            },
-            {
-                "name": "unknown ffffffff 0",
+                "name": "cumulative promotion length",
                 "type": "uint32",
                 "cache_only": true
             },
             {
-                "name": "unknown ffffffff 1",
+                "name": "last promotion time",
                 "type": "uint32",
+                "cache_only": true
+            },
+            {
+                "name": "scripted sound remaining time",
+                "comment": "set to 0xFFFFFFFF on cache build",
+                "type": "uint32",
+                "cache_only": true
+            },
+            {
+                "name": "scripted sound index",
+                "comment": "set to null id on cache build",
+                "type": "ID",
                 "cache_only": true
             },
             {
