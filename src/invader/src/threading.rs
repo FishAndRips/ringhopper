@@ -75,7 +75,7 @@ pub fn do_with_threads<T: TagTree + Send + 'static + Clone, U: Clone + Send + 's
 
     if !TagFilter::is_filter(user_filter) {
         let tag_path = match group {
-            Some(group) => TagPath::new(user_filter, group),
+            Some(group) => TagPath::new(TagFilter::cleanup_extension(user_filter, group), group),
             None => TagPath::from_path(user_filter)
         }.map_err(|_| format!("Invalid tag path `{user_filter}`"))?;
         process_tags(&mut context, &success, &failure, &ignored, &total, &tag_path, &mut user_data, display_mode, &logger, function);

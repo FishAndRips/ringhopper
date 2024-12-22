@@ -66,7 +66,7 @@ pub enum TreeType {
 ///
 /// # Examples:
 /// - `*` matches anything as a catch-all
-/// - `*.bitmap` matches any bitmap if `group` is unset (if group is set, it matches any `.bitmap.<group>`)
+/// - `*.bitmap` matches any bitmap if `group` is unset (if group is set to anything that is not Bitmap, it matches any `.bitmap.<group>`)
 #[derive(Clone)]
 pub struct TagFilter {
     filter: String,
@@ -74,16 +74,21 @@ pub struct TagFilter {
 }
 
 impl TagFilter {
-    /// Check if the given path is likely a filter.
-    pub fn is_filter(path: &str) -> bool {
-        path.chars().any(|c| c == '?' || c == '*')
-    }
-
     /// Create a tag filter.
     ///
     /// If `group` is None, then the filter matches the whole path including group. Otherwise, the filter matches only
     /// the path, while the group matches the group.
-    pub fn new(filter: &str, group: Option<TagGroup>) -> Self {
+    pub fn new(mut filter: &str, group: Option<TagGroup>) -> Self {
+        if let Some(g) = group {
+            let group_as_string = g.as_str();
+            let group_len = group_as_string.len();
+            let filter_len = filter.len();
+            let possible_dot = filter_len.wrapping_sub(group_len + 1);
+            if filter_len > group_len && filter.chars().nth(possible_dot) == Some('.') && filter.ends_with(group_as_string) {
+                filter = &filter[..possible_dot];
+            }
+        }
+
         let mut fixed = String::with_capacity(filter.len());
         for c in filter.chars() {
             if std::path::is_separator(c) {
@@ -96,6 +101,46 @@ impl TagFilter {
         Self {
             filter: fixed,
             group
+        }
+    }
+
+    /// Check if the given path is likely a filter.
+    pub fn is_filter(path: &str) -> bool {
+        path.chars().any(|c| c == '?' || c == '*')
+    }
+
+    /// Remove the extension from the path if there is already an expected extension. This is useful
+    /// for user input.
+    ///
+    /// This step is automatically applied by [`new`](TagGroup::new).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ringhopper::tag::tree::TagFilter;
+    /// use ringhopper::primitives::primitive::{TagPath, TagGroup};
+    ///
+    /// let something = TagFilter::cleanup_extension("something.bitmap", TagGroup::Bitmap);
+    /// assert_eq!(something, "something");
+    ///
+    /// let something = TagFilter::cleanup_extension("something", TagGroup::Bitmap);
+    /// assert_eq!(something, "something");
+    ///
+    /// // Note: It does not do it infinitely. Only once! If you pass this into TagFilter::new, it
+    /// // will still be treated as "something" like above.
+    /// let something_bitmap = TagFilter::cleanup_extension("something.bitmap.bitmap", TagGroup::Bitmap);
+    /// assert_eq!(something_bitmap, "something.bitmap");
+    /// ```
+    pub fn cleanup_extension(path: &str, group: TagGroup) -> &str {
+        let group_as_string = group.as_str();
+        let group_len = group_as_string.len();
+        let filter_len = path.len();
+        let possible_dot = filter_len.wrapping_sub(group_len + 1);
+        if filter_len > group_len && path.chars().nth(possible_dot) == Some('.') && path.ends_with(group_as_string) {
+            &path[..possible_dot]
+        }
+        else {
+            path
         }
     }
 
@@ -120,6 +165,12 @@ impl TagFilter {
     /// let all_bitmaps = TagFilter::new("*", Some(TagGroup::Bitmap));
     /// assert!(all_bitmaps.passes(&TagPath::from_path("something.bitmap").unwrap()));
     /// assert!(all_bitmaps.passes(&TagPath::from_path(".bitmap").unwrap()));
+    /// assert!(!all_bitmaps.passes(&TagPath::from_path("something.weapon").unwrap()));
+    ///
+    /// let all_bitmaps = TagFilter::new("*.bitmap", Some(TagGroup::Bitmap));
+    /// assert!(all_bitmaps.passes(&TagPath::from_path("something.bitmap").unwrap()));
+    /// assert!(all_bitmaps.passes(&TagPath::from_path(".bitmap").unwrap()));
+    /// assert!(!all_bitmaps.passes(&TagPath::from_path("something.weapon").unwrap()));
     ///
     /// let all_some_bitmaps = TagFilter::new("some*", Some(TagGroup::Bitmap));
     /// assert!(all_some_bitmaps.passes(&TagPath::from_path("something.bitmap").unwrap()));
