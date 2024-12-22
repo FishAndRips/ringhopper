@@ -32,17 +32,23 @@ mod recompress_vertices;
 mod dependency_tree;
 mod refactor_paths;
 
+#[derive(Copy, Clone)]
 pub struct Verb {
     pub name: &'static str,
     pub description: &'static str,
-    pub function: fn(Args, &'static str) -> Result<(), String>
+    pub function: fn(Args, &'static str) -> Result<(), String>,
+    aliases: &'static [&'static str]
 }
 
 impl Verb {
     const fn new(name: &'static str, description: &'static str, function: fn(Args, &'static str) -> Result<(), String>) -> Self {
         Self {
-            name, description, function
+            name, description, function, aliases: &[]
         }
+    }
+    const fn with_aliases(mut self, aliases: &'static [&'static str]) -> Self {
+        self.aliases = aliases;
+        self
     }
 }
 
@@ -50,7 +56,7 @@ pub const ALL_VERBS: &'static [Verb] = &[
     Verb::new("archive-scenario", "Create a .7z of a map's tag structure", archive::archive_scenario),
     Verb::new("archive-tag", "Create a .7z of a tag and its dependencies", archive::archive_tag),
     Verb::new("bludgeon", "Automatically repair common issues with tags", bludgeon::bludgeon),
-    Verb::new("compare", "Compare tags between two tag sources", compare::compare),
+    Verb::new("compare", "Compare tags between two tag sources", compare::compare).with_aliases(&["cmp"]),
     Verb::new("convert", "Convert tags to another tag group", convert::convert),
     Verb::new("dependency-list", "View dependencies of tags", dependency_list::dependency_list),
     Verb::new("dependency-tree", "View dependencies of a tag in a recursive tree", dependency_tree::dependency_tree),
@@ -67,13 +73,22 @@ pub const ALL_VERBS: &'static [Verb] = &[
     Verb::new("tag-collection", "Generate tag_collection tags from data", tag_collection::tag_collection),
     Verb::new("ui-widget-collection", "Generate ui_widget_collection tags from data", tag_collection::ui_widget_collection),
     Verb::new("undefault", "Strip default values from tags", undefault::undefault),
-    Verb::new("unicode-strings", "Generate unicode_string_list tags from data", unicode_strings::unicode_strings),
+    Verb::new("unicode-strings", "Generate unicode_string_list tags from data", unicode_strings::unicode_strings).with_aliases(&["unicode-string-list"]),
     Verb::new("verify-scenario", "Verify that a scenario tree does not contain errors", verify_scenario::verify_scenario),
-    Verb::new("version", "View the version/license of Invader", version::version)
+    Verb::new("version", "View the version/license of Invader", version::version).with_aliases(&["v"])
 ];
 
 pub fn get_verb(what: &str) -> Option<&'static Verb> {
-    ALL_VERBS.binary_search_by(|c| c.name.cmp(what)).map(|i| &ALL_VERBS[i]).ok()
+    let base_name = ALL_VERBS.binary_search_by(|c| c.name.cmp(what)).map(|i| &ALL_VERBS[i]).ok();
+    if base_name.is_some() {
+        return base_name
+    }
+    for i in ALL_VERBS {
+        if i.aliases.contains(&what) {
+            return Some(i)
+        }
+    }
+    None
 }
 
 fn print_tag_results(logger: &LockedStdoutLogger, results: &HashMap<TagPath, TagResult>, action: Arguments) {
