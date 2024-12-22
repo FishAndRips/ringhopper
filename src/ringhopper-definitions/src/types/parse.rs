@@ -249,6 +249,7 @@ impl ParsedDefinitions {
                 display_name: first_string("display_name", true).unwrap(),
                 inherits: get_chain("inherits", false).first().map(|v| v.1.as_str().unwrap().to_owned()),
                 max_cache_file_size,
+                custom: first_bool("custom", false).unwrap_or(false),
                 max_script_nodes: first_u64("max_script_nodes", true).unwrap(),
                 max_tag_space: parse_hex_u64(get_chain("max_tag_space", true)).first().unwrap().1,
                 resource_maps: get_chain("resource_maps", false).first().map(|(_, v)| EngineSupportedResourceMaps {
@@ -547,6 +548,8 @@ pub(crate) fn get_all_definitions() -> Vec<Map<String, Value>> {
     jsons.insert("engine/halo xbox pal.json", include_bytes!("../../json/engine/halo xbox pal.json"));
     jsons.insert("engine/halo xbox.json", include_bytes!("../../json/engine/halo xbox.json"));
     jsons.insert("engine/halo xbox betas.json", include_bytes!("../../json/engine/halo xbox betas.json"));
+    jsons.insert("engine/custom/halo xbox nhe.json", include_bytes!("../../json/engine/custom/halo xbox nhe.json"));
+    jsons.insert("engine/custom/halo xbox pro.json", include_bytes!("../../json/engine/custom/halo xbox pro.json"));
 
     jsons.into_iter()
             .map(|(file,v)| (file, from_slice::<Value>(v).unwrap_or_else(|e| panic!("failed to parse {file}: {e}"))))

@@ -78,6 +78,7 @@ pub fn generate_ringhopper_engines(_: TokenStream) -> TokenStream {
         let data_alignment = engine.data_alignment;
         let compressed_models = engine.compressed_models;
         let fallback = engine.fallback;
+        let custom = engine.custom;
 
         let bitmap_options = format!("EngineBitmapOptions {{
             swizzled: {},
@@ -105,6 +106,7 @@ pub fn generate_ringhopper_engines(_: TokenStream) -> TokenStream {
             external_models: {external_models},
             data_alignment: {data_alignment},
             resource_maps: {resource_maps},
+            custom: {custom},
             cache_parser: EngineCacheParser::{cache_parser},
             compression_type: EngineCompressionType::{compression_type},
             required_tags: {required_tags},

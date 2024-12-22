@@ -312,6 +312,7 @@ pub struct Engine {
     pub build_target: bool,
     /// NOTE: This property is set explicitly per engine.
     pub fallback: bool,
+    pub custom: bool,
     pub cache_file_version: u32,
     /// NOTE: This property is set explicitly per engine.
     pub cache_default: bool,
@@ -327,7 +328,7 @@ pub struct Engine {
     pub max_cache_file_size: EngineCacheFileSize,
     pub base_memory_address: BaseMemoryAddress,
     pub required_tags: EngineRequiredTags,
-    pub compression_type: EngineCompressionType
+    pub compression_type: EngineCompressionType,
 }
 
 pub enum EngineCompressionType {

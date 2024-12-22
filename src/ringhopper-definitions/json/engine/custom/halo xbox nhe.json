@@ -1,0 +1,15 @@
+[
+    {
+        "name": "xbox-nhe",
+        "type": "engine",
+        "display_name": "Halo 1: NHE (Neutral Host Edition) 1.0",
+        "version": "halo xbox 01.10.12.2300 Oct 12 2001 16:14:28",
+        "build_target": true,
+        "custom": true,
+        "build": {
+            "version": "01.10.12.2300",
+            "enforced": true
+        },
+        "inherits": "xbox-us"
+    }
+]

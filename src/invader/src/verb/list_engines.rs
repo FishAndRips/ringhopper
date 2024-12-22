@@ -30,11 +30,16 @@ pub fn list_engines(mut args: Args, _description: &'static str) -> Result<(), St
     }
 
     let print_engine = |engine: &Engine| {
-        println!("    {shorthand:16} {full_name}", shorthand = engine.name, full_name = engine.display_name)
+        println!("    {shorthand:20} {full_name}", shorthand = engine.name, full_name = engine.display_name)
     };
 
-    println!("Engine targets:");
-    for i in buildable_engines {
+    println!("Primary engine targets:");
+    for i in buildable_engines.iter().copied().filter(|e| !e.custom) {
+        print_engine(i);
+    }
+    println!();
+    println!("Custom engine targets:");
+    for i in buildable_engines.iter().copied().filter(|e| e.custom) {
         print_engine(i);
     }
     println!();

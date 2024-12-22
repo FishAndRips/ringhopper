@@ -15,6 +15,9 @@ pub struct Engine {
     /// The engine can have maps built for it.
     pub build_target: bool,
 
+    /// This is a custom target.
+    pub custom: bool,
+
     /// This is purely a fallback engine (i.e. a virtual engine) and is not a real target.
     pub fallback: bool,
 
