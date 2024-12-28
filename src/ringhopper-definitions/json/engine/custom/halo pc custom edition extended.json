@@ -1,0 +1,19 @@
+[
+  {
+    "name": "pc-custom-ex",
+    "type": "engine",
+    "display_name": "Halo Custom Edition + 2 GiB map (patched stock)",
+    "build_target": true,
+    "custom": true,
+    "max_cache_file_size": "0x80000000",
+    "inherits": "pc-custom"
+  },
+  {
+    "name": "pc-custom-chimera",
+    "type": "engine",
+    "display_name": "Halo Custom Edition + 2 GiB map + 64 MiB tag (Chimera)",
+    "build_target": true,
+    "max_tag_space": "0x4000000",
+    "inherits": "pc-custom-ex"
+  }
+]

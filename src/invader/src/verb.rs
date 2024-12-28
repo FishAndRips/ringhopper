@@ -31,6 +31,7 @@ mod bludgeon;
 mod recompress_vertices;
 mod dependency_tree;
 mod refactor_paths;
+mod info;
 
 #[derive(Copy, Clone)]
 pub struct Verb {
@@ -61,6 +62,7 @@ pub const ALL_VERBS: &'static [Verb] = &[
     Verb::new("dependency-list", "View dependencies of tags", dependency_list::dependency_list),
     Verb::new("dependency-tree", "View dependencies of a tag in a recursive tree", dependency_tree::dependency_tree),
     Verb::new("extract", "Extract tags from a map", extract::extract),
+    Verb::new("info", "Output info about a map", info::info),
     Verb::new("list-engines", "List all available engine targets", list_engines::list_engines),
     Verb::new("list-scenario-tags", "View all tags needed to build a scenario into a map", dependency_list::list_scenario_tags),
     Verb::new("nudge", "Fix floating point precision errors from tag extraction", nudge::nudge),

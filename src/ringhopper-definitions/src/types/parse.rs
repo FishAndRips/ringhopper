@@ -550,6 +550,7 @@ pub(crate) fn get_all_definitions() -> Vec<Map<String, Value>> {
     jsons.insert("engine/halo xbox betas.json", include_bytes!("../../json/engine/halo xbox betas.json"));
     jsons.insert("engine/custom/halo xbox nhe.json", include_bytes!("../../json/engine/custom/halo xbox nhe.json"));
     jsons.insert("engine/custom/halo xbox pro.json", include_bytes!("../../json/engine/custom/halo xbox pro.json"));
+    jsons.insert("engine/custom/halo pc custom edition extended.json", include_bytes!("../../json/engine/custom/halo pc custom edition extended.json"));
 
     jsons.into_iter()
             .map(|(file,v)| (file, from_slice::<Value>(v).unwrap_or_else(|e| panic!("failed to parse {file}: {e}"))))

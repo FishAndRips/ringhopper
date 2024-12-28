@@ -56,6 +56,35 @@ pub trait Map {
     /// Get the name of the map.
     fn get_name(&self) -> &str;
 
+    /// Get the build string of the map.
+    ///
+    /// NOTE: This is not useful for identifying the engine. Use [`get_engine`](Map::get_engine) for this.
+    fn get_build_string(&self) -> &str;
+
+    /// Get the CRC32 of the map, if available.
+    ///
+    /// The first value is the CRC32 in the header. The second value is the calculated CRC32.
+    fn get_crc32(&self) -> Option<(u32, u32)> {
+        None
+    }
+
+    /// Get an estimated max tag space for the map.
+    ///
+    /// This may or may not be reliable, as it assumes the map was built with the BSP data at the end of tag data.
+    fn get_estimated_max_tag_space(&self) -> Option<usize> {
+        None
+    }
+
+    /// Get the uncompressed size of the map, if available.
+    fn get_uncompressed_size(&self) -> Option<usize> {
+        None
+    }
+
+    /// Get the tag space usage, if available.
+    fn get_used_tag_space(&self) -> Option<usize> {
+        None
+    }
+
     /// Get the engine for the map.
     fn get_engine(&self) -> &'static Engine;
 
@@ -174,7 +203,4 @@ pub trait Map {
             .to_str()
             .ok()
     }
-
-    /// Calculate the CRC32 of the map.
-    fn calculate_crc32(&self) -> u32;
 }

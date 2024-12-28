@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use definitions::{CacheFileTagDataHeaderInternalModels, Scenario, ScenarioType};
-use primitives::crc32::CRC32;
 use primitives::engine::Engine;
 use primitives::error::{OverflowCheck, RinghopperResult};
 use primitives::map::{DomainType, Map, Tag};
@@ -13,6 +12,8 @@ use crate::map::{BSPDomain, extract_tag_from_map, MapTagTree, SizeRange};
 
 pub struct XboxCacheFile {
     name: String,
+    build_string: String,
+    estimated_max_tag_space: Option<usize>,
     engine: &'static Engine,
     data: Vec<u8>,
     tag_data: SizeRange,
@@ -21,7 +22,10 @@ pub struct XboxCacheFile {
     tags: Vec<Option<Tag>>,
     ids: HashMap<TagPath, ID>,
     scenario_tag: ID,
-    scenario_tag_data: Scenario
+    scenario_tag_data: Scenario,
+    uncompressed_size: usize,
+    used_tag_space: usize,
+
 }
 
 impl XboxCacheFile {
@@ -30,8 +34,12 @@ impl XboxCacheFile {
 
         let mut map = Self {
             name: String::new(),
+            build_string: String::new(),
+            uncompressed_size: data.len(),
+            estimated_max_tag_space: None,
             data,
             engine,
+            used_tag_space: 0,
             tag_data: Default::default(),
             bsp_data: Default::default(),
             base_memory_address: engine.base_memory_address.address as usize,
@@ -43,6 +51,7 @@ impl XboxCacheFile {
 
         map.tag_data = tag_data_range;
         map.name = header.name.to_string();
+        map.build_string = header.build.to_string();
 
         debug_assert!(!engine.external_models, "external models not supported on Xbox maps (if you triggered this, you broke an engine, or you need to add the support yourself)");
 
@@ -64,6 +73,16 @@ impl XboxCacheFile {
         map.scenario_tag_data = scenario_tag_data;
         super::util::fixup_bsp_addresses(&mut map.tags, &map.bsp_data, &map.ids)?;
 
+        map.used_tag_space = map.tag_data.end - map.tag_data.start;
+        if !engine.external_bsps && !map.bsp_data.is_empty() {
+            map.used_tag_space = map.used_tag_space.saturating_add(map.bsp_data.iter().map(|b| b.range.len()).max().expect("no bsps?"));
+
+            let first_bsp = map.bsp_data.first().expect("bsp");
+            map.estimated_max_tag_space = first_bsp
+                .base_address
+                .checked_add(first_bsp.range.len()).and_then(|b| b.checked_sub(map.base_memory_address));
+        }
+
         // Should never be true
         debug_assert!(!engine.external_bsps);
 
@@ -80,6 +99,22 @@ impl XboxCacheFile {
 impl Map for XboxCacheFile {
     fn get_name(&self) -> &str {
         &self.name
+    }
+
+    fn get_build_string(&self) -> &str {
+        &self.build_string
+    }
+
+    fn get_estimated_max_tag_space(&self) -> Option<usize> {
+        self.estimated_max_tag_space
+    }
+
+    fn get_uncompressed_size(&self) -> Option<usize> {
+        Some(self.uncompressed_size)
+    }
+
+    fn get_used_tag_space(&self) -> Option<usize> {
+        Some(self.used_tag_space)
     }
 
     fn get_engine(&self) -> &'static Engine {
@@ -123,22 +158,6 @@ impl Map for XboxCacheFile {
 
     fn get_all_tags(&self) -> Vec<TagPath> {
         self.ids.keys().map(|key| key.to_owned()).collect()
-    }
-
-    fn calculate_crc32(&self) -> u32 {
-        let mut hasher = CRC32::new();
-
-        for bsp in 0..self.bsp_data.len() {
-            if self.engine.external_bsps {
-                hasher.update(self.get_domain(&DomainType::BSPVertices(bsp)).unwrap().0);
-            }
-            hasher.update(self.get_domain(&DomainType::BSP(bsp)).unwrap().0);
-        }
-        hasher.update(self.get_domain(&DomainType::ModelVertexData).unwrap().0);
-        hasher.update(self.get_domain(&DomainType::ModelTriangleData).unwrap().0);
-        hasher.update(self.get_domain(&DomainType::TagData).unwrap().0);
-
-        hasher.crc()
     }
 }
 impl MapTagTree for XboxCacheFile {

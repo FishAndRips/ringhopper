@@ -75,7 +75,7 @@ impl ParsedCacheFileHeader {
             Err(_) => ()
         };
 
-        return Err(Error::MapParseFailure("can't read the cache file header (not in retail or pc demo format)".to_owned()))
+        Err(Error::MapParseFailure("can't read the cache file header (not in retail or pc demo format)".to_owned()))
     }
 
     /// Match the header to an engine.

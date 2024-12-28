@@ -307,3 +307,7 @@ impl StdoutLogger {
 impl<'a> LockedStdoutLogger<'a> {
     make_logger_impl!();
 }
+
+pub fn bytes_to_mib(bytes: usize) -> String {
+    format!("{:.02} MiB", ((bytes / 1024) as f64) / 1024.0)
+}

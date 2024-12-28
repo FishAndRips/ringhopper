@@ -14,6 +14,9 @@ use crate::map::resource::ResourceMap;
 
 pub struct GearboxCacheFile {
     name: String,
+    build_string: String,
+    crc32: (u32, u32),
+    estimated_max_tag_space: Option<usize>,
     engine: &'static Engine,
     data: Vec<u8>,
     tag_data: SizeRange,
@@ -29,7 +32,9 @@ pub struct GearboxCacheFile {
     bitmaps: Option<ResourceMap>,
     sounds: Option<ResourceMap>,
     loc: Option<ResourceMap>,
-    scenario_tag_data: Scenario
+    scenario_tag_data: Scenario,
+    uncompressed_size: usize,
+    used_tag_space: usize
 }
 
 impl GearboxCacheFile {
@@ -38,6 +43,11 @@ impl GearboxCacheFile {
 
         let mut map = Self {
             name: String::new(),
+            build_string: String::new(),
+            estimated_max_tag_space: None,
+            crc32: (0,0),
+            uncompressed_size: data.len(),
+            used_tag_space: 0,
             data,
             engine,
             vertex_data: Default::default(),
@@ -58,6 +68,7 @@ impl GearboxCacheFile {
 
         map.tag_data = tag_data_range;
         map.name = header.name.to_string();
+        map.build_string = header.build.to_string();
 
         let tag_data_header = CacheFileTagDataHeader::read_from_map(&map, map.base_memory_address, &DomainType::TagData)?;
         let tag_address: usize = tag_data_header.tag_array_address.into();
@@ -89,6 +100,16 @@ impl GearboxCacheFile {
         map.scenario_tag_data = scenario_tag_data;
         super::util::fixup_bsp_addresses(&mut map.tags, &map.bsp_data, &map.ids)?;
 
+        map.used_tag_space = map.tag_data.end - map.tag_data.start;
+        if !engine.external_bsps && !map.bsp_data.is_empty() {
+            map.used_tag_space = map.used_tag_space.saturating_add(map.bsp_data.iter().map(|b| b.range.len()).max().expect("no bsps?"));
+
+            let first_bsp = map.bsp_data.first().expect("bsp");
+            map.estimated_max_tag_space = first_bsp
+                .base_address
+                .checked_add(first_bsp.range.len()).and_then(|b| b.checked_sub(map.base_memory_address));
+        }
+
         // If we have external vertex data, do it
         if engine.external_bsps {
             map.load_external_vertex_data()?;
@@ -103,18 +124,34 @@ impl GearboxCacheFile {
             debug_assert!(map.data.get(map.triangle_data.clone()).is_some());
         }
 
+        // Calculate the CRC32 of the map.
+        let mut hasher = CRC32::new();
+        for bsp in 0..map.bsp_data.len() {
+            if map.engine.external_bsps {
+                hasher.update(map.get_domain(&DomainType::BSPVertices(bsp)).unwrap().0);
+            }
+            hasher.update(map.get_domain(&DomainType::BSP(bsp)).unwrap().0);
+        }
+        if map.engine.external_models {
+            hasher.update(map.get_domain(&DomainType::ModelVertexData).unwrap().0);
+            hasher.update(map.get_domain(&DomainType::ModelTriangleData).unwrap().0);
+        }
+        hasher.update(map.get_domain(&DomainType::TagData).unwrap().0);
+
+        let calculated_crc = hasher.crc();
         let header_crc = header.crc32;
         if header_crc != IGNORED_CRC32 {
             match parse_strictness {
                 ParseStrictness::Relaxed => (),
                 ParseStrictness::Strict => {
-                    let crc = map.calculate_crc32();
-                    if crc != header.crc32 {
-                        return Err(Error::MapParseFailure(format!("map is corrupted: CRC32 mismatch 0x{header_crc:08X} expected, got 0x{crc:08X} instead")))
+                    if calculated_crc != header.crc32 {
+                        return Err(Error::MapParseFailure(format!("map is corrupted: CRC32 mismatch 0x{header_crc:08X} expected, calculated 0x{calculated_crc:08X} instead")))
                     }
                 }
             }
         }
+
+        map.crc32 = (header_crc, calculated_crc);
 
         Ok(map)
     }
@@ -262,6 +299,26 @@ impl Map for GearboxCacheFile {
         &self.name
     }
 
+    fn get_build_string(&self) -> &str {
+        &self.build_string
+    }
+
+    fn get_uncompressed_size(&self) -> Option<usize> {
+        Some(self.uncompressed_size)
+    }
+
+    fn get_used_tag_space(&self) -> Option<usize> {
+        Some(self.used_tag_space)
+    }
+
+    fn get_crc32(&self) -> Option<(u32, u32)> {
+        Some(self.crc32)
+    }
+
+    fn get_estimated_max_tag_space(&self) -> Option<usize> {
+        self.estimated_max_tag_space
+    }
+
     fn get_engine(&self) -> &'static Engine {
         self.engine
     }
@@ -328,26 +385,6 @@ impl Map for GearboxCacheFile {
 
     fn get_all_tags(&self) -> Vec<TagPath> {
         self.ids.keys().map(|key| key.to_owned()).collect()
-    }
-
-    fn calculate_crc32(&self) -> u32 {
-        let mut hasher = CRC32::new();
-
-        for bsp in 0..self.bsp_data.len() {
-            if self.engine.external_bsps {
-                hasher.update(self.get_domain(&DomainType::BSPVertices(bsp)).unwrap().0);
-            }
-            hasher.update(self.get_domain(&DomainType::BSP(bsp)).unwrap().0);
-        }
-
-        if self.engine.external_models {
-            hasher.update(self.get_domain(&DomainType::ModelVertexData).unwrap().0);
-            hasher.update(self.get_domain(&DomainType::ModelTriangleData).unwrap().0);
-        }
-
-        hasher.update(self.get_domain(&DomainType::TagData).unwrap().0);
-
-        hasher.crc()
     }
 }
 impl MapTagTree for GearboxCacheFile {
