@@ -11,7 +11,7 @@ fn archive_command(args: Args, description: &'static str, full_scenario: bool) -
     let usage = if full_scenario { "<tag> [args]" } else { "<tag.group> [args]" };
 
     let parser = CommandLineParser::new(description, usage)
-        .add_tags(false)
+        .add_tags(true)
         .add_help()
         .add_overwrite()
         .add_custom_parameter(Parameter::new("output", 'O', "Output filename. Default: <scenario_basename>.7z", "<file>", Some(CommandLineValueType::Path), 1, None, false, false))
