@@ -275,8 +275,8 @@
                 "type": "HUDInterfaceAnchor"
             },
             {
-                "type": "pad",
-                "size": 2
+                "name": "canvas size",
+                "type": "HUDInterfaceCanvasSize"
             },
             {
                 "type": "pad",
