@@ -216,8 +216,8 @@
             "linear",
             "v16u16",
             {
-                "name": "unused",
-                "exclude": true
+                "name": "runtime created",
+                "cache_only": true
             },
             {
                 "name": "make it actually work",
