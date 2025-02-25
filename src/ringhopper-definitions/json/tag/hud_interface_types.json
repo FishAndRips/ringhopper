@@ -61,6 +61,39 @@
         "type": "enum"
     },
     {
+        "name": "HUDInterfaceElementPosition",
+        "fields": [
+            {
+                "name": "anchor offset",
+                "type": "Vector2DInt"
+            },
+            {
+                "name": "width scale",
+                "type": "float",
+                "default": 1.0
+            },
+            {
+                "name": "height scale",
+                "type": "float",
+                "default": 1.0
+            },
+            {
+                "name": "scaling flags",
+                "type": "HUDInterfaceScalingFlags"
+            },
+            {
+                "type": "pad",
+                "size": 2
+            },
+            {
+                "type": "pad",
+                "size": 20
+            }
+        ],
+        "size": 36,
+        "type": "struct"
+    },
+    {
         "name": "HUDInterfaceMeterElement",
         "fields": [
             {
@@ -152,36 +185,42 @@
         "type": "struct"
     },
     {
-        "name": "HUDInterfaceElementPosition",
+        "name": "HUDInterfaceElementColor",
         "fields": [
             {
-                "name": "anchor offset",
-                "type": "Vector2DInt"
+                "name": "default color",
+                "type": "ColorARGBInt"
             },
             {
-                "name": "width scale",
-                "type": "float",
-                "default": 1.0
+                "name": "flashing color",
+                "type": "ColorARGBInt"
             },
             {
-                "name": "height scale",
-                "type": "float",
-                "default": 1.0
+                "name": "flash period",
+                "type": "float"
             },
             {
-                "name": "scaling flags",
-                "type": "HUDInterfaceScalingFlags"
+                "name": "flash delay",
+                "type": "float"
             },
             {
-                "type": "pad",
-                "size": 2
+                "name": "number of flashes",
+                "type": "int16"
             },
             {
-                "type": "pad",
-                "size": 20
+                "name": "flash flags",
+                "type": "HUDInterfaceFlashFlags"
+            },
+            {
+                "name": "flash length",
+                "type": "float"
+            },
+            {
+                "name": "disabled color",
+                "type": "ColorARGBInt"
             }
         ],
-        "size": 36,
+        "size": 28,
         "type": "struct"
     },
     {
@@ -260,45 +299,6 @@
             }
         ],
         "size": 64,
-        "type": "struct"
-    },
-    {
-        "name": "HUDInterfaceElementColor",
-        "fields": [
-            {
-                "name": "default color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "flashing color",
-                "type": "ColorARGBInt"
-            },
-            {
-                "name": "flash period",
-                "type": "float"
-            },
-            {
-                "name": "flash delay",
-                "type": "float"
-            },
-            {
-                "name": "number of flashes",
-                "type": "int16"
-            },
-            {
-                "name": "flash flags",
-                "type": "HUDInterfaceFlashFlags"
-            },
-            {
-                "name": "flash length",
-                "type": "float"
-            },
-            {
-                "name": "disabled color",
-                "type": "ColorARGBInt"
-            }
-        ],
-        "size": 28,
         "type": "struct"
     },
     {
