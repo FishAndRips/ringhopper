@@ -353,6 +353,16 @@
         "type": "enum"
     },
     {
+        "name": "UICanvas",
+        "options": [
+            "640x480",
+            "854x480",
+            "1280x960",
+            "1708x960"
+        ],
+        "type": "enum"
+    },
+    {
         "name": "EventHandlerReferencesFlags",
         "type": "bitfield",
         "fields": [
