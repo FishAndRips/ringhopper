@@ -83,8 +83,10 @@
                 "type": "uint16"
             },
             {
-                "type": "pad",
-                "size": 2
+                "name": "draw generation",
+                "type": "uint16",
+                "comment": "stores the draw generation counter to track character usage during drawing",
+                "cache_only": true
             },
             {
                 "name": "pixels offset",
