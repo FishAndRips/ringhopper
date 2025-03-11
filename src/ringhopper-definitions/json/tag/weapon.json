@@ -740,7 +740,7 @@
             },
             {
                 "name": "zoom levels",
-                "type": "int16"
+                "type": "uint16"
             },
             {
                 "name": "zoom magnification range",
