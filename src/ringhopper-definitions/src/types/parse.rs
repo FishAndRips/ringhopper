@@ -314,7 +314,7 @@ impl ParsedDefinitions {
         }
     }
 
-    pub(crate) fn assert_valid(&self) {
+    pub(crate) fn finalize_and_assert_valid(&mut self) {
         let validate_supported_engines = |supported_engines: &SupportedEngines, object_name: &str, field_name: &str| {
             if let Some(v) = &supported_engines.supported_engines {
                 for engine in v {
@@ -343,7 +343,8 @@ impl ParsedDefinitions {
             validate_supported_engines(&group.supported_engines, &group_name, "(self)");
         }
 
-        for (object_name, object) in &self.objects {
+        let mut objects_to_verify = self.objects.clone();
+        for (object_name, object) in &mut objects_to_verify {
             let name_in_object = object.name();
             assert_eq!(name_in_object, object_name, "object name `{name_in_object}` not consistent with name `{object_name}` in map");
 
@@ -433,10 +434,11 @@ impl ParsedDefinitions {
                         validate_flags(&f.flags, &field_name);
                     }
 
-                    s.assert_size_is_correct(self);
+                    s.set_offsets_and_verify_sizes(self);
                 }
             }
         }
+        self.objects = objects_to_verify;
     }
 }
 
@@ -640,7 +642,8 @@ impl LoadFromSerdeJSON for StructField {
                 flags: Flags::default(),
                 maximum: None,
                 minimum: None,
-                limit: None
+                limit: None,
+                relative_offset: isize::MAX as usize
             },
             StructFieldType::EditorSection(e) => return Self {
                 name: e.heading.clone(),
@@ -650,7 +653,8 @@ impl LoadFromSerdeJSON for StructField {
                 flags: Flags::default(),
                 maximum: None,
                 minimum: None,
-                limit: None
+                limit: None,
+                relative_offset: isize::MAX as usize
             },
         };
 
@@ -742,6 +746,7 @@ impl LoadFromSerdeJSON for StructField {
             field_type,
             count,
             name,
+            relative_offset: isize::MAX as usize
         }
     }
 }
@@ -890,7 +895,8 @@ impl LoadFromSerdeJSON for Struct {
                 minimum: None,
                 maximum: None,
                 limit: None,
-                flags: Flags::default()
+                flags: Flags::default(),
+                relative_offset: usize::MAX
             })
         }
 

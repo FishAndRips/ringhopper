@@ -14,6 +14,7 @@ pub trait SizeableObject {
     fn size(&self, parsed_tag_data: &ParsedDefinitions) -> usize;
 }
 
+#[derive(Clone)]
 pub enum NamedObject {
     Struct(Struct),
     Enum(Enum),
@@ -48,6 +49,7 @@ pub struct TagGroup {
     pub version: u16
 }
 
+#[derive(Clone)]
 pub struct Struct {
     pub name: String,
     pub fields: Vec<StructField>,
@@ -64,10 +66,11 @@ impl SizeableObject for Struct {
 }
 
 impl Struct {
-    fn assert_size_is_correct(&self, parsed_tag_data: &ParsedDefinitions) {
+    fn set_offsets_and_verify_sizes(&mut self, parsed_tag_data: &ParsedDefinitions) {
         let expected_size = self.size;
         let mut real_size = 0;
-        for f in &self.fields {
+        for f in &mut self.fields {
+            f.relative_offset = real_size;
             real_size += f.size(parsed_tag_data);
         }
         assert_eq!(expected_size, real_size, "Size for {name} is incorrect (expected {expected_size}, got {real_size} instead)", name=self.name);
@@ -75,7 +78,7 @@ impl Struct {
     }
 }
 
-#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash, Clone)]
 pub enum LimitType {
     /// Maximum allowed by the engine
     Engine(String),
@@ -87,6 +90,7 @@ pub enum LimitType {
     Editor
 }
 
+#[derive(Clone)]
 pub struct StructField {
     /// Name of the field
     pub name: String,
@@ -110,7 +114,10 @@ pub struct StructField {
     pub limit: Option<HashMap<LimitType, usize>>,
 
     /// Flags
-    pub flags: Flags
+    pub flags: Flags,
+
+    /// Relative offset to the start of its structs.
+    pub relative_offset: usize
 }
 
 impl SizeableObject for StructField {
@@ -119,11 +126,13 @@ impl SizeableObject for StructField {
     }
 }
 
+#[derive(Clone)]
 pub struct EditorSectionData {
     pub heading: String,
     pub body: Option<String>
 }
 
+#[derive(Clone)]
 pub enum StructFieldType {
     Object(ObjectType),
     Padding(usize),
@@ -171,11 +180,11 @@ pub struct DefaultBehavior {
     /// Default if the tag is being created
     pub default_on_creation: bool,
 
-    /// Default if the valeu is equal to zero and being built into a cache file
+    /// Default if the value is equal to zero and being built into a cache file
     pub default_on_cache: bool
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum StaticValue {
     F32(f32),
     Uint(u64),
@@ -194,6 +203,7 @@ impl Display for StaticValue {
     }
 }
 
+#[derive(Clone)]
 pub struct Bitfield {
     /// Name of the bitfield
     pub name: String,
@@ -214,6 +224,7 @@ impl SizeableObject for Bitfield {
     }
 }
 
+#[derive(Clone)]
 pub struct Enum {
     pub name: String,
     pub options: Vec<Field>,
@@ -226,12 +237,14 @@ impl SizeableObject for Enum {
     }
 }
 
+#[derive(Clone)]
 pub struct Field {
     pub name: String,
     pub flags: Flags,
     pub value: u32
 }
 
+#[derive(Clone)]
 pub struct SupportedEngines {
     pub supported_engines: Option<Vec<String>>
 }
@@ -245,7 +258,7 @@ impl Default for SupportedEngines {
 }
 
 /// General fields. Some may be applicable to some objects, but not all.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Flags {
     /// This field is not readable from tag files
     pub cache_only: bool,
@@ -366,6 +379,7 @@ pub struct Build {
     pub enforced: bool
 }
 
+#[derive(Clone)]
 pub struct TagReference {
     pub allowed_groups: Vec<String>
 }
@@ -381,6 +395,7 @@ pub struct EngineBitmapOptions {
     pub alignment: u64
 }
 
+#[derive(Clone)]
 pub enum ObjectType {
     NamedObject(String),
     Reflexive(String),
