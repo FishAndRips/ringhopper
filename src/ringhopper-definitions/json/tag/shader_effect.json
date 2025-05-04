@@ -42,6 +42,15 @@
         "size": 76
     },
     {
+        "name": "ParticleAnchor",
+        "options": [
+            "with primary",
+            "with screen space",
+            "zsprite"
+        ],
+        "type": "enum"
+    },
+    {
         "name": "ShaderEffectSecondaryMap",
         "fields": [
             {

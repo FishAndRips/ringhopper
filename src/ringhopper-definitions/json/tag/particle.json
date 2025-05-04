@@ -9,15 +9,6 @@
         "type": "enum"
     },
     {
-        "name": "ParticleAnchor",
-        "options": [
-            "with primary",
-            "with screen space",
-            "zsprite"
-        ],
-        "type": "enum"
-    },
-    {
         "name": "ParticleFlags",
         "type": "bitfield",
         "fields": [

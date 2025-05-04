@@ -84,81 +84,6 @@
         "width": 32
     },
     {
-        "name": "DamageEffectDamage",
-        "fields": [
-            {
-                "name": "side effect",
-                "type": "DamageEffectSideEffect"
-            },
-            {
-                "name": "category",
-                "type": "DamageEffectCategory"
-            },
-            {
-                "name": "flags",
-                "type": "DamageEffectDamageFlags"
-            },
-            {
-                "name": "AOE core radius",
-                "type": "float",
-                "unit": "world units"
-            },
-            {
-                "name": "lower bound",
-                "type": "float"
-            },
-            {
-                "name": "upper bound",
-                "type": "float",
-                "bounds": true
-            },
-            {
-                "name": "vehicle passthrough penalty",
-                "type": "float"
-            },
-            {
-                "name": "active camouflage damage",
-                "type": "float"
-            },
-            {
-                "name": "stun",
-                "type": "float",
-                "minimum": 0.0,
-                "maximum": 1.0
-            },
-            {
-                "name": "maximum stun",
-                "type": "float",
-                "minimum": 0.0,
-                "maximum": 1.0
-            },
-            {
-                "name": "stun time",
-                "type": "float",
-                "unit": "seconds"
-            },
-            {
-                "type": "pad",
-                "size": 4
-            },
-            {
-                "name": "instantaneous acceleration",
-                "type": "Vector3D"
-            },
-            {
-                "heading": "Modifiers",
-                "body": "Damage is multiplied by these modifiers based on the material the damage is applied to.",
-                "type": "editor_section"
-            },
-            {
-                "name": "modifiers",
-                "type": "DamageEffectMaterialModifier"
-            }
-        ],
-        "size": 220,
-        "type": "struct"
-    },
-    {
         "name": "DamageEffectMaterialModifier",
         "fields": [
             {
@@ -300,6 +225,81 @@
         ],
         "type": "struct",
         "size": 160
+    },
+    {
+        "name": "DamageEffectDamage",
+        "fields": [
+            {
+                "name": "side effect",
+                "type": "DamageEffectSideEffect"
+            },
+            {
+                "name": "category",
+                "type": "DamageEffectCategory"
+            },
+            {
+                "name": "flags",
+                "type": "DamageEffectDamageFlags"
+            },
+            {
+                "name": "AOE core radius",
+                "type": "float",
+                "unit": "world units"
+            },
+            {
+                "name": "lower bound",
+                "type": "float"
+            },
+            {
+                "name": "upper bound",
+                "type": "float",
+                "bounds": true
+            },
+            {
+                "name": "vehicle passthrough penalty",
+                "type": "float"
+            },
+            {
+                "name": "active camouflage damage",
+                "type": "float"
+            },
+            {
+                "name": "stun",
+                "type": "float",
+                "minimum": 0.0,
+                "maximum": 1.0
+            },
+            {
+                "name": "maximum stun",
+                "type": "float",
+                "minimum": 0.0,
+                "maximum": 1.0
+            },
+            {
+                "name": "stun time",
+                "type": "float",
+                "unit": "seconds"
+            },
+            {
+                "type": "pad",
+                "size": 4
+            },
+            {
+                "name": "instantaneous acceleration",
+                "type": "Vector3D"
+            },
+            {
+                "heading": "Modifiers",
+                "body": "Damage is multiplied by these modifiers based on the material the damage is applied to.",
+                "type": "editor_section"
+            },
+            {
+                "name": "modifiers",
+                "type": "DamageEffectMaterialModifier"
+            }
+        ],
+        "size": 220,
+        "type": "struct"
     },
     {
         "name": "DamageEffectBreakingEffect",
