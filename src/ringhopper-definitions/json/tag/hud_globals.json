@@ -191,7 +191,8 @@
                 "type": "TagReference",
                 "non_null": true,
                 "groups": [
-                    "font"
+                    "font",
+                    "vector_font"
                 ]
             },
             {
@@ -199,7 +200,8 @@
                 "type": "TagReference",
                 "non_null": true,
                 "groups": [
-                    "font"
+                    "font",
+                    "vector_font"
                 ]
             },
             {

@@ -875,14 +875,16 @@
                 "name": "font system",
                 "type": "TagReference",
                 "groups": [
-                    "font"
+                    "font",
+                    "vector_font"
                 ]
             },
             {
                 "name": "font terminal",
                 "type": "TagReference",
                 "groups": [
-                    "font"
+                    "font",
+                    "vector_font"
                 ]
             },
             {

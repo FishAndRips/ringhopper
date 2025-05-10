@@ -1,0 +1,55 @@
+[
+    {
+        "name": "VectorFontDataFormat",
+        "options": [
+            "truetype",
+            "opentype"
+        ],
+        "type": "enum"
+    },
+    {
+        "name": "VectorFontData",
+        "fields": [
+            {
+                "type": "pad",
+                "size": 8
+            },
+            {
+                "name": "format",
+                "type": "VectorFontDataFormat",
+                "read_only": true
+            },
+            {
+                "type": "pad",
+                "size": 14
+            },
+            {
+                "name": "font data",
+                "type": "Data"
+            },
+            {
+                "type": "pad",
+                "size": 36
+            },
+            {
+                "name": "fallback font",
+                "type": "TagReference",
+                "groups": [
+                    "vector_font_data"
+                ]
+            },
+            {
+                "type": "pad",
+                "size": 64
+            }
+        ],
+        "type": "struct",
+        "size": 160
+    },
+    {
+        "name": "vector_font_data",
+        "struct": "VectorFontData",
+        "type": "group",
+        "version": 1
+    }
+]
