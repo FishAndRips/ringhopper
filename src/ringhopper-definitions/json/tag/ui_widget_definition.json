@@ -654,7 +654,8 @@
                 "name": "text font",
                 "type": "TagReference",
                 "groups": [
-                    "font"
+                    "font",
+                    "vector_font"
                 ]
             },
             {

@@ -527,6 +527,8 @@ pub(crate) fn get_all_definitions() -> Vec<Map<String, Value>> {
     jsons.insert("tag/unicode_string_list.json", include_bytes!("../../json/tag/unicode_string_list.json"));
     jsons.insert("tag/unit_hud_interface.json", include_bytes!("../../json/tag/unit_hud_interface.json"));
     jsons.insert("tag/unit.json", include_bytes!("../../json/tag/unit.json"));
+    jsons.insert("tag/vector_font.json", include_bytes!("../../json/tag/vector_font.json"));
+    jsons.insert("tag/vector_font_data.json", include_bytes!("../../json/tag/vector_font_data.json"));
     jsons.insert("tag/vehicle.json", include_bytes!("../../json/tag/vehicle.json"));
     jsons.insert("tag/virtual_keyboard.json", include_bytes!("../../json/tag/virtual_keyboard.json"));
     jsons.insert("tag/weapon_hud_interface.json", include_bytes!("../../json/tag/weapon_hud_interface.json"));
