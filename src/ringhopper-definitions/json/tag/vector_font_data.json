@@ -39,12 +39,22 @@
                 ]
             },
             {
+                "name": "resource handle",
+                "type": "Address",
+                "cache_only": true
+            },
+            {
+                "name": "font family name",
+                "type": "String32",
+                "cache_only": true
+            },
+            {
                 "type": "pad",
-                "size": 64
+                "size": 32
             }
         ],
         "type": "struct",
-        "size": 160
+        "size": 164
     },
     {
         "name": "vector_font_data",

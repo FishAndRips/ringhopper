@@ -1,5 +1,34 @@
 [
     {
+        "name": "VectorFontStyle",
+        "fields": [
+            {
+                "name": "data",
+                "type": "TagReference",
+                "groups": [
+                    "vector_font_data"
+                ]
+            },
+            {
+                "name": "hardware format",
+                "type": "Address",
+                "cache_only": true
+            },
+            {
+                "name": "space width",
+                "type": "uint32",
+                "cache_only": true,
+                "comment": "used to calculate the width of the trailing spaces"
+            },
+            {
+                "type": "pad",
+                "size": 8
+            }
+        ],
+        "type": "struct",
+        "size": 32
+    },
+    {
         "name": "VectorFont",
         "fields": [
             {
@@ -24,46 +53,31 @@
             },
             {
                 "name": "regular",
-                "type": "TagReference",
-                "groups": [
-                    "vector_font_data"
-                ]
+                "type": "VectorFontStyle"
             },
             {
                 "name": "bold",
-                "type": "TagReference",
-                "groups": [
-                    "vector_font_data"
-                ]
+                "type": "VectorFontStyle"
             },
             {
                 "name": "italic",
-                "type": "TagReference",
-                "groups": [
-                    "vector_font_data"
-                ]
+                "type": "VectorFontStyle"
             },
              {
                 "name": "condensed",
-                "type": "TagReference",
-                "groups": [
-                    "vector_font_data"
-                ]
+                "type": "VectorFontStyle"
             },
             {
                 "name": "underline",
-                "type": "TagReference",
-                "groups": [
-                    "vector_font_data"
-                ]
+                "type": "VectorFontStyle"
             },
             {
                 "type": "pad",
-                "size": 128
+                "size": 32
             }
         ],
         "type": "struct",
-        "size": 240
+        "size": 224
     },
     {
         "name": "vector_font",
