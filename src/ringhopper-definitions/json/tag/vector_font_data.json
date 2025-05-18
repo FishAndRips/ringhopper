@@ -46,7 +46,7 @@
             {
                 "name": "font family name",
                 "type": "String32",
-                "cache_only": true
+                "read_only": true
             },
             {
                 "type": "pad",
