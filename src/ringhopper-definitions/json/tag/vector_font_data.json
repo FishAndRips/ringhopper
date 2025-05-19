@@ -15,21 +15,31 @@
                 "size": 8
             },
             {
+                "name": "font family name",
+                "type": "String32",
+                "read_only": true
+            },
+            {
                 "name": "format",
                 "type": "VectorFontDataFormat",
                 "read_only": true
             },
             {
                 "type": "pad",
-                "size": 14
+                "size": 2
             },
             {
                 "name": "font data",
                 "type": "Data"
             },
             {
+                "name": "resource handle",
+                "type": "Address",
+                "cache_only": true
+            },
+            {
                 "type": "pad",
-                "size": 36
+                "size": 28
             },
             {
                 "name": "fallback font",
@@ -39,22 +49,12 @@
                 ]
             },
             {
-                "name": "resource handle",
-                "type": "Address",
-                "cache_only": true
-            },
-            {
-                "name": "font family name",
-                "type": "String32",
-                "read_only": true
-            },
-            {
                 "type": "pad",
                 "size": 32
             }
         ],
         "type": "struct",
-        "size": 164
+        "size": 144
     },
     {
         "name": "vector_font_data",
