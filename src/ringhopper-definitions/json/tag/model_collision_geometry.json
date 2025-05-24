@@ -713,7 +713,6 @@
                 "name": "pathfinding spheres",
                 "type": "Reflexive",
                 "struct": "ModelCollisionGeometrySphere",
-                "volatile": true,
                 "limit": {
                     "mcc-cea": 256,
                     "default": 32

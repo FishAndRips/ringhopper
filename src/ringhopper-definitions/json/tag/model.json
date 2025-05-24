@@ -450,6 +450,7 @@
                 "name": "unknown pointer",
                 "type": "Address",
                 "developer_note": "Appears to be a pointer that gets set on map load but never actually read.",
+                "runtime_only": true,
                 "cache_only": true
             },
             {
@@ -554,15 +555,13 @@
                 "name": "triangle pointer",
                 "type": "Address",
                 "cache_only": true,
-                "comment": "On Xbox: pointer to the triangle indices. On PC: offset to triangles relative to the end of the map's vertex data, but on map load, this is set to another pointer which is never read.",
-                "drop_on_extract_hidden": true
+                "comment": "On Xbox: pointer to the triangle indices. On PC: offset to triangles relative to the end of the map's vertex data, but on map load, this is set to another pointer which is never read."
             },
             {
                 "name": "triangle pointer 2",
                 "type": "Address",
                 "cache_only": true,
-                "comment": "On Xbox: pointer to the entry in the second parts list which points to the triangle indices. On PC: same value as the first triangle offset, and it is overwritten by a pointer on map load that is read when rendering.",
-                "drop_on_extract_hidden": true
+                "comment": "On Xbox: pointer to the entry in the second parts list which points to the triangle indices. On PC: same value as the first triangle offset, and it is overwritten by a pointer on map load that is read when rendering."
             },
             {
                 "name": "vertices",

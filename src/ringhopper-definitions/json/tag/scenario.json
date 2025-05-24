@@ -3189,19 +3189,16 @@
         "fields": [
             {
                 "name": "bsp start",
-                "drop_on_extract_hidden": true,
                 "cache_only": true,
                 "type": "uint32"
             },
             {
                 "name": "bsp size",
-                "drop_on_extract_hidden": true,
                 "cache_only": true,
                 "type": "uint32"
             },
             {
                 "name": "bsp address",
-                "drop_on_extract_hidden": true,
                 "cache_only": true,
                 "type": "uint32"
             },
@@ -3689,7 +3686,6 @@
                 "struct": "ScenarioSourceFile",
                 "non_cached": true,
                 "read_only": true,
-                "volatile": true,
                 "limit": {
                     "mcc-cea": 16,
                     "default": 8

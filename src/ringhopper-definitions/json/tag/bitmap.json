@@ -524,19 +524,22 @@
             {
                 "name": "pointer",
                 "type": "Address",
-                "cache_only": true
+                "cache_only": true,
+                "runtime_only": true
             },
             {
                 "name": "hardware format",
                 "type": "Address",
                 "comment": "Direct3D resource",
-                "cache_only": true
+                "cache_only": true,
+                "runtime_only": true
             },
             {
                 "name": "base address",
                 "type": "Address",
+                "comment": "this appears to be a pointer specific to the tool editing it; it gets changed whenever the tag is opened in any of the HEK tools (guerilla.exe, tool.exe, etc.)",
                 "cache_only": true,
-                "comment": "this appears to be a pointer specific to the tool editing it; it gets changed whenever the tag is opened in any of the HEK tools (guerilla.exe, tool.exe, etc.)"
+                "runtime_only": true
             }
         ],
         "type": "struct",
