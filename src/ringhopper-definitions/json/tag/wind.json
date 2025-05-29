@@ -36,6 +36,7 @@
         "name": "wind",
         "struct": "Wind",
         "type": "group",
-        "version": 1
+        "version": 1,
+        "fourcc_binary": 2003398244
     }
 ]

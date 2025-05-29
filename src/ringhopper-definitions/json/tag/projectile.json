@@ -351,6 +351,7 @@
         "struct": "Projectile",
         "supergroup": "object",
         "type": "group",
-        "version": 5
+        "version": 5,
+        "fourcc_binary": 1886547818
     }
 ]

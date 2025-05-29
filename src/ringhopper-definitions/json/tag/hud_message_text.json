@@ -83,6 +83,7 @@
         "name": "hud_message_text",
         "struct": "HUDMessageText",
         "type": "group",
-        "version": 1
+        "version": 1,
+        "fourcc_binary": 1752003616
     }
 ]

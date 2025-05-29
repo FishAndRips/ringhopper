@@ -659,6 +659,7 @@
         "name": "weapon_hud_interface",
         "struct": "WeaponHUDInterface",
         "type": "group",
-        "version": 2
+        "version": 2,
+        "fourcc_binary": 2003855465
     }
 ]

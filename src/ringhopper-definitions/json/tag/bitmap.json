@@ -662,6 +662,7 @@
         "name": "bitmap",
         "struct": "Bitmap",
         "type": "group",
-        "version": 7
+        "version": 7,
+        "fourcc_binary": 1651078253
     }
 ]

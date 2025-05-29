@@ -1705,6 +1705,7 @@
         "name": "globals",
         "struct": "Globals",
         "type": "group",
-        "version": 3
+        "version": 3,
+        "fourcc_binary": 1835103335
     }
 ]

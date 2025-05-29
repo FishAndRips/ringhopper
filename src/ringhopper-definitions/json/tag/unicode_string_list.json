@@ -29,6 +29,7 @@
         "name": "unicode_string_list",
         "struct": "UnicodeStringList",
         "type": "group",
-        "version": 1
+        "version": 1,
+        "fourcc_binary": 1970500722
     }
 ]

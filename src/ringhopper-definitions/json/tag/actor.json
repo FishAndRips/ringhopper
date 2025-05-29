@@ -931,6 +931,7 @@
         "name": "actor",
         "struct": "Actor",
         "type": "group",
-        "version": 2
+        "version": 2,
+        "fourcc_binary": 1633907826
     }
 ]

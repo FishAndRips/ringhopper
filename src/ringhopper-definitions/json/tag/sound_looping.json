@@ -228,6 +228,7 @@
         "name": "sound_looping",
         "struct": "SoundLooping",
         "type": "group",
-        "version": 3
+        "version": 3,
+        "fourcc_binary": 1819504228
     }
 ]

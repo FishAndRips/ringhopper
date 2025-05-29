@@ -276,6 +276,7 @@
         "name": "lens_flare",
         "struct": "LensFlare",
         "type": "group",
-        "version": 2
+        "version": 2,
+        "fourcc_binary": 1818586739
     }
 ]

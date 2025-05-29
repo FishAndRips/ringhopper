@@ -692,6 +692,7 @@
         "name": "damage_effect",
         "struct": "DamageEffect",
         "type": "group",
-        "version": 6
+        "version": 6,
+        "fourcc_binary": 1785754657
     }
 ]

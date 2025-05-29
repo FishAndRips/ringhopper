@@ -45,6 +45,7 @@
         "name": "camera_track",
         "struct": "CameraTrack",
         "type": "group",
-        "version": 2
+        "version": 2,
+        "fourcc_binary": 1953653099
     }
 ]

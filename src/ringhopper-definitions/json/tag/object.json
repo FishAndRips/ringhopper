@@ -542,6 +542,7 @@
         "name": "object",
         "struct": "Object",
         "type": "group",
-        "version": 1
+        "version": 1,
+        "fourcc_binary": 1868720741
     }
 ]

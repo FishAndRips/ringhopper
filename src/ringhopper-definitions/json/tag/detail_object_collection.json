@@ -144,6 +144,7 @@
         "name": "detail_object_collection",
         "struct": "DetailObjectCollection",
         "type": "group",
-        "version": 1
+        "version": 1,
+        "fourcc_binary": 1685021283
     }
 ]

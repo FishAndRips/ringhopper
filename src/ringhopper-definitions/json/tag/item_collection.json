@@ -58,6 +58,7 @@
         "name": "item_collection",
         "struct": "ItemCollection",
         "type": "group",
-        "version": 0
+        "version": 0,
+        "fourcc_binary": 1769237859
     }
 ]

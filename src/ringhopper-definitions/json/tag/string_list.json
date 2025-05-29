@@ -29,6 +29,7 @@
         "name": "string_list",
         "struct": "StringList",
         "type": "group",
-        "version": 1
+        "version": 1,
+        "fourcc_binary": 1937011235
     }
 ]

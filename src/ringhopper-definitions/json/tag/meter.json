@@ -118,6 +118,7 @@
         "name": "meter",
         "struct": "Meter",
         "type": "group",
-        "version": 1
+        "version": 1,
+        "fourcc_binary": 1835365490
     }
 ]

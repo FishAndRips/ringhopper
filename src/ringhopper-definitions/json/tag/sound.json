@@ -471,6 +471,7 @@
         "name": "sound",
         "struct": "Sound",
         "type": "group",
-        "version": 4
+        "version": 4,
+        "fourcc_binary": 1936614433
     }
 ]

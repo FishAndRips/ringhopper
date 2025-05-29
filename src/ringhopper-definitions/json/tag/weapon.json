@@ -955,6 +955,7 @@
         "struct": "Weapon",
         "supergroup": "item",
         "type": "group",
-        "version": 2
+        "version": 2,
+        "fourcc_binary": 2003132784
     }
 ]

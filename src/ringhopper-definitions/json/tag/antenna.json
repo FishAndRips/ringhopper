@@ -108,6 +108,7 @@
         "name": "antenna",
         "struct": "Antenna",
         "type": "group",
-        "version": 1
+        "version": 1,
+        "fourcc_binary": 1634628641
     }
 ]

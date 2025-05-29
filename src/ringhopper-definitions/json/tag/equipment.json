@@ -54,6 +54,7 @@
         "struct": "Equipment",
         "supergroup": "item",
         "type": "group",
-        "version": 2
+        "version": 2,
+        "fourcc_binary": 1701931376
     }
 ]

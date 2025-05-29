@@ -79,6 +79,7 @@
         "name": "sound_environment",
         "struct": "SoundEnvironment",
         "type": "group",
-        "version": 1
+        "version": 1,
+        "fourcc_binary": 1936614501
     }
 ]

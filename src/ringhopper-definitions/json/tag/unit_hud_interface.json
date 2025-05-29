@@ -374,6 +374,7 @@
         "name": "unit_hud_interface",
         "struct": "UnitHUDInterface",
         "type": "group",
-        "version": 1
+        "version": 1,
+        "fourcc_binary": 1970169961
     }
 ]

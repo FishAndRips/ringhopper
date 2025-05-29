@@ -56,6 +56,7 @@
         "name": "preferences_network_game",
         "struct": "PreferencesNetworkGame",
         "type": "group",
-        "version": 2
+        "version": 2,
+        "fourcc_binary": 1852272754
     }
 ]

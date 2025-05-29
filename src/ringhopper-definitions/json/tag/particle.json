@@ -191,6 +191,7 @@
         "name": "particle",
         "struct": "Particle",
         "type": "group",
-        "version": 2
+        "version": 2,
+        "fourcc_binary": 1885434484
     }
 ]

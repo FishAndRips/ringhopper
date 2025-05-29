@@ -189,6 +189,7 @@
         "name": "light_volume",
         "struct": "LightVolume",
         "type": "group",
-        "version": 1
+        "version": 1,
+        "fourcc_binary": 1835496242
     }
 ]

@@ -82,6 +82,7 @@ impl ParsedDefinitions {
                         supergroup: parent_maybe,
                         supported_engines: SupportedEngines::load_from_json(object),
                         version: oget_number!(object, "version", as_u64).try_into().unwrap_or_else(|e| panic!("{object_name}::version can't convert to u16: {e}")),
+                        fourcc_binary: oget_number!(object, "fourcc_binary", as_u64).try_into().unwrap_or_else(|e| panic!("{object_name}::fourcc_binary can't convert to u32: {e}")),
                         name: object_name,
                     });
                 },

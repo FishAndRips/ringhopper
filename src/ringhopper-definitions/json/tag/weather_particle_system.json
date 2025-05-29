@@ -193,6 +193,7 @@
         "name": "weather_particle_system",
         "struct": "WeatherParticleSystem",
         "type": "group",
-        "version": 1
+        "version": 1,
+        "fourcc_binary": 1918986606
     }
 ]

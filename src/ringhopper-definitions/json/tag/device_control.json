@@ -75,6 +75,7 @@
         "struct": "DeviceControl",
         "supergroup": "device",
         "type": "group",
-        "version": 1
+        "version": 1,
+        "fourcc_binary": 1668575852
     }
 ]

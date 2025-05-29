@@ -203,6 +203,7 @@
         "struct": "ShaderTransparentWater",
         "supergroup": "shader",
         "type": "group",
-        "version": 2
+        "version": 2,
+        "fourcc_binary": 1937203572
     }
 ]

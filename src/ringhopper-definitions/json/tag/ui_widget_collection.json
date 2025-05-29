@@ -16,6 +16,7 @@
         "name": "ui_widget_collection",
         "struct": "UIWidgetCollection",
         "type": "group",
-        "version": 1
+        "version": 1,
+        "fourcc_binary": 1399813484
     }
 ]

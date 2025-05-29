@@ -49,6 +49,7 @@
         "name": "hud_number",
         "struct": "HUDNumber",
         "type": "group",
-        "version": 1
+        "version": 1,
+        "fourcc_binary": 1752523811
     }
 ]

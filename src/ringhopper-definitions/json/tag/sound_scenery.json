@@ -11,6 +11,7 @@
         "struct": "SoundScenery",
         "supergroup": "object",
         "type": "group",
-        "version": 1
+        "version": 1,
+        "fourcc_binary": 1936941925
     }
 ]

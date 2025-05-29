@@ -361,6 +361,7 @@
         "name": "particle_system",
         "struct": "ParticleSystem",
         "type": "group",
-        "version": 4
+        "version": 4,
+        "fourcc_binary": 1885566060
     }
 ]

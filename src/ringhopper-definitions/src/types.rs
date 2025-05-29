@@ -46,7 +46,8 @@ pub struct TagGroup {
     pub struct_name: String,
     pub supergroup: Option<String>,
     pub supported_engines: SupportedEngines,
-    pub version: u16
+    pub version: u16,
+    pub fourcc_binary: u32
 }
 
 #[derive(Clone)]

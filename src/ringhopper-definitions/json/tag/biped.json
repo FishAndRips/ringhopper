@@ -344,6 +344,7 @@
         "struct": "Biped",
         "supergroup": "unit",
         "type": "group",
-        "version": 3
+        "version": 3,
+        "fourcc_binary": 1651077220
     }
 ]

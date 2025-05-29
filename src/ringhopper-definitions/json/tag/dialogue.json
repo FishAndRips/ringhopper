@@ -1360,6 +1360,7 @@
         "name": "dialogue",
         "struct": "Dialogue",
         "type": "group",
-        "version": 1
+        "version": 1,
+        "fourcc_binary": 1969515623
     }
 ]

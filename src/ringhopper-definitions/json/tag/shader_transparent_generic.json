@@ -524,6 +524,7 @@
         "struct": "ShaderTransparentGeneric",
         "supergroup": "shader",
         "type": "group",
-        "version": 1
+        "version": 1,
+        "fourcc_binary": 1936684146
     }
 ]

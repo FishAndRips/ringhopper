@@ -1622,6 +1622,7 @@
         "name": "scenario_structure_bsp",
         "struct": "ScenarioStructureBSP",
         "type": "group",
-        "version": 5
+        "version": 5,
+        "fourcc_binary": 1935831920
     }
 ]

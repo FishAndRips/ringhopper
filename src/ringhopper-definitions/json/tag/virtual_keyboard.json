@@ -154,6 +154,7 @@
         "name": "virtual_keyboard",
         "struct": "VirtualKeyboard",
         "type": "group",
-        "version": 2
+        "version": 2,
+        "fourcc_binary": 1986227065
     }
 ]

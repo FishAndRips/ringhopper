@@ -34,6 +34,7 @@
         "supported_engines": [
             "pc"
         ],
-        "version": 1
+        "version": 1,
+        "fourcc_binary": 1952540515
     }
 ]

@@ -402,6 +402,7 @@
         "struct": "ShaderModel",
         "supergroup": "shader",
         "type": "group",
-        "version": 2
+        "version": 2,
+        "fourcc_binary": 1936683887
     }
 ]

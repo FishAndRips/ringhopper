@@ -11,6 +11,7 @@
         "struct": "Placeholder",
         "supergroup": "object",
         "type": "group",
-        "version": 2
+        "version": 2,
+        "fourcc_binary": 1886151011
     }
 ]

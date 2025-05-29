@@ -16,6 +16,7 @@
         "struct": "Garbage",
         "supergroup": "item",
         "type": "group",
-        "version": 1
+        "version": 1,
+        "fourcc_binary": 1734439522
     }
 ]

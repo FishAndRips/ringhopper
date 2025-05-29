@@ -142,6 +142,7 @@
         "name": "lightning",
         "struct": "Lightning",
         "type": "group",
-        "version": 1
+        "version": 1,
+        "fourcc_binary": 1701602659
     }
 ]
