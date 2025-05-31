@@ -279,7 +279,8 @@ impl ParsedDefinitions {
                 data_alignment: first_u64("data_alignment", true).unwrap(),
                 name: engine_name.to_owned(),
                 required_tags,
-                version: first_string("version", false)
+                version: first_string("version", false),
+                obfuscated_header_layout: first_bool("obfuscated_header_layout", false).unwrap_or(false)
             });
         }
     }

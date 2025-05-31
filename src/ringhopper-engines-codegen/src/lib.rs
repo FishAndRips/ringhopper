@@ -79,6 +79,7 @@ pub fn generate_ringhopper_engines(_: TokenStream) -> TokenStream {
         let compressed_models = engine.compressed_models;
         let fallback = engine.fallback;
         let custom = engine.custom;
+        let obfuscated_header_layout = engine.obfuscated_header_layout;
 
         let bitmap_options = format!("EngineBitmapOptions {{
             swizzled: {},
@@ -110,6 +111,7 @@ pub fn generate_ringhopper_engines(_: TokenStream) -> TokenStream {
             cache_parser: EngineCacheParser::{cache_parser},
             compression_type: EngineCompressionType::{compression_type},
             required_tags: {required_tags},
+            obfuscated_header_layout: {obfuscated_header_layout}
         }},").unwrap();
     }
 

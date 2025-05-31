@@ -1,5 +1,5 @@
-use definitions::{CacheFileHeader, CacheFileHeaderPCDemo, ScenarioType};
-use primitives::byteorder::LittleEndian;
+use definitions::{CEAFlags, CacheFileHeader, CacheFileHeaderPCDemo, ScenarioType};
+use primitives::byteorder::{ByteOrder, LittleEndian};
 use primitives::engine::Engine;
 use primitives::error::{Error, RinghopperResult};
 use primitives::parse::SimpleTagData;
@@ -7,8 +7,7 @@ use primitives::primitive::{FourCC, String32};
 use ringhopper_engines::ALL_SUPPORTED_ENGINES;
 
 /// Functionality to read headers of cache files.
-///
-/// This does not contain all fields, but does contain enough fields to identify the cache file.
+#[derive(Copy, Clone)]
 pub struct ParsedCacheFileHeader {
     /// The name of the scenario.
     ///
@@ -116,6 +115,59 @@ impl ParsedCacheFileHeader {
         }
 
         best_result
+    }
+    
+    pub fn into_header_for_engine(mut self, engine: &Engine) -> Self {
+        if let Some(build) = engine.build {
+            if build.enforced {
+                self.build = String32::from_str(build.string).expect("engine has bad build string")
+            }
+        }
+        self.cache_version = engine.cache_file_version;
+        self
+    }
+    
+    pub fn as_bytes<B: ByteOrder>(&self) -> [u8; 0x800] {
+        let use_demo = match self.match_engine() {
+            Some(e) => e.obfuscated_header_layout,
+            None => false
+        };
+        
+        let mut data = [0u8; 0x800];
+        let len = data.len();
+        
+        if use_demo {
+            CacheFileHeaderPCDemo {
+                map_type: self.map_type,
+                head_fourcc: HEAD_FOURCC_DEMO,
+                foot_fourcc: FOOT_FOURCC_DEMO,
+                tag_data_size: u32::try_from(self.tag_data_size).expect("tag_data_size > u32::MAX"),
+                tag_data_offset: u32::try_from(self.tag_data_offset).expect("tag_data_offset > u32::MAX"),
+                build: self.build,
+                cache_version: self.cache_version,
+                name: self.name,
+                crc32: self.crc32,
+                decompressed_size: u32::try_from(self.decompressed_size).expect("decompressed_size > u32::MAX"),
+            }.write::<B>(&mut data, 0, len).expect("writing obfuscated header failed");
+        }
+        else {
+            CacheFileHeader {
+                map_type: self.map_type,
+                head_fourcc: HEAD_FOURCC,
+                foot_fourcc: FOOT_FOURCC,
+                tag_data_size: u32::try_from(self.tag_data_size).expect("tag_data_size > u32::MAX"),
+                tag_data_offset: u32::try_from(self.tag_data_offset).expect("tag_data_offset > u32::MAX"),
+                build: self.build,
+                cache_version: self.cache_version,
+                name: self.name,
+                crc32: self.crc32,
+                decompressed_size: u32::try_from(self.decompressed_size).expect("decompressed_size > u32::MAX"),
+                cea_flags: CEAFlags::default(),
+                compression_padding: u32::try_from(self.compression_padding).expect("compression_padding > u32::MAX")
+            }.write::<B>(&mut data, 0, len).expect("writing header failed");
+        };
+        
+        data
     }
 }
 

@@ -10,6 +10,7 @@
             "fallback": ["01.00.00.0576"],
             "enforced": false
         },
+        "obfuscated_header_layout": true,
         "cache_default": true,
         "cache_file_version": 6,
         "script_compile_target": "gbx-demo",

@@ -336,6 +336,7 @@ pub struct Engine {
     pub max_tag_space: u64,
     pub compressed_models: bool,
     pub data_alignment: u64,
+    pub obfuscated_header_layout: bool,
     pub bitmap_options: EngineBitmapOptions,
     pub resource_maps: Option<EngineSupportedResourceMaps>,
     pub cache_parser: EngineCacheParser,

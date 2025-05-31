@@ -64,7 +64,10 @@ pub struct Engine {
     pub required_tags: EngineRequiredTags,
 
     /// Cache parser type.
-    pub cache_parser: EngineCacheParser
+    pub cache_parser: EngineCacheParser,
+    
+    /// If true, this uses an obfuscated header layout.
+    pub obfuscated_header_layout: bool
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
