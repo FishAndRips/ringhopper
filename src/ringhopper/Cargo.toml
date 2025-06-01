@@ -13,8 +13,8 @@ ringhopper-engines = { path = "../ringhopper-engines" }
 crc64 = "2.0.0"
 flate2 = { version = "1.0.28", features = ["zlib"], default-features = false }
 tiff = "0.9.1"
-jxl-oxide = "0.10.2"
+jxl-oxide = "0.12.2"
 png = "0.17.13"
-sevenz-rust = "0.6.1"
+sevenz-rust2 = "0.13.2"
 aotuv_lancer_vorbis_sys = "0.1.4"
 libc = "0.2.153"

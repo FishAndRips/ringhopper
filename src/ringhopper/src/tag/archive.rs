@@ -3,8 +3,8 @@ use std::io::Cursor;
 use primitives::engine::Engine;
 use primitives::error::{Error, RinghopperResult};
 use primitives::primitive::TagPath;
-use sevenz_rust::lzma::LZMA2Options;
-use sevenz_rust::{SevenZWriter, SevenZArchiveEntry, SevenZMethodConfiguration, MethodOptions, SevenZMethod};
+use sevenz_rust2::lzma::LZMA2Options;
+use sevenz_rust2::{SevenZWriter, SevenZArchiveEntry, SevenZMethodConfiguration, MethodOptions, SevenZMethod};
 use crate::tag::dependency::{recursively_get_dependencies_for_map, recursively_get_dependencies_for_tag};
 use crate::tag::tree::TagTree;
 
