@@ -60,6 +60,7 @@
         "name": "vector_font_data",
         "struct": "VectorFontData",
         "type": "group",
-        "version": 1
+        "version": 1,
+        "fourcc_binary": 1986424420
     }
 ]
