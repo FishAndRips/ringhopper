@@ -7,16 +7,16 @@ pub fn fix_bad_floats(tag: &mut dyn PrimaryTagStructDyn) {
         match field.data_type() {
             DynamicTagDataType::SimplePrimitive(t) => match t {
                 SimplePrimitiveType::Float => {
-                    let f: &mut f64 = field.as_any_mut().downcast_mut().unwrap();
+                    let f: &mut f32 = field.as_any_mut().downcast_mut().unwrap();
                     if f.is_nan() {
                         *f = 0.0;
                     }
                 }
                 SimplePrimitiveType::Angle => {
                     let f: &mut Angle = field.as_any_mut().downcast_mut().unwrap();
-                    let mut angle = f.angle as f64;
+                    let mut angle = f.angle;
                     check_field(&mut angle);
-                    f.angle = angle as f32;
+                    f.angle = angle;
                 }
                 SimplePrimitiveType::Euler2D => {
                     let f: &mut Euler2D = field.as_any_mut().downcast_mut().unwrap();

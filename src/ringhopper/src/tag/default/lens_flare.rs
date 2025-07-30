@@ -22,7 +22,7 @@ pub fn set_defaults_for_lens_flare(tag: &mut dyn PrimaryTagStructDyn) {
 pub fn unset_defaults_for_lens_flare(tag: &mut dyn PrimaryTagStructDyn) {
     let lens_flare: &mut LensFlare = tag.as_any_mut().downcast_mut().unwrap();
 
-    let is_set = fix_decimal_rounding(lens_flare.rotation_function_scale.to_degrees() as f64) == 360.0 || lens_flare.rotation_function_scale == BUGGY_RADIUS_DEFAULT;
+    let is_set = fix_decimal_rounding(lens_flare.rotation_function_scale.to_degrees()) == 360.0 || lens_flare.rotation_function_scale == BUGGY_RADIUS_DEFAULT;
     if is_set {
         lens_flare.rotation_function_scale = Default::default();
     }

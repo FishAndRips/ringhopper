@@ -9,7 +9,7 @@ use crate::error::*;
 use super::*;
 
 /// Max error tolerance for determining if a vector is normalized.
-const NONNORMAL_THRESHOLD: f64 = 0.00001;
+const NONNORMAL_THRESHOLD: f32 = 0.00001;
 
 trait VectorMathOps {
     /// Compute the sum of this vector and another vector.
@@ -38,7 +38,7 @@ pub trait Vector: Sized + Copy + Clone {
     }
 
     /// Normalize the vector into the given unit.
-    fn normalize_into(&self, unit: f64) -> Self {
+    fn normalize_into(&self, unit: f32) -> Self {
         let magnitude_sq = self.magnitude_squared();
         if magnitude_sq == 0.0 {
             return Self::one();
@@ -57,12 +57,12 @@ pub trait Vector: Sized + Copy + Clone {
     /// Calculate the magnitude for the vector squared.
     ///
     /// This is the same as getting the distance from [`Vector::zero()`].
-    fn magnitude_squared(&self) -> f64 {
+    fn magnitude_squared(&self) -> f32 {
         self.distance_squared(&Self::zero())
     }
 
     /// Return the dot product of this and another vector.
-    fn dot(&self, with: &Self) -> f64;
+    fn dot(&self, with: &Self) -> f32;
 
     /// Return a vector where all components are equal to zero.
     fn zero() -> Self;
@@ -71,7 +71,7 @@ pub trait Vector: Sized + Copy + Clone {
     fn one() -> Self;
 
     /// Scale the vector by `by`.
-    fn scale(&self, by: f64) -> Self;
+    fn scale(&self, by: f32) -> Self;
 
     /// Compute the distance the point lies from a plane.
     ///
@@ -89,13 +89,13 @@ pub trait Vector: Sized + Copy + Clone {
     /// let distance = point.distance_from_plane(&plane);
     /// assert_eq!(-2.0, distance);
     /// ```
-    fn distance_from_plane<P: Plane<VectorType = Self>>(&self, plane: &P) -> f64 {
+    fn distance_from_plane<P: Plane<VectorType = Self>>(&self, plane: &P) -> f32 {
         self.dot(&plane.vector()) - plane.d()
     }
 
     /// Compute the distance squared between the two vectors without computing a square root.
     ///
-    /// This returns the distance squared. To get the real distance, use [`f64::sqrt`].
+    /// This returns the distance squared. To get the real distance, use [`f32::sqrt`].
     ///
     /// # Examples (with [`Vector2D`])
     /// ```rust
@@ -107,7 +107,7 @@ pub trait Vector: Sized + Copy + Clone {
     /// assert!(distance > 2.0 * 2.0);
     /// assert!(distance < 3.0 * 3.0);
     /// ```
-    fn distance_squared(&self, of: &Self) -> f64;
+    fn distance_squared(&self, of: &Self) -> f32;
 }
 
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
@@ -133,12 +133,12 @@ generate_tag_data_simple_primitive_code!(Rectangle, i16, top, left, bottom, righ
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 #[repr(C)]
 pub struct Vector2D {
-    pub x: f64,
-    pub y: f64
+    pub x: f32,
+    pub y: f32
 }
 
 impl Vector for Vector2D {
-    fn dot(&self, with: &Self) -> f64 {
+    fn dot(&self, with: &Self) -> f32 {
         self.x * with.x + self.y * with.y
     }
 
@@ -157,14 +157,14 @@ impl Vector for Vector2D {
         o
     }
 
-    fn scale(&self, by: f64) -> Self {
+    fn scale(&self, by: f32) -> Self {
         Self {
             x: self.x * by,
             y: self.y * by
         }
     }
 
-    fn distance_squared(&self, of: &Self) -> f64 {
+    fn distance_squared(&self, of: &Self) -> f32 {
         let delta = *self - *of;
         delta.dot(&delta)
     }
@@ -200,18 +200,18 @@ impl VectorMathOps for Vector2D {
     }
 }
 
-generate_tag_data_simple_primitive_code!(Vector2D, f64, x, y);
+generate_tag_data_simple_primitive_code!(Vector2D, f32, x, y);
 
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 #[repr(C)]
 pub struct Vector3D {
-    pub x: f64,
-    pub y: f64,
-    pub z: f64
+    pub x: f32,
+    pub y: f32,
+    pub z: f32
 }
 
 impl Vector for Vector3D {
-    fn dot(&self, with: &Self) -> f64 {
+    fn dot(&self, with: &Self) -> f32 {
         self.x * with.x + self.y * with.y + self.z * with.z
     }
 
@@ -231,7 +231,7 @@ impl Vector for Vector3D {
         o
     }
 
-    fn scale(&self, by: f64) -> Self {
+    fn scale(&self, by: f32) -> Self {
         Self {
             x: self.x * by,
             y: self.y * by,
@@ -239,7 +239,7 @@ impl Vector for Vector3D {
         }
     }
 
-    fn distance_squared(&self, of: &Self) -> f64 {
+    fn distance_squared(&self, of: &Self) -> f32 {
         let delta = *self - *of;
         delta.dot(&delta)
     }
@@ -279,21 +279,21 @@ impl VectorMathOps for Vector3D {
     }
 }
 
-generate_tag_data_simple_primitive_code!(Vector3D, f64, x, y, z);
+generate_tag_data_simple_primitive_code!(Vector3D, f32, x, y, z);
 
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 #[repr(C)]
 pub struct Quaternion {
-    pub x: f64,
-    pub y: f64,
-    pub z: f64,
-    pub w: f64,
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+    pub w: f32,
 }
 
-generate_tag_data_simple_primitive_code!(Quaternion, f64, x, y, z, w);
+generate_tag_data_simple_primitive_code!(Quaternion, f32, x, y, z, w);
 
 impl Vector for Quaternion {
-    fn dot(&self, with: &Self) -> f64 {
+    fn dot(&self, with: &Self) -> f32 {
         self.x * with.x + self.y * with.y + self.z * with.z + self.w * with.w
     }
 
@@ -310,7 +310,7 @@ impl Vector for Quaternion {
         }
     }
 
-    fn scale(&self, by: f64) -> Self {
+    fn scale(&self, by: f32) -> Self {
         Self {
             x: self.x * by,
             y: self.y * by,
@@ -319,7 +319,7 @@ impl Vector for Quaternion {
         }
     }
 
-    fn distance_squared(&self, of: &Self) -> f64 {
+    fn distance_squared(&self, of: &Self) -> f32 {
         let delta = *self - *of;
         delta.dot(&delta)
     }
@@ -550,12 +550,12 @@ impl Neg for Angle {
 
 impl SimpleTagData for Angle {
     fn simple_size() -> usize {
-        4
+        f32::simple_size()
     }
 
     fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
         Ok(Self {
-            angle: f32::from_bits(u32::read::<B>(data, at, struct_end)?)
+            angle: f32::read::<B>(data, at, struct_end)?
         })
     }
 
@@ -616,14 +616,14 @@ macro_rules! define_ops_for_vector {
                 *self = VectorMathOps::div(&self, &rhs)
             }
         }
-        impl Mul<f64> for $vector {
+        impl Mul<f32> for $vector {
             type Output = Self;
-            fn mul(self, rhs: f64) -> Self::Output {
+            fn mul(self, rhs: f32) -> Self::Output {
                 Vector::scale(&self, rhs)
             }
         }
-        impl MulAssign<f64> for $vector {
-            fn mul_assign(&mut self, rhs: f64) {
+        impl MulAssign<f32> for $vector {
+            fn mul_assign(&mut self, rhs: f32) {
                 *self = Vector::scale(&self, rhs)
             }
         }
@@ -647,13 +647,13 @@ pub struct CompressedFloat {
     pub data: u16
 }
 
-impl From<f64> for CompressedFloat {
-    fn from(value: f64) -> Self {
+impl From<f32> for CompressedFloat {
+    fn from(value: f32) -> Self {
         Self { data: compress_float::<16>(value) as u16 }
     }
 }
 
-impl From<CompressedFloat> for f64 {
+impl From<CompressedFloat> for f32 {
     fn from(value: CompressedFloat) -> Self {
         decompress_float::<16>(value.data as u32)
     }
@@ -681,13 +681,13 @@ impl SimplePrimitive for CompressedFloat {
 
 impl Debug for CompressedFloat {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("compressed<0x{:04X} = {:?}>", self.data, f64::from(*self)))
+        f.write_fmt(format_args!("compressed<0x{:04X} = {:?}>", self.data, f32::from(*self)))
     }
 }
 
 impl Display for CompressedFloat {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("compressed<0x{:04X} = {}>", self.data, f64::from(*self)))
+        f.write_fmt(format_args!("compressed<0x{:04X} = {}>", self.data, f32::from(*self)))
     }
 }
 
@@ -823,7 +823,7 @@ fn decompress_vector2d(vector: u32) -> Vector2D {
     Vector2D { x, y }
 }
 
-fn decompress_float<const BITS: usize>(value: u32) -> f64 {
+fn decompress_float<const BITS: usize>(value: u32) -> f32 {
     let is_negative = (value & (1 << (BITS - 1))) != 0;
     let mut max = ((1 << (BITS - 1)) - 1) as u32;
     let mut value = value & max;
@@ -836,7 +836,7 @@ fn decompress_float<const BITS: usize>(value: u32) -> f64 {
     let mut value = value as f64;
     value /= max as f64;
 
-    let float = value as f64;
+    let float = value as f32;
     if is_negative {
         -float
     }
@@ -845,7 +845,7 @@ fn decompress_float<const BITS: usize>(value: u32) -> f64 {
     }
 }
 
-fn compress_float<const BITS: usize>(value: f64) -> u32 {
+fn compress_float<const BITS: usize>(value: f32) -> u32 {
     let value = value.clamp(-1.0, 1.0);
     let mut positive = value.abs();
     let is_negative = positive != value;
@@ -856,7 +856,7 @@ fn compress_float<const BITS: usize>(value: f64) -> u32 {
         max += 1;
     }
 
-    let value = (positive * (max as f64)).round();
+    let value = (positive * (max as f32)).round();
     let mut integer = value as u32;
     if is_negative {
         integer = integer | 1 << (BITS - 1);

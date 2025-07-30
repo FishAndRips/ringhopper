@@ -343,26 +343,7 @@ generate_tag_data_for_number!(i16, read_i16, write_i16, I16);
 generate_tag_data_for_number!(u16, read_u16, write_u16, U16);
 generate_tag_data_for_number!(i32, read_i32, write_i32, I32);
 generate_tag_data_for_number!(u32, read_u32, write_u32, U32);
-
-impl SimpleTagData for f64 {
-    fn simple_size() -> usize {
-        u32::simple_size()
-    }
-
-    fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
-        <u32 as SimpleTagData>::read::<B>(data, at, struct_end).map(|f| f32::from_bits(f) as f64)
-    }
-
-    fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
-        <u32 as SimpleTagData>::write::<B>(&(*self as f32).to_bits(), data, at, struct_end)
-    }
-}
-
-impl SimplePrimitive for f64 {
-    fn primitive_type() -> SimplePrimitiveType {
-        SimplePrimitiveType::Float
-    }
-}
+generate_tag_data_for_number!(f32, read_f32, write_f32, Float);
 
 impl SimpleTagData for bool {
     fn simple_size() -> usize {

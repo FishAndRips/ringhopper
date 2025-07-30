@@ -1,23 +1,23 @@
 use primitives::dynamic::{DynamicTagData, DynamicTagDataType, SimplePrimitiveType};
 use primitives::primitive::{Angle, ColorARGBFloat, ColorRGBFloat, Euler2D, Euler3D, Matrix3x3, Plane2D, Plane3D, Quaternion, Vector2D, Vector3D};
 use primitives::tag::{for_each_field, PrimaryTagStructDyn};
-use crate::tag::verify::TagResult;
+use crate::tag::result::TagResult;
 
 pub fn check_bad_floats(tag: &dyn PrimaryTagStructDyn, result: &mut TagResult) {
     fn check_field(field: &dyn DynamicTagData, result: &mut TagResult) {
-        let zero_to_one = 0.0f64..=1.0f64;
+        let zero_to_one = 0.0f32..=1.0f32;
 
         match field.data_type() {
             DynamicTagDataType::SimplePrimitive(t) => match t {
                 SimplePrimitiveType::Float => {
-                    let f: &f64 = field.as_any().downcast_ref().unwrap();
+                    let f: &f32 = field.as_any().downcast_ref().unwrap();
                     if f.is_nan() {
                         result.errors.push("NaN float(s) detected. This can be automatically fixed.".to_string());
                     }
                 }
                 SimplePrimitiveType::Angle => {
                     let f: &Angle = field.as_any().downcast_ref().unwrap();
-                    check_field(&(f.angle as f64), result);
+                    check_field(&f.angle, result);
                 }
                 SimplePrimitiveType::Euler2D => {
                     let f: &Euler2D = field.as_any().downcast_ref().unwrap();

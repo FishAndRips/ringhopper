@@ -695,7 +695,7 @@ pub enum CommandLineValue {
     UInteger(u32),
     Short(i16),
     UShort(u16),
-    Float(f64)
+    Float(f32)
 }
 
 impl CommandLineValue {
@@ -753,7 +753,7 @@ impl CommandLineValue {
         }
     }
 
-    pub fn float(&self) -> f64 {
+    pub fn float(&self) -> f32 {
         if let CommandLineValue::Float(v) = self {
             *v
         }

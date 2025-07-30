@@ -44,11 +44,11 @@ pub fn fix_weapon_tag(tag: &mut Weapon, tag_path: &TagPath, scenario_tag: &Scena
     }
 }
 
-fn multiply_by_tick_rate(val: &mut f64) {
+fn multiply_by_tick_rate(val: &mut f32) {
     *val = *val * TICK_RATE;
 }
 
-fn divide_by_tick_rate(val: &mut f64) {
+fn divide_by_tick_rate(val: &mut f32) {
     *val = *val / TICK_RATE;
 }
 
@@ -298,7 +298,7 @@ pub fn fix_object_tag(object: &mut Object) -> RinghopperResult<()> {
 
                 // Apply the weights
                 for i in (1..permutation_count).rev() {
-                    let next_big = cc.permutations.items[i-1].weight as f64;
+                    let next_big = cc.permutations.items[i-1].weight as f32;
                     let difference = this_big - next_big;
                     this_big = next_big;
 

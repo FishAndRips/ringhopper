@@ -478,7 +478,7 @@ fn check_indices_for_part<M: ModelFunctions>(model: &M, part: &ModelGeometryPart
 }
 
 fn decompress_model_vertex(model_vertex_compressed: &ModelVertexCompressed) -> ModelVertexUncompressed {
-    let node0_weight: f64 = model_vertex_compressed.node0_weight.into();
+    let node0_weight: f32 = model_vertex_compressed.node0_weight.into();
     ModelVertexUncompressed {
         position: model_vertex_compressed.position,
         node0_index: match model_vertex_compressed.node0_index {
