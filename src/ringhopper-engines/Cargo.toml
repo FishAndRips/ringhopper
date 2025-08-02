@@ -8,5 +8,5 @@ edition = "2021"
 
 [dependencies]
 ringhopper-engines-codegen = { path = "../ringhopper-engines-codegen" }
-ringhopper-definitions = { git = "https://github.com/FishAndRips/ringhopper-definitions", rev = "eb2c98d0fd868f040140a3f0d4bf01f70ffd764d" }
+ringhopper-definitions = { git = "https://github.com/FishAndRips/ringhopper-definitions", rev = "4f5b183c636f0a26072c2a857689bb394b03d0c7" }
 ringhopper-primitives = { path = "../ringhopper-primitives" }

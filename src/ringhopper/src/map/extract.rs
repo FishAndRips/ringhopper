@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use std::num::NonZeroUsize;
 use definitions::{BitmapType, ModelTriangleStripData, ScenarioStructureBSP};
 use primitives::parse::TagData;
-use primitives::primitive::{calculate_padding_for_alignment, ColorARGBInt, TagGroup};
+use primitives::primitive::{calculate_padding_for_alignment, Pixel32, TagGroup};
 use crate::tag::model::ModelPartGet;
 use crate::constants::TICK_RATE;
 use crate::definitions::*;
@@ -541,7 +541,7 @@ pub fn fix_bitmap_tag<M: Map>(tag: &mut Bitmap, map: &M) -> RinghopperResult<()>
                 match bytes_per_block.get() {
                     1 => handle_things_from_here::<u8>(i, input, &mut data)?,
                     2 => handle_things_from_here::<u16>(i, input, &mut data)?,
-                    4 => handle_things_from_here::<ColorARGBInt>(i, input, &mut data)?,
+                    4 => handle_things_from_here::<Pixel32>(i, input, &mut data)?,
                     n => unreachable!("cannot deswizzle {n} len", n=n)
                 }
 

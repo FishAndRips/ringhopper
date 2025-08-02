@@ -11,19 +11,19 @@ pub trait Color: Sized {
     ///
     /// Alpha is not considered by this operation.
     ///
-    /// # Examples (with [`ColorARGBFloat`])
+    /// # Examples (with [`ColorARGB`])
     ///
     /// ```
-    /// use ringhopper_primitives::primitive::{Color, ColorARGBFloat};
+    /// use ringhopper_primitives::primitive::{Color, ColorARGB};
     ///
     /// // luma = 0.25
-    /// let color = ColorARGBFloat { alpha: 1.0, red: 0.25, green: 0.25, blue: 0.25 };
+    /// let color = ColorARGB { alpha: 1.0, red: 0.25, green: 0.25, blue: 0.25 };
     ///
     /// // luma = ~0.28
-    /// let brighter_color = ColorARGBFloat { alpha: 1.0, red: 0.0, green: 0.4, blue: 0.0 };
+    /// let brighter_color = ColorARGB { alpha: 1.0, red: 0.0, green: 0.4, blue: 0.0 };
     ///
     /// // luma = ~0.085
-    /// let darker_color = ColorARGBFloat { alpha: 1.0, red: 0.4, green: 0.0, blue: 0.0 };
+    /// let darker_color = ColorARGB { alpha: 1.0, red: 0.4, green: 0.0, blue: 0.0 };
     ///
     /// assert_eq!(color.luma(), 0.25);
     /// assert!(color.luma() < brighter_color.luma());
@@ -42,40 +42,40 @@ pub trait Color: Sized {
 
     /// Get the floating point RGB components of the color.
     ///
-    /// # Examples (with [`ColorARGBFloat`])
+    /// # Examples (with [`ColorARGB`])
     ///
     /// ```
-    /// use ringhopper_primitives::primitive::{Color, ColorARGBFloat, ColorRGBFloat};
+    /// use ringhopper_primitives::primitive::{Color, ColorARGB, ColorRGB};
     ///
-    /// let color = ColorARGBFloat { alpha: 1.0, red: 0.125, green: 0.25, blue: 0.5 };
-    /// assert_eq!(color.rgb_float(), ColorRGBFloat { red: 0.125, green: 0.25, blue: 0.5 });
+    /// let color = ColorARGB { alpha: 1.0, red: 0.125, green: 0.25, blue: 0.5 };
+    /// assert_eq!(color.rgb_float(), ColorRGB { red: 0.125, green: 0.25, blue: 0.5 });
     /// ```
-    fn rgb_float(&self) -> ColorRGBFloat;
+    fn rgb_float(&self) -> ColorRGB;
 
     /// Get the floating point alpha component of the color.
     ///
-    /// # Examples (with [`ColorARGBFloat`])
+    /// # Examples (with [`ColorARGB`])
     ///
     /// ```
-    /// use ringhopper_primitives::primitive::{Color, ColorARGBFloat};
+    /// use ringhopper_primitives::primitive::{Color, ColorARGB};
     ///
-    /// let color = ColorARGBFloat { alpha: 1.0, red: 0.25, green: 0.5, blue: 0.75 };
+    /// let color = ColorARGB { alpha: 1.0, red: 0.25, green: 0.5, blue: 0.75 };
     /// assert_eq!(color.alpha_float(), 1.0);
     /// ```
     fn alpha_float(&self) -> f32;
 
-    /// Convert from a [`ColorARGBFloat`] type.
+    /// Convert from a [`ColorARGB`] type.
     ///
-    /// # Examples (with [`ColorARGBFloat`])
+    /// # Examples (with [`ColorARGB`])
     ///
     /// ```
-    /// use ringhopper_primitives::primitive::{Color, ColorARGBFloat, ColorARGBIntBytes};
+    /// use ringhopper_primitives::primitive::{Color, ColorARGB, Pixel32Bytes};
     ///
-    /// let color = ColorARGBFloat { alpha: 1.0, red: 0.5, green: 0.25, blue: 0.125 };
-    /// let expected = ColorARGBIntBytes { alpha: 255, red: 127, green: 63, blue: 31 };
-    /// assert_eq!(ColorARGBIntBytes::from_argb_float(&color), expected);
+    /// let color = ColorARGB { alpha: 1.0, red: 0.5, green: 0.25, blue: 0.125 };
+    /// let expected = Pixel32Bytes { alpha: 255, red: 127, green: 63, blue: 31 };
+    /// assert_eq!(Pixel32Bytes::from_argb_float(&color), expected);
     /// ```
-    fn from_argb_float(color: &ColorARGBFloat) -> Self;
+    fn from_argb_float(color: &ColorARGB) -> Self;
 
     /// Return a copy, normalizing RGB as a vector for vector maps.
     ///
@@ -83,59 +83,59 @@ pub trait Color: Sized {
     fn vector_normalize(&self) -> Self {
         let rgb = self.rgb_float().vector_normalize();
         let a = self.alpha_float();
-        Color::from_argb_float(&ColorARGBFloat::combine(a, &rgb))
+        Color::from_argb_float(&ColorARGB::combine(a, &rgb))
     }
 
     /// Compress for gamma correction.
     ///
     /// Alpha is not affected by this operation.
     ///
-    /// # Examples (with [`ColorARGBFloat`])
+    /// # Examples (with [`ColorARGB`])
     ///
     /// ```
-    /// use ringhopper_primitives::primitive::{Color, ColorARGBFloat};
+    /// use ringhopper_primitives::primitive::{Color, ColorARGB};
     ///
-    /// let color = ColorARGBFloat { alpha: 1.0, red: 0.25, green: 0.25, blue: 0.25 };
-    /// let expected = ColorARGBFloat { alpha: 1.0, red: 0.5, green: 0.5, blue: 0.5 };
+    /// let color = ColorARGB { alpha: 1.0, red: 0.25, green: 0.25, blue: 0.25 };
+    /// let expected = ColorARGB { alpha: 1.0, red: 0.5, green: 0.5, blue: 0.5 };
     ///
     /// assert_eq!(color.gamma_compress(), expected);
     /// ```
     fn gamma_compress(&self) -> Self {
         let rgb = self.rgb_float().clamp().gamma_compress();
         let a = self.alpha_float();
-        Color::from_argb_float(&ColorARGBFloat::combine(a, &rgb))
+        Color::from_argb_float(&ColorARGB::combine(a, &rgb))
     }
 
     /// Decompress for gamma correction.
     ///
     /// Alpha is not affected by this operation.
     ///
-    /// # Examples (with [`ColorARGBFloat`])
+    /// # Examples (with [`ColorARGB`])
     ///
     /// ```
-    /// use ringhopper_primitives::primitive::{Color, ColorARGBFloat};
+    /// use ringhopper_primitives::primitive::{Color, ColorARGB};
     ///
-    /// let color = ColorARGBFloat { alpha: 1.0, red: 0.5, green: 0.5, blue: 0.5 };
-    /// let expected = ColorARGBFloat { alpha: 1.0, red: 0.25, green: 0.25, blue: 0.25 };
+    /// let color = ColorARGB { alpha: 1.0, red: 0.5, green: 0.5, blue: 0.5 };
+    /// let expected = ColorARGB { alpha: 1.0, red: 0.25, green: 0.25, blue: 0.25 };
     ///
     /// assert_eq!(color.gamma_decompress(), expected);
     /// ```
     fn gamma_decompress(&self) -> Self {
         let rgb = self.rgb_float().clamp().gamma_decompress();
         let a = self.alpha_float();
-        Color::from_argb_float(&ColorARGBFloat::combine(a, &rgb))
+        Color::from_argb_float(&ColorARGB::combine(a, &rgb))
     }
 
     /// Alpha blend this color with a source.
     ///
-    /// # Examples (with [`ColorARGBFloat`])
+    /// # Examples (with [`ColorARGB`])
     ///
     /// ```
-    /// use ringhopper_primitives::primitive::{Color, ColorARGBFloat};
+    /// use ringhopper_primitives::primitive::{Color, ColorARGB};
     ///
-    /// let color = ColorARGBFloat { alpha: 1.0, red: 1.0, green: 1.0, blue: 1.0 };
-    /// let source = ColorARGBFloat { alpha: 0.25, red: 0.0, green: 0.0, blue: 1.0 };
-    /// let expected = ColorARGBFloat { alpha: 1.0, red: 0.75, green: 0.75, blue: 1.0 };
+    /// let color = ColorARGB { alpha: 1.0, red: 1.0, green: 1.0, blue: 1.0 };
+    /// let source = ColorARGB { alpha: 0.25, red: 0.0, green: 0.0, blue: 1.0 };
+    /// let expected = ColorARGB { alpha: 1.0, red: 0.75, green: 0.75, blue: 1.0 };
     ///
     /// assert_eq!(color.alpha_blend(&source), expected);
     /// ```
@@ -153,7 +153,7 @@ pub trait Color: Sized {
         let green = rgb_source.green * alpha_source + rgb_this.green * blend;
         let blue = rgb_source.blue * alpha_source + rgb_this.blue * blend;
 
-        Color::from_argb_float(&ColorARGBFloat { alpha, red, green, blue })
+        Color::from_argb_float(&ColorARGB { alpha, red, green, blue })
     }
 
     /// Clamp the color within the range of 0.0 to 1.0.
@@ -161,43 +161,43 @@ pub trait Color: Sized {
         let rgb = self.rgb_float().clamp();
         let alpha = self.alpha_float().clamp(0.0, 1.0);
 
-        Color::from_argb_float(&ColorARGBFloat::combine(alpha, &rgb))
+        Color::from_argb_float(&ColorARGB::combine(alpha, &rgb))
     }
 }
 
 /// Refers to a color composed of floats with an alpha channel.
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 #[repr(C)]
-pub struct ColorARGBFloat {
+pub struct ColorARGB {
     pub alpha: f32,
     pub red: f32,
     pub green: f32,
     pub blue: f32
 }
 
-generate_tag_data_simple_primitive_code!(ColorARGBFloat, f32, alpha, red, green, blue);
+generate_tag_data_simple_primitive_code!(ColorARGB, f32, alpha, red, green, blue);
 
-impl ColorARGBFloat {
-    const fn combine(alpha: f32, rgb: &ColorRGBFloat) -> Self {
-        ColorARGBFloat { alpha, red: rgb.red, green: rgb.green, blue: rgb.blue }
+impl ColorARGB {
+    const fn combine(alpha: f32, rgb: &ColorRGB) -> Self {
+        ColorARGB { alpha, red: rgb.red, green: rgb.green, blue: rgb.blue }
     }
 }
 
-impl Color for ColorARGBFloat {
-    fn rgb_float(&self) -> ColorRGBFloat {
-        ColorRGBFloat { red: self.red, green: self.green, blue: self.blue }
+impl Color for ColorARGB {
+    fn rgb_float(&self) -> ColorRGB {
+        ColorRGB { red: self.red, green: self.green, blue: self.blue }
     }
 
     fn alpha_float(&self) -> f32 {
         self.alpha
     }
 
-    fn from_argb_float(color: &ColorARGBFloat) -> Self {
+    fn from_argb_float(color: &ColorARGB) -> Self {
         *color
     }
 }
 
-impl From<[f32; 4]> for ColorARGBFloat {
+impl From<[f32; 4]> for ColorARGB {
     fn from(value: [f32; 4]) -> Self {
         Self { alpha: value[0], red: value[1], green: value[2], blue: value[3] }
     }
@@ -206,20 +206,20 @@ impl From<[f32; 4]> for ColorARGBFloat {
 /// Refers to a color composed of floats without an alpha channel.
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 #[repr(C)]
-pub struct ColorRGBFloat {
+pub struct ColorRGB {
     pub red: f32,
     pub green: f32,
     pub blue: f32
 }
 
-impl From<[f32; 3]> for ColorRGBFloat {
+impl From<[f32; 3]> for ColorRGB {
     fn from(value: [f32; 3]) -> Self {
         Self { red: value[0], green: value[1], blue: value[2] }
     }
 }
 
-impl Color for ColorRGBFloat {
-    fn rgb_float(&self) -> ColorRGBFloat {
+impl Color for ColorRGB {
+    fn rgb_float(&self) -> ColorRGB {
         *self
     }
 
@@ -227,7 +227,7 @@ impl Color for ColorRGBFloat {
         1.0
     }
 
-    fn from_argb_float(color: &ColorARGBFloat) -> Self {
+    fn from_argb_float(color: &ColorARGB) -> Self {
         color.rgb_float()
     }
 
@@ -242,21 +242,21 @@ impl Color for ColorRGBFloat {
         let delta = Vector3D { x: clamped.red, y: clamped.green, z: clamped.blue } - HALF_VECTOR;
         let vector = delta.normalize_into(HALF) + HALF_VECTOR;
 
-        ColorRGBFloat { red: vector.x, green: vector.y, blue: vector.z }
+        ColorRGB { red: vector.x, green: vector.y, blue: vector.z }
     }
 
     fn gamma_compress(&self) -> Self {
         // This is approximate but fairly close, as the exponent is slightly higher than 2.
-        ColorRGBFloat { red: self.red.sqrt(), green: self.green.sqrt(), blue: self.blue.sqrt() }
+        ColorRGB { red: self.red.sqrt(), green: self.green.sqrt(), blue: self.blue.sqrt() }
     }
 
     fn gamma_decompress(&self) -> Self {
         // This is approximate but fairly close, as the exponent is slightly higher than 2.
-        ColorRGBFloat { red: self.red*self.red, green: self.green*self.green, blue: self.blue*self.blue }
+        ColorRGB { red: self.red*self.red, green: self.green*self.green, blue: self.blue*self.blue }
     }
 
     fn clamp(&self) -> Self {
-        ColorRGBFloat {
+        ColorRGB {
             red: self.red.clamp(0.0, 1.0),
             green: self.green.clamp(0.0, 1.0),
             blue: self.blue.clamp(0.0, 1.0)
@@ -264,19 +264,19 @@ impl Color for ColorRGBFloat {
     }
 }
 
-generate_tag_data_simple_primitive_code!(ColorRGBFloat, f32, red, green, blue);
+generate_tag_data_simple_primitive_code!(ColorRGB, f32, red, green, blue);
 
 /// Refers to a color composed of 8-bit integer color with alpha stored in integer form.
 #[derive(Clone, Copy, Default, Debug, PartialEq, Eq, Hash)]
 #[repr(transparent)]
-pub struct ColorARGBInt {
+pub struct Pixel32 {
     pub color: u32
 }
 
-impl ColorARGBInt {
+impl Pixel32 {
     /// Convert 8-bit monochrome with full opacity and explicity luminosity to full color.
-    pub fn from_y8(y8: u8) -> ColorARGBInt {
-        ColorARGBIntBytes {
+    pub fn from_y8(y8: u8) -> Pixel32 {
+        Pixel32Bytes {
             alpha: 255,
             red: y8,
             green: y8,
@@ -285,10 +285,10 @@ impl ColorARGBInt {
     }
 
     /// Convert 16-bit monochrome with split opacity and luminosity to color.
-    pub fn from_a8y8(a8y8: u16) -> ColorARGBInt {
+    pub fn from_a8y8(a8y8: u16) -> Pixel32 {
         let alpha = (a8y8 >> 8) as u8;
         let luminosity = (a8y8 & 0xFF) as u8;
-        ColorARGBIntBytes {
+        Pixel32Bytes {
             alpha,
             red: luminosity,
             green: luminosity,
@@ -297,28 +297,28 @@ impl ColorARGBInt {
     }
 }
 
-impl Color for ColorARGBInt {
-    fn rgb_float(&self) -> ColorRGBFloat {
-        let color: ColorARGBIntBytes = (*self).into();
+impl Color for Pixel32 {
+    fn rgb_float(&self) -> ColorRGB {
+        let color: Pixel32Bytes = (*self).into();
         color.rgb_float()
     }
 
     fn alpha_float(&self) -> f32 {
-        let color: ColorARGBIntBytes = (*self).into();
+        let color: Pixel32Bytes = (*self).into();
         color.alpha_float()
     }
 
-    fn from_argb_float(color: &ColorARGBFloat) -> Self {
-        ColorARGBIntBytes::from_argb_float(color).into()
+    fn from_argb_float(color: &ColorARGB) -> Self {
+        Pixel32Bytes::from_argb_float(color).into()
     }
 
     fn clamp(&self) -> Self {
-        let color: ColorARGBIntBytes = (*self).into();
+        let color: Pixel32Bytes = (*self).into();
         color.clamp().into()
     }
 }
 
-impl SimpleTagData for ColorARGBInt {
+impl SimpleTagData for Pixel32 {
     fn simple_size() -> usize {
         u32::simple_size()
     }
@@ -331,20 +331,20 @@ impl SimpleTagData for ColorARGBInt {
         self.color.write::<B>(data, at, struct_end)
     }
 }
-impl SimplePrimitive for ColorARGBInt {
+impl SimplePrimitive for Pixel32 {
     fn primitive_type() -> SimplePrimitiveType {
-        SimplePrimitiveType::ColorARGBInt
+        SimplePrimitiveType::Pixel32
     }
 }
 
-impl Display for ColorARGBInt {
+impl Display for Pixel32 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let bytes: ColorARGBIntBytes = (*self).into();
+        let bytes: Pixel32Bytes = (*self).into();
         Display::fmt(&bytes, f)
     }
 }
 
-impl Display for ColorARGBIntBytes {
+impl Display for Pixel32Bytes {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!("{{ alpha = {}, red = {}, green = {}, blue = {} }}", self.alpha, self.red, self.green, self.blue ))
     }
@@ -353,23 +353,23 @@ impl Display for ColorARGBIntBytes {
 /// Refers to a color composed of 8-bit integer color with alpha.
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 #[repr(C)]
-pub struct ColorARGBIntBytes {
+pub struct Pixel32Bytes {
     pub alpha: u8,
     pub red: u8,
     pub green: u8,
     pub blue: u8
 }
 
-impl Color for ColorARGBIntBytes {
-    fn rgb_float(&self) -> ColorRGBFloat {
-        ColorRGBFloat { red: self.red as f32 / 255.0, green: self.green as f32 / 255.0, blue: self.blue as f32 / 255.0 }
+impl Color for Pixel32Bytes {
+    fn rgb_float(&self) -> ColorRGB {
+        ColorRGB { red: self.red as f32 / 255.0, green: self.green as f32 / 255.0, blue: self.blue as f32 / 255.0 }
     }
 
     fn alpha_float(&self) -> f32 {
         self.alpha as f32 / 255.0
     }
 
-    fn from_argb_float(color: &ColorARGBFloat) -> Self {
+    fn from_argb_float(color: &ColorARGB) -> Self {
         let color = color.clamp();
         Self {
             alpha: (color.alpha * 255.0) as u8,
@@ -385,7 +385,7 @@ impl Color for ColorARGBIntBytes {
     }
 }
 
-impl From<u32> for ColorARGBIntBytes {
+impl From<u32> for Pixel32Bytes {
     fn from(value: u32) -> Self {
         Self {
             alpha: ((value & 0xFF000000) >> 24) as u8,
@@ -396,13 +396,19 @@ impl From<u32> for ColorARGBIntBytes {
     }
 }
 
-impl From<ColorARGBInt> for u32 {
-    fn from(value: ColorARGBInt) -> Self {
+impl From<Pixel32> for Pixel32Bytes {
+    fn from(value: Pixel32) -> Self {
+        value.color.into()
+    }
+}
+
+impl From<Pixel32> for u32 {
+    fn from(value: Pixel32) -> Self {
         value.color
     }
 }
 
-impl From<u32> for ColorARGBInt {
+impl From<u32> for Pixel32 {
     fn from(value: u32) -> Self {
         Self {
             color: value
@@ -410,8 +416,8 @@ impl From<u32> for ColorARGBInt {
     }
 }
 
-impl From<ColorARGBIntBytes> for u32 {
-    fn from(value: ColorARGBIntBytes) -> Self {
+impl From<Pixel32Bytes> for u32 {
+    fn from(value: Pixel32Bytes) -> Self {
         ((value.alpha as u32)   << 24)
         | ((value.red as u32)   << 16)
         | ((value.green as u32) <<  8)
@@ -419,32 +425,8 @@ impl From<ColorARGBIntBytes> for u32 {
     }
 }
 
-impl From<ColorARGBIntBytes> for ColorARGBInt {
-    fn from(value: ColorARGBIntBytes) -> Self {
+impl From<Pixel32Bytes> for Pixel32 {
+    fn from(value: Pixel32Bytes) -> Self {
         Self { color: value.into() }
-    }
-}
-
-impl From<ColorARGBInt> for ColorARGBIntBytes {
-    fn from(value: ColorARGBInt) -> Self {
-        value.color.into()
-    }
-}
-
-impl SimpleTagData for ColorARGBIntBytes {
-    fn simple_size() -> usize {
-        std::mem::size_of::<u32>()
-    }
-    fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
-        u32::read::<B>(data, at, struct_end).map(|f| f.into())
-    }
-    fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
-        let v: u32 = (*self).into();
-        v.write::<B>(data, at, struct_end)
-    }
-}
-impl SimplePrimitive for ColorARGBIntBytes {
-    fn primitive_type() -> SimplePrimitiveType {
-        SimplePrimitiveType::ColorARGBIntBytes
     }
 }

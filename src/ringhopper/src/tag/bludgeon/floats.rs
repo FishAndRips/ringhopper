@@ -1,5 +1,5 @@
 use primitives::dynamic::{DynamicTagData, DynamicTagDataType, SimplePrimitiveType};
-use primitives::primitive::{Angle, ColorARGBFloat, ColorRGBFloat, Euler2D, Euler3D, Matrix3x3, Plane2D, Plane3D, Quaternion, Vector2D, Vector3D};
+use primitives::primitive::{Angle, ColorARGB, ColorRGB, Euler2D, Euler3D, Matrix3x3, Plane2D, Plane3D, Quaternion, Vector2D, Vector3D};
 use primitives::tag::{for_each_field_mut, PrimaryTagStructDyn};
 
 pub fn fix_bad_floats(tag: &mut dyn PrimaryTagStructDyn) {
@@ -65,8 +65,8 @@ pub fn fix_bad_floats(tag: &mut dyn PrimaryTagStructDyn) {
                     check_field(&mut f.y);
                     check_field(&mut f.z);
                 }
-                SimplePrimitiveType::ColorARGBFloat => {
-                    let f: &mut ColorARGBFloat = field.as_any_mut().downcast_mut().unwrap();
+                SimplePrimitiveType::ColorARGB => {
+                    let f: &mut ColorARGB = field.as_any_mut().downcast_mut().unwrap();
                     check_field(&mut f.alpha);
                     check_field(&mut f.red);
                     check_field(&mut f.green);
@@ -77,8 +77,8 @@ pub fn fix_bad_floats(tag: &mut dyn PrimaryTagStructDyn) {
                     f.green = f.green.clamp(0.0, 1.0);
                     f.blue = f.blue.clamp(0.0, 1.0);
                 }
-                SimplePrimitiveType::ColorRGBFloat => {
-                    let f: &mut ColorRGBFloat = field.as_any_mut().downcast_mut().unwrap();
+                SimplePrimitiveType::ColorRGB => {
+                    let f: &mut ColorRGB = field.as_any_mut().downcast_mut().unwrap();
                     check_field(&mut f.red);
                     check_field(&mut f.green);
                     check_field(&mut f.blue);

@@ -26,10 +26,9 @@ fn primitive_sizes() {
     // Actually check now
     correct_size::<Address>(U32_SIZE);
     correct_size::<Angle>(F32_SIZE);
-    correct_size::<ColorARGBFloat>(F32_SIZE * 4);
-    correct_size::<ColorARGBInt>(U32_SIZE);
-    correct_size::<ColorARGBIntBytes>(U8_SIZE * 4);
-    correct_size::<ColorRGBFloat>(F32_SIZE * 3);
+    correct_size::<ColorARGB>(F32_SIZE * 4);
+    correct_size::<Pixel32>(U32_SIZE);
+    correct_size::<ColorRGB>(F32_SIZE * 3);
     correct_size::<DataC>(U32_SIZE * 5);
     correct_size::<Euler2D>(F32_SIZE * 2);
     correct_size::<Euler3D>(F32_SIZE * 3);

@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use primitives::error::{Error, OverflowCheck, RinghopperResult};
-use primitives::primitive::{ColorARGBInt, ColorARGBIntBytes};
+use primitives::primitive::{Pixel32, Pixel32Bytes};
 use crate::data::bitmap::{autodetect_image_extension, Image, load_image_from_path};
 
 /// Iterator for loose color plates.
@@ -91,7 +91,7 @@ impl<'a> Iterator for LooseColorPlateIterator<'a> {
     }
 }
 
-fn parse_padding_file(padding_metadata: &Path) -> RinghopperResult<ColorARGBInt> {
+fn parse_padding_file(padding_metadata: &Path) -> RinghopperResult<Pixel32> {
     let f = std::fs::read(padding_metadata).map_err(|e| Error::FailedToReadFile(padding_metadata.to_path_buf(), e))?;
     let padding_color = std::str::from_utf8(&f)
         .map_err(|_| Error::Other(format!("{padding_metadata:?} is not valid UTF-8")))?
@@ -137,14 +137,14 @@ fn parse_padding_file(padding_metadata: &Path) -> RinghopperResult<ColorARGBInt>
         ((c[0].to_digit(16).unwrap() << 4) | (c[1].to_digit(16).unwrap())) as u8
     });
 
-    let colors = ColorARGBIntBytes {
+    let colors = Pixel32Bytes {
         alpha: 255,
         red: channel_iterator.next().unwrap(),
         green: channel_iterator.next().unwrap(),
         blue: channel_iterator.next().unwrap(),
     };
 
-    Ok(ColorARGBInt::from(colors))
+    Ok(Pixel32::from(colors))
 }
 
 /// Read a loose color plate into a full color plate.
@@ -191,11 +191,11 @@ pub fn make_color_plate_from_loose(data_dir: &Path) -> RinghopperResult<Image> {
             current_height = current_height.max(i.height);
 
             for pixel in &i.data {
-                let convertified = ColorARGBIntBytes {
+                let convertified = Pixel32Bytes {
                     alpha: 255,
-                    ..ColorARGBIntBytes::from(*pixel)
+                    ..Pixel32Bytes::from(*pixel)
                 };
-                all_pixels.insert(ColorARGBInt::from(convertified));
+                all_pixels.insert(Pixel32::from(convertified));
             }
         }
 
@@ -206,26 +206,26 @@ pub fn make_color_plate_from_loose(data_dir: &Path) -> RinghopperResult<Image> {
         heights.push(current_height);
     }
 
-    let mut background = ColorARGBInt::from(ColorARGBIntBytes { alpha: 255, red: 0, green: 0, blue: 255 });
-    let mut sequence_divider = ColorARGBInt::from(ColorARGBIntBytes { alpha: 255, red: 255, green: 0, blue: 255 });
+    let mut background = Pixel32::from(Pixel32Bytes { alpha: 255, red: 0, green: 0, blue: 255 });
+    let mut sequence_divider = Pixel32::from(Pixel32Bytes { alpha: 255, red: 255, green: 0, blue: 255 });
 
-    let contains_pixel = |color: ColorARGBInt| all_pixels.contains(&color);
+    let contains_pixel = |color: Pixel32| all_pixels.contains(&color);
 
-    let find_first_available_pixel = |excluding: [Option<ColorARGBInt>; 2], white_to_black: bool| -> Option<ColorARGBInt> {
+    let find_first_available_pixel = |excluding: [Option<Pixel32>; 2], white_to_black: bool| -> Option<Pixel32> {
         for red in 0..=u8::MAX {
             for green in 0..=u8::MAX {
                 'blue: for blue in 0..=u8::MAX {
                     let color = if white_to_black {
-                        ColorARGBIntBytes {
+                        Pixel32Bytes {
                             red: 255 - red, green: 255 - green, blue: 255 - blue, alpha: 255
                         }
                     }
                     else {
-                        ColorARGBIntBytes {
+                        Pixel32Bytes {
                             red, green, blue, alpha: 255
                         }
                     };
-                    let color = ColorARGBInt::from(color);
+                    let color = Pixel32::from(color);
                     for i in excluding {
                         if i.is_some_and(|i| i == color) {
                             continue 'blue

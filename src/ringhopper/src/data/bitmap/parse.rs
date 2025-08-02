@@ -1,6 +1,6 @@
 use std::io::Cursor;
 use primitives::error::{Error, OverflowCheck, RinghopperResult};
-use primitives::primitive::{ColorARGBInt, ColorARGBIntBytes};
+use primitives::primitive::{Pixel32, Pixel32Bytes};
 use crate::data::bitmap::Image;
 
 impl Image {
@@ -22,7 +22,7 @@ impl Image {
             self.width.mul_overflow_checked(self.height).unwrap().mul_overflow_checked(4).unwrap()
         );
         for i in &self.data {
-            let color: ColorARGBIntBytes = (*i).into();
+            let color: Pixel32Bytes = (*i).into();
             pixels_r8g8b8a8.push(color.red);
             pixels_r8g8b8a8.push(color.green);
             pixels_r8g8b8a8.push(color.blue);
@@ -71,22 +71,22 @@ impl Image {
         match jxl.pixel_format() {
             PixelFormat::Gray => {
                 for i in pixel_bytes {
-                    image.data.push(ColorARGBIntBytes { alpha: 255, red: i, green: i, blue: i }.into())
+                    image.data.push(Pixel32Bytes { alpha: 255, red: i, green: i, blue: i }.into())
                 }
             },
             PixelFormat::Graya => {
                 for i in pixel_bytes.chunks(2) {
-                    image.data.push(ColorARGBIntBytes { alpha: i[1], red: i[0], green: i[0], blue: i[0] }.into())
+                    image.data.push(Pixel32Bytes { alpha: i[1], red: i[0], green: i[0], blue: i[0] }.into())
                 }
             },
             PixelFormat::Rgb => {
                 for i in pixel_bytes.chunks(3) {
-                    image.data.push(ColorARGBIntBytes { alpha: 255, red: i[0], green: i[1], blue: i[2] }.into())
+                    image.data.push(Pixel32Bytes { alpha: 255, red: i[0], green: i[1], blue: i[2] }.into())
                 }
             },
             PixelFormat::Rgba => {
                 for i in pixel_bytes.chunks(4) {
-                    image.data.push(ColorARGBIntBytes { alpha: i[3], red: i[0], green: i[1], blue: i[2] }.into())
+                    image.data.push(Pixel32Bytes { alpha: i[3], red: i[0], green: i[1], blue: i[2] }.into())
                 }
             },
             n => return Err(Error::Other(format!("unsupported jxl pixel format {n:?}")))
@@ -137,11 +137,11 @@ impl Image {
         }
 
         // Convert pixels to ARGB
-        let (conversion_function, bytes_per_pixel): (fn (input_bytes: &[u8]) -> ColorARGBInt, usize) = match color_type {
-            ColorType::Gray(_) => (|pixels| ColorARGBInt::from_y8(pixels[0]), 1),
-            ColorType::GrayA(_) => (|pixels| ColorARGBInt::from_a8y8(((pixels[1] as u16) << 8) | (pixels[0] as u16)), 2),
-            ColorType::RGB(_) => (|pixels| ColorARGBIntBytes { alpha: 255, red: pixels[0], green: pixels[1], blue: pixels[2] }.into(), 3),
-            ColorType::RGBA(_) => (|pixels| ColorARGBIntBytes { alpha: pixels[3], red: pixels[0], green: pixels[1], blue: pixels[2] }.into(), 4),
+        let (conversion_function, bytes_per_pixel): (fn (input_bytes: &[u8]) -> Pixel32, usize) = match color_type {
+            ColorType::Gray(_) => (|pixels| Pixel32::from_y8(pixels[0]), 1),
+            ColorType::GrayA(_) => (|pixels| Pixel32::from_a8y8(((pixels[1] as u16) << 8) | (pixels[0] as u16)), 2),
+            ColorType::RGB(_) => (|pixels| Pixel32Bytes { alpha: 255, red: pixels[0], green: pixels[1], blue: pixels[2] }.into(), 3),
+            ColorType::RGBA(_) => (|pixels| Pixel32Bytes { alpha: pixels[3], red: pixels[0], green: pixels[1], blue: pixels[2] }.into(), 4),
             _ => unreachable!()
         };
         for i in (0..raw_pixels_vec.len()).step_by(bytes_per_pixel) {
@@ -193,11 +193,11 @@ impl Image {
         let mut pixels = Vec::with_capacity(width * height);
 
         // Convert pixels to ARGB
-        let (conversion_function, bytes_per_pixel): (fn (input_bytes: &[u8]) -> ColorARGBInt, usize) = match color_type {
-            ColorType::Grayscale => (|pixels| ColorARGBInt::from_y8(pixels[0]), 1),
-            ColorType::GrayscaleAlpha => (|pixels| ColorARGBInt::from_a8y8(((pixels[1] as u16) << 8) | (pixels[0] as u16)), 2),
-            ColorType::Rgb => (|pixels| ColorARGBIntBytes { alpha: 255, red: pixels[0], green: pixels[1], blue: pixels[2] }.into() , 3),
-            ColorType::Rgba => (|pixels| ColorARGBIntBytes { alpha: pixels[3], red: pixels[0], green: pixels[1], blue: pixels[2] }.into(), 4),
+        let (conversion_function, bytes_per_pixel): (fn (input_bytes: &[u8]) -> Pixel32, usize) = match color_type {
+            ColorType::Grayscale => (|pixels| Pixel32::from_y8(pixels[0]), 1),
+            ColorType::GrayscaleAlpha => (|pixels| Pixel32::from_a8y8(((pixels[1] as u16) << 8) | (pixels[0] as u16)), 2),
+            ColorType::Rgb => (|pixels| Pixel32Bytes { alpha: 255, red: pixels[0], green: pixels[1], blue: pixels[2] }.into(), 3),
+            ColorType::Rgba => (|pixels| Pixel32Bytes { alpha: pixels[3], red: pixels[0], green: pixels[1], blue: pixels[2] }.into(), 4),
             _ => return Err(Error::Other("only RGB/monochrome supported for png".to_string()))
         };
         for i in (0..raw_pixels_vec.len()).step_by(bytes_per_pixel) {

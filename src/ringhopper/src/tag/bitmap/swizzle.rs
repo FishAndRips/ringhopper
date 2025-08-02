@@ -1,11 +1,11 @@
 use primitives::error::{Error, OverflowCheck, RinghopperResult};
-use primitives::primitive::ColorARGBInt;
+use primitives::primitive::Pixel32;
 
 pub trait Swizzlable: Sized + Copy + Clone + Default {}
 
 impl Swizzlable for u8 {}
 impl Swizzlable for u16 {}
-impl Swizzlable for ColorARGBInt {}
+impl Swizzlable for Pixel32 {}
 
 pub fn swizzle<S: Swizzlable>(data: &[S], output: &mut [S], width: usize, height: usize, depth: usize, deswizzle: bool) -> RinghopperResult<()> {
     if !width.is_power_of_two() || !height.is_power_of_two() || !depth.is_power_of_two() {
