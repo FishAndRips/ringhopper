@@ -29,7 +29,7 @@ pub fn generate_ringhopper_engines(_: TokenStream) -> TokenStream {
         let display_name = &engine.display_name;
         let version = unwrap_str(&engine.version);
         let build = match &engine.build {
-            Some(n) => format!("Some(EngineBuild {{ string: \"{}\", enforced: {}, fallback: {} }})", n.string, n.enforced, make_string_list(&n.fallback).as_str()),
+            Some(n) => format!("Some(EngineBuild {{ string: \"{}\", enforced: {}, aliases: {} }})", n.string, n.enforced, make_string_list(&n.aliases).as_str()),
             None => "None".to_string()
         };
         let build_target = engine.build_target;
@@ -44,8 +44,7 @@ pub fn generate_ringhopper_engines(_: TokenStream) -> TokenStream {
         };
         let resource_maps = if let Some(n) = &engine.resource_maps {
             let externally_indexed_tags = n.externally_indexed_tags;
-            let loc = n.loc;
-            format!("Some(EngineSupportedResourceMaps {{ loc: {loc}, externally_indexed_tags: {externally_indexed_tags} }})")
+            format!("Some(EngineSupportedResourceMaps {{ externally_indexed_tags: {externally_indexed_tags} }})")
         }
         else {
             "None".to_owned()

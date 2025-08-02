@@ -3,7 +3,7 @@ extern crate ringhopper_definitions;
 use std::fmt::Write;
 use std::borrow::Cow;
 
-use ringhopper_definitions::{load_all_definitions, SizeableObject, Struct, NamedObject, Enum, Bitfield, StructFieldType, ObjectType, ParsedDefinitions, FieldCount, TagGroup, StaticValue, Flags};
+use ringhopper_definitions::{load_all_definitions, SizeableObject, Struct, NamedObject, Enum, Bitfield, StructFieldType, ParsedDefinitions, FieldCount, TagGroup, StaticValue, Flags, FieldObject, SupportedEngines};
 
 use proc_macro::TokenStream;
 use std::collections::HashSet;
@@ -33,8 +33,8 @@ pub fn generate_ringhopper_structs(_: TokenStream) -> TokenStream {
 
         recursively_access_all_objects_in_definition(&definitions, &group.struct_name, |s| {
             for f in &s.fields {
-                if let StructFieldType::Object(ObjectType::TagReference(r)) = &f.field_type {
-                    for g in &r.allowed_groups {
+                if let StructFieldType::Object(FieldObject::TagReference { allowed_groups }) = &f.field_type {
+                    for g in allowed_groups {
                         groups.insert(format!("TagGroup::{}", camel_case(g)));
                     }
                 }
@@ -53,7 +53,7 @@ pub fn generate_ringhopper_structs(_: TokenStream) -> TokenStream {
             list += ",";
         }
 
-        if let Some(e) = &group.supported_engines.supported_engines {
+        if let SupportedEngines::SomeEngines(e) = &group.supported_engines {
             let mut engines = String::new();
             for engine in resolve_all_engines_for_parents(&e, &definitions) {
                 engines += "\"";
@@ -138,7 +138,7 @@ fn recursively_access_all_objects_in_definition<P: FnMut(&Struct)>(definitions: 
             for f in &s.fields {
                 if let StructFieldType::Object(n) = &f.field_type {
                     match n {
-                        ObjectType::NamedObject(n) | ObjectType::Reflexive(n) => recursion(definitions, n, predicate),
+                        FieldObject::NamedObject(n) | FieldObject::Reflexive(n) => recursion(definitions, n, predicate),
                         _ => continue
                     }
                 }
@@ -183,7 +183,7 @@ fn is_simple_struct(structure: &Struct, parsed_definitions: &ParsedDefinitions) 
 
         match &f.field_type {
             StructFieldType::Object(o) => match o {
-                ObjectType::NamedObject(o) => match &parsed_definitions.objects[o] {
+                FieldObject::NamedObject(o) => match &parsed_definitions.objects[o] {
                     NamedObject::Struct(s) => if !is_simple_struct(s, parsed_definitions) {
                         return false
                     },
@@ -192,42 +192,42 @@ fn is_simple_struct(structure: &Struct, parsed_definitions: &ParsedDefinitions) 
                         return false
                     }
                 },
-                ObjectType::Reflexive(_) => return false,
-                ObjectType::TagReference(_) => return false,
-                ObjectType::TagGroup => (),
-                ObjectType::Data | ObjectType::FileData | ObjectType::BSPVertexData | ObjectType::UTF16String => return false,
-                ObjectType::F32 => (),
-                ObjectType::U8 => (),
-                ObjectType::U16 => (),
-                ObjectType::U32 => (),
-                ObjectType::I8 => (),
-                ObjectType::I16 => (),
-                ObjectType::I32 => (),
-                ObjectType::TagID => (),
-                ObjectType::ID => (),
-                ObjectType::Index => (),
-                ObjectType::Angle => (),
-                ObjectType::Address => (),
-                ObjectType::Vector2D => (),
-                ObjectType::Vector3D => (),
-                ObjectType::Vector2DInt => (),
-                ObjectType::CompressedVector2D => (),
-                ObjectType::CompressedVector3D => (),
-                ObjectType::CompressedFloat => (),
-                ObjectType::Plane2D => (),
-                ObjectType::Plane3D => (),
-                ObjectType::Euler2D => (),
-                ObjectType::Euler3D => (),
-                ObjectType::Rectangle => (),
-                ObjectType::Quaternion => (),
-                ObjectType::Matrix3x3 => (),
-                ObjectType::ColorRGBFloat => (),
-                ObjectType::ColorARGBFloat => (),
-                ObjectType::ColorARGBInt => (),
-                ObjectType::String32 => (),
-                ObjectType::ScenarioScriptNodeValue => (),
+                FieldObject::Reflexive(_) => return false,
+                FieldObject::TagReference { .. } => return false,
+                FieldObject::TagGroup => (),
+                FieldObject::Data | FieldObject::FileData | FieldObject::BSPVertexData | FieldObject::UTF16String => return false,
+                FieldObject::F32 => (),
+                FieldObject::U8 => (),
+                FieldObject::U16 => (),
+                FieldObject::U32 => (),
+                FieldObject::I8 => (),
+                FieldObject::I16 => (),
+                FieldObject::I32 => (),
+                FieldObject::TagID => (),
+                FieldObject::ID => (),
+                FieldObject::Index => (),
+                FieldObject::Angle => (),
+                FieldObject::Address => (),
+                FieldObject::Vector2D => (),
+                FieldObject::Vector3D => (),
+                FieldObject::Vector2DInt => (),
+                FieldObject::CompressedVector2D => (),
+                FieldObject::CompressedVector3D => (),
+                FieldObject::CompressedFloat => (),
+                FieldObject::Plane2D => (),
+                FieldObject::Plane3D => (),
+                FieldObject::Euler2D => (),
+                FieldObject::Euler3D => (),
+                FieldObject::Rectangle => (),
+                FieldObject::Quaternion => (),
+                FieldObject::Matrix3x3 => (),
+                FieldObject::ColorRGBFloat => (),
+                FieldObject::ColorARGBFloat => (),
+                FieldObject::ColorARGBInt => (),
+                FieldObject::String32 => (),
+                FieldObject::ScenarioScriptNodeValue => (),
             },
-            StructFieldType::EditorSection(_) => (),
+            StructFieldType::EditorSection { .. } => (),
             StructFieldType::Padding(_) => ()
         }
     }
@@ -248,8 +248,8 @@ fn recursive_look_for_defaults_for_struct(struct_name: &str, definitions: &Parse
         }
         match &i.field_type {
             StructFieldType::Object(o) => match o {
-                ObjectType::NamedObject(n)
-                | ObjectType::Reflexive(n) => if recursive_look_for_defaults_for_struct(n, definitions) {
+                FieldObject::NamedObject(n)
+                | FieldObject::Reflexive(n) => if recursive_look_for_defaults_for_struct(n, definitions) {
                     return true
                 },
                 _ => ()
@@ -297,46 +297,46 @@ impl ToTokenStream for Struct {
             let field = &self.fields[i];
             let field_type = match &field.field_type {
                 StructFieldType::Padding(n) => format!("Padding<[u8; {n}]>"),
-                StructFieldType::EditorSection(_) => String::new(),
+                StructFieldType::EditorSection { .. } => String::new(),
                 StructFieldType::Object(o) => match o {
-                    ObjectType::Angle => "Angle".to_owned(),
-                    ObjectType::ColorARGBFloat => "ColorARGBFloat".to_owned(),
-                    ObjectType::ColorRGBFloat => "ColorRGBFloat".to_owned(),
-                    ObjectType::ColorARGBInt => "ColorARGBInt".to_owned(),
-                    ObjectType::Data => "Data".to_owned(),
-                    ObjectType::FileData => "FileData".to_owned(),
-                    ObjectType::BSPVertexData => "BSPVertexData".to_owned(),
-                    ObjectType::UTF16String => "UTF16String".to_owned(),
-                    ObjectType::Euler2D => "Euler2D".to_owned(),
-                    ObjectType::Euler3D => "Euler3D".to_owned(),
-                    ObjectType::F32 => "f32".to_owned(),
-                    ObjectType::I16 => "i16".to_owned(),
-                    ObjectType::I32 => "i32".to_owned(),
-                    ObjectType::I8 => "i8".to_owned(),
-                    ObjectType::Index => "Index".to_owned(),
-                    ObjectType::Matrix3x3 => "Matrix3x3".to_owned(),
-                    ObjectType::Plane2D => "Plane2D".to_owned(),
-                    ObjectType::Plane3D => "Plane3D".to_owned(),
-                    ObjectType::Address => "Address".to_owned(),
-                    ObjectType::Quaternion => "Quaternion".to_owned(),
-                    ObjectType::String32 => "String32".to_owned(),
-                    ObjectType::TagID => "ID".to_owned(),
-                    ObjectType::ID => "ID".to_owned(),
-                    ObjectType::TagReference(_) => "TagReference".to_owned(),
-                    ObjectType::TagGroup => "TagGroup".to_owned(),
-                    ObjectType::U16 => "u16".to_owned(),
-                    ObjectType::U32 => "u32".to_owned(),
-                    ObjectType::U8 => "u8".to_owned(),
-                    ObjectType::Vector2D => "Vector2D".to_owned(),
-                    ObjectType::Vector3D => "Vector3D".to_owned(),
-                    ObjectType::CompressedVector2D => "CompressedVector2D".to_owned(),
-                    ObjectType::CompressedVector3D => "CompressedVector3D".to_owned(),
-                    ObjectType::CompressedFloat => "CompressedFloat".to_owned(),
-                    ObjectType::NamedObject(o) => o.to_owned(),
-                    ObjectType::Reflexive(o) => format!("Reflexive<{o}>"),
-                    ObjectType::ScenarioScriptNodeValue => "ScenarioScriptNodeValue".to_owned(),
-                    ObjectType::Vector2DInt => "Vector2DInt".to_owned(),
-                    ObjectType::Rectangle => "Rectangle".to_owned()
+                    FieldObject::Angle => "Angle".to_owned(),
+                    FieldObject::ColorARGBFloat => "ColorARGBFloat".to_owned(),
+                    FieldObject::ColorRGBFloat => "ColorRGBFloat".to_owned(),
+                    FieldObject::ColorARGBInt => "ColorARGBInt".to_owned(),
+                    FieldObject::Data => "Data".to_owned(),
+                    FieldObject::FileData => "FileData".to_owned(),
+                    FieldObject::BSPVertexData => "BSPVertexData".to_owned(),
+                    FieldObject::UTF16String => "UTF16String".to_owned(),
+                    FieldObject::Euler2D => "Euler2D".to_owned(),
+                    FieldObject::Euler3D => "Euler3D".to_owned(),
+                    FieldObject::F32 => "f32".to_owned(),
+                    FieldObject::I16 => "i16".to_owned(),
+                    FieldObject::I32 => "i32".to_owned(),
+                    FieldObject::I8 => "i8".to_owned(),
+                    FieldObject::Index => "Index".to_owned(),
+                    FieldObject::Matrix3x3 => "Matrix3x3".to_owned(),
+                    FieldObject::Plane2D => "Plane2D".to_owned(),
+                    FieldObject::Plane3D => "Plane3D".to_owned(),
+                    FieldObject::Address => "Address".to_owned(),
+                    FieldObject::Quaternion => "Quaternion".to_owned(),
+                    FieldObject::String32 => "String32".to_owned(),
+                    FieldObject::TagID => "ID".to_owned(),
+                    FieldObject::ID => "ID".to_owned(),
+                    FieldObject::TagReference { .. } => "TagReference".to_owned(),
+                    FieldObject::TagGroup => "TagGroup".to_owned(),
+                    FieldObject::U16 => "u16".to_owned(),
+                    FieldObject::U32 => "u32".to_owned(),
+                    FieldObject::U8 => "u8".to_owned(),
+                    FieldObject::Vector2D => "Vector2D".to_owned(),
+                    FieldObject::Vector3D => "Vector3D".to_owned(),
+                    FieldObject::CompressedVector2D => "CompressedVector2D".to_owned(),
+                    FieldObject::CompressedVector3D => "CompressedVector3D".to_owned(),
+                    FieldObject::CompressedFloat => "CompressedFloat".to_owned(),
+                    FieldObject::NamedObject(o) => o.to_owned(),
+                    FieldObject::Reflexive(o) => format!("Reflexive<{o}>"),
+                    FieldObject::ScenarioScriptNodeValue => "ScenarioScriptNodeValue".to_owned(),
+                    FieldObject::Vector2DInt => "Vector2DInt".to_owned(),
+                    FieldObject::Rectangle => "Rectangle".to_owned()
                 }
             };
 
@@ -355,9 +355,9 @@ impl ToTokenStream for Struct {
                         if let Some(n) = &field.flags.comment {
                             writeln!(&mut doc, "{n}\n\n").unwrap();
                         }
-                        if let ObjectType::TagReference(t) = &o {
+                        if let FieldObject::TagReference { allowed_groups } = &o {
                             writeln!(&mut doc, "## Allowed groups").unwrap();
-                            for g in &t.allowed_groups {
+                            for g in allowed_groups {
                                 writeln!(&mut doc, "* [{g}](TagGroup::{reference}) ([struct info]({struct_ref}))", reference=camel_case(&g), struct_ref=camel_case(&g)).unwrap();
                             }
                             writeln!(&mut doc, "\n\n").unwrap();
@@ -379,8 +379,8 @@ impl ToTokenStream for Struct {
                             writeln!(&mut fields, "#[doc=\"{doc}\"]").unwrap();
                         }
                         writeln!(&mut fields, "pub {field_name}: {field_type},").unwrap();
-                        if let ObjectType::TagReference(reference) = &o {
-                            writeln!(&mut default_code, "{field_name}: TagReference::Null(TagGroup::{}),", camel_case(&reference.allowed_groups[0])).unwrap();
+                        if let FieldObject::TagReference { allowed_groups } = &o {
+                            writeln!(&mut default_code, "{field_name}: TagReference::Null(TagGroup::{}),", camel_case(&allowed_groups[0])).unwrap();
                         }
                         else {
                             writeln!(&mut default_code, "{field_name}: Default::default(),").unwrap();
@@ -422,9 +422,9 @@ impl ToTokenStream for Struct {
                 continue;
             }
 
-            let allowed_references = if let StructFieldType::Object(ObjectType::TagReference(reference)) = &field.field_type {
+            let allowed_references = if let StructFieldType::Object(FieldObject::TagReference { allowed_groups }) = &field.field_type {
                 let mut list = String::new();
-                for g in &reference.allowed_groups {
+                for g in allowed_groups {
                     list += &format!("TagGroup::{},", camel_case(g));
                 }
                 format!("Some(&[{list}])")
@@ -474,20 +474,20 @@ impl ToTokenStream for Struct {
             }
             else if let StructFieldType::Object(object_type) = &self.fields[i].field_type {
                 let should_output_code_anyway = match object_type {
-                    ObjectType::NamedObject(o) => match definitions.objects[o] {
+                    FieldObject::NamedObject(o) => match definitions.objects[o] {
                         NamedObject::Enum(_) | NamedObject::Bitfield(_) => false,
                         NamedObject::Struct(_) => true
                     },
-                    ObjectType::Reflexive(_) => true,
-                    ObjectType::Data => true,
-                    ObjectType::TagReference(_) => true,
+                    FieldObject::Reflexive(_) => true,
+                    FieldObject::Data => true,
+                    FieldObject::TagReference { .. } => true,
                     _ => false
                 };
                 if should_output_code_anyway {
                     writeln!(&mut read_tag_in, "{read_tag_code};").unwrap();
                     match &self.fields[i].field_type {
-                        StructFieldType::Object(ObjectType::TagReference(t)) => {
-                            let best_group = camel_case(&t.allowed_groups[0]);
+                        StructFieldType::Object(FieldObject::TagReference { allowed_groups }) => {
+                            let best_group = camel_case(&allowed_groups[0]);
                             writeln!(&mut write_out, "TagReference::Null(TagGroup::{best_group}).write_to_tag_file(data, _pos, struct_end)?;").unwrap()
                         }
                         _ => writeln!(&mut write_out, "<{field_type}>::default().write_to_tag_file(data, _pos, struct_end)?;").unwrap()
@@ -538,7 +538,7 @@ impl ToTokenStream for Struct {
                 if let Some(n) = &field.default_value {
                     let merge_vector = |vector: &[StaticValue]| -> String {
                         if vector.len() == 1 {
-                            return if let StructFieldType::Object(ObjectType::Angle) = field.field_type {
+                            return if let StructFieldType::Object(FieldObject::Angle) = field.field_type {
                                 format!("Angle::from_degrees({} as f32)", &vector[0])
                             }
                             else {
@@ -571,8 +571,8 @@ impl ToTokenStream for Struct {
                 }
                 else {
                     match &field.field_type {
-                        StructFieldType::Object(ObjectType::NamedObject(o))
-                        | StructFieldType::Object(ObjectType::Reflexive(o)) => {
+                        StructFieldType::Object(FieldObject::NamedObject(o))
+                        | StructFieldType::Object(FieldObject::Reflexive(o)) => {
                             if recursive_look_for_defaults_for_struct(o, definitions) {
                                 writeln!(&mut all_defaulting_code, "self.{field_name}.set_defaults();").unwrap();
                                 writeln!(&mut all_undefaulting_code, "self.{field_name}.unset_defaults();").unwrap();

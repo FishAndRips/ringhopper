@@ -96,8 +96,7 @@ pub struct EngineBitmapOptions {
 
 #[derive(Copy, Clone, Debug)]
 pub struct EngineSupportedResourceMaps {
-    pub externally_indexed_tags: bool,
-    pub loc: bool
+    pub externally_indexed_tags: bool
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -117,7 +116,7 @@ pub struct EngineRequiredTags {
 #[derive(Copy, Clone, Debug)]
 pub struct EngineBuild {
     pub string: &'static str,
-    pub fallback: &'static [&'static str],
+    pub aliases: &'static [&'static str],
     pub enforced: bool
 }
 

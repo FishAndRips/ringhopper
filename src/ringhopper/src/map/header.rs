@@ -95,7 +95,7 @@ impl ParsedCacheFileHeader {
                 }
 
                 // Any past maps that were released for this engine with a matching build string?
-                for &fallback in n.fallback {
+                for &fallback in n.aliases {
                     if fallback == build_as_str {
                         return Some(i);
                     }

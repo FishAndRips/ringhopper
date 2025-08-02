@@ -3,7 +3,6 @@ resolver = "2"
 
 members = [
     "src/ringhopper",
-    "src/ringhopper-definitions",
     "src/ringhopper-primitives",
     "src/ringhopper-structs-codegen",
     "src/ringhopper-structs",

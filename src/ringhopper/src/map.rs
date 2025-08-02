@@ -160,7 +160,7 @@ macro_rules! make_map_load_fn {
                     if let Some(parent) = path.as_ref().parent() {
                         bitmaps = std::fs::read(parent.join("bitmaps.map")).unwrap_or(Vec::new());
                         sounds = std::fs::read(parent.join("sounds.map")).unwrap_or(Vec::new());
-                        loc = if resource_data_needed.loc { std::fs::read(parent.join("loc.map")).unwrap_or(Vec::new()) } else { Vec::new() };
+                        loc = if resource_data_needed.externally_indexed_tags { std::fs::read(parent.join("loc.map")).unwrap_or(Vec::new()) } else { Vec::new() };
                     }
                     else {
                         bitmaps = Vec::new();
