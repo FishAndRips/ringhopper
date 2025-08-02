@@ -162,10 +162,9 @@ pub enum SimplePrimitiveType {
     CompressedVector2D,
     CompressedFloat,
 
-    ColorRGBFloat,
-    ColorARGBInt,
-    ColorARGBIntBytes,
-    ColorARGBFloat,
+    ColorRGB,
+    Pixel32,
+    ColorARGB,
 
     Index,
     ID,

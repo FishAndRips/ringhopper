@@ -19,3 +19,6 @@ panic = "abort"
 panic = "abort"
 strip = "debuginfo"
 lto = true
+
+[patch."https://github.com/FishAndRips/ringhopper-definitions"]
+ringhopper-definitions = { path = "/Users/snowy/RustroverProjects/ringhopper-definitions" }

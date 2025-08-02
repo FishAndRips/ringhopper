@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 use primitives::error::{Error, RinghopperResult};
-use primitives::primitive::ColorARGBInt;
+use primitives::primitive::Pixel32;
 
 mod parse;
 pub mod plate;
@@ -10,7 +10,7 @@ pub mod plate;
 pub struct Image {
     pub width: usize,
     pub height: usize,
-    pub data: Vec<ColorARGBInt>
+    pub data: Vec<Pixel32>
 }
 
 const IMAGE_LOADING_FUNCTIONS: &'static [(&'static str, fn(data: &[u8]) -> RinghopperResult<Image>)] = &[

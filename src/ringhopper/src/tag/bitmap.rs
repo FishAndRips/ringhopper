@@ -11,7 +11,7 @@ use definitions::{Bitmap, BitmapData, BitmapDataFormat, BitmapDataType};
 use primitives::byteorder::{BigEndian, LittleEndian};
 use primitives::error::{Error, OverflowCheck, RinghopperResult};
 use primitives::parse::SimpleTagData;
-use primitives::primitive::ColorARGBInt;
+use primitives::primitive::Pixel32;
 use crate::data::bitmap::Image;
 
 /// Get the number of pixels per block length for the given bitmap format.
@@ -333,7 +333,7 @@ pub fn extract_compressed_color_plate_data(bitmap: &Bitmap) -> RinghopperResult<
 
     let uncompressed_size = u32::read::<BigEndian>(len_bytes, 0, len_bytes.len()).unwrap() as usize;
     let pixel_count = height.mul_overflow_checked(width)?;
-    let expected_uncompressed_size = pixel_count.mul_overflow_checked(ColorARGBInt::simple_size())?;
+    let expected_uncompressed_size = pixel_count.mul_overflow_checked(Pixel32::simple_size())?;
     if uncompressed_size != expected_uncompressed_size {
         return Err(Error::InvalidTagData(format!("compressed color plate data size is wrong (expected 0x{expected_uncompressed_size:08X}, got 0x{uncompressed_size:08X} instead)")))
     }
@@ -350,7 +350,7 @@ pub fn extract_compressed_color_plate_data(bitmap: &Bitmap) -> RinghopperResult<
         return Err(Error::InvalidTagData(format!("decompressed size is wrong (expected 0x{expected_uncompressed_size:08X}, got 0x{read_bytes:08X} instead)")))
     }
 
-    let result = ColorARGBInt::read_chunks_to_iterator::<LittleEndian>(&compressed_data)
+    let result = Pixel32::read_chunks_to_iterator::<LittleEndian>(&compressed_data)
         .unwrap()
         .into_infallible();
 

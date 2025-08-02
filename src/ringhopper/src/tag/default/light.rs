@@ -1,4 +1,4 @@
-use primitives::primitive::{Color, ColorRGBFloat};
+use primitives::primitive::{Color, ColorRGB};
 use primitives::tag::PrimaryTagStructDyn;
 use ringhopper_structs::Light;
 
@@ -15,12 +15,12 @@ fn set_or_unset_defaults_for_light(tag: &mut dyn PrimaryTagStructDyn, undefault:
 
     // If the RGB components are zero, default them to 1 (alpha is left alone)
 
-    let zeroed_out = ColorRGBFloat {
+    let zeroed_out = ColorRGB {
         red: 0.0,
         green: 0.0,
         blue: 0.0
     };
-    let default = ColorRGBFloat {
+    let default = ColorRGB {
         red: 1.0,
         green: 1.0,
         blue: 1.0

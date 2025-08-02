@@ -1,5 +1,5 @@
 use primitives::dynamic::{DynamicTagData, DynamicTagDataType, SimplePrimitiveType};
-use primitives::primitive::{Angle, ColorARGBFloat, ColorRGBFloat, Euler2D, Euler3D, Matrix3x3, Plane2D, Plane3D, Quaternion, Vector2D, Vector3D};
+use primitives::primitive::{Angle, ColorARGB, ColorRGB, Euler2D, Euler3D, Matrix3x3, Plane2D, Plane3D, Quaternion, Vector2D, Vector3D};
 use primitives::tag::{for_each_field, PrimaryTagStructDyn};
 use crate::tag::result::TagResult;
 
@@ -66,8 +66,8 @@ pub fn check_bad_floats(tag: &dyn PrimaryTagStructDyn, result: &mut TagResult) {
                     check_field(&f.y, result);
                     check_field(&f.z, result);
                 }
-                SimplePrimitiveType::ColorARGBFloat => {
-                    let f: &ColorARGBFloat = field.as_any().downcast_ref().unwrap();
+                SimplePrimitiveType::ColorARGB => {
+                    let f: &ColorARGB = field.as_any().downcast_ref().unwrap();
                     check_field(&f.alpha, result);
                     check_field(&f.red, result);
                     check_field(&f.green, result);
@@ -77,8 +77,8 @@ pub fn check_bad_floats(tag: &dyn PrimaryTagStructDyn, result: &mut TagResult) {
                         result.errors.push(format!("Color components ({f}) detect outside of 0-1 range. This can be automatically fixed."));
                     }
                 }
-                SimplePrimitiveType::ColorRGBFloat => {
-                    let f: &ColorRGBFloat = field.as_any().downcast_ref().unwrap();
+                SimplePrimitiveType::ColorRGB => {
+                    let f: &ColorRGB = field.as_any().downcast_ref().unwrap();
                     check_field(&f.red, result);
                     check_field(&f.green, result);
                     check_field(&f.blue, result);
