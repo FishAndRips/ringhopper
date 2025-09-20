@@ -11,10 +11,10 @@ ringhopper-primitives = { path = "../ringhopper-primitives" }
 ringhopper-structs = { path = "../ringhopper-structs" }
 ringhopper-engines = { path = "../ringhopper-engines" }
 crc64 = "2.0.0"
-flate2 = { version = "1.0.28", features = ["zlib"], default-features = false }
-tiff = "0.9.1"
-jxl-oxide = "0.12.2"
-png = "0.17.13"
-sevenz-rust2 = "0.13.2"
-aotuv_lancer_vorbis_sys = "0.1.4"
-libc = "0.2.153"
+flate2 = { version = "1.1.2", features = ["zlib"], default-features = false }
+tiff = "0.10.3"
+jxl-oxide = "0.12.4"
+png = "0.18.0"
+sevenz-rust2 = "0.19.0"
+aotuv_lancer_vorbis_sys = "0.1.5"
+libc = "0.2.175"

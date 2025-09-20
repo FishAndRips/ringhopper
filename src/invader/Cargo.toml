@@ -12,10 +12,10 @@ ringhopper = { path = "../ringhopper" }
 ringhopper-engines = { path = "../ringhopper-engines" }
 
 [target.'cfg(any(target_os = "linux", target_os = "macos"))'.dependencies.libc]
-version = "0.2.153"
+version = "0.2.175"
 
 [target.'cfg(target_os = "windows")'.dependencies.windows]
-version = "0.58.0"
+version = "0.62.0"
 features = [
     "Win32_Foundation",
     "Win32_System_Console"

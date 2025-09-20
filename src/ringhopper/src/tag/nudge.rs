@@ -141,11 +141,11 @@ fn nudge(float: &mut f32, was_nudged_thus_far: &mut bool) {
 
 const MAX_SIG_FIGS: usize = 6;
 
-pub(crate) fn fix_decimal_rounding(float: f32) -> f32 {
+pub(crate) fn fix_decimal_rounding(input: f32) -> f32 {
     use std::io::Write;
 
-    let signum = float.signum();
-    let abs = float.abs();
+    let signum = input.signum();
+    let abs = input.abs();
 
     // 512 digits should be more than enough to hold any 64-bit float
     let mut buf = std::io::Cursor::new([0u8; 512]);
@@ -157,7 +157,7 @@ pub(crate) fn fix_decimal_rounding(float: f32) -> f32 {
 
     // First, find the most significant digits
     if written.len() <= MAX_SIG_FIGS {
-        return float;
+        return input;
     }
 
     macro_rules! ignore_dot_iter {

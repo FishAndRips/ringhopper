@@ -171,7 +171,7 @@ impl Image {
         let (raw_pixels_vec, color_type, bit_depth, width, height) = wrap_png_error!((|| -> Result<(Vec<u8>, ColorType, BitDepth, usize, usize), DecodingError> {
             let decoder = Decoder::new(Cursor::new(&png));
             let mut reader = decoder.read_info()?;
-            let mut raw_pixels = vec![0; reader.output_buffer_size()];
+            let mut raw_pixels = vec![0; reader.output_buffer_size().expect("can't allocate output buffer size; goodbye cruel world :(")];
             let info = reader.next_frame(&mut raw_pixels)?;
             let color_type = info.color_type;
             let bit_depth = info.bit_depth;

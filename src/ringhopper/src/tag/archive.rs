@@ -1,10 +1,10 @@
 use std::collections::HashSet;
 use std::io::Cursor;
+use sevenz_rust2::{ArchiveEntry, ArchiveWriter, EncoderConfiguration, EncoderMethod};
+use sevenz_rust2::encoder_options::{EncoderOptions, Lzma2Options};
 use primitives::engine::Engine;
 use primitives::error::{Error, RinghopperResult};
 use primitives::primitive::TagPath;
-use sevenz_rust2::lzma::LZMA2Options;
-use sevenz_rust2::{SevenZWriter, SevenZArchiveEntry, SevenZMethodConfiguration, MethodOptions, SevenZMethod};
 use crate::tag::dependency::{recursively_get_dependencies_for_map, recursively_get_dependencies_for_tag};
 use crate::tag::tree::TagTree;
 
@@ -35,8 +35,8 @@ pub fn archive_tag_set_to_zip<T: TagTree, I: IntoIterator<Item = TagPath>>(tag_s
         };
     }
 
-    let mut archive = unwrap_7z!(SevenZWriter::new(Cursor::new(Vec::new())));
-    archive.set_content_methods(vec![SevenZMethodConfiguration { method: SevenZMethod::LZMA2, options: Some(MethodOptions::LZMA2(LZMA2Options::with_preset(compression_level.level))) }]);
+    let mut archive = unwrap_7z!(ArchiveWriter::new(Cursor::new(Vec::new())));
+    archive.set_content_methods(vec![EncoderConfiguration { method: EncoderMethod::LZMA2, options: Some(EncoderOptions::Lzma2(Lzma2Options::from_level(compression_level.level))) }]);
 
     // Keep groups together, and then sort by path.
     let tags_to_filter_paths: Vec<TagPath> = tag_set.into_iter().collect();
@@ -54,7 +54,7 @@ pub fn archive_tag_set_to_zip<T: TagTree, I: IntoIterator<Item = TagPath>>(tag_s
     });
 
     for i in tags_to_filter_indices.into_iter().map(|i| &tags_to_filter_paths[i]) {
-        let mut entry = SevenZArchiveEntry::new();
+        let mut entry = ArchiveEntry::new();
         entry.name = i.to_zip_path();
 
         let tag = tag_tree.open_tag_shared(&i)?;
