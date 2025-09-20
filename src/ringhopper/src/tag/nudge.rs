@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use definitions::{ActorVariant, ContinuousDamageEffect, DamageEffect, Light, Object, PointPhysics, Projectile, Scenario, Sound};
 use primitives::primitive::TagGroup;
 use primitives::tag::PrimaryTagStructDyn;
@@ -161,17 +162,16 @@ pub(crate) fn fix_decimal_rounding(float: f32) -> f32 {
 
     macro_rules! ignore_dot_iter {
         ($a:expr) => {{
-            let len = $a.len();
             let mut first_sig_fig_found = false;
             ($a)
                 .iter_mut()
-                .zip(0..len)
-                .filter(move |(b,_)| {
-                    if **b == b'.' || (!first_sig_fig_found && **b == b'0') {
-                        return false;
+                .enumerate()
+                .filter_map(move |(i,b)| {
+                    if *b == b'.' || (!first_sig_fig_found && *b == b'0') {
+                        return None;
                     }
                     first_sig_fig_found = true;
-                    true
+                    Some((b,i))
                 })
         }};
     }
@@ -192,9 +192,13 @@ pub(crate) fn fix_decimal_rounding(float: f32) -> f32 {
     }
 
     // Do rounding here
+    let mut prepend_one = false;
     if round_up {
-        for (byte, _) in ignore_dot_iter!(written[..sig_figs_end]).rev() {
+        for (byte, index) in ignore_dot_iter!(written[..sig_figs_end]).rev() {
             if *byte == b'9' {
+                if index == 0 {
+                    prepend_one = true;
+                }
                 *byte = b'0';
             } else {
                 *byte += 1;
@@ -203,7 +207,14 @@ pub(crate) fn fix_decimal_rounding(float: f32) -> f32 {
         }
     }
 
-    let fstr = std::str::from_utf8(&written).expect("should be utf-8");
+    let mut fstr: Cow<str> = Cow::Borrowed(std::str::from_utf8(&written).expect("should be utf-8"));
+    if prepend_one {
+        let mut string = String::with_capacity(fstr.len() + 1);
+        string += "1";
+        string += fstr.as_ref();
+        fstr = Cow::Owned(string)
+    }
+
     let f: f64 = fstr.parse().map_err(|e| panic!("can't parse the float we just made `{fstr}` as a float: {e:?}")).unwrap();
     (f as f32) * signum
 }
