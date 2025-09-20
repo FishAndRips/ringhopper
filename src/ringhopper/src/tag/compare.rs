@@ -1,7 +1,7 @@
 use std::fmt::Display;
 use crc64::crc64;
 use primitives::dynamic::{DynamicEnum, DynamicTagData, DynamicTagDataArray, DynamicTagDataType, SimplePrimitiveType};
-use primitives::primitive::{Address, Angle, BSPVertexData, ColorARGB, Pixel32, ColorRGB, CompressedFloat, CompressedVector2D, CompressedVector3D, Data, Euler2D, Euler3D, FileData, ID, Index, Matrix3x3, Plane2D, Plane3D, Quaternion, Rectangle, ScenarioScriptNodeValue, String32, TagGroup, TagReference, UTF16String, Vector2D, Vector2DInt, Vector3D};
+use primitives::primitive::{Address, Angle, BSPVertexData, ColorARGB, Pixel32, ColorRGB, CompressedFloat, CompressedVector2D, CompressedVector3D, Data, Euler2D, Euler3D, FileData, ID, Index, Matrix3x3, Plane2D, Plane3D, Quaternion, Rectangle, ScenarioScriptNodeValue, String32, TagGroup, TagReference, UTF16String, Vector2D, Vector2DInt, Vector3D, Matrix2x3};
 use primitives::tag::PrimaryTagStructDyn;
 
 #[derive(Clone)]
@@ -130,6 +130,7 @@ fn compare_tag_data<T: DynamicTagData + ?Sized>(first: &T, second: &T, path: &mu
                 SimplePrimitiveType::Plane3D => do_compare!(Plane3D),
                 SimplePrimitiveType::Quaternion => do_compare!(Quaternion),
                 SimplePrimitiveType::Matrix3x3 => do_compare!(Matrix3x3),
+                SimplePrimitiveType::Matrix2x3 => do_compare!(Matrix2x3),
                 SimplePrimitiveType::ColorRGB => do_compare!(ColorRGB),
                 SimplePrimitiveType::ColorARGB => do_compare!(ColorARGB),
             }

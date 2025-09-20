@@ -125,6 +125,7 @@ macro_rules! define_primitive_ref {
             Data($($reference)* Data),
             Euler2D($($reference)* Euler2D),
             Euler3D($($reference)* Euler3D),
+            Matrix2x3($($reference)* Matrix2x3),
             Matrix3x3($($reference)* Matrix3x3),
             Address($($reference)* Address),
             Angle($($reference)* Angle),

@@ -384,6 +384,50 @@ generate_tag_data_simple_primitive_code!(Euler3D, Angle, yaw, pitch, roll);
 
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 #[repr(C)]
+pub struct Matrix2x3 {
+    pub vectors: [Vector3D; 2]
+}
+
+impl Display for Matrix2x3 {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("{{ vectors[0] = {}; vectors[1] = {} }}", self.vectors[0], self.vectors[1]))
+    }
+}
+
+impl SimpleTagData for Matrix2x3 {
+    fn simple_size() -> usize {
+        Vector3D::simple_size() * 2
+    }
+    fn read<B: ByteOrder>(data: &[u8], at: usize, struct_end: usize) -> RinghopperResult<Self> {
+        let at1 = at;
+        let at2 = at1.add_overflow_checked(Vector3D::simple_size())?;
+
+        Ok(Matrix2x3 {
+            vectors: [
+                Vector3D::read::<B>(data, at1, struct_end)?,
+                Vector3D::read::<B>(data, at2, struct_end)?,
+            ]
+        })
+    }
+    fn write<B: ByteOrder>(&self, data: &mut [u8], at: usize, struct_end: usize) -> RinghopperResult<()> {
+        let at1 = at;
+        let at2 = at1.add_overflow_checked(Vector3D::simple_size())?;
+
+        self.vectors[0].write::<B>(data, at1, struct_end)?;
+        self.vectors[1].write::<B>(data, at2, struct_end)?;
+
+        Ok(())
+    }
+}
+
+impl SimplePrimitive for Matrix2x3 {
+    fn primitive_type() -> SimplePrimitiveType {
+        SimplePrimitiveType::Matrix2x3
+    }
+}
+
+#[derive(Clone, Copy, Default, Debug, PartialEq)]
+#[repr(C)]
 pub struct Matrix3x3 {
     pub vectors: [Vector3D; 3]
 }

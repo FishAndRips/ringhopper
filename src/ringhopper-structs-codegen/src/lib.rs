@@ -24,9 +24,9 @@ pub fn generate_ringhopper_structs(_: TokenStream) -> TokenStream {
     let mut supported_groups_for_engines = String::new();
     let mut defaultable_tag_groups_hint = String::new();
 
-    for (group_name, group) in &definitions.groups {
+    for group in definitions.groups.values() {
         let struct_name = &group.struct_name;
-        let group_name_fixed = camel_case(&group_name);
+        let enum_name = &group.name_rust_enum;
         stream.extend(group.to_token_stream(&definitions));
 
         let mut groups: HashSet<String> = HashSet::new();
@@ -36,7 +36,7 @@ pub fn generate_ringhopper_structs(_: TokenStream) -> TokenStream {
             for f in &s.fields {
                 if let StructFieldType::Object(FieldObject::TagReference { allowed_groups }) = &f.field_type {
                     for g in allowed_groups {
-                        groups.insert(format!("TagGroup::{}", camel_case(g)));
+                        groups.insert(format!("TagGroup::{}", definitions.groups[g].name_rust_enum));
                     }
                 }
 
@@ -45,7 +45,7 @@ pub fn generate_ringhopper_structs(_: TokenStream) -> TokenStream {
         });
 
         if has_defaults {
-            writeln!(&mut defaultable_tag_groups_hint, "TagGroup::{group_name_fixed} => true,").unwrap();
+            writeln!(&mut defaultable_tag_groups_hint, "TagGroup::{enum_name} => true,").unwrap();
         }
 
         let mut list = String::new();
@@ -61,12 +61,12 @@ pub fn generate_ringhopper_structs(_: TokenStream) -> TokenStream {
                 engines += engine;
                 engines += "\",";
             }
-            writeln!(&mut supported_groups_for_engines, "TagGroup::{group_name_fixed} => (&[{engines}]).contains(&engine.name),").unwrap();
+            writeln!(&mut supported_groups_for_engines, "TagGroup::{enum_name} => (&[{engines}]).contains(&engine.name),").unwrap();
         }
 
-        writeln!(referenceable_tag_groups_hint, "TagGroup::{group_name_fixed} => &[{list}],").unwrap();
-        writeln!(read_any_tag_lines, "TagGroup::{group_name_fixed} => b(TagFile::read_tag_from_file_buffer::<{struct_name}>(file, ParseStrictness::Relaxed)),").unwrap();
-        writeln!(read_any_map_lines, "TagGroup::{group_name_fixed} => b({struct_name}::read_from_map(map, tag_info.address, &tag_info.domain)),").unwrap();
+        writeln!(referenceable_tag_groups_hint, "TagGroup::{enum_name} => &[{list}],").unwrap();
+        writeln!(read_any_tag_lines, "TagGroup::{enum_name} => b(TagFile::read_tag_from_file_buffer::<{struct_name}>(file, ParseStrictness::Relaxed)),").unwrap();
+        writeln!(read_any_map_lines, "TagGroup::{enum_name} => b({struct_name}::read_from_map(map, tag_info.address, &tag_info.domain)),").unwrap();
     }
 
     stream.extend(format!("
@@ -221,6 +221,7 @@ fn is_simple_struct(structure: &Struct, parsed_definitions: &ParsedDefinitions) 
                 FieldObject::Euler3D => (),
                 FieldObject::Rectangle => (),
                 FieldObject::Quaternion => (),
+                FieldObject::Matrix2x3 => (),
                 FieldObject::Matrix3x3 => (),
                 FieldObject::ColorRGB => (),
                 FieldObject::ColorARGB => (),
@@ -272,7 +273,6 @@ impl ToTokenStream for Struct {
         let mut fields_read_from_caches: Vec<bool> = Vec::new();
         let mut reverse_field_matcher = String::new();
 
-        let fields_with_names = self.fields.iter().map(|s| safe_str(&s.name, SafetyLevel::RustCompilation)).collect::<Vec<Cow<str>>>();
         let fields_with_matchers = self.fields.iter().map(|s| safe_str(&s.name, SafetyLevel::Matcher)).collect::<Vec<Cow<str>>>();
 
         let field_count = self.fields.len();
@@ -293,9 +293,9 @@ impl ToTokenStream for Struct {
         let clone = if simple_struct { "Copy, Clone" } else { "Clone" };
 
         for i in 0..field_count {
-            let field_name = &fields_with_names[i];
-
             let field = &self.fields[i];
+            let field_name = &field.name_rust_field;
+
             let field_type = match &field.field_type {
                 StructFieldType::Padding(n) => format!("Padding<[u8; {n}]>"),
                 StructFieldType::EditorSection { .. } => String::new(),
@@ -315,6 +315,7 @@ impl ToTokenStream for Struct {
                     FieldObject::I32 => "i32".to_owned(),
                     FieldObject::I8 => "i8".to_owned(),
                     FieldObject::Index => "Index".to_owned(),
+                    FieldObject::Matrix2x3 => "Matrix2x3".to_owned(),
                     FieldObject::Matrix3x3 => "Matrix3x3".to_owned(),
                     FieldObject::Plane2D => "Plane2D".to_owned(),
                     FieldObject::Plane3D => "Plane3D".to_owned(),
@@ -359,7 +360,10 @@ impl ToTokenStream for Struct {
                         if let FieldObject::TagReference { allowed_groups } = &o {
                             writeln!(&mut doc, "## Allowed groups").unwrap();
                             for g in allowed_groups {
-                                writeln!(&mut doc, "* [{g}](TagGroup::{reference}) ([struct info]({struct_ref}))", reference=camel_case(&g), struct_ref=camel_case(&g)).unwrap();
+                                let def = &definitions.groups[g];
+                                let enum_name = &def.name_rust_enum;
+                                let struct_name = &def.struct_name;
+                                writeln!(&mut doc, "* [{g}](TagGroup::{enum_name}) ([struct info]({struct_name}))").unwrap();
                             }
                             writeln!(&mut doc, "\n\n").unwrap();
                         }
@@ -381,7 +385,7 @@ impl ToTokenStream for Struct {
                         }
                         writeln!(&mut fields, "pub {field_name}: {field_type},").unwrap();
                         if let FieldObject::TagReference { allowed_groups } = &o {
-                            writeln!(&mut default_code, "{field_name}: TagReference::Null(TagGroup::{}),", camel_case(&allowed_groups[0])).unwrap();
+                            writeln!(&mut default_code, "{field_name}: TagReference::Null(TagGroup::{}),", definitions.groups[&allowed_groups[0]].name_rust_enum).unwrap();
                         }
                         else {
                             writeln!(&mut default_code, "{field_name}: Default::default(),").unwrap();
@@ -426,7 +430,7 @@ impl ToTokenStream for Struct {
             let allowed_references = if let StructFieldType::Object(FieldObject::TagReference { allowed_groups }) = &field.field_type {
                 let mut list = String::new();
                 for g in allowed_groups {
-                    list += &format!("TagGroup::{},", camel_case(g));
+                    list += &format!("TagGroup::{},", definitions.groups[g].name_rust_enum);
                 }
                 format!("Some(&[{list}])")
             }
@@ -435,7 +439,7 @@ impl ToTokenStream for Struct {
             };
 
             let metadata = build_metadata(&field.flags, &allowed_references);
-            let field_name = &fields_with_names[i];
+            let field_name = &field.name_rust_field;
             let field_matcher = &fields_with_matchers[i];
             writeln!(&mut metadata_matcher, "\"{field_matcher}\" => Some({metadata}),").unwrap();
             write!(&mut field_list, "\"{field_matcher}\",").unwrap();
@@ -445,12 +449,13 @@ impl ToTokenStream for Struct {
 
         // Tag I/O
         for i in 0..field_count {
+            let field = &self.fields[i];
             let length = &fields_with_sizes[i];
 
-            let field_name = &fields_with_names[i];
+            let field_name = &field.name_rust_field;
             let field_type = &fields_with_types[i];
 
-            let little_endian = self.fields[i].flags.little_endian_in_tags;
+            let little_endian = field.flags.little_endian_in_tags;
             let read_tag_code = if little_endian {
                 format!("<{field_type}>::read::<LittleEndian>(data, _pos, struct_end)?")
             }
@@ -488,7 +493,7 @@ impl ToTokenStream for Struct {
                     writeln!(&mut read_tag_in, "{read_tag_code};").unwrap();
                     match &self.fields[i].field_type {
                         StructFieldType::Object(FieldObject::TagReference { allowed_groups }) => {
-                            let best_group = camel_case(&allowed_groups[0]);
+                            let best_group = &definitions.groups[&allowed_groups[0]].name_rust_enum;
                             writeln!(&mut write_out, "TagReference::Null(TagGroup::{best_group}).write_to_tag_file(data, _pos, struct_end)?;").unwrap()
                         }
                         _ => writeln!(&mut write_out, "<{field_type}>::default().write_to_tag_file(data, _pos, struct_end)?;").unwrap()
@@ -504,7 +509,7 @@ impl ToTokenStream for Struct {
             for i in 0..field_count {
                 let length = &fields_with_sizes[i];
                 if fields_read_from_caches[i] {
-                    let field_name = &fields_with_names[i];
+                    let field_name = &self.fields[i].name_rust_field;
                     let field_type = &fields_with_types[i];
 
                     let read_map_code = if self.flags.shifted_by_one {
@@ -533,7 +538,7 @@ impl ToTokenStream for Struct {
 
             for i in 0..field_count {
                 let field = &self.fields[i];
-                let field_name = &fields_with_names[i];
+                let field_name = &field.name_rust_field;
                 let field_type = &fields_with_types[i].replace("<", "::<");
 
                 if let Some(n) = &field.default_value {
@@ -711,7 +716,7 @@ impl ToTokenStream for Struct {
 
 impl ToTokenStream for Enum {
     fn to_token_stream(&self, _definitions: &ParsedDefinitions) -> TokenStream {
-        let field_names_rust = self.options.iter().map(|s| camel_case(&s.name)).collect::<Vec<String>>();
+        let field_names_rust = self.options.iter().map(|s| s.name_rust_enum.as_str()).collect::<Vec<&str>>();
         let field_names_matchers = self.options.iter().map(|s| safe_str(&s.name, SafetyLevel::Matcher)).collect::<Vec<Cow<str>>>();
 
         macro_rules! writeln_for_each_field {
@@ -1017,7 +1022,7 @@ impl ToTokenStream for TagGroup {
     fn to_token_stream(&self, _definitions: &ParsedDefinitions) -> TokenStream {
         let struct_name = &self.struct_name;
         let version = self.version;
-        let group = camel_case(&self.name);
+        let group = &self.name_rust_enum;
 
         format!("impl PrimaryTagStruct for {struct_name} {{
             fn group() -> TagGroup {{
@@ -1034,41 +1039,6 @@ impl ToTokenStream for TagGroup {
             }}
         }}").parse().unwrap()
     }
-}
-
-fn camel_case(string: &str) -> String {
-    let safe = safe_str(string, SafetyLevel::RustCompilation);
-
-    let mut result = String::with_capacity(safe.len());
-    let mut capital = true;
-
-    for c in safe.chars() {
-        if c == '_' {
-            capital = true;
-            if result.is_empty() {
-                result.push('_');
-            }
-            continue;
-        }
-
-        if capital {
-            capital = false;
-            result.push(c.to_ascii_uppercase());
-            continue;
-        }
-
-        result.push(c);
-    }
-
-    let prefixes = &["Gbxm", "Ui", "Bsp", "Hud", "Dxt", "Pcm", "Bc7", "Adpcm", "A1r5g5b5", "R5g6b5", "A4r4g4b4", "A8y8", "Ay8", "A8r8g8b8", "X8r8g8b8", "Ucs"];
-
-    for p in prefixes {
-        if result.contains(p) {
-            result = result.replace(p, &p.to_ascii_uppercase());
-        }
-    }
-
-    result
 }
 
 #[derive(Copy, Clone, PartialEq)]

@@ -155,6 +155,7 @@ pub enum SimplePrimitiveType {
     Euler2D,
     Euler3D,
     Quaternion,
+    Matrix2x3,
     Matrix3x3,
     Vector2DInt,
     Rectangle,
