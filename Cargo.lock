@@ -743,6 +743,7 @@ dependencies = [
 [[package]]
 name = "ringhopper-definitions"
 version = "0.2.0"
+source = "git+https://github.com/FishAndRips/ringhopper-definitions?rev=4f5b183c636f0a26072c2a857689bb394b03d0c7#4f5b183c636f0a26072c2a857689bb394b03d0c7"
 dependencies = [
  "serde_json",
 ]

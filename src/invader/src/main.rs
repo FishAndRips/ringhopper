@@ -1,3 +1,5 @@
+#![allow(mismatched_lifetime_syntaxes)]
+
 #[cfg(target_os = "windows")]
 extern crate windows;
 

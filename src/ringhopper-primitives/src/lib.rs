@@ -1,3 +1,5 @@
+#![allow(mismatched_lifetime_syntaxes)]
+
 //! Contains all of the primitives, tag definitions, and parsing code for Ringhopper.
 
 pub extern crate byteorder;

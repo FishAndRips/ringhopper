@@ -1,3 +1,4 @@
+#![allow(mismatched_lifetime_syntaxes)]
 extern crate ringhopper_definitions;
 
 use std::fmt::Write;
