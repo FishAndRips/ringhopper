@@ -1,3 +1,4 @@
+use primitives::primitive::Angle;
 use primitives::primitive::{Color, ColorRGB};
 use primitives::tag::PrimaryTagStructDyn;
 use ringhopper_structs::Light;
@@ -32,13 +33,39 @@ fn set_or_unset_defaults_for_light(tag: &mut dyn PrimaryTagStructDyn, undefault:
     let from;
     let to;
 
+    let pi = Angle::from_radians(std::f32::consts::PI);
     if undefault {
         from = default;
         to = zeroed_out;
+        if light.shape.cutoff_angle == pi && light.shape.falloff_angle == pi {
+            light.shape.cutoff_angle = Angle::from_radians(0.0);
+            light.shape.falloff_angle = Angle::from_radians(0.0);
+        }
+        if light.shape.radius_modifier.lower == 1.0 && light.shape.radius_modifier.upper == 1.0 {
+            light.shape.radius_modifier.lower = 0.0;
+            light.shape.radius_modifier.upper = 0.0;
+        }
     }
     else {
         from = zeroed_out;
         to = default;
+        if light.shape.cutoff_angle.angle <= 0.0 {
+            light.shape.cutoff_angle = pi;
+            light.shape.falloff_angle = pi;
+        }
+        if light.shape.cutoff_angle.angle > pi.angle {
+            light.shape.cutoff_angle = pi;
+        }
+        if light.shape.falloff_angle.angle > pi.angle {
+            light.shape.falloff_angle = pi;
+        }
+        if light.shape.falloff_angle.angle > light.shape.cutoff_angle.angle {
+            light.shape.falloff_angle = Angle::from_radians(0.0);
+        }
+        if light.shape.radius_modifier.lower <= 0.0 && light.shape.radius_modifier.upper <= 0.0 {
+            light.shape.radius_modifier.lower = 1.0;
+            light.shape.radius_modifier.upper = 1.0;
+        }
     }
 
     if lower_rgb == from && upper_rgb == from {

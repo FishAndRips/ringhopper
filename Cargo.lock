@@ -719,7 +719,7 @@ dependencies = [
 [[package]]
 name = "ringhopper-definitions"
 version = "0.2.0"
-source = "git+https://github.com/FishAndRips/ringhopper-definitions?rev=cd469c7c3dbff12bb330be36ec850aadf2dd4443#cd469c7c3dbff12bb330be36ec850aadf2dd4443"
+source = "git+https://github.com/FishAndRips/ringhopper-definitions?rev=03805a6b02a1c7d36d6cac149eacc1043fb75788#03805a6b02a1c7d36d6cac149eacc1043fb75788"
 dependencies = [
  "serde_json",
  "spin",
