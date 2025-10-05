@@ -1,4 +1,5 @@
 use primitives::{primitive::Reflexive, tag::PrimaryTagStructDyn};
+use primitives::primitive::Vector2D;
 use ringhopper_structs::*;
 
 pub fn unset_defaults_for_shader_model(tag: &mut dyn PrimaryTagStructDyn) {
@@ -35,7 +36,7 @@ pub fn set_defaults_for_shader_transparent_chicago_extended(tag: &mut dyn Primar
 
 fn fix_shader_model(tag: &mut dyn PrimaryTagStructDyn, undefault: bool) {
     let shader: &mut ShaderModel = tag.as_any_mut().downcast_mut().unwrap();
-    fix_map_scale(&mut shader.maps.map_u_scale, &mut shader.maps.map_v_scale, undefault);
+    fix_map_scale(&mut shader.maps.map_scale, undefault);
 }
 
 fn fix_shader_transparent_generic(tag: &mut dyn PrimaryTagStructDyn, undefault: bool) {
@@ -54,7 +55,10 @@ fn fix_shader_transparent_chicago_extended(tag: &mut dyn PrimaryTagStructDyn, un
     fix_chicago_map_reflexive(&mut shader._4_stage_maps, undefault);
 }
 
-fn fix_map_scale(u: &mut f32, v: &mut f32, undefault: bool) {
+fn fix_map_scale(uv: &mut Vector2D, undefault: bool) {
+    let u = &mut uv.x;
+    let v = &mut uv.y;
+
     if undefault {
         if (*u == 1.0 || *u == 0.0) && (*v == 1.0 || *v == 0.0) {
             *u = 0.0;
@@ -77,12 +81,12 @@ fn fix_map_scale(u: &mut f32, v: &mut f32, undefault: bool) {
 
 fn fix_chicago_map_reflexive(reflexive: &mut Reflexive<ShaderTransparentChicagoMap>, undefault: bool) {
     for i in reflexive {
-        fix_map_scale(&mut i.parameters.map_u_scale, &mut i.parameters.map_v_scale, undefault);
+        fix_map_scale(&mut i.parameters.map_scale, undefault);
     }
 }
 
 fn fix_generic_map_reflexive(reflexive: &mut Reflexive<ShaderTransparentGenericMap>, undefault: bool) {
     for i in reflexive {
-        fix_map_scale(&mut i.parameters.map_u_scale, &mut i.parameters.map_v_scale, undefault);
+        fix_map_scale(&mut i.parameters.map_scale, undefault);
     }
 }

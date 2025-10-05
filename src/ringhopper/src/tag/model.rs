@@ -209,8 +209,7 @@ impl ModelFunctions for Model {
             shaders: self.shaders,
             detail_cutoff: self.detail_cutoff,
             runtime_markers: self.runtime_markers,
-            base_map_v_scale: self.base_map_v_scale,
-            base_map_u_scale: self.base_map_u_scale
+            base_map_scale: self.base_map_scale
         }
     }
 
@@ -323,8 +322,7 @@ impl ModelFunctions for GBXModel {
             node_list_checksum: self.node_list_checksum,
             detail_cutoff: self.detail_cutoff,
             detail_node_count: self.detail_node_count,
-            base_map_u_scale: self.base_map_u_scale,
-            base_map_v_scale: self.base_map_v_scale,
+            base_map_scale: self.base_map_scale,
             runtime_markers: self.runtime_markers,
             nodes: self.nodes,
             regions: self.regions,

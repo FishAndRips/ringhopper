@@ -56,7 +56,7 @@ pub fn generate_ringhopper_structs(_: TokenStream) -> TokenStream {
 
         if let SupportedEngines::SomeEngines(e) = &group.supported_engines {
             let mut engines = String::new();
-            for engine in resolve_all_engines_for_parents(&e, &definitions) {
+            for engine in resolve_all_engines_for_parents(e.iter(), &definitions) {
                 engines += "\"";
                 engines += engine;
                 engines += "\",";
@@ -1047,7 +1047,7 @@ enum SafetyLevel {
     RustCompilation
 }
 
-fn resolve_all_engines_for_parents<'a>(parents: &'a [String], definitions: &'a ParsedDefinitions) -> HashSet<&'a str> {
+fn resolve_all_engines_for_parents<'a, I: Iterator<Item = &'a String>>(parents: I, definitions: &'a ParsedDefinitions) -> HashSet<&'a str> {
     let mut result = HashSet::new();
 
     for i in parents {

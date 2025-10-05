@@ -137,6 +137,15 @@ pub struct Vector2D {
     pub y: f32
 }
 
+impl From<[f32; 2]> for Vector2D {
+    fn from(value: [f32; 2]) -> Self {
+        Self {
+            x: value[0],
+            y: value[1]
+        }
+    }
+}
+
 impl Vector for Vector2D {
     fn dot(&self, with: &Self) -> f32 {
         self.x * with.x + self.y * with.y
