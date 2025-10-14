@@ -12,6 +12,12 @@ pub type FourCC = u32;
 /// Refers to a tag group, or a type of tag.
 #[derive(Copy, Clone, PartialEq, Debug, Eq, Hash, Default)]
 pub enum TagGroup {
+    /// Denotes the state of the tag group not being set.
+    ///
+    /// This is considered invalid at runtime, but some fields that use tag groups may not always have a tag group set.
+    #[default]
+    _Unset,
+
     Actor,
     ActorVariant,
     Antenna,
@@ -94,13 +100,7 @@ pub enum TagGroup {
     Weapon,
     WeaponHUDInterface,
     WeatherParticleSystem,
-    Wind,
-
-    /// Denotes the state of the tag group not being set.
-    ///
-    /// This is considered invalid at runtime, but some fields that use tag groups may not always have a tag group set.
-    #[default]
-    _Unset
+    Wind
 }
 
 impl Ord for TagGroup {
@@ -117,6 +117,7 @@ impl PartialOrd for TagGroup {
 
 /// All tag groups for CE sorted alphabetically to allow for efficient binary searching.
 const ALL_GROUPS: &'static [(&'static str, TagGroup, FourCC)] = &[
+    ("<unset>", TagGroup::_Unset, 0x00000000),
     ("actor", TagGroup::Actor, 0x61637472),
     ("actor_variant", TagGroup::ActorVariant, 0x61637476),
     ("antenna", TagGroup::Antenna, 0x616E7421),
@@ -199,8 +200,7 @@ const ALL_GROUPS: &'static [(&'static str, TagGroup, FourCC)] = &[
     ("weapon", TagGroup::Weapon, 0x77656170),
     ("weapon_hud_interface", TagGroup::WeaponHUDInterface, 0x77706869),
     ("weather_particle_system", TagGroup::WeatherParticleSystem, 0x7261696E),
-    ("wind", TagGroup::Wind, 0x77696E64),
-    ("<unset>", TagGroup::_Unset, 0x00000000),
+    ("wind", TagGroup::Wind, 0x77696E64)
 ];
 
 impl TagGroup {
