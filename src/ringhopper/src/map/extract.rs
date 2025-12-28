@@ -105,7 +105,7 @@ macro_rules! extract_vertices {
                 let part = part.get_model_part_mut();
 
                 let vertex_count = part.vertices.vertex_count as usize;
-                let triangle_count = part.triangle_count as usize;
+                let triangle_count = part.triangles.triangle_count as usize;
 
                 if vertex_count > 0xFFFF {
                     return Err(Error::InvalidTagData(format!("Model data is invalid: vertex count is too high (0x{vertex_count:X} > 0xFFFF)")))
@@ -146,7 +146,7 @@ macro_rules! extract_vertices {
                     )?.into_infallible());
 
                     // Now all indices
-                    part.triangle_data.items = load_all_indices($map, triangle_count, part.triangle_pointer.into(), &domain_from_indices)?;
+                    part.triangle_data.items = load_all_indices($map, triangle_count, part.triangles.triangle_pointer.into(), &domain_from_indices)?;
                 }
                 else {
                     // Load all vertices
@@ -159,7 +159,7 @@ macro_rules! extract_vertices {
                     )?.into_infallible());
 
                     // Now all indices
-                    part.triangle_data.items = load_all_indices($map, triangle_count, part.triangle_pointer.into(), &domain_from_indices)?;
+                    part.triangle_data.items = load_all_indices($map, triangle_count, part.triangles.triangle_pointer.into(), &domain_from_indices)?;
                 }
             }
         }
