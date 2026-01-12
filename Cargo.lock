@@ -707,7 +707,7 @@ dependencies = [
 [[package]]
 name = "ringhopper-definitions"
 version = "0.2.0"
-source = "git+https://github.com/FishAndRips/ringhopper-definitions?rev=92c7d2c538d7b3b300ae824213c4d0e389d33e86#92c7d2c538d7b3b300ae824213c4d0e389d33e86"
+source = "git+https://github.com/FishAndRips/ringhopper-definitions?rev=a6697dc361b4840e9efa23b93dc8b9255f3b3686#a6697dc361b4840e9efa23b93dc8b9255f3b3686"
 dependencies = [
  "serde_json",
  "spin",
@@ -716,7 +716,7 @@ dependencies = [
 [[package]]
 name = "ringhopper-definitions"
 version = "0.2.0"
-source = "git+https://github.com/FishAndRips/ringhopper-definitions?rev=a6697dc361b4840e9efa23b93dc8b9255f3b3686#a6697dc361b4840e9efa23b93dc8b9255f3b3686"
+source = "git+https://github.com/FishAndRips/ringhopper-definitions?rev=bb4eb95c17b415e81b92a27e2739a4576c7adaf0#bb4eb95c17b415e81b92a27e2739a4576c7adaf0"
 dependencies = [
  "serde_json",
  "spin",
@@ -756,7 +756,7 @@ dependencies = [
 name = "ringhopper-structs-codegen"
 version = "0.2.0"
 dependencies = [
- "ringhopper-definitions 0.2.0 (git+https://github.com/FishAndRips/ringhopper-definitions?rev=92c7d2c538d7b3b300ae824213c4d0e389d33e86)",
+ "ringhopper-definitions 0.2.0 (git+https://github.com/FishAndRips/ringhopper-definitions?rev=bb4eb95c17b415e81b92a27e2739a4576c7adaf0)",
 ]
 
 [[package]]

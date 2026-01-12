@@ -10,4 +10,4 @@ edition = "2021"
 proc-macro = true
 
 [dependencies]
-ringhopper-definitions = { git = "https://github.com/FishAndRips/ringhopper-definitions", rev = "92c7d2c538d7b3b300ae824213c4d0e389d33e86" }
+ringhopper-definitions = { git = "https://github.com/FishAndRips/ringhopper-definitions", rev = "bb4eb95c17b415e81b92a27e2739a4576c7adaf0" }
